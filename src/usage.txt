@@ -4,15 +4,20 @@ USAGE
   edits <youtube-link | topic | video-file> [options]
   edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
-  edits preset list            the built-in presets
-  edits preset to-rust <zip|xml|dir>   convert Alight Motion projects into src/presets.rs (for building them in)
+  edits preset list | show NAME           presets are JSON: read one in full
+  edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
+  edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects and Premiere presets into presets
+  edits looks                  the colour looks
+  edits mcp                    serve every command to an AI agent (MCP over stdio)
+  edits skills [install]       agent skills for every command
   edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
 
 OPTIONS
       --music SONG    make music edits: the footage's best shots cut on the song's beats (link, file, or
                       trend:N for TikTok's Nth trending song, trend:us:N for another country)
-      --preset NAME   replay an Alight Motion project over the footage: timing, speed, moves, shakes, flashes, its song
+      --preset NAME   replay a preset (name or .json file) over the footage: timing, speed, moves, shakes, flashes, song
+      --intensity K   preset moves: 0.5 calmer, 2 wilder (default: the preset's own)
       --like EDIT     copy a reference edit: its music (dialogue removed), cuts, flashes, colour and shape
       --sad           slow cuts, slow motion, crossfades, black and white
       --voice         the speaker's best whole passage over their own footage, music under it, the drop as it ends, captions

@@ -1,6 +1,7 @@
 mod face;
 mod fetch;
 mod looks;
+mod mcp;
 mod montage;
 mod pick;
 mod premiere;
@@ -34,20 +35,13 @@ fn main() -> ExitCode {
             println!("\nuse one: --music trend:N  (another country: --music trend:us:N)");
         }),
         Some("rate") => rate(&args[1..]),
-        Some("preset") => match (args.get(1).map(String::as_str), args.get(2)) {
-            (Some("to-rust"), Some(_)) => to_rust(&args[2..]),
-            (Some("list") | None, _) => {
-                for p in presets::all() {
-                    println!("{:<44} {:>2} shots {:>5.1}s {}x{}{}", p.name, p.slots.len(), p.total, p.w, p.h, p.song.as_ref().map(|s| format!("  song: {}", s.0)).unwrap_or_default());
-                }
-                println!("\ncut moves:");
-                for m in presets::motions() {
-                    println!("  {:<70} {:.2}s", m.name, m.dur);
-                }
-                Ok(())
-            }
-            _ => Err("usage: edits preset list | edits preset to-rust <zip|xml|folder|prfpset>... > src/presets.rs".into()),
-        },
+        Some("preset") => preset_cmd(&args[1..]),
+        Some("mcp") => mcp::serve(),
+        Some("skills") => skills(&args[1..]),
+        Some("looks") => {
+            looks::LOOKS.iter().for_each(|(n, about, _)| println!("{n:<12} {about}"));
+            Ok(())
+        }
         Some("study") => match args.get(1) {
             Some(dir) => study::study(Path::new(dir)),
             None => Err("usage: edits study <folder of edits you like>".into()),
@@ -82,6 +76,10 @@ struct Cli {
     lut: Option<PathBuf>,
     /// --aspect or --size was given: it wins over a preset's own frame
     sized: bool,
+    /// --look was given: it wins over a preset's own look
+    looked: bool,
+    /// --intensity: scales a preset's moves
+    intensity: Option<f64>,
     /// of the videos found, how many to download after reading their captions
     use_videos: usize,
     look: montage::Look,
@@ -103,7 +101,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, use_videos: 4, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -115,6 +113,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "-o" | "--out" => c.out = PathBuf::from(val("--out")?),
             "--grade" | "--look" => {
                 c.opts.grade = val("--look")?;
+                c.looked = true;
                 if !looks::names().contains(&c.opts.grade.as_str()) {
                     return Err(format!("--look must be one of: {}", looks::names().join(", ")));
                 }
@@ -132,6 +131,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                 (c.opts.w, c.opts.h) = (w / 2 * 2, h / 2 * 2);
                 c.sized = true;
             }
+            "--intensity" => c.intensity = Some(val("--intensity")?.parse().ok().filter(|k| (0.0..=3.0).contains(k)).ok_or("--intensity must be 0-3")?),
             "--use" => c.use_videos = val("--use")?.parse().ok().filter(|n| (1..=20).contains(n)).ok_or("--use must be 1-20")?,
             "--fit" => c.opts.layout = "fit".into(),
             "--music" => c.music = Some(val("--music")?),
@@ -316,10 +316,10 @@ fn footage(c: &Cli, cache: &Path) -> (Vec<(String, PathBuf)>, Vec<montage::Shot>
 fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     let p = preset::load(name)?;
     lap(&format!("preset {}: {} shots in {:.1}s, {}x{}, {} flashes{}", p.name, p.slots.len(), p.total, p.w, p.h, p.flashes.len(),
-        p.song.as_ref().map(|s| format!(", song \"{}\"", s.0)).unwrap_or_default()));
+        p.song.as_ref().map(|s| format!(", song \"{}\"", s.title)).unwrap_or_default()));
     let music = match (&c.music, &p.song) {
         (Some(m), _) => fetch::music(m)?,
-        (None, Some(s)) => fetch::find_song(&s.0)?,
+        (None, Some(s)) => fetch::find_song(&s.title)?,
         (None, None) => return Err("this preset names no song: give one with --music".into()),
     };
     let (song, (videos, shots)) = std::thread::scope(|s| {
@@ -333,15 +333,24 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     lap(&format!("song \"{}\"; {} shots from {} video(s)", song.title, shots.len(), videos.len()));
     // where the song starts: the preset's own offset into its own song, else the loudest stretch
     let song_from = match (&c.music, &p.song) {
-        (None, Some(s)) => s.1,
+        (None, Some(s)) => s.from,
         _ => montage::windows(&song.beats, &song.loud, p.total, 1).first().copied().unwrap_or(0.0),
     };
+    // the preset bends to the moment: its own intensity (or --intensity), and with another song its cuts on that song's beats
+    let mut p = p.clone().with_intensity(c.intensity.unwrap_or(p.intensity));
+    if c.music.is_some() && p.fit_beats {
+        let beats: Vec<f64> = song.beats.iter().map(|b| b - song_from).filter(|b| *b >= 0.0 && *b <= p.total).collect();
+        p = p.fit_to(&beats);
+    }
     // one piece per slot, end to end: a slot runs until the next one starts
     let starts: Vec<f64> = p.slots.iter().enumerate().map(|(i, s)| if i == 0 { 0.0 } else { s.start }).collect();
     let spans: Vec<(f64, f64)> = (0..p.slots.len()).map(|i| (starts[i], starts.get(i + 1).copied().unwrap_or(p.total))).filter(|(a, b)| b - a > 0.02).collect();
     let mut opts = c.opts.clone();
     if !c.sized {
         (opts.w, opts.h) = (p.w, p.h);
+    }
+    if let (false, Some(look)) = (c.looked, &p.look) {
+        opts.grade = look.clone();
     }
     let mut used = vec![false; shots.len()];
     let mut made = 0;
@@ -643,28 +652,108 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     Ok(())
 }
 
-/// `edits preset to-rust <sources>`: Alight Motion projects (zip, folder, .xml) and Premiere presets (.prfpset)
-/// as Rust source, merged with the presets already built in.
-fn to_rust(sources: &[String]) -> Result<(), String> {
-    let fresh = std::env::var_os("EDITS_FRESH").is_some();
-    let (mut all, mut moves) = if fresh { (vec![], vec![]) } else { (presets::all(), presets::motions()) };
-    for src in sources {
-        let path = Path::new(src);
-        if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("prfpset")) {
-            let xml = std::fs::read_to_string(path).map_err(|e| format!("{src}: {e}"))?;
-            let found = premiere::parse(&xml, &path.file_stem().unwrap_or_default().to_string_lossy())?;
-            moves.retain(|m| !found.iter().any(|f| f.name == m.name));
-            moves.extend(found);
-        } else {
-            let found = preset::read_all(path)?;
-            all.retain(|p| !found.iter().any(|f| f.name == p.name));
-            all.extend(found);
+const SKILLS: &[(&str, &str)] = &[
+    ("edits", include_str!("../skills/edits/SKILL.md")),
+    ("edits-preset-tweak", include_str!("../skills/edits-preset-tweak/SKILL.md")),
+    ("edits-trends", include_str!("../skills/edits-trends/SKILL.md")),
+    ("edits-presets-import", include_str!("../skills/edits-presets-import/SKILL.md")),
+    ("edits-mcp", include_str!("../skills/edits-mcp/SKILL.md")),
+];
+
+/// `edits skills install [DIR]`: the agent skills into ~/.claude/skills (or DIR). `edits skills` lists them.
+fn skills(args: &[String]) -> Result<(), String> {
+    match args.first().map(String::as_str) {
+        Some("install") => {
+            let dir = args.get(1).map(PathBuf::from).unwrap_or_else(|| util::home().join(".claude/skills"));
+            for (name, text) in SKILLS {
+                let d = dir.join(name);
+                std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
+                std::fs::write(d.join("SKILL.md"), text).map_err(|e| e.to_string())?;
+            }
+            println!("installed {} skills in {}", SKILLS.len(), dir.display());
+            Ok(())
+        }
+        _ => {
+            for (name, text) in SKILLS {
+                let about = text.lines().find_map(|l| l.strip_prefix("description: ")).unwrap_or("");
+                println!("{name:<22} {}", about.chars().take(110).collect::<String>());
+            }
+            println!("\ninstall them: edits skills install [DIR]   (default ~/.claude/skills)");
+            Ok(())
         }
     }
-    all.sort_by_key(|p| p.name.to_lowercase());
-    moves.sort_by(|a, b| a.name.cmp(&b.name));
-    print!("{}", preset::to_rust(&all, &moves));
-    Ok(())
+}
+
+/// `edits preset ...`: list, show, save, import. Presets are JSON: read one, change what the moment needs, save it.
+fn preset_cmd(args: &[String]) -> Result<(), String> {
+    match (args.first().map(String::as_str), args.get(1)) {
+        (Some("list") | None, _) => {
+            for p in presets::all() {
+                println!("{:<40} {:>2} shots {:>5.1}s {}x{}{}", p.name, p.slots.len(), p.total, p.w, p.h, p.song.as_ref().map(|s| format!("  song: {}", s.title)).unwrap_or_default());
+            }
+            println!("\n{} cut moves; your presets: {}", presets::motions().len(), presets::user_dir().display());
+            Ok(())
+        }
+        (Some("show"), Some(name)) => {
+            println!("{}", preset::pretty(&preset::load(name)?));
+            Ok(())
+        }
+        (Some("save"), Some(file)) => {
+            let text = if file == "-" {
+                let mut t = String::new();
+                std::io::Read::read_to_string(&mut std::io::stdin(), &mut t).map_err(|e| e.to_string())?;
+                t
+            } else {
+                std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?
+            };
+            let p: preset::Preset = serde_json::from_str(&text).map_err(|e| format!("not a valid preset: {e}"))?;
+            if p.slots.is_empty() {
+                return Err("a preset needs at least one shot".into());
+            }
+            std::fs::create_dir_all(presets::user_dir()).map_err(|e| e.to_string())?;
+            let to = presets::user_dir().join(format!("{}.json", preset::slug(&p.name)));
+            std::fs::write(&to, preset::pretty(&p)).map_err(|e| e.to_string())?;
+            println!("saved \"{}\" to {}", p.name, to.display());
+            Ok(())
+        }
+        (Some("import"), Some(_)) => {
+            // --into DIR writes elsewhere (presets/ to build them in); default: your preset folder
+            let (into, sources): (PathBuf, Vec<&String>) = match args.iter().position(|a| a == "--into") {
+                Some(i) => (PathBuf::from(args.get(i + 1).ok_or("--into needs a folder")?), args[1..].iter().enumerate().filter(|(k, _)| *k + 1 != i && *k + 1 != i + 1).map(|x| x.1).collect()),
+                None => (presets::user_dir(), args[1..].iter().collect()),
+            };
+            std::fs::create_dir_all(&into).map_err(|e| e.to_string())?;
+            let mut moves: Vec<preset::Motion> = std::fs::read_to_string(into.join("moves.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+            let mut taken: Vec<String> = vec![];
+            for src in sources {
+                let path = Path::new(src);
+                if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("prfpset")) {
+                    let xml = std::fs::read_to_string(path).map_err(|e| format!("{src}: {e}"))?;
+                    let found = premiere::parse(&xml, &path.file_stem().unwrap_or_default().to_string_lossy())?;
+                    println!("{src}: {} cut moves", found.len());
+                    moves.retain(|m| !found.iter().any(|f| f.name == m.name));
+                    moves.extend(found);
+                    continue;
+                }
+                for p in preset::read_all(path)? {
+                    let mut slug = preset::slug(&p.name);
+                    while taken.contains(&slug) {
+                        slug.push('-');
+                        slug.push('2');
+                    }
+                    taken.push(slug.clone());
+                    std::fs::write(into.join(format!("{slug}.json")), preset::pretty(&p)).map_err(|e| e.to_string())?;
+                    println!("{slug}.json: {} ({} shots, {:.1}s)", p.name, p.slots.len(), p.total);
+                }
+            }
+            if !moves.is_empty() {
+                moves.sort_by(|a, b| a.name.cmp(&b.name));
+                std::fs::write(into.join("moves.json"), preset::pretty(&moves)).map_err(|e| e.to_string())?;
+            }
+            Ok(())
+        }
+        _ => Err("usage: edits preset list | show NAME | save FILE.json|- | import <zip|xml|folder|prfpset>... [--into DIR]".into()),
+    }
 }
 
 /// `edits rate clip.mp4 +|-` appends the clip's text to the taste file as a liked or disliked example.

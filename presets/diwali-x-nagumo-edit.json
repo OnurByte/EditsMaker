@@ -1,0 +1,236 @@
+{
+  "name": "Diwali x nagumo edit",
+  "about": "Alight Motion project \"Diwali x nagumo edit\"",
+  "w": 1080,
+  "h": 1200,
+  "total": 21.265,
+  "song": null,
+  "look": null,
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 21.265
+    },
+    {
+      "start": 0.0,
+      "end": 8.015,
+      "speed": 3.05,
+      "zoom": [
+        [0.0, 2.8519, "linear"],
+        [1.0, 1.0, "out 6"]
+      ]
+    },
+    {
+      "start": 6.77,
+      "end": 8.015,
+      "speed": 1.84,
+      "zoom": [
+        [0.0, 0.0, "linear"],
+        [1.0, 1000.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.0,
+      "end": 8.815,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 8.8,
+      "end": 9.832,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 9.816,
+      "end": 10.315,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 10.3,
+      "end": 11.032,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 11.016,
+      "end": 11.832,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 11.816,
+      "end": 12.082,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 12.066,
+      "end": 12.799,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 12.783,
+      "end": 13.065,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 13.05,
+      "end": 13.799,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 13.783,
+      "end": 14.282,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 14.266,
+      "end": 15.065,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 15.05,
+      "end": 15.782,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 15.766,
+      "end": 16.015,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 16.0,
+      "end": 16.815,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 16.8,
+      "end": 17.832,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 17.816,
+      "end": 18.315,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 18.3,
+      "end": 19.032,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 19.016,
+      "end": 19.832,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 19.816,
+      "end": 20.082,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    },
+    {
+      "start": 20.066,
+      "end": 20.365,
+      "shake": [
+        [0.0, 0.0231, "linear"],
+        [1.0, 0.0139, "linear"]
+      ],
+      "shake_hz": 3.0,
+      "motion_blur": true
+    }
+  ],
+  "flashes": []
+}

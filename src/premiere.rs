@@ -119,7 +119,8 @@ pub fn parse(xml: &str, file: &str) -> Result<Vec<Motion>, String> {
             // a lone half: an "out" move ends on the cut, an "in" move starts on it
             (None, None) => Motion { cut: if is_out { a.dur } else { 0.0 }, zoom: norm(&a.zoom, a.dur, 0.0), x: norm(&a.x, a.dur, 0.0), y: norm(&a.y, a.dur, 0.0), rot: norm(&a.rot, a.dur, 0.0), blur: norm(&a.blur, a.dur, 0.0), ..a },
         };
-        out.push(Motion { name: format!("{file}: {}", m.name), ..m });
+        let r = |c: &Curve| Curve { keys: c.keys.iter().map(|&(t, v, e)| ((t * 1e4).round() / 1e4, (v * 1e4).round() / 1e4, e)).collect() };
+        out.push(Motion { name: format!("{file}: {}", m.name), dur: (m.dur * 1e4).round() / 1e4, cut: (m.cut * 1e4).round() / 1e4, zoom: r(&m.zoom), x: r(&m.x), y: r(&m.y), rot: r(&m.rot), blur: r(&m.blur) });
     }
     Ok(out)
 }

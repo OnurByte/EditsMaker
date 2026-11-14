@@ -1,6 +1,7 @@
 //! Alight Motion projects (.xml) as presets: an edit's timing, speed ramps, camera moves, shakes, blurs, exposure
 //! hits and flashes, read from the file and replayed over your own footage.
 use roxmltree::{Document, Node};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -48,6 +49,33 @@ pub fn ease(e: Option<&str>) -> Ease {
     }
 }
 
+/// In files an easing is a word: "linear", "out 4", "in 2.5", "inout 3".
+impl Serialize for Ease {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(&match self {
+            Ease::Linear => "linear".to_string(),
+            Ease::Out(k) => format!("out {k}"),
+            Ease::In(k) => format!("in {k}"),
+            Ease::InOut(k) => format!("inout {k}"),
+        })
+    }
+}
+
+impl<'de> Deserialize<'de> for Ease {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let text = String::deserialize(d)?;
+        let mut w = text.split_whitespace();
+        let (kind, k) = (w.next().unwrap_or("linear").to_lowercase(), w.next().and_then(|x| x.parse::<f64>().ok()).unwrap_or(2.0).clamp(0.2, 10.0));
+        match kind.as_str() {
+            "linear" => Ok(Ease::Linear),
+            "out" => Ok(Ease::Out(k)),
+            "in" => Ok(Ease::In(k)),
+            "inout" => Ok(Ease::InOut(k)),
+            _ => Err(serde::de::Error::custom(format!("easing \"{text}\" is not linear, out K, in K or inout K"))),
+        }
+    }
+}
+
 impl Ease {
     fn at(self, u: f64) -> f64 {
         let u = u.clamp(0.0, 1.0);
@@ -69,12 +97,16 @@ impl Ease {
 }
 
 /// A value over a layer's life: keys at 0..1 of its duration, each eased in from the one before.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct Curve {
     pub keys: Vec<(f64, f64, Ease)>,
 }
 
 impl Curve {
+    pub fn is_empty(&self) -> bool {
+        self.keys.is_empty()
+    }
     pub fn constant(v: f64) -> Self {
         Curve { keys: vec![(0.0, v, Ease::Linear)] }
     }
@@ -127,53 +159,182 @@ impl Curve {
     }
 }
 
-/// One shot of the edit, and everything that happens to it.
-#[derive(Clone, Debug)]
+/// One shot of the edit, and everything that happens to it. Curves are [time 0..1 of the shot, value, easing].
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Slot {
     pub start: f64,
     pub end: f64,
     /// playback speed of the footage (velocity edits run 2-4x)
+    #[serde(default = "one", skip_serializing_if = "is_one")]
     pub speed: f64,
     /// 1 = framed, above = zoomed in
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub zoom: Curve,
     /// offsets as a fraction of the frame width / height
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub x: Curve,
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub y: Curve,
     /// degrees
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub rot: Curve,
     /// shake amplitude as a fraction of the frame width, and its frequency
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub shake: Curve,
+    #[serde(default = "four", skip_serializing_if = "is_four")]
     pub shake_hz: f64,
     /// 0..1, blur on when it is high
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub blur: Curve,
     /// 0..1
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub exposure: Curve,
+    #[serde(default = "one", skip_serializing_if = "is_one")]
     pub saturation: f64,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub rgb: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub invert: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub motion_blur: bool,
 }
 
 /// A coloured layer over the picture: flashes, dips, light hits.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Flash {
     pub start: f64,
     pub end: f64,
     pub color: String,
     pub opacity: Curve,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub blink: bool,
 }
 
-#[derive(Clone, Debug)]
+/// The song an edit was cut to.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Song {
+    pub title: String,
+    /// seconds into the song where the edit starts
+    pub from: f64,
+}
+
+fn one() -> f64 {
+    1.0
+}
+
+fn four() -> f64 {
+    4.0
+}
+
+fn is_one(v: &f64) -> bool {
+    *v == 1.0
+}
+
+fn is_four(v: &f64) -> bool {
+    *v == 4.0
+}
+
+fn is_false(v: &bool) -> bool {
+    !*v
+}
+
+/// A whole edit as data: what an agent or a person reads, changes and saves as JSON.
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Preset {
     pub name: String,
+    #[serde(default)]
+    pub about: String,
     pub w: u32,
     pub h: u32,
+    /// seconds
     pub total: f64,
+    #[serde(default)]
+    pub song: Option<Song>,
+    /// colour look (see `edits looks`); None keeps the footage's colours
+    #[serde(default)]
+    pub look: Option<String>,
+    /// 1 = as made; 0.5 calmer, 2 wilder: scales every zoom, slide, turn, shake and blur
+    #[serde(default = "one")]
+    pub intensity: f64,
+    /// with a song other than its own, move each cut onto the nearest beat
+    #[serde(default = "yes")]
+    pub fit_beats: bool,
+    #[serde(rename = "shots")]
     pub slots: Vec<Slot>,
+    #[serde(default)]
     pub flashes: Vec<Flash>,
-    /// (title, from seconds into the song, where in the edit it starts)
-    pub song: Option<(String, f64, f64)>,
+}
+
+fn yes() -> bool {
+    true
+}
+
+/// JSON for people and agents to read: indented, but each curve key and each list of numbers on one line.
+pub fn pretty<T: Serialize>(v: &T) -> String {
+    let text = serde_json::to_string_pretty(v).unwrap_or_default();
+    let inner = regex::Regex::new(r"\[\s*([^\[\]{}]*?)\s*\]").unwrap();
+    let space = regex::Regex::new(r",\s+").unwrap();
+    let mut out = text;
+    // twice: keys first, then the lists of keys made only of one-line keys
+    for _ in 0..2 {
+        out = inner.replace_all(&out, |c: &regex::Captures| format!("[{}]", space.replace_all(c[1].trim(), ", "))).into_owned();
+    }
+    out
+}
+
+fn r4(v: f64) -> f64 {
+    (v * 10000.0).round() / 10000.0
+}
+
+impl Curve {
+    fn tidy(&self) -> Self {
+        Curve { keys: self.keys.iter().map(|&(t, v, e)| (r4(t), r4(v), e)).collect() }
+    }
+}
+
+impl Preset {
+    /// Numbers rounded to 4 decimals: the same edit, a file a third the size.
+    pub fn tidy(mut self) -> Self {
+        self.total = r4(self.total);
+        for s in &mut self.slots {
+            (s.start, s.end, s.speed, s.shake_hz, s.saturation) = (r4(s.start), r4(s.end), r4(s.speed), r4(s.shake_hz), r4(s.saturation));
+            for c in [&mut s.zoom, &mut s.x, &mut s.y, &mut s.rot, &mut s.shake, &mut s.blur, &mut s.exposure] {
+                *c = c.tidy();
+            }
+        }
+        for f in &mut self.flashes {
+            (f.start, f.end, f.opacity) = (r4(f.start), r4(f.end), f.opacity.tidy());
+        }
+        self
+    }
+
+    /// Every move scaled around its resting value by `k`.
+    pub fn with_intensity(mut self, k: f64) -> Self {
+        let k = k.clamp(0.0, 3.0);
+        for s in &mut self.slots {
+            s.zoom = s.zoom.map(|v| 1.0 + (v - 1.0) * k);
+            for c in [&mut s.x, &mut s.y, &mut s.rot, &mut s.shake] {
+                *c = c.map(|v| v * k);
+            }
+            s.blur = s.blur.map(|v| (v * k).min(1.0));
+        }
+        self.intensity = 1.0;
+        self
+    }
+
+    /// Each cut moved onto the nearest beat (within 0.25 s) of the song it is now cut to.
+    pub fn fit_to(mut self, beats: &[f64]) -> Self {
+        for i in 1..self.slots.len() {
+            let t = self.slots[i].start;
+            if let Some(b) = beats.iter().copied().filter(|b| (b - t).abs() <= 0.25).min_by(|a, b| (a - t).abs().total_cmp(&(b - t).abs())) {
+                if b > self.slots[i - 1].start + 0.1 {
+                    self.slots[i].start = b;
+                    self.slots[i - 1].end = self.slots[i - 1].end.max(b);
+                }
+            }
+        }
+        self
+    }
 }
 
 fn nums(s: &str) -> Vec<f64> {
@@ -255,7 +416,7 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         start,
         end,
         speed: (speed(n) * if m != n { speed(m) } else { 1.0 }).clamp(0.1, 8.0),
-        zoom: scale.map(|v| v / lo),
+        zoom: Some(scale.map(|v| v / lo)).filter(|z| z.is_moving() || z.max() > 1.001).unwrap_or_default(),
         x: moved(tf("location", 0), w),
         y: moved(tf("location", 1), h),
         rot: tf("rotation", 0).filter(Curve::is_moving).unwrap_or_default(),
@@ -336,29 +497,46 @@ pub fn parse(xml: &str, name: &str) -> Result<Preset, String> {
             let file = ["VID_", "IMG_", "AUD", "REC"].iter().any(|p| label.starts_with(p))
                 || [".aac", ".m4a", ".wav", ".ogg", ".opus"].iter().any(|e| label.to_lowercase().ends_with(e))
                 || label.chars().collect::<Vec<_>>().windows(6).any(|w| w.iter().all(char::is_ascii_digit));
-            (words >= 2 && !file).then(|| (label, ms(a, "inTime").unwrap_or(0.0), ms(a, "startTime").unwrap_or(0.0)))
+            (words >= 2 && !file).then(|| Song { title: label, from: ms(a, "inTime").unwrap_or(0.0) })
         });
     if slots.is_empty() {
         return Err(format!("{name}: no video layers to fill"));
     }
     Ok(Preset {
         name: name.to_string(),
+        about: format!("Alight Motion project \"{}\"", root.attribute("title").unwrap_or(name)),
         w: (w as u32) / 2 * 2,
         h: (h as u32) / 2 * 2,
         total: num("totalTime").map_or(slots.iter().map(|s| s.end).fold(0.0, f64::max), |t| t / 1000.0),
+        song,
+        look: None,
+        intensity: 1.0,
+        fit_beats: true,
         slots,
         flashes,
-        song,
-    })
+    }.tidy())
 }
 
-/// A built-in preset by (part of) its name.
+/// A preset by file (.json) or by (part of) its name among the built-in and saved ones.
 pub fn load(name: &str) -> Result<Preset, String> {
+    if name.ends_with(".json") && Path::new(name).is_file() {
+        let text = std::fs::read_to_string(name).map_err(|e| format!("{name}: {e}"))?;
+        return serde_json::from_str(&text).map_err(|e| format!("{name}: {e}"));
+    }
     let want = name.to_lowercase().replace(['-', '_'], " ");
     let all = crate::presets::all();
     let names: Vec<String> = all.iter().map(|p| p.name.clone()).collect();
-    all.into_iter().find(|p| p.name.to_lowercase().replace(['-', '_'], " ").contains(want.trim()))
+    all.iter().find(|p| p.name.to_lowercase() == want.trim())
+        .or_else(|| all.iter().find(|p| p.name.to_lowercase().replace(['-', '_'], " ").contains(want.trim())))
+        .cloned()
         .ok_or(format!("no preset matching \"{name}\"; there are: {}", names.join(", ")))
+}
+
+/// A file name for a preset: ascii letters and digits, dashes between.
+pub fn slug(name: &str) -> String {
+    let s: String = name.to_lowercase().chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '-' }).collect();
+    let s = s.split('-').filter(|x| !x.is_empty()).collect::<Vec<_>>().join("-");
+    if s.is_empty() { "preset".into() } else { s }
 }
 
 /// Every Alight Motion project (.xml) in a zip, folder or file.
@@ -393,51 +571,6 @@ pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
         let _ = std::fs::remove_dir_all(&tmp);
     }
     Ok(out)
-}
-
-fn rust_curve(c: &Curve) -> String {
-    let keys: Vec<String> = c.keys.iter().map(|(t, v, e)| format!("({t:.4}, {v:.4}, {})", match e {
-        Ease::Linear => "Linear".to_string(),
-        Ease::Out(k) => format!("Out({k:.1})"),
-        Ease::In(k) => format!("In({k:.1})"),
-        Ease::InOut(k) => format!("InOut({k:.1})"),
-    })).collect();
-    format!("c(&[{}])", keys.join(", "))
-}
-
-/// Presets and motions as Rust source for src/presets.rs: timing, moves and effects only, no media.
-pub fn to_rust(presets: &[Preset], motions: &[Motion]) -> String {
-    // function names from preset names: ascii only, numbered so two names that reduce alike stay apart
-    let names: Vec<String> = presets.iter().enumerate().map(|(i, p)| {
-        let f: String = p.name.to_lowercase().chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect();
-        format!("p{i}_{}", f.split('_').filter(|s| !s.is_empty()).collect::<Vec<_>>().join("_"))
-    }).collect();
-    let fname = |p: &Preset| names[presets.iter().position(|x| std::ptr::eq(x, p)).unwrap()].clone();
-    let mut s = String::from("//! Edit presets, converted by `edits preset to-rust` from Alight Motion projects (the project owner's anime edits;\n//! community presets from github.com/andikachan/alight-web-editor, creators named in each preset) and Premiere Pro\n//! transition presets on GitHub (wgetgoose/AdobePresets, Deep0902, felipoliver15-hash, Renderdragonorg,\n//! asDJKLFHadjksh, ZenDev-arc). Timing, speed, camera moves, shakes, blurs and flashes only: no footage, no music.\n#![allow(clippy::all)]\nuse crate::preset::{Curve, Ease, Ease::*, Flash, Motion, Preset, Slot};\n\nfn c(k: &[(f64, f64, Ease)]) -> Curve {\n    Curve { keys: k.to_vec() }\n}\n\npub fn all() -> Vec<Preset> {\n    vec![");
-    s.push_str(&presets.iter().map(|p| format!("{}()", fname(p))).collect::<Vec<_>>().join(", "));
-    s.push_str("]\n}\n");
-    for p in presets {
-        s.push_str(&format!("\nfn {}() -> Preset {{\n    Preset {{\n        name: {:?}.into(),\n        w: {},\n        h: {},\n        total: {:.3},\n        song: {},\n        slots: vec![\n",
-            fname(p), p.name, p.w, p.h, p.total,
-            p.song.as_ref().map_or("None".to_string(), |(t, a, b)| format!("Some(({t:?}.into(), {a:.3}, {b:.3}))"))));
-        for sl in &p.slots {
-            s.push_str(&format!("            Slot {{ start: {:.3}, end: {:.3}, speed: {:.3}, zoom: {}, x: {}, y: {}, rot: {}, shake: {}, shake_hz: {:.2}, blur: {}, exposure: {}, saturation: {:.2}, rgb: {}, invert: {}, motion_blur: {} }},\n",
-                sl.start, sl.end, sl.speed, rust_curve(&sl.zoom), rust_curve(&sl.x), rust_curve(&sl.y), rust_curve(&sl.rot), rust_curve(&sl.shake), sl.shake_hz,
-                rust_curve(&sl.blur), rust_curve(&sl.exposure), sl.saturation, sl.rgb, sl.invert, sl.motion_blur));
-        }
-        s.push_str("        ],\n        flashes: vec![\n");
-        for f in &p.flashes {
-            s.push_str(&format!("            Flash {{ start: {:.3}, end: {:.3}, color: {:?}.into(), opacity: {}, blink: {} }},\n", f.start, f.end, f.color, rust_curve(&f.opacity), f.blink));
-        }
-        s.push_str("        ],\n    }\n}\n");
-    }
-    s.push_str("\n/// Camera moves around a cut, from Premiere Pro presets.\npub fn motions() -> Vec<Motion> {\n    vec![\n");
-    for m in motions {
-        s.push_str(&format!("        Motion {{ name: {:?}.into(), dur: {:.3}, cut: {:.3}, zoom: {}, x: {}, y: {}, rot: {}, blur: {} }},\n",
-            m.name, m.dur, m.cut, rust_curve(&m.zoom), rust_curve(&m.x), rust_curve(&m.y), rust_curve(&m.rot), rust_curve(&m.blur)));
-    }
-    s.push_str("    ]\n}\n");
-    s
 }
 
 /// The ffmpeg chain for one slot's footage, already cut to `len` seconds at the slot's speed. Labels use `p`.
@@ -491,7 +624,7 @@ pub fn moves(p: &str, w: u32, h: u32, x: &str, y: &str, rot: &str) -> String {
 
 /// A camera move around a cut, from a Premiere Pro preset: the outgoing shot plays the part before `cut`
 /// seconds, the incoming one the rest. Curves run over `dur` seconds.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Motion {
     pub name: String,
     pub dur: f64,
@@ -540,6 +673,14 @@ mod tests {
     }
 
     #[test]
+    fn easing_as_words() {
+        let c = Curve { keys: vec![(0.0, 1.0, Ease::Linear), (0.5, 2.0, Ease::Out(2.9))] };
+        assert_eq!(serde_json::to_string(&c).unwrap(), r#"[[0.0,1.0,"linear"],[0.5,2.0,"out 2.9"]]"#);
+        assert_eq!(serde_json::from_str::<Curve>(r#"[[0,1,"inout 3"],[1,2,"linear"]]"#).unwrap().keys[0].2, Ease::InOut(3.0));
+        assert!(serde_json::from_str::<Curve>(r#"[[0,1,"bounce"]]"#).is_err());
+    }
+
+    #[test]
     fn curves_match_their_expressions() {
         let c = Curve { keys: vec![(0.2, 1.0, Ease::Linear), (0.6, 2.0, Ease::Out(2.0)), (1.0, 1.5, Ease::Linear)] };
         assert_eq!((c.at(0.0), c.at(0.2), c.at(1.0)), (1.0, 1.0, 1.5));
@@ -585,7 +726,7 @@ mod tests {
         assert_eq!((b.x.at(0.0), b.x.at(1.0)), (1.0, 0.0)); // slides in from one frame to the right
         assert!(b.blur.at(0.0) > 0.99 && b.blur.at(1.0) == 0.0);
         assert_eq!((p.flashes[0].color.as_str(), p.flashes[0].blink), ("ffffff", false));
-        assert_eq!(p.song, Some(("Montagem Royal - Slowed & Reverb".into(), 6.484, 0.0)));
+        assert_eq!(p.song, Some(Song { title: "Montagem Royal - Slowed & Reverb".into(), from: 6.484 }));
         assert!(parse("<nope/>", "x").is_err() && parse("garbage", "x").is_err());
     }
 
@@ -597,8 +738,14 @@ mod tests {
         assert!(a.ends_with("trim=duration=1.000,setpts=PTS-STARTPTS[v0];"), "{a}");
         let b = chain(&p.slots[1], 1, 1080, 1200, 0.5, 1.0);
         assert!(b.contains("gblur=sigma=14:enable=") && b.contains("crop=1080:1200:x='1080-(") && !b.contains("zoompan"), "{b}");
-        let src = to_rust(std::slice::from_ref(&p), &[]);
-        assert!(src.contains("fn p0_t() -> Preset {") && src.contains("Slot { start: 0.000, end: 1.000, speed: 3.000, zoom: c(&[(0.0000, 1.6000, Linear), (0.5000, 1.0000, Out(") && src.contains("Some((\"Montagem Royal - Slowed & Reverb\".into(), 6.484, 0.000))"), "{src}");
+        // a preset survives being written out as JSON and read back
+        let back: Preset = serde_json::from_str(&serde_json::to_string_pretty(&p).unwrap()).unwrap();
+        assert_eq!((back.slots.len(), back.slots[0].zoom.clone(), back.song.clone()), (2, p.slots[0].zoom.clone(), p.song.clone()));
+        let calm = p.clone().with_intensity(0.5);
+        assert_eq!((calm.slots[0].zoom.at(0.0), calm.slots[1].x.at(0.0)), (1.3, 0.5));
+        let fitted = p.clone().fit_to(&[0.0, 0.9, 1.2]);
+        assert_eq!(fitted.slots[1].start, 0.9);
+        assert_eq!(slug("ʟɪᴋᴋ ᴘʀᴇꜱᴇᴛ #33"), "33");
         let fl = flashes(&p);
         assert!(fl.starts_with(",drawbox=x=0:y=0:w=iw:h=ih:t=fill:color=0xffffff@0.80:enable='between(t,1.000,1.100)*gt("), "{fl}");
     }

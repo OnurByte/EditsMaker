@@ -1,6 +1,6 @@
 [package]
 name = "edits"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Give it a YouTube link, a topic or a file: it downloads, finds the funny moments from viewer signals and cuts captioned edits. One binary."
 repository = "https://github.com/OnurByte/EditsMaker"

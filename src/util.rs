@@ -30,8 +30,9 @@ pub fn run_bytes<S: AsRef<OsStr>>(cmd: &str, args: &[S]) -> Result<Vec<u8>, Stri
 
 /// Runs a shell command line with `input` on stdin (the LLM command is user-configured, so it goes through sh).
 pub fn run_stdin(cmdline: &str, input: &str) -> Result<String, String> {
-    let mut child = Command::new("sh")
-        .args(["-c", cmdline])
+    let (shell, flag) = if cfg!(windows) { ("cmd", "/C") } else { ("sh", "-c") };
+    let mut child = Command::new(shell)
+        .args([flag, cmdline])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
