@@ -15,7 +15,6 @@ pub struct Opts {
     pub lufs: f64,
 }
 
-const RED_BGR: &str = "2A33E5"; // design/tokens.css --cut-red, as ASS wants it (BBGGRR)
 
 pub fn ass_time(t: f64) -> String {
     let cs = (t.max(0.0) * 100.0).round() as u64;
@@ -55,26 +54,6 @@ pub fn chunks(words: &[Word], m: &Moment) -> Vec<(f64, f64, String, bool)> {
     out
 }
 
-pub fn ass(words: &[Word], m: &Moment, o: &Opts) -> String {
-    let size = o.w * 7 / 100;
-    let margin = if o.h > o.w { o.h * 28 / 100 } else { o.h * 10 / 100 }; // above the app UI on vertical video
-    let mut s = format!(
-        "[Script Info]\nScriptType: v4.00+\nPlayResX: {}\nPlayResY: {}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n\
-         [V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n\
-         Style: C,Helvetica,{size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,5,2,2,60,60,{margin},1\n\n\
-         [Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n",
-        o.w, o.h
-    );
-    for (a, b, text, punch) in chunks(words, m) {
-        let (fx, text) = if punch {
-            (format!("{{\\c&H{RED_BGR}&\\fscx95\\fscy95\\t(0,90,\\fscx118\\fscy118)}}"), upper_tr(&text))
-        } else {
-            ("{\\fscx88\\fscy88\\t(0,80,\\fscx100\\fscy100)}".to_string(), text)
-        };
-        s.push_str(&format!("Dialogue: 0,{},{},C,,0,0,0,,{fx}{text}\n", ass_time(a), ass_time(b)));
-    }
-    s
-}
 
 /// Any frame to `o.w` x `o.h`: a crop centred on `focus` (0..1 across), or with layout "fit" the whole frame
 /// over a blurred copy of itself.
@@ -93,39 +72,7 @@ pub fn grade(name: &str) -> String {
     if name.starts_with(",lut3d") { name.to_string() } else { crate::looks::chain(name).to_string() }
 }
 
-/// The video filter chain: reshape to the target, punch in on the punchline, grade, captions, fades.
-/// `focus` is the horizontal centre of the faces (0..1), 0.5 when unknown.
-pub fn filters(m: &Moment, o: &Opts, ass_file: Option<&str>, focus: f64) -> String {
-    let (w, h, dur, punch) = (o.w, o.h, m.end - m.start, m.punch - m.start);
-    let mut f = format!("fps=30,{}", shape(o, focus));
-    f.push_str(&format!(",zoompan=z='if(gte(in_time,{punch:.2}),1.12,1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30"));
-    f.push_str(&grade(&o.grade));
-    if let Some(a) = ass_file {
-        f.push_str(&format!(",ass={a}"));
-    }
-    f.push_str(&format!(",fade=t=in:d=0.12,fade=t=out:st={:.2}:d=0.25,format=yuv420p", (dur - 0.25).max(0.0)));
-    f
-}
 
-/// Cuts one moment into a finished clip. The moment starts `seek` seconds into `video`; `work` holds the subtitle file.
-#[allow(clippy::too_many_arguments)]
-pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, focus: f64, work: &Path, out: &Path) -> Result<(), String> {
-    let dur = m.end - m.start;
-    let ass_file = if o.captions && words.iter().any(|w| w.s >= m.start && w.e <= m.end) {
-        std::fs::write(work.join("cap.ass"), ass(words, m, o)).map_err(|e| e.to_string())?;
-        Some("cap.ass") // relative on purpose: ffmpeg runs in `work`, so the path needs no filter escaping
-    } else {
-        None
-    };
-    let abs = |p: &Path| std::path::absolute(p).map(|p| p.to_string_lossy().into_owned()).map_err(|e| e.to_string());
-    let af = format!("afade=t=in:d=0.05,afade=t=out:st={:.2}:d=0.25,loudnorm=I={:.1}:TP=-1.5:LRA=11", (dur - 0.25).max(0.0), o.lufs);
-    run(Some(work), "ffmpeg", &[
-        "-v", "error", "-y", "-ss", &format!("{seek:.3}"), "-t", &format!("{dur:.3}"), "-i", &abs(video)?,
-        "-map", "0:v:0", "-map", "0:a:0?", "-vf", &filters(m, o, ass_file, focus), "-af", &af,
-        "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-maxrate", "6M", "-bufsize", "12M",
-        "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", &abs(out)?,
-    ]).map(|_| ())
-}
 
 /// Joins finished clips (same size, fps and codecs) without re-encoding.
 pub fn join(clips: &[std::path::PathBuf], work: &Path, out: &Path) -> Result<(), String> {
@@ -145,9 +92,6 @@ mod tests {
 
     fn w(s: f64, e: f64, t: &str) -> Word {
         Word { s, e, t: t.into() }
-    }
-    fn o() -> Opts {
-        Opts { w: 1080, h: 1920, grade: "bw".into(), captions: true, layout: "fill".into(), lufs: -14.0 }
     }
     fn m() -> Moment {
         Moment { start: 10.0, end: 20.0, punch: 14.0, score: 0.0, title: String::new(), why: String::new() }
@@ -174,20 +118,5 @@ mod tests {
         assert!((c[1].1 - 1.9).abs() < 1e-9); // not held across the 2.7 s silence
     }
 
-    #[test]
-    fn punchline_is_red_and_turkish_uppercase() {
-        let o = o();
-        let a = ass(&[w(14.0, 14.5, "siktir"), w(14.5, 15.0, "git")], &m(), &o);
-        assert!(a.contains("PlayResX: 1080") && a.contains("Style: C,Helvetica,75,"), "{a}");
-        assert!(a.contains("Dialogue: 0,0:00:04.00,0:00:05.60,C,,0,0,0,,{\\c&H2A33E5&") && a.ends_with("SİKTİR GİT\n"), "{a}");
-    }
 
-    #[test]
-    fn filter_chain() {
-        let f = filters(&m(), &o(), Some("cap.ass"), 0.7);
-        assert!(f.starts_with("fps=30,crop=w='min(iw,ih*1080/1920)':h='min(ih,iw*1920/1080)':x='max(0,min(iw-ow,iw*0.700-ow/2))',scale=1080:1920"), "{f}");
-        assert!(f.contains("gte(in_time,4.00)") && f.contains(",hue=s=0,") && f.contains(",ass=cap.ass,fade=t=in") && f.contains("st=9.75"), "{f}");
-        let fit = filters(&m(), &Opts { grade: "none".into(), layout: "fit".into(), ..o() }, None, 0.5);
-        assert!(!fit.contains("ass=") && fit.contains("boxblur") && fit.contains("[bg][fg]overlay"), "{fit}");
-    }
 }

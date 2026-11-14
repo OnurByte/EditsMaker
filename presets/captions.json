@@ -1,0 +1,8 @@
+[
+  {"name": "hormozi", "about": "bold white capitals, the said word in yellow, three at a time", "font": "Adwaita Sans Black", "size": 0.075, "color": "#FFFFFF", "highlight": "#FFE600", "outline": 7, "shadow": 2, "upper": true, "words": 3, "position": 0.24, "pop": true},
+  {"name": "mrbeast", "about": "huge, one or two words, thick outline, the said word in green", "font": "Adwaita Sans Black", "size": 0.1, "color": "#FFFFFF", "highlight": "#2BFF4A", "outline": 10, "shadow": 4, "upper": true, "words": 2, "position": 0.3, "pop": true},
+  {"name": "karaoke", "about": "a calm line of up to six words, the said word in cyan", "font": "Adwaita Sans", "size": 0.055, "color": "#FFFFFF", "highlight": "#3EE6FF", "outline": 4, "shadow": 2, "upper": false, "words": 6, "position": 0.2, "pop": false},
+  {"name": "box", "about": "white words on a black box, the said word in red", "font": "Adwaita Sans Black", "size": 0.06, "color": "#FFFFFF", "highlight": "#FF4040", "punch": "#FFE600", "outline": 0, "outline_color": "#000000", "boxed": true, "upper": false, "words": 4, "position": 0.22, "pop": false},
+  {"name": "minimal", "about": "small and quiet, low on the frame", "font": "Adwaita Sans", "size": 0.045, "color": "#F4F1EA", "highlight": "#FFFFFF", "outline": 2, "shadow": 3, "upper": false, "words": 5, "position": 0.12, "pop": false},
+  {"name": "neon", "about": "pink glow, the said word in electric blue", "font": "Adwaita Sans Black", "size": 0.075, "color": "#FF4FD8", "highlight": "#4FC3FF", "outline": 5, "outline_color": "#2A0033", "shadow": 0, "upper": true, "words": 3, "position": 0.24, "pop": true}
+]

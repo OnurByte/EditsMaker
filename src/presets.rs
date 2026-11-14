@@ -27,7 +27,7 @@ fn files() -> Vec<(String, String)> {
 
 pub fn all() -> Vec<Preset> {
     let mut out: Vec<Preset> = vec![];
-    for (file, text) in files().into_iter().filter(|(n, _)| n != "moves.json") {
+    for (file, text) in files().into_iter().filter(|(n, _)| n != "moves.json" && n != "captions.json") {
         match serde_json::from_str::<Preset>(&text) {
             Ok(p) => {
                 out.retain(|o| o.name != p.name);
@@ -38,6 +38,11 @@ pub fn all() -> Vec<Preset> {
     }
     out.sort_by_key(|p| p.name.to_lowercase());
     out
+}
+
+/// A data file by name (saved one first, else built in): moves.json, captions.json.
+pub fn file(name: &str) -> Option<String> {
+    files().into_iter().rfind(|(n, _)| n == name).map(|x| x.1)
 }
 
 /// The cut moves, read once.
@@ -56,7 +61,9 @@ mod tests {
     fn built_in_presets_read() {
         // every shipped file parses
         for (name, text) in super::BUILT_IN {
-            if *name == "moves.json" {
+            if *name == "captions.json" {
+                serde_json::from_str::<Vec<crate::talk::CaptionStyle>>(text).unwrap();
+            } else if *name == "moves.json" {
                 serde_json::from_str::<Vec<crate::preset::Motion>>(text).unwrap();
             } else {
                 serde_json::from_str::<crate::preset::Preset>(text).unwrap_or_else(|e| panic!("{name}: {e}"));

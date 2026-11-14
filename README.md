@@ -88,10 +88,16 @@ A sad music montage without a preset:
 edits https://www.youtube.com/@channel --music song.mp3 --sad
 ```
 
-Talking clips with captions from one video:
+Talking clips: pauses cut, word-by-word captions, a hook on top, music under the voice:
 
 ```sh
-edits https://www.youtube.com/watch?v=VIDEO_ID
+edits https://www.youtube.com/@channel -n 3 --captions hormozi --bed trend:7
+```
+
+Caption styles: hormozi, mrbeast, karaoke, box, minimal, neon:
+
+```sh
+edits https://www.youtube.com/watch?v=VIDEO_ID --captions mrbeast
 ```
 
 What is trending on TikTok:

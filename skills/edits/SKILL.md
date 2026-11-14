@@ -23,9 +23,20 @@ edits <link|channel|topic|file> --preset yuraprst --music trend:3 --look tealora
 - `--intensity 0.5` calmer, `2` wilder. `--tag @name` signs it.
 - For a channel: `--videos 12 --use 4` reads every video's captions first and downloads only the best four.
 
+Talking clips (a speaker's best moments, cut tight, captioned) are good too:
+
+```sh
+edits <link|channel> -n 3 --aspect 9:16 --captions hormozi --bed trend:7
+```
+
+- Pauses are cut out (jump cuts) and every other cut punches in; the punchline punches in harder with a boom.
+- `--captions`: hormozi, mrbeast, karaoke, box, minimal, neon (JSON in presets/captions.json, change freely).
+- `--bed SONG`: music under the voice, ducked while they talk. A hook line shows on top for the first seconds.
+- `--no-jumpcuts`, `--no-sfx`, `--no-hook`, `--no-captions` turn parts off.
+- Screen recordings with no face keep the whole frame over a blurred copy; faces are cropped around.
+
 Other kinds, when asked for:
 - Music montage with no preset: `--music SONG` (add `--sad` for slow, black-and-white, dissolves).
-- Talking clips with captions from a video's funniest moments: just `edits <link>`.
 - A speaker's line over the edit: `--voice`, or `--say VIDEO@FROM-TO` to choose it. These rarely beat preset edits.
 
 ## After rendering

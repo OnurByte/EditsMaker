@@ -10,6 +10,7 @@ mod presets;
 mod render;
 mod signals;
 mod study;
+mod talk;
 mod transcribe;
 mod util;
 
@@ -87,6 +88,12 @@ struct Cli {
     voice: bool,
     /// VIDEO@SECONDS: the passages to use, by hand
     say: Vec<String>,
+    /// talking clips: caption style, jump cuts, sound effects, hook line, music bed
+    caption_style: String,
+    jumpcuts: bool,
+    sfx: bool,
+    hook: bool,
+    bed: Option<String>,
 }
 
 fn size(aspect: &str) -> Option<(u32, u32)> {
@@ -101,7 +108,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -146,6 +153,14 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--length" => c.look.length = val("--length")?.parse().ok().filter(|l| (6.0..=90.0).contains(l)).ok_or("--length must be 6-90 seconds")?,
             "--tag" => c.look.tag = montage::clean_tag(&val("--tag")?),
             "--text" => c.look.text = val("--text")?.chars().take(60).collect(),
+            "--captions" => {
+                c.caption_style = val("--captions")?;
+                talk::style(&c.caption_style)?;
+            }
+            "--no-jumpcuts" => c.jumpcuts = false,
+            "--no-sfx" => c.sfx = false,
+            "--no-hook" => c.hook = false,
+            "--bed" => c.bed = Some(val("--bed")?),
             "--no-captions" => c.opts.captions = false,
             "--no-llm" => c.llm = false,
             "--join" => c.join = true,
@@ -197,7 +212,7 @@ fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
 }
 
 /// Downloads the picture for one moment and renders it.
-fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, out: &Path) -> Result<serde_json::Value, String> {
+fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, cache: &Path, out: &Path) -> Result<serde_json::Value, String> {
     let (video, seek) = fetch::clip(&a.src, m.start, m.end)?;
     let (w, h) = fetch::dims(&video);
     let focus = if c.opts.layout == "fill" { face::center_x(&video, seek, m.end - m.start, w, h) } else { None };
@@ -209,7 +224,25 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, out: &Path) -> Result<serde_json
     if focus.is_none() && w * opts.h > h * opts.w {
         opts.layout = "fit".into();
     }
-    render::render(&video, seek, m, &a.words, &opts, focus.unwrap_or(0.5), &work, out)?;
+    // the hook: the model's title for the moment, else its first words
+    // its first sentence, if short enough to read in a glance
+    let mut first: Vec<&str> = vec![];
+    for w in a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end) {
+        first.push(&w.t);
+        if w.t.ends_with(['.', '?', '!']) || first.len() == 9 {
+            break;
+        }
+    }
+    let first = first.join(" ");
+    let hook = c.hook.then(|| if m.title.trim().is_empty() { first } else { m.title.clone() });
+    let t = talk::Talk {
+        captions: if opts.captions { Some(talk::style(&c.caption_style)?) } else { None },
+        jumpcuts: c.jumpcuts,
+        sfx: c.sfx,
+        hook,
+        bed: bed.cloned(),
+    };
+    talk::render(&video, seek, m, &a.words, &opts, &t, focus.unwrap_or(0.5), cache, &work, out)?;
     let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
     let side = serde_json::json!({ "clip": out, "source": a.src.title, "id": a.src.id, "moment": m, "text": text, "framed_on_faces": focus.is_some() });
     std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
@@ -254,16 +287,33 @@ fn make(args: &[String]) -> Result<(), String> {
     };
     lap("analysed");
 
+    // a music bed under the talking: the song's loudest stretch
+    let bed_song = match &c.bed {
+        Some(b) => Some(montage::song(&fetch::music(b)?, cache)?),
+        None => None,
+    };
+    let bed_track = bed_song.as_ref().map(|s| (s.file.clone(), montage::windows(&s.beats, &s.loud, 60.0, 1).first().copied().unwrap_or(0.0)));
+    let bed = bed_track.as_ref();
     // only the best moments overall get their picture downloaded and rendered, four at a time
     let mut best: Vec<(&Analysed, &pick::Moment)> = analysed.iter().flat_map(|a| a.moments.iter().map(move |m| (a, m))).collect();
     best.sort_by(|a, b| b.1.score.total_cmp(&a.1.score));
+    // the best moment of each video first, then seconds: three clips from three videos beat three from one
+    let mut seen: Vec<String> = vec![];
+    let (firsts, rest): (Vec<_>, Vec<_>) = best.into_iter().partition(|(a, _)| {
+        let new = !seen.contains(&a.src.id);
+        if new {
+            seen.push(a.src.id.clone());
+        }
+        new
+    });
+    let mut best: Vec<_> = firsts.into_iter().chain(rest).collect();
     best.truncate(c.n);
     let jobs: Vec<(PathBuf, &Analysed, &pick::Moment)> = best.iter().enumerate()
         .map(|(k, (a, m))| (c.out.join(format!("{:02}-{}.mp4", k + 1, fetch::safe(&a.src.id))), *a, *m)).collect();
     let mut clips: Vec<PathBuf> = vec![];
     for batch in jobs.chunks(4) {
         let done: Vec<_> = std::thread::scope(|s| {
-            let running: Vec<_> = batch.iter().map(|(out, a, m)| s.spawn(move || cut(a, m, c, out))).collect();
+            let running: Vec<_> = batch.iter().map(|(out, a, m)| s.spawn(move || cut(a, m, c, bed, cache, out))).collect();
             running.into_iter().map(|j| j.join().unwrap_or_else(|_| Err("render thread crashed".into()))).collect()
         });
         for ((out, _, m), res) in batch.iter().zip(done) {
