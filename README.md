@@ -95,7 +95,15 @@ Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `
 cargo install --git https://github.com/OnurByte/EditsMaker
 ```
 
-Only cut what you have the rights to: songs, footage and presets belong to their makers. Public domain
-([Unlicense](LICENSE)); the face model is [rustface](https://github.com/atomashpolskiy/rustface)'s (BSD-2).
+Only cut what you have the rights to: songs, footage and presets belong to their makers.
+
+</details>
+
+<details>
+<summary><b>Contributing</b></summary>
+
+Fixes, presets and looks are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+[MIT](LICENSE). The face model is [rustface](https://github.com/atomashpolskiy/rustface)'s (BSD-2).
 
 </details>

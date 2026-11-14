@@ -8,7 +8,7 @@ homepage = "https://github.com/OnurByte/EditsMaker"
 readme = "README.md"
 keywords = ["video-editor", "tiktok", "shorts", "ffmpeg", "mcp"]
 categories = ["command-line-utilities", "multimedia::video"]
-license = "Unlicense"
+license = "MIT"
 
 [dependencies]
 regex = "1"
