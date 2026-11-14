@@ -101,6 +101,45 @@ pub fn best_title(want: &str, titles: &[String]) -> Option<usize> {
     }).map(|x| x.0)
 }
 
+/// "Artist - Title" rows of a kworb.net TikTok chart page, in chart order.
+pub fn parse_chart(html: &str) -> Vec<String> {
+    let row = regex::Regex::new(r"(?s)<tr>(.*?)</tr>").unwrap();
+    let cell = regex::Regex::new(r"(?s)<td[^>]*>(.*?)</td>").unwrap();
+    let tag = regex::Regex::new(r"<[^>]+>").unwrap();
+    let unescape = |t: &str| t.replace("&amp;", "&").replace("&#39;", "'").replace("&quot;", "\"").replace("&lt;", "<").replace("&gt;", ">");
+    row.captures_iter(html).filter_map(|r| {
+        cell.captures_iter(&r[1]).map(|c| unescape(tag.replace_all(&c[1], "").trim())).filter(|t| t.contains(" - ")).max_by_key(|t| t.len())
+    }).collect()
+}
+
+/// What is trending on TikTok in a country right now (two-letter code), from kworb.net's public chart.
+pub fn trends(country: &str) -> Result<Vec<String>, String> {
+    let cc: String = country.chars().filter(|c| c.is_ascii_alphabetic()).take(2).collect::<String>().to_lowercase();
+    let html = run(None, "curl", &["-fsSL", "--max-time", "20", "-A", "Mozilla/5.0", &format!("https://kworb.net/charts/tiktok/{cc}.html")])
+        .map_err(|e| format!("could not read the TikTok chart for \"{cc}\": {e}"))?;
+    let list = parse_chart(&html);
+    if list.is_empty() {
+        return Err(format!("the TikTok chart for \"{cc}\" had no songs"));
+    }
+    Ok(list)
+}
+
+/// `--music trend`, `trend:3` or `trend:us:3`: the song at that place on TikTok's chart, found on YouTube.
+/// Anything else is passed through.
+pub fn music(spec: &str) -> Result<String, String> {
+    let Some(rest) = spec.strip_prefix("trend") else { return Ok(spec.to_string()) };
+    let parts: Vec<&str> = rest.split(':').filter(|p| !p.is_empty()).collect();
+    let (cc, n) = match parts[..] {
+        [] => ("tr", 1),
+        [x] => x.parse().map_or((x, 1), |n| ("tr", n)),
+        [c, x, ..] => (c, x.parse().unwrap_or(1)),
+    };
+    let list = trends(cc)?;
+    let song = list.get(n.max(1) - 1).ok_or(format!("the chart has {} songs", list.len()))?;
+    eprintln!("edits: trending #{n} in {cc}: {song}");
+    find_song(song)
+}
+
 /// A song by name: the YouTube result whose title matches it best (the first result alone varies between calls).
 pub fn find_song(title: &str) -> Result<String, String> {
     let out = yt(&["--no-warnings", "--flat-playlist", "--print", "%(title)s\t%(webpage_url,url)s", "--", &format!("ytsearch8:{title}")])?;
@@ -293,6 +332,16 @@ mod tests {
         assert!(preview_score(&p(50000.0, 3000.0, 500.0)) > preview_score(&p(50000.0, 3000.0, 3000.0)));
         assert!(preview_score(&p(0.0, 0.0, 0.0)).is_finite());
         assert_eq!(screen(vec![("a".into(), "u".into())], 3, Path::new("/nonexistent"), "tr", false).len(), 1);
+    }
+
+    #[test]
+    fn reads_a_tiktok_chart() {
+        let html = "<table><tr><th>Pos</th><th>Artist - Title</th></tr>\
+            <tr><td>1</td><td>+2</td><td><a href='x'>Ravi İncigöz - Maşallah</a></td><td>9</td></tr>\
+            <tr><td>2</td><td>=</td><td>Heijan &amp; Muti - Yansın Geceler</td></tr></table>";
+        assert_eq!(parse_chart(html), vec!["Ravi İncigöz - Maşallah", "Heijan & Muti - Yansın Geceler"]);
+        assert!(parse_chart("<html></html>").is_empty());
+        assert_eq!(music("song.mp3").unwrap(), "song.mp3");
     }
 
     #[test]

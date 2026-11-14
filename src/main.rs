@@ -29,6 +29,10 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
+        Some("trends") => fetch::trends(args.get(1).map_or("tr", String::as_str)).map(|list| {
+            list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
+            println!("\nuse one: --music trend:N  (another country: --music trend:us:N)");
+        }),
         Some("rate") => rate(&args[1..]),
         Some("preset") => match (args.get(1).map(String::as_str), args.get(2)) {
             (Some("to-rust"), Some(_)) => to_rust(&args[2..]),
@@ -314,7 +318,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     lap(&format!("preset {}: {} shots in {:.1}s, {}x{}, {} flashes{}", p.name, p.slots.len(), p.total, p.w, p.h, p.flashes.len(),
         p.song.as_ref().map(|s| format!(", song \"{}\"", s.0)).unwrap_or_default()));
     let music = match (&c.music, &p.song) {
-        (Some(m), _) => m.clone(),
+        (Some(m), _) => fetch::music(m)?,
         (None, Some(s)) => fetch::find_song(&s.0)?,
         (None, None) => return Err("this preset names no song: give one with --music".into()),
     };
@@ -430,7 +434,11 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
             t.joins.iter().filter(|j| j.kind == "fadewhite").count(), t.joins.iter().filter(|j| j.kind == "fadeblack").count(), t.grade, t.aspect));
     }
     let look = montage::Look { punch: !c.look.sad && template.is_none(), ..c.look.clone() };
-    let music = template.as_ref().map(|t| t.music.to_string_lossy().into_owned()).or(c.music.clone()).ok_or("--music or --like is needed")?;
+    let music = match (&template, &c.music) {
+        (Some(t), _) => t.music.to_string_lossy().into_owned(),
+        (None, Some(m)) => fetch::music(m)?,
+        (None, None) => return Err("--music or --like is needed".into()),
+    };
     let local = Path::new(&c.input).is_file();
     let (song, videos) = std::thread::scope(|s| {
         let song = s.spawn(|| montage::song(&music, cache));

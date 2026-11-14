@@ -517,7 +517,10 @@ pub fn flashes(p: &Preset) -> String {
         let dur = (f.end - f.start).max(0.01);
         let on = format!("between(t,{:.3},{:.3})*gt({},0.3)", f.start, f.end, f.opacity.expr(&format!("(t-{:.3})", f.start), dur));
         let blink = if f.blink { "*lt(mod(t*12,1),0.5)" } else { "" };
-        format!(",drawbox=x=0:y=0:w=iw:h=ih:t=fill:color=0x{}@{:.2}:enable='{on}{blink}'", f.color, (f.opacity.max() * 0.8).clamp(0.1, 0.85))
+        // white and black flashes hit full; coloured ones were blended in the app (screen, add), so they tint
+        let plain = matches!(f.color.to_lowercase().as_str(), "ffffff" | "000000");
+        let alpha = (f.opacity.max() * if plain { 0.8 } else { 0.4 }).clamp(0.1, 0.85);
+        format!(",drawbox=x=0:y=0:w=iw:h=ih:t=fill:color=0x{}@{alpha:.2}:enable='{on}{blink}'", f.color)
     }).collect()
 }
 

@@ -90,6 +90,9 @@ bleach, neon, matrix, sunset, pop, none) and `--lut file.cube` brings your own. 
 the music: a voiced edit stays black and white until the drop, and the hardest hits flash to black and white or
 negative.
 
+**What is trending:** `edits trends` lists TikTok's current chart for Türkiye (`edits trends us` for another
+country, from kworb.net), and `--music trend:3` cuts the edit to the third song on it, found on YouTube.
+
 **Frame:** `--aspect` 9:16, 4:5, 1:1, 3:4, 4:3, 16:9, 21:9, or any `--size 1080x1350`.
 
 **Reading before downloading:** for a channel or topic, `--videos 12 --use 4` reads all twelve videos' captions

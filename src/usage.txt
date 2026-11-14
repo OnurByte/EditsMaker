@@ -6,10 +6,12 @@ USAGE
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
   edits preset list            the built-in presets
   edits preset to-rust <zip|xml|dir>   convert Alight Motion projects into src/presets.rs (for building them in)
+  edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
 
 OPTIONS
-      --music SONG    make music edits: the footage's best shots cut on the song's beats (link or file)
+      --music SONG    make music edits: the footage's best shots cut on the song's beats (link, file, or
+                      trend:N for TikTok's Nth trending song, trend:us:N for another country)
       --preset NAME   replay an Alight Motion project over the footage: timing, speed, moves, shakes, flashes, its song
       --like EDIT     copy a reference edit: its music (dialogue removed), cuts, flashes, colour and shape
       --sad           slow cuts, slow motion, crossfades, black and white
