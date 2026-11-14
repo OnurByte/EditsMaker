@@ -60,8 +60,13 @@ The edits people repost: the footage's best shots cut onto a song.
 - **Transitions from the music.** Hard cuts on the beat; on the hardest hits a white flash or a zoom.
   `--sad` dissolves, dips to black on the hardest hits, slows the picture to 80% and turns it black and white.
 - **Every shot moves.** A slow push-in; fast edits land each cut with a quick punch.
-- **`--voice`** puts the speaker's best line over it, the music ducking under the words, with captions:
-  one word at a time in heavy capitals for fast edits, two or three words fading for sad ones.
+- **`--voice`** builds the edit like an editor would: a beat of music, then the speaker's best *whole* passage
+  (sentence to sentence, never cut mid-thought) over the footage they showed while saying it, so words and picture
+  belong together; the music ducks under the words, every beat kicks the picture, and the drop lands as the last
+  word ends: a flash, then the best shots cut on the beat. Captions come word by word in heavy capitals.
+  `--say VIDEO@54.3-67.9` picks the passage by hand; otherwise the model (or viewer signals) chooses.
+- **`--music` can be an edit.** Give it a video you like and its music is used with the dialogue taken out.
+  `--like EDIT` goes further and copies its cut points, flashes, colour and shape.
 - **`--text "THE PROBLEM"`** lays one line over the whole edit, **`--tag`** signs it.
 
 Only publish what you have the rights to: the song and the footage both belong to someone.

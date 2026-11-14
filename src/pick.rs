@@ -1,6 +1,6 @@
 //! Chooses the moments: viewer signals + transcript go to an LLM with the taste file; signals alone are the fallback.
 use crate::signals::{peaks, Hit};
-use crate::transcribe::Line;
+use crate::transcribe::{Line, Word};
 use crate::util::{home, mmss, run_stdin};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -110,6 +110,82 @@ pub fn from_signals(curve: &[f64], n: usize) -> Vec<Moment> {
     }).collect()
 }
 
+/// Sentences as (first word, last word) indexes: a sentence ends on . ? ! … or a pause over 1.2 s.
+pub fn sentences(words: &[Word]) -> Vec<(usize, usize)> {
+    let mut out = vec![];
+    let mut first = 0;
+    for i in 0..words.len() {
+        let end = words[i].t.ends_with(['.', '?', '!', '…']) || words.get(i + 1).is_none_or(|n| n.s - words[i].e > 1.2);
+        if end {
+            out.push((first, i));
+            first = i + 1;
+        }
+    }
+    out
+}
+
+/// Runs of whole sentences lasting `min`..`max` seconds, best first, none overlapping: a line that starts and
+/// finishes, to put over an edit. Ranked by viewer interest; a closing ! or ? counts a little.
+pub fn passages(words: &[Word], curve: &[f64], min: f64, max: f64) -> Vec<Moment> {
+    let sent = sentences(words);
+    let mut cands: Vec<Moment> = vec![];
+    for i in 0..sent.len() {
+        for j in i..sent.len() {
+            let (s, e) = (words[sent[i].0].s, words[sent[j].1].e);
+            if e - s > max {
+                break;
+            }
+            if e - s >= min {
+                let (a, b) = (s as usize, (e.ceil() as usize).min(curve.len()));
+                let interest = if b > a { curve[a..b].iter().sum::<f64>() / (b - a) as f64 } else { 0.0 };
+                let strong = if words[sent[j].1].t.ends_with(['!', '?']) { 0.3 } else { 0.0 };
+                cands.push(Moment { start: (s - 0.05).max(0.0), end: e + 0.25, punch: words[sent[j].0].s, score: interest + strong, title: String::new(), why: String::new() });
+            }
+        }
+    }
+    cands.sort_by(|a, b| b.score.total_cmp(&a.score));
+    let mut out: Vec<Moment> = vec![];
+    for m in cands {
+        if out.iter().all(|o| m.end <= o.start || m.start >= o.end) {
+            out.push(m);
+        }
+    }
+    out
+}
+
+/// The `n` passages that work best over a music edit. The model judges which lines stand on their own and carry
+/// feeling; without one, the ranking stays.
+pub fn choose_passages(cands: &[(String, Moment, String)], n: usize, use_llm: bool) -> Vec<usize> {
+    let fallback: Vec<usize> = (0..cands.len().min(n)).collect();
+    if !use_llm || cands.len() <= n {
+        return fallback;
+    }
+    let mut p = format!(
+        "Bir müzikli edit'in (sad edit / viral edit) üstüne konuşmacının sesi konacak. Aşağıdaki pasajlardan en iyi {n} tanesini seç.\n\
+         İyi pasaj: kendi başına anlaşılır, bağlam istemez, duygusu ya da iddiası güçlü, akılda kalan bir cümleyle biter.\n\
+         Kötü pasaj: yarım fikir, ekrana/linke/aboneliğe/sponsora atıf, teknik talimat listesi.\n\n"
+    );
+    for (i, (title, m, text)) in cands.iter().enumerate() {
+        p.push_str(&format!("[{i}] ({:.0} sn, {title}) {text}\n", m.end - m.start));
+    }
+    p.push_str(&format!("\nSadece JSON dizisi yaz, en iyisi başta, en fazla {n} sayı: [3, 0, 7]\n"));
+    let picked = run_stdin(&llm_cmd(), &p).ok().and_then(|r| {
+        let (a, b) = (r.find('[')?, r.rfind(']')?);
+        serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
+    });
+    match picked {
+        Some(v) => {
+            let mut seen = vec![];
+            v.into_iter().filter(|&i| i < cands.len()).for_each(|i| if !seen.contains(&i) { seen.push(i) });
+            if seen.is_empty() { fallback } else { seen.into_iter().take(n).collect() }
+        }
+        None => {
+            eprintln!("edits: the model did not choose; using viewer signals");
+            fallback
+        }
+    }
+}
+
 pub fn llm_cmd() -> String {
     std::env::var("EDITS_LLM").unwrap_or_else(|_| "claude -p".into())
 }
@@ -171,6 +247,35 @@ mod tests {
         let curve = vec![0.0; 49].into_iter().chain([2.5, 2.5, 0.0]).collect::<Vec<_>>();
         let p = prompt("ZEVK", "başlık", &lines, &curve, &hits, 3);
         assert!(p.contains("ZEVK") && p.contains("[48.0-52.0] buda boynu bükük kalmasın  🔥2.5  yorum(0:49): \"0:49 gariban :D\""), "{p}");
+    }
+
+    #[test]
+    fn passages_are_whole_sentences() {
+        let w = |s: f64, t: &str| Word { s, e: s + 0.4, t: t.into() };
+        let words = [
+            w(0.0, "yani"), w(0.5, "aslında"), w(1.0, "bu."), // sentence 0: 0-1.4
+            w(2.0, "Her"), w(2.5, "şey"), w(3.0, "bitti!"), // sentence 1: 2-3.4
+            w(6.0, "sonra"), w(6.5, "dedim"), // pause after -> sentence 2: 6-6.9
+            w(9.0, "neyse."),
+        ];
+        assert_eq!(sentences(&words), vec![(0, 2), (3, 5), (6, 7), (8, 8)]);
+        let mut curve = vec![0.0; 10];
+        curve[2] = 5.0;
+        curve[3] = 5.0;
+        let p = passages(&words, &curve, 1.0, 4.0);
+        // the best one is the exclaimed sentence where viewers reacted; it starts and ends on sentence edges
+        assert_eq!((p[0].start, p[0].end), (1.95, 3.65));
+        assert!(p.iter().all(|m| m.end - m.start <= 4.0 + 0.3), "{p:?}");
+        assert!(p.windows(2).all(|x| x[0].score >= x[1].score));
+        assert!(passages(&words, &curve, 20.0, 30.0).is_empty());
+    }
+
+    #[test]
+    fn choosing_without_a_model_keeps_the_ranking() {
+        let m = Moment { start: 0.0, end: 5.0, punch: 0.0, score: 0.0, title: String::new(), why: String::new() };
+        let c: Vec<(String, Moment, String)> = (0..5).map(|i| (format!("v{i}"), m.clone(), "x".into())).collect();
+        assert_eq!(choose_passages(&c, 2, false), vec![0, 1]);
+        assert_eq!(choose_passages(&c[..1], 2, true), vec![0]);
     }
 
     #[test]

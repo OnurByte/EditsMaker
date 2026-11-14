@@ -10,9 +10,12 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+#[derive(Clone)]
 /// How an edit moves. `sad`: long shots, slow motion, crossfades, black and white. Otherwise: fast cuts with a punch-in.
 pub struct Look {
     pub sad: bool,
+    /// land every cut with a quick zoom punch (fast edits); off for sad edits and copied references
+    pub punch: bool,
     pub length: f64,
     pub tag: String,
     /// a line shown over the whole edit, like "THE PROBLEM"
@@ -36,7 +39,7 @@ const HOP: usize = 256;
 const N: usize = 1024;
 const TIGHT: f64 = 100.0; // how hard the beat tracker holds the tempo
 
-fn hop_s() -> f64 {
+pub fn hop_s() -> f64 {
     HOP as f64 / SR as f64
 }
 
@@ -166,7 +169,10 @@ pub fn track(env: &[f64], lag: usize) -> Vec<usize> {
 /// Downloads (or takes) the song and finds its beats.
 pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
     let (file, title) = if Path::new(src).is_file() {
-        (PathBuf::from(src), Path::new(src).file_stem().unwrap_or_default().to_string_lossy().into_owned())
+        let title = Path::new(src).file_stem().unwrap_or_default().to_string_lossy().into_owned();
+        // an edit (it has a picture) brings its own dialogue: keep only its music
+        let file = if dims(Path::new(src)).0 > 0 { music_only(Path::new(src), cache)? } else { PathBuf::from(src) };
+        (file, title)
     } else {
         let dir = cache.join("music");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
@@ -199,6 +205,26 @@ pub fn hit_at(beats: &[f64], strength: &[f64], t: f64) -> f64 {
     [i.saturating_sub(1), i.min(beats.len().saturating_sub(1))].iter()
         .min_by(|a, b| (beats[**a] - t).abs().total_cmp(&(beats[**b] - t).abs()))
         .and_then(|&k| strength.get(k).copied()).unwrap_or(0.0)
+}
+
+/// The beat where the music should hit as the voice ends: the one after which it gets loudest relative to before,
+/// with `before` s of song ahead of it (under the voice) and `after` s behind it (the montage).
+pub fn drop_at(beats: &[f64], strength: &[f64], loud: &[f64], before: f64, after: f64) -> Option<f64> {
+    let end = loud.len() as f64 * hop_s();
+    let mean = |a: f64, b: f64| {
+        let (i, j) = ((a / hop_s()).max(0.0) as usize, ((b / hop_s()) as usize).min(loud.len()));
+        if j > i { loud[i..j].iter().sum::<f64>() / (j - i) as f64 } else { 0.0 }
+    };
+    beats.iter().enumerate().filter(|(_, b)| **b >= before && **b + after <= end).map(|(i, &b)| {
+        let lift = mean(b, b + after.min(6.0)) / (mean(b - before.min(6.0), b) + 1e-3);
+        (lift + 0.1 * strength.get(i).copied().unwrap_or(0.0), b)
+    }).max_by(|a, b| a.0.total_cmp(&b.0)).map(|x| x.1)
+}
+
+/// The typical gap between beats.
+pub fn beat_period(beats: &[f64]) -> f64 {
+    let mut gaps: Vec<f64> = beats.windows(2).map(|w| w[1] - w[0]).collect();
+    median(&mut gaps).unwrap_or(0.5)
 }
 
 /// Starts of the `n` loudest stretches of `length` seconds, each on a beat, none overlapping.
@@ -251,6 +277,8 @@ pub struct Shot {
     pub video: usize,
     pub s: f64,
     pub e: f64,
+    /// where the scene this piece belongs to ends: a long piece of an edit can run on into it
+    pub scene_end: f64,
     pub score: f64,
     pub focus: Option<f64>,
 }
@@ -327,7 +355,7 @@ pub fn segment(fs: &[Frame], video: usize) -> Vec<Shot> {
                 let checked = f.iter().filter(|x| x.checked).count().max(1);
                 let faces = xs.len() as f64 / checked as f64;
                 let score = 2.0 * faces + (motion * 25.0).min(1.0) - if luma < 22.0 { 2.0 } else { 0.0 } - if luma > 235.0 { 1.0 } else { 0.0 };
-                out.push(Shot { video, s: a as f64 / FPS, e: e as f64 / FPS, score, focus: median(&mut xs) });
+                out.push(Shot { video, s: a as f64 / FPS, e: e as f64 / FPS, scene_end: (b.min(n - skip)) as f64 / FPS, score, focus: median(&mut xs) });
             }
             a = e;
         }
@@ -337,10 +365,13 @@ pub fn segment(fs: &[Frame], video: usize) -> Vec<Shot> {
 
 /// One shot per piece, each at least `need` seconds of source: the best unused ones, the very best first
 /// as the hook, the rest in story order. Returns (shot, source start) per piece.
-pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64]) -> Vec<(usize, f64)> {
+/// `prefer` (video, from, to): footage shown while the voice was said, so picture and words belong together.
+pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(usize, f64, f64)>) -> Vec<(usize, f64)> {
     let need = needs.iter().cloned().fold(0.0, f64::max);
-    let mut order: Vec<usize> = (0..shots.len()).filter(|&i| shots[i].e - shots[i].s >= need).collect();
-    order.sort_by(|a, b| shots[*b].score.total_cmp(&shots[*a].score));
+    let near = |i: usize| prefer.is_some_and(|(v, a, b)| shots[i].video == v && shots[i].e > a && shots[i].s < b);
+    let score = |i: usize| shots[i].score + if near(i) { 3.0 } else { 0.0 };
+    let mut order: Vec<usize> = (0..shots.len()).filter(|&i| shots[i].scene_end.max(shots[i].e) - shots[i].s >= need).collect();
+    order.sort_by(|a, b| score(*b).total_cmp(&score(*a)));
     if order.iter().filter(|&&i| !used[i]).count() < needs.len() {
         used.iter_mut().for_each(|u| *u = false); // footage ran out: reuse rather than make a short edit
     }
@@ -358,7 +389,8 @@ pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64]) -> Vec<(usize, f
     if pick.len() > 1 {
         pick[1..].sort_by(|a, b| (shots[*a].video, shots[*a].s).partial_cmp(&(shots[*b].video, shots[*b].s)).unwrap());
     }
-    pick.iter().zip(needs).map(|(&i, n)| (i, (shots[i].s + shots[i].e - n) / 2.0)).collect()
+    // centred in its piece when it fits, else from the piece's start on into the rest of the scene
+    pick.iter().zip(needs).map(|(&i, n)| (i, if shots[i].e - shots[i].s >= *n { (shots[i].s + shots[i].e - n) / 2.0 } else { shots[i].s })).collect()
 }
 
 // ---------------------------------------------------------------- the edit
@@ -413,12 +445,16 @@ pub struct Voice {
     pub file: PathBuf,
     pub start: f64,
     pub len: f64,
+    /// where in the edit the voice comes in: on a beat or a cut
+    pub at: f64,
 }
 
 /// Subtitles for an edit as ASS: the spoken words and the `--text` line.
 /// Fast edits: one word at a time, upper case, popping in (like the "EDUCATION" reference).
 /// Sad edits: two or three words, as spoken, fading. The text line: heavy condensed capitals, outlined.
-pub fn captions(words: &[Word], m: Option<&Moment>, text: &str, sad: bool, total: f64, o: &Opts) -> String {
+/// `offset` is where the voice starts in the edit.
+#[allow(clippy::too_many_arguments)]
+pub fn captions(words: &[Word], m: Option<&Moment>, offset: f64, text: &str, sad: bool, total: f64, o: &Opts) -> String {
     let (w, h) = (o.w, o.h);
     let (size, margin) = if sad { (w * 52 / 1000, h * 17 / 100) } else { (w * 85 / 1000, h * 20 / 100) };
     let mut s = format!(
@@ -436,13 +472,13 @@ pub fn captions(words: &[Word], m: Option<&Moment>, text: &str, sad: bool, total
     if let Some(m) = m {
         if sad {
             for (a, b, t, _) in chunks(words, m) {
-                s.push_str(&format!("Dialogue: 0,{},{},W,,0,0,0,,{{\\fad(140,140)}}{}\n", ass_time(a), ass_time(b), clean(&t)));
+                s.push_str(&format!("Dialogue: 0,{},{},W,,0,0,0,,{{\\fad(140,140)}}{}\n", ass_time(a + offset), ass_time(b + offset), clean(&t)));
             }
         } else {
             let ws: Vec<&Word> = words.iter().filter(|x| x.s >= m.start - 0.05 && x.e <= m.end + 0.05).collect();
             for (i, x) in ws.iter().enumerate() {
-                let a = x.s - m.start;
-                let b = ws.get(i + 1).map_or(x.e - m.start + 0.4, |n| (n.s - m.start).min(x.e - m.start + 0.6)).max(a + 0.12);
+                let a = x.s - m.start + offset;
+                let b = ws.get(i + 1).map_or(x.e - m.start + 0.4, |n| (n.s - m.start).min(x.e - m.start + 0.6)).max(x.s - m.start + 0.12) + offset;
                 let t = clean(x.t.trim_matches(|c: char| ",.;:!?\"'".contains(c)));
                 s.push_str(&format!("Dialogue: 0,{},{},W,,0,0,0,,{{\\fscx125\\fscy125\\t(0,90,\\fscx100\\fscy100)}}{}\n", ass_time(a), ass_time(b), upper_tr(&t)));
             }
@@ -452,16 +488,19 @@ pub fn captions(words: &[Word], m: Option<&Moment>, text: &str, sad: bool, total
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], joins: &[Join], total: f64, voice: Option<&Voice>, subs: bool) -> String {
+/// `beats` are the music's beats on the edit's timeline.
+pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], joins: &[Join], beats: &[f64], total: f64, voice: Option<&Voice>, subs: bool) -> String {
     let (w, h, speed) = (o.w, o.h, look.speed());
     let mut g = String::new();
     for (i, (f, (_, len))) in focus.iter().zip(spans).enumerate() {
         // every shot drifts in; fast edits also land each cut with a quick punch and a little motion smear
-        let (zoom, smear) = if look.sad {
-            ("min(1+0.0012*on,1.12)", "")
-        } else {
-            ("if(lt(on,5),1.24-0.048*on,min(1+0.0016*(on-5),1.15))", ",tmix=frames=2")
-        };
+        // every shot drifts in and kicks on each beat that falls inside it; the first kick is the cut itself
+        let kick = if look.punch { 0.08 } else if look.sad { 0.025 } else { 0.05 };
+        let (s0, _) = spans[i];
+        let pulses: String = beats.iter().map(|b| b - s0).filter(|t| *t >= -0.01 && *t < *len).take(40)
+            .map(|t| format!("+{kick}*max(0,1-(it-{:.3})*6)*gte(it,{:.3})", t.max(0.0), t.max(0.0))).collect();
+        let zoom = format!("min(1+0.0012*on,1.12){pulses}");
+        let smear = if look.punch { ",tmix=frames=2" } else { "" };
         let tone = if look.sad {
             ",hue=s=0,eq=contrast=1.22:brightness=-0.05,vignette=PI/4.2,noise=alls=5:allf=t".to_string()
         } else {
@@ -478,7 +517,8 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         g.push_str(&format!("[{last}][v{i}]xfade=transition={}:duration={:.3}:offset={s:.3}[x{i}];", j.kind, j.dur));
         last = format!("x{i}");
     }
-    g.push_str(&format!("[{last}]fade=t=in:d=0.4,fade=t=out:st={:.3}:d=1.2", (total - 1.2).max(0.0)));
+    // one clean 30 fps clock after the transitions, or the encoder drops frames it takes for duplicates
+    g.push_str(&format!("[{last}]settb=1/30,fps=30,fade=t=in:d=0.4,fade=t=out:st={:.3}:d=1.2", (total - 1.2).max(0.0)));
     if subs {
         g.push_str(",ass=cap.ass");
     }
@@ -490,20 +530,138 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
     if let Some(v) = voice {
         // the music ducks whenever the voice speaks, and comes back up in the gaps and after the last word
         g.push_str(&format!(
-            "[mus];[{}:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st={:.3}:d=0.3,asplit[vo][sc];\
-             [mus]aresample=48000[mr];[mr][sc]sidechaincompress=threshold=0.012:ratio=12:attack=15:release=450[duck];\
+            "[mus];[{}:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st={:.3}:d=0.3,adelay=delays={}:all=1,asplit[vo][sc];\
+             [sc]apad[scp];[mus]aresample=48000[mr];[mr][scp]sidechaincompress=threshold=0.012:ratio=12:attack=15:release=450[duck];\
              [duck][vo]amix=inputs=2:normalize=0:duration=first",
-            m + 1, (v.len - 0.3).max(0.0)
+            m + 1, (v.len - 0.3).max(0.0), (v.at * 1000.0).round() as u64
         ));
     }
     g.push_str(&format!(",loudnorm=I={:.1}:TP=-1.5[aout]", o.lufs));
     g
 }
 
+/// A reference edit read as a recipe: where it cuts, how (flash, dip to black, cut), its colour and shape,
+/// and its music with the dialogue taken out.
+pub struct Template {
+    pub music: PathBuf,
+    pub cuts: Vec<f64>,
+    pub joins: Vec<Join>,
+    pub grade: String,
+    pub aspect: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct RefFrame {
+    pub t: f64,
+    pub scene: f64,
+    pub y: f64,
+    pub u: f64,
+    pub v: f64,
+    pub sat: f64,
+}
+
+/// Cut points and joins of a reference from its frames: hard cuts where the picture jumps, white flashes where
+/// it peaks near white, dips where it falls to black. Events closer than 0.3 s merge, a flash or a dip winning.
+pub fn structure(fs: &[RefFrame], dur: f64) -> (Vec<f64>, Vec<Join>) {
+    let mut ys: Vec<f64> = fs.iter().map(|f| f.y).collect();
+    let med = median(&mut ys).unwrap_or(100.0);
+    let mut events: Vec<(f64, Join)> = vec![];
+    for (i, f) in fs.iter().enumerate() {
+        let (p, n) = (fs.get(i.wrapping_sub(1)).map_or(f.y, |x| x.y), fs.get(i + 1).map_or(f.y, |x| x.y));
+        let kind = if f.y > 200.0 && f.y - med > 60.0 && f.y >= p && f.y >= n {
+            Some(Join { kind: "fadewhite", dur: 0.3 })
+        } else if f.y < 16.0 && med > 40.0 && f.y <= p && f.y <= n && f.t > 0.5 && f.t < dur - 0.8 {
+            Some(Join { kind: "fadeblack", dur: 0.5 })
+        } else if f.scene > 0.3 {
+            Some(CUT)
+        } else {
+            None
+        };
+        if let Some(j) = kind {
+            match events.last_mut() {
+                Some(last) if f.t - last.0 < 0.3 => {
+                    if last.1 == CUT && j != CUT {
+                        *last = (f.t, j);
+                    }
+                }
+                _ => events.push((f.t, j)),
+            }
+        }
+    }
+    let mut cuts = vec![0.0];
+    let mut joins = vec![CUT];
+    for (t, j) in events {
+        if t > 0.3 && t < dur - 0.3 {
+            cuts.push(t);
+            joins.push(j);
+        }
+    }
+    cuts.push(dur);
+    joins.push(CUT);
+    (cuts, joins)
+}
+
+/// Its look: black and white, teal, darkened or as shot.
+pub fn tone(fs: &[RefFrame]) -> &'static str {
+    let n = fs.len().max(1) as f64;
+    let (sat, u, v) = fs.iter().fold((0.0, 0.0, 0.0), |a, f| (a.0 + f.sat / n, a.1 + f.u / n, a.2 + f.v / n));
+    if sat < 4.5 { "bw" } else if u > 129.0 && v < 127.0 { "teal" } else if sat < 45.0 { "dark" } else { "none" }
+}
+
+/// The music of an edit without its dialogue: speech sits in the middle of the stereo field, music around it,
+/// so the sides are kept when they carry enough. A mono or music-only file comes back as it is.
+pub fn music_only(edit: &Path, cache: &Path) -> Result<PathBuf, String> {
+    let e = edit.to_string_lossy();
+    let level = |af: &str| {
+        let o = Command::new("ffmpeg").args(["-hide_banner", "-i", e.as_ref(), "-vn", "-af", &format!("{af}volumedetect"), "-f", "null", "-"]).output().ok()?;
+        String::from_utf8_lossy(&o.stderr).lines().find_map(|l| l.split("mean_volume:").nth(1)?.trim().trim_end_matches(" dB").parse::<f64>().ok())
+    };
+    let (full, side) = (level(""), level("pan=mono|c0=0.5*c0-0.5*c1,"));
+    if !matches!((full, side), (Some(f), Some(s)) if s > f - 24.0 && s > -45.0) {
+        return Ok(edit.to_path_buf());
+    }
+    let dir = cache.join("music");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let out = dir.join(format!("{}-music.wav", safe(&edit.file_stem().unwrap_or_default().to_string_lossy())));
+    if !out.is_file() {
+        run(None, "ffmpeg", &["-v", "error", "-y", "-i", e.as_ref(), "-vn", "-af", "pan=stereo|c0=c0-c1|c1=c1-c0", "-ar", "48000", &out.to_string_lossy()])?;
+    }
+    Ok(out)
+}
+
+pub fn template(reference: &Path, cache: &Path) -> Result<Template, String> {
+    let r = reference.to_string_lossy();
+    let out = run(None, "ffmpeg", &["-v", "error", "-i", r.as_ref(), "-an", "-vf", "scale=160:-2,select='gte(scene,0)',signalstats,metadata=print:file=-", "-f", "null", "-"])?;
+    let mut fs: Vec<RefFrame> = vec![];
+    for l in out.lines() {
+        if let Some(t) = l.split("pts_time:").nth(1) {
+            fs.push(RefFrame { t: t.trim().parse().unwrap_or(0.0), ..Default::default() });
+        } else if let (Some(f), Some((k, v))) = (fs.last_mut(), l.split_once('=')) {
+            let v: f64 = v.trim().parse().unwrap_or(0.0);
+            match k {
+                "lavfi.scene_score" => f.scene = v,
+                "lavfi.signalstats.YAVG" => f.y = v,
+                "lavfi.signalstats.UAVG" => f.u = v,
+                "lavfi.signalstats.VAVG" => f.v = v,
+                "lavfi.signalstats.SATAVG" => f.sat = v,
+                _ => {}
+            }
+        }
+    }
+    if fs.is_empty() {
+        return Err(format!("{r}: no video frames"));
+    }
+    let dur = crate::fetch::duration(reference)?;
+    let (cuts, joins) = structure(&fs, dur);
+    let music = music_only(reference, cache)?;
+    let (w, h) = dims(reference);
+    Ok(Template { music, cuts, joins, grade: tone(&fs).into(), aspect: crate::study::nearest_aspect(w, h) })
+}
+
 /// One finished edit. `picks` are (video file, source start, focus) per piece, `joins` one per cut.
 /// `work` is the folder ffmpeg runs in; `subs` is the ASS text written there as cap.ass.
 #[allow(clippy::too_many_arguments)]
-pub fn render(picks: &[(PathBuf, f64, f64)], cuts: &[f64], joins: &[Join], song: &Path, song_start: f64, voice: Option<&Voice>, subs: &str, look: &Look, o: &Opts, work: &Path, out: &Path) -> Result<(), String> {
+pub fn render(picks: &[(PathBuf, f64, f64)], cuts: &[f64], joins: &[Join], beats: &[f64], song: &Path, song_start: f64, voice: Option<&Voice>, subs: &str, look: &Look, o: &Opts, work: &Path, out: &Path) -> Result<(), String> {
     let abs = |p: &Path| std::path::absolute(p).map(|p| p.to_string_lossy().into_owned()).map_err(|e| e.to_string());
     let spans = pieces(cuts, joins);
     let total = *cuts.last().unwrap();
@@ -520,10 +678,12 @@ pub fn render(picks: &[(PathBuf, f64, f64)], cuts: &[f64], joins: &[Join], song:
         args.extend(["-ss".into(), format!("{:.3}", v.start), "-t".into(), format!("{:.3}", v.len), "-i".into(), abs(&v.file)?]);
     }
     let focus: Vec<f64> = picks.iter().map(|p| p.2).collect();
-    args.extend(["-filter_complex".into(), filter_graph(o, look, &focus, &spans, joins, total, voice, has_subs), "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
-    args.extend(["-t", &format!("{total:.3}"), "-c:v", "libx264", "-preset", "medium", "-crf", "22", "-maxrate", "6M", "-bufsize", "12M",
+    args.extend(["-filter_complex".into(), filter_graph(o, look, &focus, &spans, joins, beats, total, voice, has_subs), "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
+    args.extend(["-t", &format!("{total:.3}"), "-fps_mode", "cfr", "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "22", "-maxrate", "6M", "-bufsize", "12M",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(abs(out)?);
+    // kept next to the subtitles so a bad edit can be re-run by hand
+    let _ = std::fs::write(work.join("ffmpeg.txt"), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
     run(Some(work), "ffmpeg", &args).map(|_| ())
 }
 
@@ -637,36 +797,71 @@ mod tests {
 
     #[test]
     fn hook_first_then_story_order() {
-        let sh = |s: f64, score: f64| Shot { video: 0, s, e: s + 3.0, score, focus: None };
-        let shots = vec![sh(0.0, 1.0), sh(15.0, 5.0), sh(30.0, 2.0), sh(45.0, 3.0), Shot { e: 61.0, ..sh(60.0, 9.0) }];
+        let sh = |s: f64, score: f64| Shot { video: 0, s, e: s + 3.0, scene_end: s + 3.0, score, focus: None };
+        let shots = vec![sh(0.0, 1.0), sh(15.0, 5.0), sh(30.0, 2.0), sh(45.0, 3.0), Shot { e: 61.0, scene_end: 61.0, ..sh(60.0, 9.0) }];
         let mut used = vec![false; shots.len()];
-        let p = assign(&shots, &mut used, &[2.0, 2.0, 2.0]);
+        let p = assign(&shots, &mut used, &[2.0, 2.0, 2.0], None);
         // the 1 s shot is too short; best is shot 1, then 3 and 2 in time order
         assert_eq!(p, vec![(1, 15.5), (2, 30.5), (3, 45.5)]);
         // only one long-enough shot left unused: start over with the best rather than make a short edit
-        let q = assign(&shots, &mut used, &[2.0, 2.0]);
+        let q = assign(&shots, &mut used, &[2.0, 2.0], None);
         assert_eq!(q.iter().map(|x| x.0).collect::<Vec<_>>(), vec![1, 3]);
         // neighbouring pieces of one scene are not used together
         let near = vec![sh(0.0, 9.0), sh(3.0, 8.0), sh(10.0, 7.0), sh(20.0, 1.0)];
-        let r = assign(&near, &mut [false; 4], &[2.0, 2.0]);
+        let r = assign(&near, &mut [false; 4], &[2.0, 2.0], None);
+        // footage from when the words were said wins over better-looking footage
+        // a 6 s piece fits a 3 s chunk whose scene runs on
+        let long = vec![Shot { scene_end: 9.0, ..sh(0.0, 1.0) }, sh(20.0, 5.0)];
+        assert_eq!(assign(&long, &mut [false; 2], &[6.0], None), vec![(0, 0.0)]);
+        let pair = vec![sh(0.0, 2.5), sh(20.0, 0.5)];
+        let r2 = assign(&pair, &mut [false; 2], &[2.0], Some((0, 19.0, 25.0)));
+        assert_eq!(r2[0].0, 1);
         assert_eq!(r.iter().map(|x| x.0).collect::<Vec<_>>(), vec![0, 3]);
+    }
+
+    #[test]
+    fn the_drop_is_where_it_gets_loud() {
+        let beats: Vec<f64> = (0..40).map(|i| i as f64 * 0.5).collect();
+        let loud: Vec<f64> = (0..(20.0 / hop_s()) as usize).map(|f| if f as f64 * hop_s() >= 12.0 { 1.0 } else { 0.2 }).collect();
+        assert_eq!(drop_at(&beats, &vec![0.0; 40], &loud, 5.0, 4.0), Some(12.0));
+        // no room before it: nothing
+        assert_eq!(drop_at(&beats, &[], &loud, 19.0, 4.0), None);
+    }
+
+    #[test]
+    fn reads_a_reference() {
+        let f = |t: f64, scene: f64, y: f64| RefFrame { t, scene, y, u: 135.0, v: 120.0, sat: 20.0 };
+        let mut fs: Vec<RefFrame> = (0..300).map(|i| f(i as f64 / 30.0, 0.01, 100.0)).collect();
+        fs[60].scene = 0.6; // cut at 2.0
+        for (k, y) in [(119, 150.0), (120, 240.0), (121, 180.0)] {
+            fs[k].y = y; // white flash at 4.0, with the cut it hides
+        }
+        fs[121].scene = 0.5;
+        fs[180].y = 5.0; // dip to black at 6.0
+        let (cuts, joins) = structure(&fs, 10.0);
+        assert_eq!(cuts, vec![0.0, 2.0, 4.0, 6.0, 10.0]);
+        assert_eq!(joins.iter().map(|j| j.kind).collect::<Vec<_>>(), vec!["fade", "fade", "fadewhite", "fadeblack", "fade"]);
+        assert_eq!(tone(&fs), "teal");
+        assert_eq!(tone(&[RefFrame { sat: 1.0, ..Default::default() }]), "bw");
     }
 
     #[test]
     fn graph_shapes() {
         let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: false, layout: "fit".into(), lufs: -12.0 };
-        let sad = Look { sad: true, length: 6.0, tag: "@me".into(), text: String::new() };
+        let sad = Look { sad: true, punch: false, length: 6.0, tag: "@me".into(), text: String::new() };
         let cuts = [0.0, 2.0, 4.0];
         let js = joins(&[1.0, 5.0, 1.0], true);
-        let g = filter_graph(&o, &sad, &[0.5, 0.4], &pieces(&cuts, &js), &js, 4.0, None, false);
-        assert!(g.contains("[0:v]setpts=(PTS-STARTPTS)/0.8,fps=30,crop=") && g.contains("[v0][v1]xfade=transition=fadeblack:duration=0.700:offset=1.650[x1];[x1]fade=t=in"), "{g}");
+        let g = filter_graph(&o, &sad, &[0.5, 0.4], &pieces(&cuts, &js), &js, &[], 4.0, None, false);
+        assert!(g.contains("[0:v]setpts=(PTS-STARTPTS)/0.8,fps=30,crop=") && g.contains("[v0][v1]xfade=transition=fadeblack:duration=0.700:offset=1.650[x1];[x1]settb=1/30,fps=30,fade=t=in"), "{g}");
         assert!(g.contains("drawtext=text='@me'") && g.contains("[2:a]afade") && g.contains("loudnorm=I=-12.0") && !g.contains("ass="), "{g}");
-        let hype = Look { sad: false, length: 6.0, tag: String::new(), text: String::new() };
+        let hype = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new() };
         let js = joins(&[0.0, 1.0, 0.0], false);
-        let v = Voice { file: "a.m4a".into(), start: 30.0, len: 1.5 };
-        let g = filter_graph(&o, &hype, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, 2.0, Some(&v), true);
+        let v = Voice { file: "a.m4a".into(), start: 30.0, len: 1.5, at: 0.5 };
+        let g = filter_graph(&o, &hype, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, &[0.0, 0.5, 1.0, 1.5], 2.0, Some(&v), true);
+        // beats kick the picture: piece 1 (from 0.85 s) kicks at 0.15 s and 0.65 s into itself
+        assert!(g.contains("[1:v]") && g.contains("+0.08*max(0,1-(it-0.150)*6)*gte(it,0.150)+0.08*max(0,1-(it-0.650)*6)"), "{g}");
         assert!(g.contains("tmix=frames=2") && g.contains("xfade=transition=fadewhite") && g.contains(",ass=cap.ass") && !g.contains("drawtext"), "{g}");
-        assert!(g.contains("[3:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st=1.200:d=0.3,asplit[vo][sc]") && g.contains("[duck][vo]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-12.0:TP=-1.5[aout]"), "{g}");
+        assert!(g.contains("[3:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st=1.200:d=0.3,adelay=delays=500:all=1,asplit[vo][sc];") && g.contains("[sc]apad[scp]") && g.contains("[duck][vo]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-12.0:TP=-1.5[aout]"), "{g}");
         assert_eq!(clean_tag("@x'; rm -rf"), "@x rm -rf");
     }
 
@@ -676,12 +871,12 @@ mod tests {
         let w = |s: f64, t: &str| Word { s, e: s + 0.3, t: t.into() };
         let words = [w(10.0, "bunu"), w(10.4, "bilmiyordum."), w(11.0, "ama"), w(13.0, "sonra")];
         let m = Moment { start: 10.0, end: 12.0, punch: 11.0, score: 0.0, title: String::new(), why: String::new() };
-        let fast = captions(&words, Some(&m), "the {problem}", false, 8.0, &o);
+        let fast = captions(&words, Some(&m), 0.0, "the {problem}", false, 8.0, &o);
         assert!(fast.contains(",T,,0,0,0,,{\\fad(250,400)}THE PROBLEM\n"), "{fast}");
         assert!(fast.contains("Dialogue: 0,0:00:00.40,0:00:01.00,W,,0,0,0,,{\\fscx125\\fscy125\\t(0,90,\\fscx100\\fscy100)}BİLMİYORDUM\n"), "{fast}");
         assert!(!fast.contains("SONRA"), "{fast}"); // after the line ends
-        let sad = captions(&words, Some(&m), "", true, 8.0, &o);
-        assert!(sad.contains("{\\fad(140,140)}bunu bilmiyordum.") && !sad.contains(",T,,"), "{sad}");
-        assert!(!captions(&[], None, "", true, 8.0, &o).contains("Dialogue:"));
+        let sad = captions(&words, Some(&m), 1.0, "", true, 8.0, &o);
+        assert!(sad.contains("Dialogue: 0,0:00:01.00,") && sad.contains("{\\fad(140,140)}bunu bilmiyordum.") && !sad.contains(",T,,"), "{sad}");
+        assert!(!captions(&[], None, 0.0, "", true, 8.0, &o).contains("Dialogue:"));
     }
 }

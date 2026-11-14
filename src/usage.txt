@@ -8,8 +8,10 @@ USAGE
 
 OPTIONS
       --music SONG    make music edits: the footage's best shots cut on the song's beats (link or file)
+      --like EDIT     copy a reference edit: its music (dialogue removed), cuts, flashes, colour and shape
       --sad           slow cuts, slow motion, crossfades, black and white
-      --voice         the speaker's best line over the music edit, music ducked under it, with captions
+      --voice         the speaker's best whole passage over their own footage, music under it, the drop as it ends, captions
+      --say ID@A-B    use what that video says from A to B seconds (repeat for more edits); implies --voice
       --length S      seconds per music edit (default 18, sad 24)
       --tag TEXT      small signature at the bottom, like @yourname
       --text TEXT     a line over the whole music edit, in heavy capitals ("THE PROBLEM")

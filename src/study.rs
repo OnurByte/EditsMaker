@@ -31,7 +31,7 @@ pub fn load() -> Option<Style> {
     serde_json::from_str(&std::fs::read_to_string(path()).ok()?).ok()
 }
 
-fn nearest_aspect(w: u32, h: u32) -> &'static str {
+pub fn nearest_aspect(w: u32, h: u32) -> &'static str {
     let r = (w.max(1) as f64 / h.max(1) as f64).ln();
     ASPECTS.iter().min_by(|a, b| (r - (a.1 as f64 / a.2 as f64).ln()).abs().total_cmp(&(r - (b.1 as f64 / b.2 as f64).ln()).abs())).unwrap().0
 }
