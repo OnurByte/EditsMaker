@@ -21,13 +21,16 @@ curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh
 irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 ```
 
-Then `edits doctor`. You also need [ffmpeg](https://ffmpeg.org) and [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+Then check what is missing. You also need [ffmpeg](https://ffmpeg.org) and [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+
+```sh
+edits doctor
+```
 
 ### Or ask your agent
 
 ```text
-Install EditsMaker from github.com/OnurByte/EditsMaker, run `edits doctor`, add it as an MCP server
-(`edits mcp`) and install its skills (`edits skills install`).
+Install EditsMaker from github.com/OnurByte/EditsMaker, run "edits doctor", add it as an MCP server with "edits mcp" and install its skills with "edits skills install".
 ```
 
 <picture>
@@ -49,18 +52,88 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 <details>
 <summary><b>Command line</b></summary>
 
-```sh
-edits <link|channel|topic|file> --preset NAME   # replay a preset over the footage
-edits ... --music trend:3                        # TikTok's 3rd trending song (or a link/file)
-edits ... --look tealorange --aspect 4:5         # colour and frame (--size 1080x1350, --lut file.cube)
-edits ... --videos 12 --use 4                    # read 12 videos' captions, download the best 4
-edits ... --intensity 0.6                        # calmer moves (2 = wilder)
-edits ... --music song.mp3 --sad                 # a music montage without a preset
-edits <link>                                     # talking clips with captions
+Replay a preset over a channel's videos:
 
-edits preset list | show NAME | save FILE.json | import <zip|xml|prfpset>
-edits trends [country]    edits looks    edits doctor
-edits mcp                 edits skills install
+```sh
+edits https://www.youtube.com/@channel --preset yuraprst
+```
+
+Cut it to TikTok's 3rd trending song:
+
+```sh
+edits https://www.youtube.com/@channel --preset yuraprst --music trend:3
+```
+
+Colour and frame:
+
+```sh
+edits https://www.youtube.com/@channel --preset yuraprst --look tealorange --aspect 4:5
+```
+
+Read 12 videos' captions, download only the best 4:
+
+```sh
+edits https://www.youtube.com/@channel --preset yuraprst --videos 12 --use 4
+```
+
+Calmer moves (2 is wilder):
+
+```sh
+edits https://www.youtube.com/@channel --preset yuraprst --intensity 0.6
+```
+
+A sad music montage without a preset:
+
+```sh
+edits https://www.youtube.com/@channel --music song.mp3 --sad
+```
+
+Talking clips with captions from one video:
+
+```sh
+edits https://www.youtube.com/watch?v=VIDEO_ID
+```
+
+What is trending on TikTok:
+
+```sh
+edits trends
+```
+
+Colour looks:
+
+```sh
+edits looks
+```
+
+Presets:
+
+```sh
+edits preset list
+```
+
+One preset in full:
+
+```sh
+edits preset show yuraprst
+```
+
+Save a changed preset:
+
+```sh
+edits preset save my-preset.json
+```
+
+Import Alight Motion or Premiere presets:
+
+```sh
+edits preset import presets.zip
+```
+
+Check the tools:
+
+```sh
+edits doctor
 ```
 
 </details>
@@ -69,17 +142,35 @@ edits mcp                 edits skills install
 <summary><b>Presets</b></summary>
 
 30 edits (anime and 9:16 community edits made in Alight Motion) and 36 cut moves (Premiere transitions), kept as
-JSON in [`presets/`](presets). Nothing is fixed: `edits preset show NAME` prints one whole, change shots, speed,
-zooms, shakes, flashes, look or song, then use the file with `--preset file.json` or keep it with
-`edits preset save`. With another song, cuts move onto its beats.
+JSON in [`presets/`](presets). Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
+look or song, then use the file for one edit or save it. With another song, cuts move onto its beats.
+
+```sh
+edits preset show yuraprst > my-preset.json
+```
+
+```sh
+edits https://www.youtube.com/@channel --preset my-preset.json
+```
+
+```sh
+edits preset save my-preset.json
+```
 
 </details>
 
 <details>
 <summary><b>Agents</b></summary>
 
+Add it to Claude Code:
+
 ```sh
-claude mcp add edits -- edits mcp
+claude mcp add edits -s user -- edits mcp
+```
+
+Install the skills:
+
+```sh
 edits skills install
 ```
 
