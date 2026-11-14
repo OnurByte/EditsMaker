@@ -71,6 +71,20 @@ The edits people repost: the footage's best shots cut onto a song.
 
 Only publish what you have the rights to: the song and the footage both belong to someone.
 
+## Presets
+
+```sh
+edits preset list
+edits https://www.youtube.com/@channel --preset megumi --music song.mp4
+```
+
+Edits made in Alight Motion, built into the binary as Rust: each one's shot timing, speed ramps, zooms, slides,
+spins, shakes, blurs and flashes, replayed over your footage with its own song (found on YouTube by name) or
+`--music`. Premiere Pro transition presets are built in the same way and land on the cuts the music hits hardest
+in music edits: spins, whips, slides, zooms, glitches.
+
+New ones are converted with `edits preset to-rust <zip|folder|.xml|.prfpset>... > src/presets.rs` and a rebuild.
+
 ## Why it is fast
 
 It never downloads a whole video. Measured on two 8-minute videos from a channel, three clips out:

@@ -2,6 +2,9 @@ mod face;
 mod fetch;
 mod montage;
 mod pick;
+mod premiere;
+mod preset;
+mod presets;
 mod render;
 mod signals;
 mod study;
@@ -26,6 +29,20 @@ fn main() -> ExitCode {
         }
         Some("doctor") => doctor(),
         Some("rate") => rate(&args[1..]),
+        Some("preset") => match (args.get(1).map(String::as_str), args.get(2)) {
+            (Some("to-rust"), Some(_)) => to_rust(&args[2..]),
+            (Some("list") | None, _) => {
+                for p in presets::all() {
+                    println!("{:<44} {:>2} shots {:>5.1}s {}x{}{}", p.name, p.slots.len(), p.total, p.w, p.h, p.song.as_ref().map(|s| format!("  song: {}", s.0)).unwrap_or_default());
+                }
+                println!("\ncut moves:");
+                for m in presets::motions() {
+                    println!("  {:<70} {:.2}s", m.name, m.dur);
+                }
+                Ok(())
+            }
+            _ => Err("usage: edits preset list | edits preset to-rust <zip|xml|folder|prfpset>... > src/presets.rs".into()),
+        },
         Some("study") => match args.get(1) {
             Some(dir) => study::study(Path::new(dir)),
             None => Err("usage: edits study <folder of edits you like>".into()),
@@ -54,6 +71,8 @@ struct Cli {
     music: Option<String>,
     /// a reference edit to copy: its music, cuts, flashes, colour and shape
     like: Option<String>,
+    /// an Alight Motion project to replay over the footage
+    preset: Option<String>,
     look: montage::Look,
     /// put the speaker's best line over the music edit
     voice: bool,
@@ -73,7 +92,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
+        llm: true, join: false, music: None, like: None, preset: None, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -93,6 +112,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--fit" => c.opts.layout = "fit".into(),
             "--music" => c.music = Some(val("--music")?),
             "--like" => c.like = Some(val("--like")?),
+            "--preset" => c.preset = Some(val("--preset")?),
             "--sad" => c.look.sad = true,
             "--voice" => c.voice = true,
             "--say" => {
@@ -179,6 +199,9 @@ fn make(args: &[String]) -> Result<(), String> {
     std::fs::create_dir_all(&c.out).map_err(|e| e.to_string())?;
     let clock = std::time::Instant::now();
     let lap = |what: &str| eprintln!("edits: [{:>5.1}s] {what}", clock.elapsed().as_secs_f64());
+    if let Some(name) = &c.preset {
+        return make_preset(c, name, cache, &lap);
+    }
     if c.music.is_some() || c.like.is_some() {
         return make_music(c, cache, &lap);
     }
@@ -234,6 +257,108 @@ fn make(args: &[String]) -> Result<(), String> {
         let out = c.out.join("joined.mp4");
         render::join(&clips, cache, &out)?;
         eprintln!("edits: joined {} clips into {}", clips.len(), out.display());
+    }
+    Ok(())
+}
+
+/// The footage to cut from: picture-only downloads (or the file given), and its shots.
+fn footage(c: &Cli, cache: &Path) -> (Vec<(String, PathBuf)>, Vec<montage::Shot>) {
+    let videos: Vec<(String, PathBuf)> = if Path::new(&c.input).is_file() {
+        vec![(c.input.clone(), PathBuf::from(&c.input))]
+    } else {
+        let found = fetch::resolve(&c.input, c.videos).unwrap_or_else(|e| {
+            eprintln!("edits: {e}");
+            vec![]
+        });
+        std::thread::scope(|s| {
+            let jobs: Vec<_> = found.into_iter().map(|(id, url)| s.spawn(move || montage::video_file(&id, &url, cache).map(|f| (id, f)))).collect();
+            jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: skipped a video: {e}")).ok()).collect()
+        })
+    };
+    let shots = std::thread::scope(|s| {
+        let jobs: Vec<_> = videos.iter().enumerate().map(|(i, (_, f))| s.spawn(move || montage::frames(f).map(|fs| montage::segment(&fs, i)))).collect();
+        jobs.into_iter().flat_map(|j| j.join().ok().and_then(|r| r.map_err(|e| eprintln!("edits: {e}")).ok()).unwrap_or_default()).collect()
+    });
+    (videos, shots)
+}
+
+/// An Alight Motion project replayed over the footage: its shot timing, speed ramps, camera moves, shakes,
+/// blurs and flashes, with its own song (found by name) unless --music says otherwise.
+fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
+    let p = preset::load(name)?;
+    lap(&format!("preset {}: {} shots in {:.1}s, {}x{}, {} flashes{}", p.name, p.slots.len(), p.total, p.w, p.h, p.flashes.len(),
+        p.song.as_ref().map(|s| format!(", song \"{}\"", s.0)).unwrap_or_default()));
+    let music = match (&c.music, &p.song) {
+        (Some(m), _) => m.clone(),
+        (None, Some(s)) => fetch::find_song(&s.0)?,
+        (None, None) => return Err("this preset names no song: give one with --music".into()),
+    };
+    let (song, (videos, shots)) = std::thread::scope(|s| {
+        let song = s.spawn(|| montage::song(&music, cache));
+        (song.join().unwrap_or_else(|_| Err("song thread crashed".into())), footage(c, cache))
+    });
+    let song = song?;
+    if shots.is_empty() {
+        return Err("no footage to cut".into());
+    }
+    lap(&format!("song \"{}\"; {} shots from {} video(s)", song.title, shots.len(), videos.len()));
+    // where the song starts: the preset's own offset into its own song, else the loudest stretch
+    let song_from = match (&c.music, &p.song) {
+        (None, Some(s)) => s.1,
+        _ => montage::windows(&song.beats, &song.loud, p.total, 1).first().copied().unwrap_or(0.0),
+    };
+    // one piece per slot, end to end: a slot runs until the next one starts
+    let starts: Vec<f64> = p.slots.iter().enumerate().map(|(i, s)| if i == 0 { 0.0 } else { s.start }).collect();
+    let spans: Vec<(f64, f64)> = (0..p.slots.len()).map(|i| (starts[i], starts.get(i + 1).copied().unwrap_or(p.total))).filter(|(a, b)| b - a > 0.02).collect();
+    let mut opts = c.opts.clone();
+    (opts.w, opts.h) = (p.w, p.h);
+    let mut used = vec![false; shots.len()];
+    let mut made = 0;
+    for k in 0..c.n {
+        let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
+        let needs: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (b - a) * s.speed + 0.2).collect();
+        let picks = montage::assign(&shots, &mut used, &needs, None);
+        if picks.len() < needs.len() {
+            eprintln!("edits: not enough usable shots for edit {}", k + 1);
+            break;
+        }
+        let out = c.out.join(format!("{}-{:02}.mp4", fetch::safe(&p.name), k + 1));
+        let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into()];
+        let mut g = String::new();
+        for (i, (((a, b), s), (shot, from))) in spans.iter().zip(&slots).zip(&picks).enumerate() {
+            args.extend(["-ss".into(), format!("{from:.3}"), "-t".into(), format!("{:.3}", needs[i] + 0.2), "-i".into(), videos[shots[*shot].video].1.to_string_lossy().into_owned()]);
+            g.push_str(&preset::chain(s, i, p.w, p.h, shots[*shot].focus.unwrap_or(0.5), (s.end - s.start).max(b - a)));
+            let _ = a;
+        }
+        let m = spans.len();
+        (0..m).for_each(|i| g.push_str(&format!("[v{i}]")));
+        g.push_str(&format!("concat=n={m}:v=1:a=0,settb=1/30,fps=30{}{},fade=t=out:st={:.3}:d=0.5", render::grade(&opts.grade), preset::flashes(&p), (p.total - 0.5).max(0.0)));
+        if !c.look.tag.is_empty() {
+            g.push_str(&format!(",drawtext=text='{}':font=Adwaita Sans:fontsize=h*0.022:fontcolor=white@0.7:x=(w-tw)/2:y=h*0.94", c.look.tag));
+        }
+        g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=out:st={:.3}:d=0.6,loudnorm=I={:.1}:TP=-1.5[aout]", (p.total - 0.6).max(0.0), opts.lufs));
+        args.extend(["-ss".into(), format!("{song_from:.3}"), "-t".into(), format!("{:.3}", p.total), "-i".into(), song.file.to_string_lossy().into_owned()]);
+        args.extend(["-filter_complex".into(), g, "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
+        args.extend(["-t", &format!("{:.3}", p.total), "-fps_mode", "cfr", "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M",
+            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
+        args.push(std::path::absolute(&out).map_err(|e| e.to_string())?.to_string_lossy().into_owned());
+        let work = cache.join("renders").join(fetch::safe(&p.name));
+        std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
+        let _ = std::fs::write(work.join(format!("ffmpeg-{:02}.txt", k + 1)), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
+        match util::run(Some(&work), "ffmpeg", &args) {
+            Ok(_) => {
+                let side = serde_json::json!({ "clip": out, "preset": p.name, "song": song.title, "song_from": song_from, "seconds": p.total,
+                    "shots": picks.iter().map(|(i, st)| serde_json::json!({ "video": videos[shots[*i].video].0, "from": st })).collect::<Vec<_>>() });
+                std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
+                println!("{side}");
+                made += 1;
+            }
+            Err(e) => eprintln!("edits: {e}"),
+        }
+    }
+    lap(&format!("{made} edit(s) in {}", c.out.display()));
+    if made == 0 {
+        return Err("no edits made".into());
     }
     Ok(())
 }
@@ -415,10 +540,13 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         };
         if template.is_none() && voice.is_some() && joins.len() > 2 {
             // the drop
-            joins[1] = if c.look.sad { montage::Join { kind: "fadeblack", dur: 0.5 } } else { montage::Join { kind: "fadewhite", dur: 0.3 } };
+            joins[1] = if c.look.sad { montage::Join { kind: "fadeblack", dur: 0.5, motion: None } } else { montage::Join { kind: "fadewhite", dur: 0.3, motion: None } };
         }
         if template.is_none() && voice.is_none() {
             cuts.dedup();
+        }
+        if template.is_none() && !c.look.sad {
+            montage::add_moves(&mut joins, k);
         }
         let spans = montage::pieces(&cuts, &joins);
         let needs: Vec<f64> = spans.iter().skip(files.len()).map(|(_, l)| l * look.speed() + 0.25).collect();
@@ -473,6 +601,30 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     if ok == 0 {
         return Err("no edits made".into());
     }
+    Ok(())
+}
+
+/// `edits preset to-rust <sources>`: Alight Motion projects (zip, folder, .xml) and Premiere presets (.prfpset)
+/// as Rust source, merged with the presets already built in.
+fn to_rust(sources: &[String]) -> Result<(), String> {
+    let fresh = std::env::var_os("EDITS_FRESH").is_some();
+    let (mut all, mut moves) = if fresh { (vec![], vec![]) } else { (presets::all(), presets::motions()) };
+    for src in sources {
+        let path = Path::new(src);
+        if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("prfpset")) {
+            let xml = std::fs::read_to_string(path).map_err(|e| format!("{src}: {e}"))?;
+            let found = premiere::parse(&xml, &path.file_stem().unwrap_or_default().to_string_lossy())?;
+            moves.retain(|m| !found.iter().any(|f| f.name == m.name));
+            moves.extend(found);
+        } else {
+            let found = preset::read_all(path)?;
+            all.retain(|p| !found.iter().any(|f| f.name == p.name));
+            all.extend(found);
+        }
+    }
+    all.sort_by_key(|p| p.name.to_lowercase());
+    moves.sort_by(|a, b| a.name.cmp(&b.name));
+    print!("{}", preset::to_rust(&all, &moves));
     Ok(())
 }
 

@@ -4,10 +4,13 @@ USAGE
   edits <youtube-link | topic | video-file> [options]
   edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
+  edits preset list            the built-in presets
+  edits preset to-rust <zip|xml|dir>   convert Alight Motion projects into src/presets.rs (for building them in)
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
 
 OPTIONS
       --music SONG    make music edits: the footage's best shots cut on the song's beats (link or file)
+      --preset NAME   replay an Alight Motion project over the footage: timing, speed, moves, shakes, flashes, its song
       --like EDIT     copy a reference edit: its music (dialogue removed), cuts, flashes, colour and shape
       --sad           slow cuts, slow motion, crossfades, black and white
       --voice         the speaker's best whole passage over their own footage, music under it, the drop as it ends, captions

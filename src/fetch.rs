@@ -84,6 +84,31 @@ pub fn resolve(input: &str, videos: usize) -> Result<Vec<(String, String)>, Stri
     Ok(found)
 }
 
+/// Words of a title, for matching: lower case, letters and digits only.
+fn words(t: &str) -> Vec<String> {
+    t.to_lowercase().split(|c: char| !c.is_alphanumeric()).filter(|w| w.len() > 1).map(String::from).collect()
+}
+
+/// Which of `titles` is the song called `want`: the most of its words, then the fewest extra ones.
+pub fn best_title(want: &str, titles: &[String]) -> Option<usize> {
+    let w = words(want);
+    titles.iter().enumerate().max_by(|(_, a), (_, b)| {
+        let score = |t: &String| {
+            let tw = words(t);
+            (w.iter().filter(|x| tw.contains(x)).count() as f64, -(tw.len() as f64))
+        };
+        score(a).partial_cmp(&score(b)).unwrap()
+    }).map(|x| x.0)
+}
+
+/// A song by name: the YouTube result whose title matches it best (the first result alone varies between calls).
+pub fn find_song(title: &str) -> Result<String, String> {
+    let out = yt(&["--no-warnings", "--flat-playlist", "--print", "%(title)s\t%(webpage_url,url)s", "--", &format!("ytsearch8:{title}")])?;
+    let found: Vec<(String, String)> = out.lines().filter_map(|l| l.split_once('\t')).map(|(t, u)| (t.to_string(), u.to_string())).collect();
+    let titles: Vec<String> = found.iter().map(|f| f.0.clone()).collect();
+    best_title(title, &titles).map(|i| found[i].1.clone()).ok_or(format!("no song found for \"{title}\""))
+}
+
 pub fn local(file: &Path, cache: &Path) -> Result<Source, String> {
     let id = safe(&file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "video".into()));
     let work = cache.join(&id);
@@ -175,6 +200,14 @@ mod tests {
         assert!(listed(&format!("abc\tNA\t{url}"), Some(1800.0)).is_some()); // unknown length is kept
         assert_eq!(listed("abc\t10\tNA", None), None);
         assert_eq!(listed("garbage", None), None);
+    }
+
+    #[test]
+    fn matches_the_song_title() {
+        let t = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let titles = t(&["Raya (Slowed)", "NUEKI, Mc Menor Do Alvorada - MONTAGEM ROYAL (SLOWED)", "MONTAGEM ROYAL (slowed + reverb)"]);
+        assert_eq!(best_title("Montagem Royal - Slowed & Reverb", &titles), Some(2));
+        assert_eq!(best_title("x", &[]), None);
     }
 
     #[test]

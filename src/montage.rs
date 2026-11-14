@@ -290,6 +290,8 @@ pub struct Frame {
     pub luma: f64,
     pub face: Option<f64>,
     pub checked: bool,
+    /// how far from gray the picture is: drawings and photos score high, text slides low
+    pub color: f64,
 }
 
 const FPS: f64 = 4.0;
@@ -303,7 +305,7 @@ pub fn frames(video: &Path) -> Result<Vec<Frame>, String> {
     }
     let h = (AW * sh / sw / 2 * 2).max(2);
     let mut child = Command::new("ffmpeg")
-        .args(["-v", "error", "-i", &video.to_string_lossy(), "-an", "-vf", &format!("fps={FPS},scale={AW}:{h},format=gray"), "-f", "rawvideo", "-"])
+        .args(["-v", "error", "-i", &video.to_string_lossy(), "-an", "-vf", &format!("fps={FPS},scale={AW}:{h},format=yuv420p"), "-f", "rawvideo", "-"])
         .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null())
         .spawn().map_err(|e| format!("ffmpeg: {e}"))?;
     let mut out = child.stdout.take().ok_or("no ffmpeg output")?;
@@ -315,9 +317,11 @@ pub fn frames(video: &Path) -> Result<Vec<Frame>, String> {
     det.set_slide_window_step(4, 4);
     let size = (AW * h) as usize;
     let (mut cur, mut prev) = (vec![0u8; size], vec![0u8; size]);
+    let mut chroma = vec![0u8; size / 2];
     let mut fs: Vec<Frame> = vec![];
-    while out.read_exact(&mut cur).is_ok() {
+    while out.read_exact(&mut cur).is_ok() && out.read_exact(&mut chroma).is_ok() {
         let mut f = Frame { luma: cur.iter().step_by(7).map(|v| *v as f64).sum::<f64>() / (size / 7).max(1) as f64, ..Default::default() };
+        f.color = chroma.iter().step_by(5).map(|v| (*v as f64 - 128.0).abs()).sum::<f64>() / (chroma.len() / 5).max(1) as f64;
         if !fs.is_empty() {
             f.diff = cur.iter().zip(&prev).step_by(3).map(|(a, b)| a.abs_diff(*b) as f64).sum::<f64>() / ((size / 3).max(1) as f64 * 255.0);
         }
@@ -354,7 +358,8 @@ pub fn segment(fs: &[Frame], video: usize) -> Vec<Shot> {
                 let mut xs: Vec<f64> = f.iter().filter_map(|x| x.face).collect();
                 let checked = f.iter().filter(|x| x.checked).count().max(1);
                 let faces = xs.len() as f64 / checked as f64;
-                let score = 2.0 * faces + (motion * 25.0).min(1.0) - if luma < 22.0 { 2.0 } else { 0.0 } - if luma > 235.0 { 1.0 } else { 0.0 };
+                let color = f.iter().map(|x| x.color).sum::<f64>() / f.len() as f64;
+                let score = 2.0 * faces + (motion * 25.0).min(1.0) + (color / 12.0).min(1.5) - if luma < 22.0 { 2.0 } else { 0.0 } - if luma > 235.0 { 1.0 } else { 0.0 };
                 out.push(Shot { video, s: a as f64 / FPS, e: e as f64 / FPS, scene_end: (b.min(n - skip)) as f64 / FPS, score, focus: median(&mut xs) });
             }
             a = e;
@@ -400,9 +405,11 @@ pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(
 pub struct Join {
     pub kind: &'static str,
     pub dur: f64,
+    /// a camera move around this cut, by index into `presets::motions()`
+    pub motion: Option<usize>,
 }
 
-const CUT: Join = Join { kind: "fade", dur: 0.034 };
+pub const CUT: Join = Join { kind: "fade", dur: 0.034, motion: None };
 
 /// One join per cut point, from how hard the music hits there (`hits`, same length as `cuts`).
 /// As in the reference edits: hard cuts on the beat, a white flash or a zoom on the biggest hits;
@@ -418,15 +425,42 @@ pub fn joins(hits: &[f64], sad: bool) -> Vec<Join> {
     let (strong, medium) = ((inner.len() as f64 * 0.15).ceil() as usize, (inner.len() as f64 * 0.35).ceil() as usize);
     for (rank, &i) in inner.iter().enumerate() {
         out[i] = match (sad, rank < strong, rank < medium) {
-            (false, true, _) => Join { kind: "fadewhite", dur: 0.3 },
-            (false, _, true) => Join { kind: "zoomin", dur: 0.2 },
+            (false, true, _) => Join { kind: "fadewhite", dur: 0.3, motion: None },
+            (false, _, true) => Join { kind: "zoomin", dur: 0.2, motion: None },
             (false, _, _) => CUT,
-            (true, true, _) => Join { kind: "fadeblack", dur: 0.7 },
-            (true, _, true) => Join { kind: "dissolve", dur: 0.6 },
-            (true, _, _) => Join { kind: "fade", dur: 0.45 },
+            (true, true, _) => Join { kind: "fadeblack", dur: 0.7, motion: None },
+            (true, _, true) => Join { kind: "dissolve", dur: 0.6, motion: None },
+            (true, _, _) => Join { kind: "fade", dur: 0.45, motion: None },
         };
     }
     out
+}
+
+/// Puts Premiere camera moves on the cuts the music hits: the hardest hits (white flashes) get the biggest moves,
+/// the next ones (zooms) a move instead of the zoom. `k` varies the choice between edits.
+pub fn add_moves(joins: &mut [Join], k: usize) {
+    let all = crate::presets::motions();
+    if all.is_empty() {
+        return;
+    }
+    let mut order: Vec<usize> = (0..all.len()).collect();
+    order.sort_by(|a, b| all[*b].strength().total_cmp(&all[*a].strength()));
+    let (big, small) = order.split_at(order.len().div_ceil(2));
+    let n = joins.len();
+    for (i, j) in joins.iter_mut().enumerate().skip(1).take(n.saturating_sub(2)) {
+        let pool = match j.kind {
+            "fadewhite" => big,
+            "zoomin" => small,
+            _ => continue,
+        };
+        if pool.is_empty() {
+            continue;
+        }
+        j.motion = Some(pool[(k * 7 + i * 3) % pool.len()]);
+        if j.kind == "zoomin" {
+            *j = Join { motion: j.motion, ..CUT };
+        }
+    }
 }
 
 /// (start, length) on the output timeline for each piece between `cuts`; neighbours overlap by their join,
@@ -499,8 +533,31 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         let (s0, _) = spans[i];
         let pulses: String = beats.iter().map(|b| b - s0).filter(|t| *t >= -0.01 && *t < *len).take(40)
             .map(|t| format!("+{kick}*max(0,1-(it-{:.3})*6)*gte(it,{:.3})", t.max(0.0), t.max(0.0))).collect();
-        let zoom = format!("min(1+0.0012*on,1.12){pulses}");
-        let smear = if look.punch { ",tmix=frames=2" } else { "" };
+        // Premiere moves around the cuts at either end of this piece, on the piece's own clock
+        let moves = crate::presets::motions();
+        let incoming = (i > 0).then(|| joins[i].motion.and_then(|k| moves.get(k))).flatten().map(|m| (m, format!("+{:.3}", m.cut - joins[i].dur / 2.0)));
+        let outgoing = (i + 1 < spans.len()).then(|| joins[i + 1].motion.and_then(|k| moves.get(k))).flatten()
+            .map(|m| (m, format!("-{:.3}", len - joins[i + 1].dur / 2.0 - m.cut)));
+        let ends: Vec<_> = incoming.iter().chain(outgoing.iter()).collect();
+        let term = |pick: &dyn Fn(&crate::preset::Motion) -> &crate::preset::Curve, var: &str, op: &str| -> String {
+            ends.iter().filter(|(m, _)| !pick(m).keys.is_empty()).map(|(m, shift)| format!("{op}({})", pick(m).expr(&format!("({var}{shift})"), m.dur))).collect()
+        };
+        let zoom = format!("max(1,(min(1+0.0012*on,1.12){pulses}){})", term(&|m| &m.zoom, "it", "*"));
+        let (mx, my, mr) = (term(&|m| &m.x, "t", "+"), term(&|m| &m.y, "t", "+"), term(&|m| &m.rot, "t", "+"));
+        let mut smear = if look.punch { ",tmix=frames=2".to_string() } else { String::new() };
+        if !(mx.is_empty() && my.is_empty() && mr.is_empty()) {
+            let or0 = |e: &String| if e.is_empty() { "0".to_string() } else { format!("0{e}") };
+            smear.push_str(&crate::preset::moves(&format!("q{i}"), w, h, &or0(&mx), &or0(&my), if mr.is_empty() { "" } else { &mr[1..] }));
+        }
+        // ffmpeg's max takes two arguments: fold them
+        let blur = ends.iter().filter(|(m, _)| !m.blur.keys.is_empty())
+            .fold(String::new(), |acc, (m, shift)| {
+                let e = m.blur.expr(&format!("(t{shift})"), m.dur);
+                if acc.is_empty() { e } else { format!("max({acc},{e})") }
+            });
+        if !blur.is_empty() {
+            smear.push_str(&format!(",gblur=sigma=12:enable='gt({blur},0.25)'"));
+        }
         let tone = if look.sad {
             ",hue=s=0,eq=contrast=1.22:brightness=-0.05,vignette=PI/4.2,noise=alls=5:allf=t".to_string()
         } else {
@@ -569,9 +626,9 @@ pub fn structure(fs: &[RefFrame], dur: f64) -> (Vec<f64>, Vec<Join>) {
     for (i, f) in fs.iter().enumerate() {
         let (p, n) = (fs.get(i.wrapping_sub(1)).map_or(f.y, |x| x.y), fs.get(i + 1).map_or(f.y, |x| x.y));
         let kind = if f.y > 200.0 && f.y - med > 60.0 && f.y >= p && f.y >= n {
-            Some(Join { kind: "fadewhite", dur: 0.3 })
+            Some(Join { kind: "fadewhite", dur: 0.3, motion: None })
         } else if f.y < 16.0 && med > 40.0 && f.y <= p && f.y <= n && f.t > 0.5 && f.t < dur - 0.8 {
-            Some(Join { kind: "fadeblack", dur: 0.5 })
+            Some(Join { kind: "fadeblack", dur: 0.5, motion: None })
         } else if f.scene > 0.3 {
             Some(CUT)
         } else {
@@ -758,7 +815,7 @@ mod tests {
 
     #[test]
     fn crossfaded_pieces_meet_on_the_beat() {
-        let j = |d| Join { kind: "fade", dur: d };
+        let j = |d| Join { kind: "fade", dur: d, motion: None };
         let p = pieces(&[0.0, 2.0, 4.0, 6.0], &[CUT, j(0.4), j(0.4), CUT]);
         let want = [(0.0, 2.2), (1.8, 2.4), (3.8, 2.2)];
         assert!(p.iter().zip(want).all(|(a, b)| (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9), "{p:?}");
@@ -782,7 +839,7 @@ mod tests {
 
     #[test]
     fn shots_from_frames() {
-        let f = |diff: f64, luma: f64, face: Option<f64>| Frame { diff, luma, face, checked: true };
+        let f = |diff: f64, luma: f64, face: Option<f64>| Frame { diff, luma, face, checked: true, color: 0.0 };
         let mut fs = vec![f(0.0, 120.0, None); 100];
         fs.extend(vec![f(0.03, 120.0, Some(0.3)); 40]); // a face, moving
         fs[100].diff = 0.5; // hard cut
