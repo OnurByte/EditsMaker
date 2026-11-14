@@ -1,0 +1,77 @@
+use std::ffi::OsStr;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
+
+/// Runs a program and returns its stdout; a non-zero exit becomes an error carrying the end of stderr.
+pub fn run<S: AsRef<OsStr>>(dir: Option<&Path>, cmd: &str, args: &[S]) -> Result<String, String> {
+    let mut c = Command::new(cmd);
+    c.args(args).stdin(Stdio::null());
+    if let Some(d) = dir {
+        c.current_dir(d);
+    }
+    let out = c.output().map_err(|e| format!("{cmd}: {e}"))?;
+    if !out.status.success() {
+        let err = String::from_utf8_lossy(&out.stderr);
+        let tail: Vec<&str> = err.lines().rev().take(6).collect();
+        return Err(format!("{cmd} failed: {}", tail.into_iter().rev().collect::<Vec<_>>().join(" | ")));
+    }
+    Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+/// Like `run` without a working directory, for binary stdout (raw video frames).
+pub fn run_bytes<S: AsRef<OsStr>>(cmd: &str, args: &[S]) -> Result<Vec<u8>, String> {
+    let out = Command::new(cmd).args(args).stdin(Stdio::null()).stderr(Stdio::null()).output().map_err(|e| format!("{cmd}: {e}"))?;
+    if !out.status.success() {
+        return Err(format!("{cmd} failed"));
+    }
+    Ok(out.stdout)
+}
+
+/// Runs a shell command line with `input` on stdin (the LLM command is user-configured, so it goes through sh).
+pub fn run_stdin(cmdline: &str, input: &str) -> Result<String, String> {
+    let mut child = Command::new("sh")
+        .args(["-c", cmdline])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("{cmdline}: {e}"))?;
+    let mut stdin = child.stdin.take().ok_or("no stdin")?;
+    let text = input.to_string();
+    // written from a thread: a large prompt would otherwise deadlock against a full stdout pipe
+    let writer = std::thread::spawn(move || stdin.write_all(text.as_bytes()));
+    let out = child.wait_with_output().map_err(|e| e.to_string())?;
+    let _ = writer.join();
+    if !out.status.success() {
+        // some CLIs (claude: "Not logged in") report errors on stdout
+        let (err, std) = (String::from_utf8_lossy(&out.stderr), String::from_utf8_lossy(&out.stdout));
+        return Err(format!("{cmdline} failed: {}", if err.trim().is_empty() { std.trim() } else { err.trim() }));
+    }
+    Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+pub fn have(cmd: &str) -> bool {
+    Command::new(cmd).arg("-version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok()
+        || Command::new(cmd).arg("--version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok()
+}
+
+pub fn home() -> PathBuf {
+    PathBuf::from(std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| ".".into()))
+}
+
+/// Mean and standard deviation; a flat series gets sd 1 so z-scores stay 0 instead of NaN.
+pub fn zscores(v: &[f64]) -> Vec<f64> {
+    if v.is_empty() {
+        return vec![];
+    }
+    let mean = v.iter().sum::<f64>() / v.len() as f64;
+    let var = v.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / v.len() as f64;
+    let sd = if var.sqrt() < 1e-9 { 1.0 } else { var.sqrt() };
+    v.iter().map(|x| (x - mean) / sd).collect()
+}
+
+pub fn mmss(t: f64) -> String {
+    let s = t.max(0.0) as u64;
+    format!("{}:{:02}", s / 60, s % 60)
+}

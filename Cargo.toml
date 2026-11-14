@@ -1,0 +1,22 @@
+[package]
+name = "edits"
+version = "0.1.0"
+edition = "2021"
+description = "Give it a YouTube link, a topic or a file: it downloads, finds the funny moments from viewer signals and cuts captioned edits. One binary."
+repository = "https://github.com/OnurByte/EditsMaker"
+homepage = "https://github.com/OnurByte/EditsMaker"
+readme = "README.md"
+keywords = ["video", "ffmpeg", "shorts", "captions", "cli"]
+categories = ["command-line-utilities", "multimedia::video"]
+license = "Unlicense"
+
+[dependencies]
+regex = "1"
+rustface = "0.1.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

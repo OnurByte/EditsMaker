@@ -1,0 +1,24 @@
+/* EditsMaker design tokens. One red, one warm gray, ink and paper: the 1976 NASA manual's economy, applied here.
+   src/render.rs burns --cut-red into captions (as BGR 2A33E5); keep the two in step. */
+:root {
+  --ink: #0B0B0C;        /* backgrounds, text on paper */
+  --paper: #F4F1EA;      /* text on ink, light backgrounds */
+  --cut-red: #E5332A;    /* the cut: punchlines, the sliced half of the mark, one accent per view */
+  --warm-gray: #8C877C;  /* secondary text, rules */
+  --line: #2A2A2D;       /* hairlines on ink */
+
+  --font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  --weight-light: 300;   /* descriptors, like the agency name under the logotype */
+  --weight-bold: 700;    /* names, captions */
+  --tracking-tight: -0.045em; /* display sizes only */
+
+  --unit: 8px;           /* every space is a multiple of this */
+  --stroke: 14;          /* mark stroke on its 96 grid; bars and gaps never change width */
+  --radius: 20px;        /* icon corner on 96 */
+
+  /* captions, relative to video width */
+  --caption-size: 7%;
+  --caption-outline: 5px;
+  --caption-safe-bottom: 28%; /* vertical video: clear of the app UI */
+}

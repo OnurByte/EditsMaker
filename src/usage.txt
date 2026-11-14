@@ -1,0 +1,25 @@
+edits - give it a link, a topic or a file; get finished edits.
+
+USAGE
+  edits <youtube-link | topic | video-file> [options]
+  edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
+  edits rate <clip.mp4> +|-    teach your taste: liked / disliked
+  edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
+
+OPTIONS
+  -n, --moments N     clips to make, the best across all videos (default 3)
+      --videos N      videos to download and analyse for a topic (default 5)
+      --aspect A      9:16 (default), 1:1, 4:3 or 16:9
+      --fit           keep the whole frame over a blurred copy instead of cropping around faces
+      --grade G       bw (default), dark, teal or none
+      --lang L        spoken language for captions (default tr)
+  -o, --out DIR       output folder (default ./edits-out)
+      --join          also join all clips into joined.mp4
+      --no-captions   no burned-in captions
+      --no-llm        pick moments from viewer signals only
+
+ENVIRONMENT
+  EDITS_LLM            command that reads a prompt on stdin (default: claude -p)
+  EDITS_WHISPER_MODEL  path to a ggml whisper model
+
+Your taste lives in ~/.config/edits/taste.md. Edit it freely.

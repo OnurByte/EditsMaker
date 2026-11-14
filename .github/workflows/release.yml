@@ -1,0 +1,41 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-22.04,     target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-22.04-arm, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest,     target: aarch64-apple-darwin }
+          - { os: macos-latest,     target: x86_64-apple-darwin }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup target add ${{ matrix.target }}
+      - run: cargo test --release
+        if: matrix.target != 'x86_64-apple-darwin'
+      - run: cargo build --release --target ${{ matrix.target }}
+      - run: |
+          mkdir out
+          tar -czf out/edits-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release edits
+      - uses: actions/upload-artifact@v4
+        with:
+          name: edits-${{ matrix.target }}
+          path: out/*
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - run: cd out && sha256sum * > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
