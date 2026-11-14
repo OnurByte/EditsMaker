@@ -21,7 +21,7 @@ pub struct Stat {
     pub lufs: f64,
 }
 
-pub const ASPECTS: &[(&str, u32, u32)] = &[("9:16", 1080, 1920), ("1:1", 1080, 1080), ("4:3", 1440, 1080), ("16:9", 1920, 1080)];
+pub const ASPECTS: &[(&str, u32, u32)] = &[("9:16", 1080, 1920), ("4:5", 1080, 1350), ("1:1", 1080, 1080), ("3:4", 1080, 1440), ("4:3", 1440, 1080), ("16:9", 1920, 1080), ("21:9", 2520, 1080)];
 
 pub fn path() -> PathBuf {
     home().join(".config/edits/style.json")
@@ -99,6 +99,7 @@ mod tests {
     fn shapes() {
         assert_eq!(nearest_aspect(1080, 1920), "9:16");
         assert_eq!(nearest_aspect(586, 576), "1:1");
+        assert_eq!(nearest_aspect(1080, 1350), "4:5");
         assert_eq!(nearest_aspect(768, 576), "4:3");
         assert_eq!(nearest_aspect(2880, 2160), "4:3");
         assert_eq!(nearest_aspect(1920, 1080), "16:9");

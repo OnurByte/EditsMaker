@@ -15,7 +15,6 @@ pub struct Opts {
     pub lufs: f64,
 }
 
-pub const GRADES: &[&str] = &["bw", "dark", "teal", "none"];
 const RED_BGR: &str = "2A33E5"; // design/tokens.css --cut-red, as ASS wants it (BBGGRR)
 
 pub fn ass_time(t: f64) -> String {
@@ -89,14 +88,9 @@ pub fn shape(o: &Opts, focus: f64) -> String {
     }
 }
 
-/// The colour grades as filter chains, each starting with a comma ("" for none).
-pub fn grade(name: &str) -> &'static str {
-    match name {
-        "bw" => ",hue=s=0,eq=contrast=1.12:brightness=-0.02",
-        "dark" => ",eq=saturation=0.75:contrast=1.12:brightness=-0.05:gamma=0.95",
-        "teal" => ",colorbalance=rs=-0.08:gs=0.02:bs=0.06:rh=-0.04,eq=saturation=0.8:contrast=1.1",
-        _ => "",
-    }
+/// A colour grade by name (see `looks`), or the LUT it names when it starts with "lut3d".
+pub fn grade(name: &str) -> String {
+    if name.starts_with(",lut3d") { name.to_string() } else { crate::looks::chain(name).to_string() }
 }
 
 /// The video filter chain: reshape to the target, punch in on the punchline, grade, captions, fades.
@@ -105,7 +99,7 @@ pub fn filters(m: &Moment, o: &Opts, ass_file: Option<&str>, focus: f64) -> Stri
     let (w, h, dur, punch) = (o.w, o.h, m.end - m.start, m.punch - m.start);
     let mut f = format!("fps=30,{}", shape(o, focus));
     f.push_str(&format!(",zoompan=z='if(gte(in_time,{punch:.2}),1.12,1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30"));
-    f.push_str(grade(&o.grade));
+    f.push_str(&grade(&o.grade));
     if let Some(a) = ass_file {
         f.push_str(&format!(",ass={a}"));
     }

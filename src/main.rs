@@ -1,5 +1,6 @@
 mod face;
 mod fetch;
+mod looks;
 mod montage;
 mod pick;
 mod premiere;
@@ -73,6 +74,12 @@ struct Cli {
     like: Option<String>,
     /// an Alight Motion project to replay over the footage
     preset: Option<String>,
+    /// a .cube LUT applied over the look
+    lut: Option<PathBuf>,
+    /// --aspect or --size was given: it wins over a preset's own frame
+    sized: bool,
+    /// of the videos found, how many to download after reading their captions
+    use_videos: usize,
     look: montage::Look,
     /// put the speaker's best line over the music edit
     voice: bool,
@@ -88,27 +95,40 @@ fn size(aspect: &str) -> Option<(u32, u32)> {
 fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let style = style.unwrap_or(study::Style { aspect: "9:16".into(), grade: "bw".into(), lufs: -14.0 });
     let (w, h) = size(&style.aspect).unwrap_or((1080, 1920));
-    let grade = if render::GRADES.contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
+    let grade = if looks::names().contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, use_videos: 4, voice: false, say: vec![], look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
         let mut val = |name: &str| it.next().cloned().ok_or(format!("{name} needs a value"));
         match a.as_str() {
             "-n" | "--moments" => c.n = val("-n")?.parse().ok().filter(|n| (1..=20).contains(n)).ok_or("-n must be 1-20")?,
-            "--videos" => c.videos = val("--videos")?.parse().ok().filter(|n| (1..=10).contains(n)).ok_or("--videos must be 1-10")?,
+            "--videos" => c.videos = val("--videos")?.parse().ok().filter(|n| (1..=40).contains(n)).ok_or("--videos must be 1-40")?,
             "--lang" => c.lang = val("--lang")?,
             "-o" | "--out" => c.out = PathBuf::from(val("--out")?),
-            "--grade" => {
-                c.opts.grade = val("--grade")?;
-                if !render::GRADES.contains(&c.opts.grade.as_str()) {
-                    return Err(format!("--grade must be one of: {}", render::GRADES.join(", ")));
+            "--grade" | "--look" => {
+                c.opts.grade = val("--look")?;
+                if !looks::names().contains(&c.opts.grade.as_str()) {
+                    return Err(format!("--look must be one of: {}", looks::names().join(", ")));
                 }
             }
-            "--aspect" => (c.opts.w, c.opts.h) = size(&val("--aspect")?).ok_or("--aspect must be 9:16, 1:1, 4:3 or 16:9")?,
+            "--lut" => c.lut = Some(PathBuf::from(val("--lut")?)),
+            "--aspect" => {
+                let a = val("--aspect")?;
+                (c.opts.w, c.opts.h) = size(&a).ok_or(format!("--aspect must be one of: {}", study::ASPECTS.iter().map(|a| a.0).collect::<Vec<_>>().join(", ")))?;
+                c.sized = true;
+            }
+            "--size" => {
+                let v = val("--size")?;
+                let (w, h) = v.split_once('x').and_then(|(w, h)| Some((w.parse::<u32>().ok()?, h.parse::<u32>().ok()?)))
+                    .filter(|(w, h)| (240..=4096).contains(w) && (240..=4096).contains(h)).ok_or("--size must be WxH, like 1080x1350")?;
+                (c.opts.w, c.opts.h) = (w / 2 * 2, h / 2 * 2);
+                c.sized = true;
+            }
+            "--use" => c.use_videos = val("--use")?.parse().ok().filter(|n| (1..=20).contains(n)).ok_or("--use must be 1-20")?,
             "--fit" => c.opts.layout = "fit".into(),
             "--music" => c.music = Some(val("--music")?),
             "--like" => c.like = Some(val("--like")?),
@@ -193,9 +213,13 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, out: &Path) -> Result<serde_json
 }
 
 fn make(args: &[String]) -> Result<(), String> {
-    let c = &parse(args, study::load())?;
+    let mut cli = parse(args, study::load())?;
     let cache = &util::home().join(".cache/edits");
     std::fs::create_dir_all(cache).map_err(|e| e.to_string())?;
+    if let Some(l) = cli.lut.clone() {
+        cli.opts.grade = looks::lut(&l, cache)?;
+    }
+    let c = &cli;
     std::fs::create_dir_all(&c.out).map_err(|e| e.to_string())?;
     let clock = std::time::Instant::now();
     let lap = |what: &str| eprintln!("edits: [{:>5.1}s] {what}", clock.elapsed().as_secs_f64());
@@ -270,6 +294,7 @@ fn footage(c: &Cli, cache: &Path) -> (Vec<(String, PathBuf)>, Vec<montage::Shot>
             eprintln!("edits: {e}");
             vec![]
         });
+        let found = fetch::screen(found, c.use_videos, cache, &c.lang, c.llm);
         std::thread::scope(|s| {
             let jobs: Vec<_> = found.into_iter().map(|(id, url)| s.spawn(move || montage::video_file(&id, &url, cache).map(|f| (id, f)))).collect();
             jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: skipped a video: {e}")).ok()).collect()
@@ -311,7 +336,9 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     let starts: Vec<f64> = p.slots.iter().enumerate().map(|(i, s)| if i == 0 { 0.0 } else { s.start }).collect();
     let spans: Vec<(f64, f64)> = (0..p.slots.len()).map(|i| (starts[i], starts.get(i + 1).copied().unwrap_or(p.total))).filter(|(a, b)| b - a > 0.02).collect();
     let mut opts = c.opts.clone();
-    (opts.w, opts.h) = (p.w, p.h);
+    if !c.sized {
+        (opts.w, opts.h) = (p.w, p.h);
+    }
     let mut used = vec![false; shots.len()];
     let mut made = 0;
     for k in 0..c.n {
@@ -415,6 +442,10 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 eprintln!("edits: {e}");
                 vec![]
             });
+            // a video named in --say is used whatever the screening thinks of it
+            let wanted: Vec<(String, String)> = found.iter().filter(|(id, _)| c.say.iter().any(|w| w.starts_with(&format!("{id}@")))).cloned().collect();
+            let mut found = fetch::screen(found, c.use_videos, cache, &c.lang, c.llm);
+            found.extend(wanted.into_iter().filter(|w| !found.contains(w)).collect::<Vec<_>>());
             let jobs: Vec<_> = found.into_iter().map(|(id, url)| s.spawn(move || montage::video_file(&id, &url, cache).map(|f| (id, f)))).collect();
             jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: skipped a video: {e}")).ok()).collect()
         };

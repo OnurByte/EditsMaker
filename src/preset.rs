@@ -333,7 +333,9 @@ pub fn parse(xml: &str, name: &str) -> Result<Preset, String> {
             let label = a.attribute("label")?.trim().trim_end_matches(".mp3").trim_end_matches(".mp4").trim_end_matches(" Mp4").trim_end_matches(" mp4").trim().to_string();
             // only a real title can be found again: two words with letters, not a camera file name or "Copy"
             let words = label.split_whitespace().filter(|w| w.chars().any(char::is_alphabetic)).count();
-            let file = ["VID_", "IMG_", "AUD", "REC"].iter().any(|p| label.starts_with(p));
+            let file = ["VID_", "IMG_", "AUD", "REC"].iter().any(|p| label.starts_with(p))
+                || [".aac", ".m4a", ".wav", ".ogg", ".opus"].iter().any(|e| label.to_lowercase().ends_with(e))
+                || label.chars().collect::<Vec<_>>().windows(6).any(|w| w.iter().all(char::is_ascii_digit));
             (words >= 2 && !file).then(|| (label, ms(a, "inTime").unwrap_or(0.0), ms(a, "startTime").unwrap_or(0.0)))
         });
     if slots.is_empty() {
@@ -405,11 +407,13 @@ fn rust_curve(c: &Curve) -> String {
 
 /// Presets and motions as Rust source for src/presets.rs: timing, moves and effects only, no media.
 pub fn to_rust(presets: &[Preset], motions: &[Motion]) -> String {
-    let fname = |p: &Preset| {
+    // function names from preset names: ascii only, numbered so two names that reduce alike stay apart
+    let names: Vec<String> = presets.iter().enumerate().map(|(i, p)| {
         let f: String = p.name.to_lowercase().chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect();
-        format!("p_{}", f.split('_').filter(|s| !s.is_empty()).collect::<Vec<_>>().join("_"))
-    };
-    let mut s = String::from("//! Edit presets, converted from Alight Motion projects by `edits preset to-rust`. Timing, speed, camera\n//! moves, shakes, blurs and flashes only: no footage, no music.\n#![allow(clippy::all)]\nuse crate::preset::{Curve, Ease, Ease::*, Flash, Motion, Preset, Slot};\n\nfn c(k: &[(f64, f64, Ease)]) -> Curve {\n    Curve { keys: k.to_vec() }\n}\n\npub fn all() -> Vec<Preset> {\n    vec![");
+        format!("p{i}_{}", f.split('_').filter(|s| !s.is_empty()).collect::<Vec<_>>().join("_"))
+    }).collect();
+    let fname = |p: &Preset| names[presets.iter().position(|x| std::ptr::eq(x, p)).unwrap()].clone();
+    let mut s = String::from("//! Edit presets, converted by `edits preset to-rust` from Alight Motion projects (the project owner's anime edits;\n//! community presets from github.com/andikachan/alight-web-editor, creators named in each preset) and Premiere Pro\n//! transition presets on GitHub (wgetgoose/AdobePresets, Deep0902, felipoliver15-hash, Renderdragonorg,\n//! asDJKLFHadjksh, ZenDev-arc). Timing, speed, camera moves, shakes, blurs and flashes only: no footage, no music.\n#![allow(clippy::all)]\nuse crate::preset::{Curve, Ease, Ease::*, Flash, Motion, Preset, Slot};\n\nfn c(k: &[(f64, f64, Ease)]) -> Curve {\n    Curve { keys: k.to_vec() }\n}\n\npub fn all() -> Vec<Preset> {\n    vec![");
     s.push_str(&presets.iter().map(|p| format!("{}()", fname(p))).collect::<Vec<_>>().join(", "));
     s.push_str("]\n}\n");
     for p in presets {
@@ -444,7 +448,8 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, focus: f64, len: f64) -> String
         f.push_str(&format!(",eq=saturation={:.2}:brightness='{}':eval=frame", s.saturation, s.exposure.map(|v| v * 0.25).expr("t", len)));
     }
     if s.zoom.is_moving() || s.zoom.max() > 1.001 {
-        f.push_str(&format!(",zoompan=z='max(1,{})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30", s.zoom.expr("it", len)));
+        // capped: a preset framed for a tight crop zooms other footage into a blank patch of colour
+        f.push_str(&format!(",zoompan=z='min(2.2,max(1,{}))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30", s.zoom.expr("it", len)));
     }
     let shaking = s.shake.max() > 1e-4;
     if s.x.is_moving() || s.y.is_moving() || s.rot.is_moving() || shaking {
@@ -585,12 +590,12 @@ mod tests {
     fn chains_for_slots() {
         let p = parse(XML, "t").unwrap();
         let a = chain(&p.slots[0], 0, 1080, 1200, 0.5, 1.0);
-        assert!(a.starts_with("[0:v]setpts=(PTS-STARTPTS)/3.0000,fps=30,crop=") && a.contains("zoompan=z='max(1,") && a.contains("hstack=3") && a.contains("tmix=frames=3"), "{a}");
+        assert!(a.starts_with("[0:v]setpts=(PTS-STARTPTS)/3.0000,fps=30,crop=") && a.contains("zoompan=z='min(2.2,max(1,") && a.contains("hstack=3") && a.contains("tmix=frames=3"), "{a}");
         assert!(a.ends_with("trim=duration=1.000,setpts=PTS-STARTPTS[v0];"), "{a}");
         let b = chain(&p.slots[1], 1, 1080, 1200, 0.5, 1.0);
         assert!(b.contains("gblur=sigma=14:enable=") && b.contains("crop=1080:1200:x='1080-(") && !b.contains("zoompan"), "{b}");
         let src = to_rust(std::slice::from_ref(&p), &[]);
-        assert!(src.contains("fn p_t() -> Preset {") && src.contains("Slot { start: 0.000, end: 1.000, speed: 3.000, zoom: c(&[(0.0000, 1.6000, Linear), (0.5000, 1.0000, Out(") && src.contains("Some((\"Montagem Royal - Slowed & Reverb\".into(), 6.484, 0.000))"), "{src}");
+        assert!(src.contains("fn p0_t() -> Preset {") && src.contains("Slot { start: 0.000, end: 1.000, speed: 3.000, zoom: c(&[(0.0000, 1.6000, Linear), (0.5000, 1.0000, Out(") && src.contains("Some((\"Montagem Royal - Slowed & Reverb\".into(), 6.484, 0.000))"), "{src}");
         let fl = flashes(&p);
         assert!(fl.starts_with(",drawbox=x=0:y=0:w=iw:h=ih:t=fill:color=0xffffff@0.80:enable='between(t,1.000,1.100)*gt("), "{fl}");
     }

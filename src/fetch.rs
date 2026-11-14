@@ -159,6 +159,82 @@ pub fn remote(id: &str, url: &str, cache: &Path) -> Result<Source, String> {
     })
 }
 
+/// What a video says and how it did, read without downloading it: its info and its captions (a few kB).
+pub struct Preview {
+    pub id: String,
+    pub url: String,
+    pub title: String,
+    pub views: f64,
+    pub likes: f64,
+    pub duration: f64,
+    pub text: String,
+}
+
+pub fn preview(id: &str, url: &str, cache: &Path, lang: &str) -> Result<Preview, String> {
+    let work = cache.join(safe(id));
+    std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
+    let info_file = work.join("src.info.json");
+    if !info_file.is_file() {
+        yt(&["--no-warnings", "--skip-download", "--no-playlist", "--write-info-json", "--write-auto-subs", "--sub-langs", ".*-orig", "--sub-format", "json3",
+            "-o", &work.join("src.%(ext)s").to_string_lossy(), "--", url])?;
+    }
+    let info: Value = std::fs::read_to_string(&info_file).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or(Value::Null);
+    let mut tracks: Vec<PathBuf> = std::fs::read_dir(&work).into_iter().flatten().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with("-orig.json3")).collect();
+    tracks.sort();
+    let text = crate::transcribe::pick_track(&tracks, info["language"].as_str().unwrap_or(""), lang)
+        .and_then(|p| std::fs::read_to_string(p).ok()).and_then(|j| crate::transcribe::parse_json3(&j))
+        .map(|t| t.words.iter().map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")).unwrap_or_default();
+    Ok(Preview {
+        id: id.to_string(),
+        url: url.to_string(),
+        title: info["title"].as_str().unwrap_or("").to_string(),
+        views: info["view_count"].as_f64().unwrap_or(0.0),
+        likes: info["like_count"].as_f64().unwrap_or(0.0),
+        duration: info["duration"].as_f64().unwrap_or(0.0),
+        text,
+    })
+}
+
+/// Without a model: well-watched, well-liked, not too long, with something said.
+pub fn preview_score(p: &Preview) -> f64 {
+    (1.0 + p.views).ln() + 3.0 * (p.likes / p.views.max(1.0) * 30.0).min(1.0) - if p.duration > 1500.0 { 1.0 } else { 0.0 }
+        + if p.text.split_whitespace().count() > 200 { 0.5 } else { 0.0 }
+}
+
+/// Reads every video's captions first and keeps the `keep` worth downloading; the rest are never downloaded.
+pub fn screen(found: Vec<(String, String)>, keep: usize, cache: &Path, lang: &str, use_llm: bool) -> Vec<(String, String)> {
+    if found.len() <= keep {
+        return found;
+    }
+    let previews: Vec<Preview> = std::thread::scope(|s| {
+        let jobs: Vec<_> = found.iter().map(|(id, url)| s.spawn(move || preview(id, url, cache, lang))).collect();
+        jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: could not read a video: {e}")).ok()).collect()
+    });
+    let mut order: Vec<usize> = (0..previews.len()).collect();
+    order.sort_by(|a, b| preview_score(&previews[*b]).total_cmp(&preview_score(&previews[*a])));
+    if use_llm {
+        let mut p = format!("Bu videolardan müzikli edit (sad edit / viral edit) yapmak için en iyi malzeme olan {keep} tanesini seç. \
+            İyi malzeme: güçlü, akılda kalan, duygusu olan konuşmalar ve ilginç görüntüler. Sıkıcı, teknik, liste okuyan videoları seçme.\n\n");
+        for (i, v) in previews.iter().enumerate() {
+            p.push_str(&format!("[{i}] {} ({:.0} görüntülenme): {}\n", v.title, v.views, v.text.chars().take(500).collect::<String>()));
+        }
+        p.push_str(&format!("\nSadece JSON dizisi yaz, en iyisi başta, {keep} sayı: [2, 0]\n"));
+        let picked = crate::util::run_stdin(&crate::pick::llm_cmd(), &p).ok().and_then(|r| {
+            let (a, b) = (r.find('[')?, r.rfind(']')?);
+            serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
+        });
+        if let Some(v) = picked.filter(|v| v.iter().all(|i| *i < previews.len()) && !v.is_empty()) {
+            let rest: Vec<usize> = order.iter().copied().filter(|i| !v.contains(i)).collect();
+            order = v.into_iter().chain(rest).collect();
+        }
+    }
+    for (rank, &i) in order.iter().enumerate() {
+        let v = &previews[i];
+        eprintln!("edits: {} {} ({:.0} views)", if rank < keep { "using  " } else { "skipping" }, v.title, v.views);
+    }
+    order.into_iter().take(keep).map(|i| (previews[i].id.clone(), previews[i].url.clone())).collect()
+}
+
 /// The picture for one moment: (file, where the moment starts inside it). Online, only that stretch is downloaded.
 pub fn clip(src: &Source, start: f64, end: f64) -> Result<(PathBuf, f64), String> {
     if let Some(file) = &src.local {
@@ -208,6 +284,15 @@ mod tests {
         let titles = t(&["Raya (Slowed)", "NUEKI, Mc Menor Do Alvorada - MONTAGEM ROYAL (SLOWED)", "MONTAGEM ROYAL (slowed + reverb)"]);
         assert_eq!(best_title("Montagem Royal - Slowed & Reverb", &titles), Some(2));
         assert_eq!(best_title("x", &[]), None);
+    }
+
+    #[test]
+    fn preview_ranking() {
+        let p = |views: f64, likes: f64, duration: f64| Preview { id: String::new(), url: String::new(), title: String::new(), views, likes, duration, text: String::new() };
+        assert!(preview_score(&p(50000.0, 3000.0, 500.0)) > preview_score(&p(50000.0, 100.0, 500.0)));
+        assert!(preview_score(&p(50000.0, 3000.0, 500.0)) > preview_score(&p(50000.0, 3000.0, 3000.0)));
+        assert!(preview_score(&p(0.0, 0.0, 0.0)).is_finite());
+        assert_eq!(screen(vec![("a".into(), "u".into())], 3, Path::new("/nonexistent"), "tr", false).len(), 1);
     }
 
     #[test]

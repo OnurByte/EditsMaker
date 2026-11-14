@@ -283,7 +283,7 @@ pub struct Shot {
     pub focus: Option<f64>,
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, serde::Serialize, serde::Deserialize)]
 pub struct Frame {
     /// mean change from the previous frame, 0..1
     pub diff: f64,
@@ -292,13 +292,30 @@ pub struct Frame {
     pub checked: bool,
     /// how far from gray the picture is: drawings and photos score high, text slides low
     pub color: f64,
+    /// how much is drawn: near zero for an empty background, a blank slide, a flat wall
+    pub detail: f64,
 }
 
 const FPS: f64 = 4.0;
 const AW: u32 = 320;
 
-/// Streams gray frames out of ffmpeg and measures each one.
+/// Measures every frame once per video: the result is kept next to it (scanning a long video takes minutes).
 pub fn frames(video: &Path) -> Result<Vec<Frame>, String> {
+    let keep = video.with_extension("frames.json");
+    let fresh = |p: &Path| p.metadata().and_then(|m| m.modified()).ok();
+    if fresh(&keep) >= fresh(video) && fresh(&keep).is_some() {
+        if let Some(fs) = std::fs::read_to_string(&keep).ok().and_then(|s| serde_json::from_str::<Vec<Frame>>(&s).ok()) {
+            return Ok(fs);
+        }
+    }
+    let fs = scan(video)?;
+    // a file the user gave may sit somewhere read-only: then it is simply scanned again next time
+    let _ = std::fs::write(&keep, serde_json::to_string(&fs).unwrap_or_default());
+    Ok(fs)
+}
+
+/// Streams frames out of ffmpeg and measures each one.
+fn scan(video: &Path) -> Result<Vec<Frame>, String> {
     let (sw, sh) = dims(video);
     if sw == 0 || sh == 0 {
         return Err(format!("{}: no video stream", video.display()));
@@ -322,6 +339,7 @@ pub fn frames(video: &Path) -> Result<Vec<Frame>, String> {
     while out.read_exact(&mut cur).is_ok() && out.read_exact(&mut chroma).is_ok() {
         let mut f = Frame { luma: cur.iter().step_by(7).map(|v| *v as f64).sum::<f64>() / (size / 7).max(1) as f64, ..Default::default() };
         f.color = chroma.iter().step_by(5).map(|v| (*v as f64 - 128.0).abs()).sum::<f64>() / (chroma.len() / 5).max(1) as f64;
+        f.detail = detail(&cur, AW as usize);
         if !fs.is_empty() {
             f.diff = cur.iter().zip(&prev).step_by(3).map(|(a, b)| a.abs_diff(*b) as f64).sum::<f64>() / ((size / 3).max(1) as f64 * 255.0);
         }
@@ -336,6 +354,26 @@ pub fn frames(video: &Path) -> Result<Vec<Frame>, String> {
     }
     let _ = child.wait();
     Ok(fs)
+}
+
+/// Below this a frame counts as empty (see `detail`).
+const EMPTY: f64 = 2.5;
+
+/// Mean brightness step between neighbouring pixels (sampled): how much is drawn on a gray frame of `w` columns.
+pub fn detail(y: &[u8], w: usize) -> f64 {
+    if w < 3 || y.len() < w * 3 {
+        return 0.0;
+    }
+    let mut sum = 0u64;
+    let mut n = 0u64;
+    for r in (1..y.len() / w - 1).step_by(3) {
+        for c in (1..w - 1).step_by(3) {
+            let i = r * w + c;
+            sum += y[i].abs_diff(y[i + 1]) as u64 + y[i].abs_diff(y[i + w]) as u64;
+            n += 1;
+        }
+    }
+    sum as f64 / n.max(1) as f64
 }
 
 /// Frames -> shots of at most 3 s, scored: faces first, then movement; black and blown-out frames lose.
@@ -359,7 +397,11 @@ pub fn segment(fs: &[Frame], video: usize) -> Vec<Shot> {
                 let checked = f.iter().filter(|x| x.checked).count().max(1);
                 let faces = xs.len() as f64 / checked as f64;
                 let color = f.iter().map(|x| x.color).sum::<f64>() / f.len() as f64;
-                let score = 2.0 * faces + (motion * 25.0).min(1.0) + (color / 12.0).min(1.5) - if luma < 22.0 { 2.0 } else { 0.0 } - if luma > 235.0 { 1.0 } else { 0.0 };
+                let drawn = f.iter().map(|x| x.detail).sum::<f64>() / f.len() as f64;
+                // an empty frame (background, blank slide) is never worth a beat
+                let empty = if drawn < EMPTY { 3.0 } else { 0.0 };
+                let score = 2.0 * faces + (motion * 25.0).min(1.0) + (color / 12.0).min(1.5) + (drawn / 12.0).min(0.8) - empty
+                    - if luma < 22.0 { 2.0 } else { 0.0 } - if luma > 235.0 { 1.0 } else { 0.0 };
                 out.push(Shot { video, s: a as f64 / FPS, e: e as f64 / FPS, scene_end: (b.min(n - skip)) as f64 / FPS, score, focus: median(&mut xs) });
             }
             a = e;
@@ -575,7 +617,8 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         last = format!("x{i}");
     }
     // one clean 30 fps clock after the transitions, or the encoder drops frames it takes for duplicates
-    g.push_str(&format!("[{last}]settb=1/30,fps=30,fade=t=in:d=0.4,fade=t=out:st={:.3}:d=1.2", (total - 1.2).max(0.0)));
+    g.push_str(&format!("[{last}]settb=1/30,fps=30{}", color_hits(spans, joins, voice.is_some() && !look.sad)));
+    g.push_str(&format!(",fade=t=in:d=0.4,fade=t=out:st={:.3}:d=1.2", (total - 1.2).max(0.0)));
     if subs {
         g.push_str(",ass=cap.ass");
     }
@@ -715,6 +758,26 @@ pub fn template(reference: &Path, cache: &Path) -> Result<Template, String> {
     Ok(Template { music, cuts, joins, grade: tone(&fs).into(), aspect: crate::study::nearest_aspect(w, h) })
 }
 
+/// Colour that changes with the music: on each of the hardest hits the picture drops to black and white for a
+/// moment, every other one flipping to negative for two frames first. With `story`, everything before the first
+/// hard hit (the voice) is black and white, so the colour arrives with the drop.
+pub fn color_hits(spans: &[(f64, f64)], joins: &[Join], story: bool) -> String {
+    let hits: Vec<f64> = (1..spans.len()).filter(|&i| joins[i].kind == "fadewhite").map(|i| spans[i].0 + joins[i].dur / 2.0).collect();
+    let mut f = String::new();
+    if story {
+        if let Some(first) = hits.first() {
+            f.push_str(&format!(",hue=s=0:enable='lt(t,{first:.3})'"));
+        }
+    }
+    for (k, t) in hits.iter().enumerate().skip(usize::from(story)) {
+        if k % 2 == 1 {
+            f.push_str(&format!(",negate=enable='between(t,{t:.3},{:.3})'", t + 0.07));
+        }
+        f.push_str(&format!(",hue=s=0:enable='between(t,{:.3},{:.3})'", t + 0.07, t + 0.3));
+    }
+    f
+}
+
 /// One finished edit. `picks` are (video file, source start, focus) per piece, `joins` one per cut.
 /// `work` is the folder ffmpeg runs in; `subs` is the ASS text written there as cap.ass.
 #[allow(clippy::too_many_arguments)]
@@ -839,7 +902,7 @@ mod tests {
 
     #[test]
     fn shots_from_frames() {
-        let f = |diff: f64, luma: f64, face: Option<f64>| Frame { diff, luma, face, checked: true, color: 0.0 };
+        let f = |diff: f64, luma: f64, face: Option<f64>| Frame { diff, luma, face, checked: true, color: 0.0, detail: 20.0 };
         let mut fs = vec![f(0.0, 120.0, None); 100];
         fs.extend(vec![f(0.03, 120.0, Some(0.3)); 40]); // a face, moving
         fs[100].diff = 0.5; // hard cut
@@ -850,6 +913,26 @@ mod tests {
         let best = s.iter().max_by(|a, b| a.score.total_cmp(&b.score)).unwrap();
         assert!(best.video == 7 && (25.0..35.0).contains(&best.s) && best.focus == Some(0.3), "{best:?}");
         assert!(s.iter().filter(|x| x.s >= 35.0).all(|x| x.score < 0.0)); // the black stretch
+    }
+
+    #[test]
+    fn empty_frames_are_found() {
+        let flat = vec![200u8; 320 * 180];
+        let mut drawn = flat.clone();
+        for (i, p) in drawn.iter_mut().enumerate() {
+            if (i % 320) % 7 < 2 || (i / 320) % 9 < 2 {
+                *p = 30;
+            }
+        }
+        assert!(detail(&flat, 320) < 0.01);
+        assert!(detail(&drawn, 320) > EMPTY, "{}", detail(&drawn, 320));
+        let f = |detail: f64| Frame { diff: 0.02, luma: 150.0, face: None, checked: true, color: 10.0, detail };
+        let mut fs = vec![f(0.5); 40];
+        fs.extend(vec![f(20.0); 40]);
+        fs[40].diff = 0.5;
+        let s = segment(&fs, 0);
+        let (blank, full): (Vec<_>, Vec<_>) = s.iter().partition(|x| x.s < 10.0);
+        assert!(blank.iter().all(|b| full.iter().all(|f| f.score > b.score + 2.0)), "{s:?}");
     }
 
     #[test]
@@ -900,6 +983,18 @@ mod tests {
         assert_eq!(joins.iter().map(|j| j.kind).collect::<Vec<_>>(), vec!["fade", "fade", "fadewhite", "fadeblack", "fade"]);
         assert_eq!(tone(&fs), "teal");
         assert_eq!(tone(&[RefFrame { sat: 1.0, ..Default::default() }]), "bw");
+    }
+
+    #[test]
+    fn colour_follows_the_hits() {
+        let flash = Join { kind: "fadewhite", dur: 0.3, motion: None };
+        let spans = [(0.0, 5.15), (4.85, 2.3), (6.85, 2.3), (8.85, 1.0)];
+        let joins = [CUT, flash, flash, flash];
+        let story = color_hits(&spans, &joins, true);
+        assert!(story.starts_with(",hue=s=0:enable='lt(t,5.000)'") && story.contains(",negate=enable='between(t,7.000,7.070)'"), "{story}");
+        let plain = color_hits(&spans, &joins, false);
+        assert!(plain.starts_with(",hue=s=0:enable='between(t,5.070,5.300)'"), "{plain}");
+        assert_eq!(color_hits(&spans, &[CUT; 4], false), "");
     }
 
     #[test]

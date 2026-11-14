@@ -74,7 +74,7 @@ pub fn transcript(work: &Path, wav: &Path, lang: &str, spoken: &str) -> Result<T
 }
 
 /// The track in the spoken language, else in the language asked for, else the only one there is.
-fn pick_track(tracks: &[PathBuf], spoken: &str, lang: &str) -> Option<PathBuf> {
+pub fn pick_track(tracks: &[PathBuf], spoken: &str, lang: &str) -> Option<PathBuf> {
     let named = |l: &str| tracks.iter().find(|p| !l.is_empty() && p.to_string_lossy().ends_with(&format!(".{l}-orig.json3")));
     named(spoken).or_else(|| named(lang)).or(if tracks.len() == 1 { tracks.first() } else { None }).cloned()
 }

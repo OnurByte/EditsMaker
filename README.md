@@ -83,6 +83,19 @@ spins, shakes, blurs and flashes, replayed over your footage with its own song (
 `--music`. Premiere Pro transition presets are built in the same way and land on the cuts the music hits hardest
 in music edits: spins, whips, slides, zooms, glitches.
 
+30 edit presets are built in (12 anime edits, 18 community edits in 9:16) and 36 cut moves.
+
+**Colour:** `--look` picks one of 16 grades (bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia,
+bleach, neon, matrix, sunset, pop, none) and `--lut file.cube` brings your own. In music edits the colour follows
+the music: a voiced edit stays black and white until the drop, and the hardest hits flash to black and white or
+negative.
+
+**Frame:** `--aspect` 9:16, 4:5, 1:1, 3:4, 4:3, 16:9, 21:9, or any `--size 1080x1350`.
+
+**Reading before downloading:** for a channel or topic, `--videos 12 --use 4` reads all twelve videos' captions
+and numbers (a few kB each) and downloads the picture of the best four only. Shots that show an empty frame
+(a bare background, a blank slide) are never used, and each video is scanned once and remembered.
+
 New ones are converted with `edits preset to-rust <zip|folder|.xml|.prfpset>... > src/presets.rs` and a rebuild.
 
 ## Why it is fast

@@ -19,10 +19,14 @@ OPTIONS
       --tag TEXT      small signature at the bottom, like @yourname
       --text TEXT     a line over the whole music edit, in heavy capitals ("THE PROBLEM")
   -n, --moments N     clips (or music edits) to make, the best across all videos (default 3)
-      --videos N      videos to download and analyse for a topic (default 5)
-      --aspect A      9:16 (default), 1:1, 4:3 or 16:9
+      --videos N      videos to look at for a topic or channel (default 5)
+      --use K         music/preset edits: of those, read every one's captions and download only the best K (default 4)
+      --aspect A      9:16 (default), 4:5, 1:1, 3:4, 4:3, 16:9 or 21:9
+      --size WxH      any frame size, like 1080x1350
       --fit           keep the whole frame over a blurred copy instead of cropping around faces
-      --grade G       bw (default), dark, teal or none
+      --look L        colour: none, bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia, bleach,
+                      neon, matrix, sunset, pop (--grade works too)
+      --lut FILE      a .cube LUT over the picture
       --lang L        spoken language for captions (default tr)
   -o, --out DIR       output folder (default ./edits-out)
       --join          also join all clips into joined.mp4
