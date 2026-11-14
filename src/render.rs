@@ -18,12 +18,12 @@ pub struct Opts {
 pub const GRADES: &[&str] = &["bw", "dark", "teal", "none"];
 const RED_BGR: &str = "2A33E5"; // design/tokens.css --cut-red, as ASS wants it (BBGGRR)
 
-fn ass_time(t: f64) -> String {
+pub fn ass_time(t: f64) -> String {
     let cs = (t.max(0.0) * 100.0).round() as u64;
     format!("{}:{:02}:{:02}.{:02}", cs / 360000, cs / 6000 % 60, cs / 100 % 60, cs % 100)
 }
 
-fn upper_tr(s: &str) -> String {
+pub fn upper_tr(s: &str) -> String {
     s.replace('i', "İ").to_uppercase()
 }
 
@@ -77,23 +77,35 @@ pub fn ass(words: &[Word], m: &Moment, o: &Opts) -> String {
     s
 }
 
-/// The video filter chain: reshape to the target, punch in on the punchline, grade, captions, fades.
-/// `focus` is the horizontal centre of the faces (0..1), 0.5 when unknown.
-pub fn filters(m: &Moment, o: &Opts, ass_file: Option<&str>, focus: f64) -> String {
-    let (w, h, dur, punch) = (o.w, o.h, m.end - m.start, m.punch - m.start);
-    let mut f = if o.layout == "fit" {
-        format!("fps=30,split[a][b];[a]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},boxblur=24:2,eq=brightness=-0.12[bg];\
+/// Any frame to `o.w` x `o.h`: a crop centred on `focus` (0..1 across), or with layout "fit" the whole frame
+/// over a blurred copy of itself.
+pub fn shape(o: &Opts, focus: f64) -> String {
+    let (w, h) = (o.w, o.h);
+    if o.layout == "fit" {
+        format!("split[a][b];[a]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},boxblur=24:2,eq=brightness=-0.12[bg];\
                  [b]scale={w}:{h}:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1")
     } else {
-        format!("fps=30,crop=w='min(iw,ih*{w}/{h})':h='min(ih,iw*{h}/{w})':x='max(0,min(iw-ow,iw*{focus:.3}-ow/2))',scale={w}:{h},setsar=1")
-    };
-    f.push_str(&format!(",zoompan=z='if(gte(in_time,{punch:.2}),1.12,1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30"));
-    f.push_str(match o.grade.as_str() {
+        format!("crop=w='min(iw,ih*{w}/{h})':h='min(ih,iw*{h}/{w})':x='max(0,min(iw-ow,iw*{focus:.3}-ow/2))',scale={w}:{h},setsar=1")
+    }
+}
+
+/// The colour grades as filter chains, each starting with a comma ("" for none).
+pub fn grade(name: &str) -> &'static str {
+    match name {
         "bw" => ",hue=s=0,eq=contrast=1.12:brightness=-0.02",
         "dark" => ",eq=saturation=0.75:contrast=1.12:brightness=-0.05:gamma=0.95",
         "teal" => ",colorbalance=rs=-0.08:gs=0.02:bs=0.06:rh=-0.04,eq=saturation=0.8:contrast=1.1",
         _ => "",
-    });
+    }
+}
+
+/// The video filter chain: reshape to the target, punch in on the punchline, grade, captions, fades.
+/// `focus` is the horizontal centre of the faces (0..1), 0.5 when unknown.
+pub fn filters(m: &Moment, o: &Opts, ass_file: Option<&str>, focus: f64) -> String {
+    let (w, h, dur, punch) = (o.w, o.h, m.end - m.start, m.punch - m.start);
+    let mut f = format!("fps=30,{}", shape(o, focus));
+    f.push_str(&format!(",zoompan=z='if(gte(in_time,{punch:.2}),1.12,1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30"));
+    f.push_str(grade(&o.grade));
     if let Some(a) = ass_file {
         f.push_str(&format!(",ass={a}"));
     }

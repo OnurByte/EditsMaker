@@ -7,7 +7,13 @@ USAGE
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
 
 OPTIONS
-  -n, --moments N     clips to make, the best across all videos (default 3)
+      --music SONG    make music edits: the footage's best shots cut on the song's beats (link or file)
+      --sad           slow cuts, slow motion, crossfades, black and white
+      --voice         the speaker's best line over the music edit, music ducked under it, with captions
+      --length S      seconds per music edit (default 18, sad 24)
+      --tag TEXT      small signature at the bottom, like @yourname
+      --text TEXT     a line over the whole music edit, in heavy capitals ("THE PROBLEM")
+  -n, --moments N     clips (or music edits) to make, the best across all videos (default 3)
       --videos N      videos to download and analyse for a topic (default 5)
       --aspect A      9:16 (default), 1:1, 4:3 or 16:9
       --fit           keep the whole frame over a blurred copy instead of cropping around faces

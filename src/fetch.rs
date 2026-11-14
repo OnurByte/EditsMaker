@@ -1,5 +1,5 @@
 //! Downloads as little as possible: audio, captions and viewer data first; video only for the moments that get cut.
-use crate::util::run;
+use crate::util::{run, yt};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
@@ -9,6 +9,8 @@ pub struct Source {
     pub url: String,
     pub work: PathBuf,
     pub wav: PathBuf,
+    /// the sound at full quality, for putting the voice into an edit (the 16 kHz wav when it is gone)
+    pub audio: PathBuf,
     pub id: String,
     pub title: String,
     pub duration: f64,
@@ -73,7 +75,7 @@ pub fn resolve(input: &str, videos: usize) -> Result<Vec<(String, String)>, Stri
     let is_url = input.starts_with("http://") || input.starts_with("https://");
     let target = if is_url { channel_videos(input) } else { format!("ytsearch{videos}:{input}") };
     // "--" so a topic starting with "-" can never be read as a yt-dlp option
-    let out = run(None, "yt-dlp", &["--no-warnings", "--flat-playlist", "--playlist-end", &videos.to_string(), "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &target])?;
+    let out = yt(&["--no-warnings", "--flat-playlist", "--playlist-end", &videos.to_string(), "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &target])?;
     // a topic search must not pull a 3-hour stream
     let found: Vec<_> = out.lines().filter_map(|l| listed(l, (!is_url).then_some(1800.0))).collect();
     if found.is_empty() {
@@ -90,7 +92,7 @@ pub fn local(file: &Path, cache: &Path) -> Result<Source, String> {
     // always redone, and the old transcript dropped: another file may share this name
     let _ = std::fs::remove_file(w.with_extension("json"));
     wav(file, &w)?;
-    Ok(Source { local: Some(file.to_path_buf()), url: String::new(), wav: w, work, title: id.clone(), id, duration: duration(file)?, language: String::new(), heat: vec![], comments: vec![] })
+    Ok(Source { local: Some(file.to_path_buf()), url: String::new(), audio: file.to_path_buf(), wav: w, work, title: id.clone(), id, duration: duration(file)?, language: String::new(), heat: vec![], comments: vec![] })
 }
 
 /// Audio, info, comments and the site's own word-timed captions: a few MB instead of the whole video.
@@ -99,7 +101,7 @@ pub fn remote(id: &str, url: &str, cache: &Path) -> Result<Source, String> {
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
     let (w, info_file) = (work.join("a.wav"), work.join("src.info.json"));
     if !(w.is_file() && info_file.is_file()) {
-        let out = run(None, "yt-dlp", &[
+        let out = yt(&[
             "--no-warnings", "--no-progress", "--no-playlist", "-f", "ba[ext=m4a]/ba/b",
             "--write-info-json", "--write-comments", "--extractor-args", "youtube:max_comments=300,all,0,0;comment_sort=top",
             // "-orig" is the speech recognition track in the language actually spoken, with per-word times
@@ -108,8 +110,10 @@ pub fn remote(id: &str, url: &str, cache: &Path) -> Result<Source, String> {
         ])?;
         let audio = out.lines().map(str::trim).rfind(|l| !l.is_empty()).ok_or("yt-dlp reported no file")?;
         wav(Path::new(audio), &w)?;
-        let _ = std::fs::remove_file(audio);
     }
+    let audio = std::fs::read_dir(&work).into_iter().flatten().flatten().map(|e| e.path())
+        .find(|p| p.file_stem().is_some_and(|s| s == "src") && p.extension().is_some_and(|e| ["m4a", "webm", "opus", "mp3", "mp4"].contains(&e.to_string_lossy().as_ref())))
+        .unwrap_or_else(|| w.clone());
     let info: Value = std::fs::read_to_string(&info_file).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or(Value::Null);
     Ok(Source {
         local: None,
@@ -125,6 +129,7 @@ pub fn remote(id: &str, url: &str, cache: &Path) -> Result<Source, String> {
             Some((c["text"].as_str()?.to_string(), c["like_count"].as_u64().unwrap_or(0)))
         }).collect()).unwrap_or_default(),
         wav: w,
+        audio,
         work,
     })
 }
@@ -136,7 +141,7 @@ pub fn clip(src: &Source, start: f64, end: f64) -> Result<(PathBuf, f64), String
     }
     let out = src.work.join(format!("sec-{start:.2}-{end:.2}.mp4"));
     if !out.is_file() {
-        run(None, "yt-dlp", &[
+        yt(&[
             "--no-warnings", "--no-progress", "--no-playlist", "-f", VIDEO, "--merge-output-format", "mp4",
             // re-encoded at the cut so the clip starts exactly at `start` and captions stay in sync
             "--download-sections", &format!("*{start:.2}-{end:.2}"), "--force-keyframes-at-cuts",

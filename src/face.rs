@@ -2,7 +2,7 @@
 use crate::util::run_bytes;
 use std::path::Path;
 
-const MODEL: &[u8] = include_bytes!("../models/seeta_fd_frontal_v1.0.bin");
+pub const MODEL: &[u8] = include_bytes!("../models/seeta_fd_frontal_v1.0.bin");
 const W: u32 = 480;
 
 /// Horizontal centre (0..1) of the faces in `[start, start+dur]`, or None when no face shows up.

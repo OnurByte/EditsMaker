@@ -51,6 +51,20 @@ pub fn run_stdin(cmdline: &str, input: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
+/// yt-dlp, tried again when YouTube refuses for a moment (403/429 when several downloads start at once).
+pub fn yt<S: AsRef<OsStr>>(args: &[S]) -> Result<String, String> {
+    let mut wait = 3;
+    loop {
+        match run(None, "yt-dlp", args) {
+            Err(e) if wait <= 12 && ["403", "429", "timed out", "Connection reset"].iter().any(|k| e.contains(k)) => {
+                std::thread::sleep(std::time::Duration::from_secs(wait));
+                wait *= 2;
+            }
+            r => return r,
+        }
+    }
+}
+
 pub fn have(cmd: &str) -> bool {
     Command::new(cmd).arg("-version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok()
         || Command::new(cmd).arg("--version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok()

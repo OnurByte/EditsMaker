@@ -44,6 +44,28 @@ Models are bad at humour, so the model is asked last. People are asked first.
 For a topic it analyses every downloaded video and renders only the best moments overall. Without an LLM
 (`--no-llm`, or none installed) it cuts around the strongest signals.
 
+## Music edits
+
+```sh
+edits https://www.youtube.com/@channel --music https://www.youtube.com/watch?v=... --sad --voice --tag @you
+```
+
+The edits people repost: the footage's best shots cut onto a song.
+
+- **Beats.** The song's beats are found in the binary (spectral flux, tempo, dynamic-programming beat tracking).
+  The loudest stretches become the edits, one per `-n`.
+- **Shots.** Every video is scanned at 4 frames a second for hard cuts, movement, brightness and faces. Faces and
+  movement win; black frames, intros and end screens lose. The best shot opens the edit, the rest keep story order,
+  and pieces of one scene are never used back to back.
+- **Transitions from the music.** Hard cuts on the beat; on the hardest hits a white flash or a zoom.
+  `--sad` dissolves, dips to black on the hardest hits, slows the picture to 80% and turns it black and white.
+- **Every shot moves.** A slow push-in; fast edits land each cut with a quick punch.
+- **`--voice`** puts the speaker's best line over it, the music ducking under the words, with captions:
+  one word at a time in heavy capitals for fast edits, two or three words fading for sad ones.
+- **`--text "THE PROBLEM"`** lays one line over the whole edit, **`--tag`** signs it.
+
+Only publish what you have the rights to: the song and the footage both belong to someone.
+
 ## Why it is fast
 
 It never downloads a whole video. Measured on two 8-minute videos from a channel, three clips out:
