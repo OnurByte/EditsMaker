@@ -100,71 +100,112 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
 }
 
 struct Analysed {
+    src: fetch::Source,
     words: Vec<transcribe::Word>,
     lines: Vec<transcribe::Line>,
-    work: PathBuf,
     moments: Vec<pick::Moment>,
 }
 
-fn make(args: &[String]) -> Result<(), String> {
-    let c = parse(args, study::load())?;
-    let cache = util::home().join(".cache/edits");
-    std::fs::create_dir_all(&cache).map_err(|e| e.to_string())?;
-    std::fs::create_dir_all(&c.out).map_err(|e| e.to_string())?;
-    eprintln!("edits: fetching \"{}\"", c.input);
-    let sources = fetch::fetch(&c.input, c.videos, &cache)?;
-    let mut analysed = vec![];
-    for src in &sources {
-        let work = cache.join(safe(&src.id));
-        std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
-        let wav = work.join("a.wav");
-        transcribe::wav(&src.video, &wav)?;
-        eprintln!("edits: transcribing {} ({})", src.title, util::mmss(src.duration));
-        // no speech model or no speech is fine: the cut then rests on the other signals, without captions
-        let words = transcribe::words(&wav, &c.lang).unwrap_or_else(|e| {
-            eprintln!("edits: no transcript ({e})");
-            vec![]
-        });
-        let lines = transcribe::lines(&words);
-        let mut hits = signals::comment_hits(&src.comments, src.duration);
-        let laughs = transcribe::laughs(&wav);
-        hits.extend(laughs.iter().map(|&t| signals::Hit { t: (t - 4.0).max(0.0), weight: 4.0, text: "(videoda kahkaha/alkış sesi)".into() }));
-        let loud = signals::loudness(&wav).unwrap_or_default();
-        let curve = signals::curve(src.duration, &src.heat, &hits, &loud);
-        eprintln!("edits: picking moments ({} timestamped comments, {} laughs, replay heat: {})", hits.len() - laughs.len(), laughs.len(), if src.heat.is_empty() { "no" } else { "yes" });
-        let moments = pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm);
-        analysed.push(Analysed { words, lines, work, moments });
+/// Everything about one video up to "which moments": transcript, signals, the pick.
+fn analyse(src: fetch::Source, c: &Cli) -> Analysed {
+    // no captions and no speech model is fine: the cut then rests on the other signals, without burned-in text
+    let t = transcribe::transcript(&src.work, &src.wav, &c.lang, &src.language).unwrap_or_else(|e| {
+        eprintln!("edits: no transcript for {} ({e})", src.title);
+        transcribe::Transcript::default()
+    });
+    let lines = transcribe::lines(&t.words);
+    let mut hits = signals::comment_hits(&src.comments, src.duration);
+    let comments = hits.len();
+    hits.extend(t.laughs.iter().map(|&s| signals::Hit { t: (s - 4.0).max(0.0), weight: 4.0, text: "(videoda kahkaha/alkış sesi)".into() }));
+    let loud = signals::loudness(&src.wav).unwrap_or_default();
+    let curve = signals::curve(src.duration, &src.heat, &hits, &loud);
+    let moments = pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm);
+    eprintln!("edits: {} ({}): words from {}, {comments} timestamped comments, {} laughs, replay heat {}, {} moments",
+        src.title, util::mmss(src.duration), if t.from.is_empty() { "nothing" } else { t.from }, t.laughs.len(), if src.heat.is_empty() { "no" } else { "yes" }, moments.len());
+    Analysed { src, words: t.words, lines, moments }
+}
+
+/// Downloads the picture for one moment and renders it.
+fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, out: &Path) -> Result<serde_json::Value, String> {
+    let (video, seek) = fetch::clip(&a.src, m.start, m.end)?;
+    let (w, h) = fetch::dims(&video);
+    let focus = if c.opts.layout == "fill" { face::center_x(&video, seek, m.end - m.start, w, h) } else { None };
+    // the subtitle file is per clip: clips render at the same time
+    let work = a.src.work.join(out.file_stem().unwrap_or_default());
+    std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
+    // nobody to frame on (screen recordings, graphics): cropping would cut content at random, so keep the whole frame
+    let mut opts = c.opts.clone();
+    if focus.is_none() && w * opts.h > h * opts.w {
+        opts.layout = "fit".into();
     }
-    // every video was analysed; only the best moments overall get rendered
-    let mut best: Vec<(usize, &pick::Moment)> = analysed.iter().enumerate().flat_map(|(i, a)| a.moments.iter().map(move |m| (i, m))).collect();
+    render::render(&video, seek, m, &a.words, &opts, focus.unwrap_or(0.5), &work, out)?;
+    let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
+    let side = serde_json::json!({ "clip": out, "source": a.src.title, "id": a.src.id, "moment": m, "text": text, "framed_on_faces": focus.is_some() });
+    std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
+    Ok(side)
+}
+
+fn make(args: &[String]) -> Result<(), String> {
+    let c = &parse(args, study::load())?;
+    let cache = &util::home().join(".cache/edits");
+    std::fs::create_dir_all(cache).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&c.out).map_err(|e| e.to_string())?;
+    let clock = std::time::Instant::now();
+    let lap = |what: &str| eprintln!("edits: [{:>5.1}s] {what}", clock.elapsed().as_secs_f64());
+
+    // every video is fetched and analysed at the same time; one that fails is skipped, not fatal
+    let analysed: Vec<Analysed> = if Path::new(&c.input).is_file() {
+        vec![analyse(fetch::local(Path::new(&c.input), cache)?, c)]
+    } else {
+        let found = fetch::resolve(&c.input, c.videos)?;
+        lap(&format!("found {} video(s)", found.len()));
+        std::thread::scope(|s| {
+            let jobs: Vec<_> = found.iter().map(|(id, url)| s.spawn(move || fetch::remote(id, url, cache).map(|src| analyse(src, c)))).collect();
+            jobs.into_iter().filter_map(|j| match j.join() {
+                Ok(Ok(a)) => Some(a),
+                Ok(Err(e)) => {
+                    eprintln!("edits: skipped a video: {e}");
+                    None
+                }
+                Err(_) => None,
+            }).collect()
+        })
+    };
+    lap("analysed");
+
+    // only the best moments overall get their picture downloaded and rendered, four at a time
+    let mut best: Vec<(&Analysed, &pick::Moment)> = analysed.iter().flat_map(|a| a.moments.iter().map(move |m| (a, m))).collect();
     best.sort_by(|a, b| b.1.score.total_cmp(&a.1.score));
     best.truncate(c.n);
+    let jobs: Vec<(PathBuf, &Analysed, &pick::Moment)> = best.iter().enumerate()
+        .map(|(k, (a, m))| (c.out.join(format!("{:02}-{}.mp4", k + 1, fetch::safe(&a.src.id))), *a, *m)).collect();
     let mut clips: Vec<PathBuf> = vec![];
-    for (k, (i, m)) in best.iter().enumerate() {
-        let (src, a) = (&sources[*i], &analysed[*i]);
-        let out = c.out.join(format!("{:02}-{}.mp4", k + 1, safe(&src.id)));
-        let focus = if c.opts.layout == "fill" { face::center_x(&src.video, m.start, m.end - m.start, src.width, src.height) } else { None };
-        eprintln!("edits: rendering {} [{}-{}] {}{}", out.display(), util::mmss(m.start), util::mmss(m.end), m.title, if focus.is_some() { " (framed on faces)" } else { "" });
-        render::render(&src.video, m, &a.words, &c.opts, focus.unwrap_or(0.5), &a.work, &out)?;
-        let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
-        let side = serde_json::json!({ "clip": out, "source": src.title, "id": src.id, "moment": m, "text": text });
-        std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
-        println!("{side}");
-        clips.push(out);
+    for batch in jobs.chunks(4) {
+        let done: Vec<_> = std::thread::scope(|s| {
+            let running: Vec<_> = batch.iter().map(|(out, a, m)| s.spawn(move || cut(a, m, c, out))).collect();
+            running.into_iter().map(|j| j.join().unwrap_or_else(|_| Err("render thread crashed".into()))).collect()
+        });
+        for ((out, _, m), res) in batch.iter().zip(done) {
+            match res {
+                Ok(side) => {
+                    eprintln!("edits: {} [{}-{}] {}", out.display(), util::mmss(m.start), util::mmss(m.end), m.title);
+                    println!("{side}");
+                    clips.push(out.clone());
+                }
+                Err(e) => eprintln!("edits: could not make {}: {e}", out.display()),
+            }
+        }
     }
+    lap("rendered");
     if clips.is_empty() {
         return Err("found nothing worth cutting".into());
     }
     if c.join && clips.len() > 1 {
         let out = c.out.join("joined.mp4");
-        render::join(&clips, &cache, &out)?;
+        render::join(&clips, cache, &out)?;
         eprintln!("edits: joined {} clips into {}", clips.len(), out.display());
     }
     Ok(())
-}
-
-fn safe(id: &str) -> String {
-    id.chars().map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).take(60).collect()
 }
 
 /// `edits rate clip.mp4 +|-` appends the clip's text to the taste file as a liked or disliked example.
@@ -238,10 +279,5 @@ mod tests {
         let c = parse(&args("x"), style()).unwrap();
         assert_eq!((c.opts.w, c.opts.h, c.opts.grade.as_str(), c.opts.lufs), (1440, 1080, "bw", -30.0));
         assert_eq!(parse(&args("x --aspect 9:16"), style()).unwrap().opts.h, 1920);
-    }
-
-    #[test]
-    fn safe_names() {
-        assert_eq!(safe("a/b c.mp4"), "a_b_c_mp4");
     }
 }

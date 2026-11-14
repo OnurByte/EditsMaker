@@ -8,6 +8,7 @@ renders finished edits: reframed, captioned, graded, loudness-matched. One Rust 
 ```sh
 edits "recep ivedik komik sahneler"            # search, analyse 5 videos, cut the 3 best moments
 edits https://www.youtube.com/watch?v=...  -n 5
+edits https://www.youtube.com/@channel --videos 4   # a channel's newest uploads
 edits interview.mp4 --aspect 9:16 --grade teal
 ```
 
@@ -43,10 +44,27 @@ Models are bad at humour, so the model is asked last. People are asked first.
 For a topic it analyses every downloaded video and renders only the best moments overall. Without an LLM
 (`--no-llm`, or none installed) it cuts around the strongest signals.
 
+## Why it is fast
+
+It never downloads a whole video. Measured on two 8-minute videos from a channel, three clips out:
+
+| | Whole videos + whisper | Now |
+|---|---|---|
+| First run | 315 s | 50 s |
+| Same videos again | | 18 s |
+
+- **Audio first.** Analysis needs sound, comments and replay data: a few MB, about 8 s per video.
+- **The site's captions.** YouTube already has word-timed speech recognition; whisper only runs when there are
+  none, or when they mask profanity as `[ __ ]`.
+- **Only the moments.** The picture is downloaded for the chosen seconds alone, by HTTP range.
+- **All at once.** Videos are analysed in parallel, clips are fetched and rendered four at a time.
+- **Cached by video id** in `~/.cache/edits`: plain files, no database to run or corrupt.
+
 ## What an edit gets
 
 - **Reframing.** A wide video becomes 9:16, 1:1 or 4:3 by cropping around the faces it detects, not around the
-  middle. `--fit` keeps the whole frame over a blurred copy instead.
+  middle. With no face in the shot (screen recordings, graphics) the whole frame is kept over a blurred copy;
+  `--fit` forces that.
 - **Captions.** Word-timed, three words at a time. The punchline turns red and upper case, and the picture punches in.
 - **Grade.** `bw`, `dark`, `teal` or `none`.
 - **Sound.** Loudness-normalised, short fades in and out.

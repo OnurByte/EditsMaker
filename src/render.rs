@@ -3,6 +3,7 @@ use crate::transcribe::Word;
 use crate::util::run;
 use std::path::Path;
 
+#[derive(Clone)]
 pub struct Opts {
     pub w: u32,
     pub h: u32,
@@ -100,8 +101,9 @@ pub fn filters(m: &Moment, o: &Opts, ass_file: Option<&str>, focus: f64) -> Stri
     f
 }
 
-/// Cuts one moment into a finished clip. `work` holds the temporary subtitle file.
-pub fn render(video: &Path, m: &Moment, words: &[Word], o: &Opts, focus: f64, work: &Path, out: &Path) -> Result<(), String> {
+/// Cuts one moment into a finished clip. The moment starts `seek` seconds into `video`; `work` holds the subtitle file.
+#[allow(clippy::too_many_arguments)]
+pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, focus: f64, work: &Path, out: &Path) -> Result<(), String> {
     let dur = m.end - m.start;
     let ass_file = if o.captions && words.iter().any(|w| w.s >= m.start && w.e <= m.end) {
         std::fs::write(work.join("cap.ass"), ass(words, m, o)).map_err(|e| e.to_string())?;
@@ -112,7 +114,7 @@ pub fn render(video: &Path, m: &Moment, words: &[Word], o: &Opts, focus: f64, wo
     let abs = |p: &Path| std::path::absolute(p).map(|p| p.to_string_lossy().into_owned()).map_err(|e| e.to_string());
     let af = format!("afade=t=in:d=0.05,afade=t=out:st={:.2}:d=0.25,loudnorm=I={:.1}:TP=-1.5:LRA=11", (dur - 0.25).max(0.0), o.lufs);
     run(Some(work), "ffmpeg", &[
-        "-v", "error", "-y", "-ss", &format!("{:.3}", m.start), "-t", &format!("{dur:.3}"), "-i", &abs(video)?,
+        "-v", "error", "-y", "-ss", &format!("{seek:.3}"), "-t", &format!("{dur:.3}"), "-i", &abs(video)?,
         "-map", "0:v:0", "-map", "0:a:0?", "-vf", &filters(m, o, ass_file, focus), "-af", &af,
         "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-maxrate", "6M", "-bufsize", "12M",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", &abs(out)?,
