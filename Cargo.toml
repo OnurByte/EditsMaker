@@ -1,6 +1,6 @@
 [package]
 name = "edits"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 description = "Turn any YouTube link, channel or topic into viral TikTok, Reels and Shorts edits: Alight Motion and Premiere presets, trending songs, beat-synced cuts, captions, colour looks, MCP server for AI agents."
 repository = "https://github.com/OnurByte/EditsMaker"

@@ -50,6 +50,11 @@ Other kinds, when asked for:
   `edits draw clip.mp4 SPEC...`. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart,
   sparkle, or an .svg file. X,Y is the centre and SIZE the width as fractions; look at a frame first so the ring
   lands on the face or the detail, and keep each up for 1.5-2.5 s on the line it explains.
+- The user's own pack assets (`edits library` lists them; `edits library add pack.zip` takes a pack in):
+  `--overlay NAME[@FROM[-TO]][:OPACITY]` (repeatable, also `edits draw clip.mp4 --overlay ...`) lays a library clip
+  over the edit: textures like "vhs texture:0.5" run screened under all of it, a transition or meme plays once at
+  FROM, green screens are keyed. `--music NAME` takes a library song; talking clips take `--whoosh NAME` and
+  `--boom NAME`. A meme or background's path works as the input footage.
 - Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
 - Shots are spread over every downloaded video; do not settle for an edit cut from one video.
 
