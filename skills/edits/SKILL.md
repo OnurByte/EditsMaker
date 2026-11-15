@@ -53,6 +53,26 @@ Check the tools once: `edits doctor` (needs ffmpeg; yt-dlp for links; whisper on
 - Sad is not just slow: if the footage has no feeling in it (a gameplay clip, a lecture), say so and ask for better
   footage instead of rendering it.
 
+## What the user's own reference edits look like (measured from ~/Documents/edits, 11 clips)
+
+Study results, not taste guesses. Match these before adding anything fancy:
+
+- **Loud and bass-heavy.** Fast montages sit at -9 to -12 LUFS; talking-head clips at -16 to -17. A first emotional
+  test came out at -16 LUFS with the sub (<120 Hz) 10-15 dB below the references and the user called the sound
+  disgusting. After every render run
+  `ffmpeg -i clip.mp4 -af ebur128 -f null - 2>&1 | grep -A8 Summary` and keep montages near -11 LUFS.
+- **A quiet "fon müziği" bed under dialogue is wrong.** Do not use soft stock piano/ambient tracks (trend lists have
+  them, e.g. "En Duygusal Fon Müziği"). Use a song with real low end, from the library or the trend chart, and
+  say which one you chose.
+- **Frames:** mostly 1:1 (720 or 1080) and 4:3, some 9:16. Square is the default (`~/.config/edits/style.json`).
+- **Cuts:** fast montages cut every 0.5-1.5 s (a few 2-3 s holds near the start, then tighter); no cut longer than
+  ~3 s except a deliberate hold. A single 50 s scene is not this style.
+- **Formats seen:** (1) fast cuts of Turkish-series scenes, teal/green or black-and-white grade, music-driven;
+  (2) a speaker in black and white with one big caption line at a time; (3) "THE PROBLEM / THE SOLUTION" meme cuts;
+  (4) one big uppercase word at a time over a talking face. Pick one of these, do not invent a new format.
+- Before rendering, compare with a reference by running `edits learn ref.mp4` or `--like ref.mp4`; the loudness and
+  cut-length numbers above are what to hit.
+
 ## Pick the kind of edit
 
 Preset edits look best: a real edit's timing, speed ramps, zooms, shakes and flashes replayed over the footage.
