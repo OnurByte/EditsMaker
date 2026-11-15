@@ -7,6 +7,16 @@
   <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><b>Download</b></a> ⁜ Linux, macOS and Windows
 </p>
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 5 agent skills, 30 presets, 36 cut moves, 16 looks">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/agents-dark.svg">
+  <img src="assets/readme/agents-light.svg" width="100%" alt="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
+</picture>
+
 ## Install
 
 ### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-apple-dark.svg"><img src="assets/readme/os-apple-light.svg" height="20" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-linux-dark.svg"><img src="assets/readme/os-linux-light.svg" height="20" alt=""></picture> macOS and Linux
@@ -45,6 +55,21 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
   <img src="assets/readme/features-light.svg" width="100%" alt="Presets, trends, looks, agents, reads captions first, every frame size">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/fx-dark.svg">
+  <img src="assets/readme/fx-light.svg" width="100%" alt="Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, music ducking, stabilize, ProRes">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 30 Alight Motion edits and 36 Premiere cut moves, every shot and keyframe as editable JSON">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/why-dark.svg">
+  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command, trend-aware, reads first, MIT and runs on your computer">
 </picture>
 
 ---

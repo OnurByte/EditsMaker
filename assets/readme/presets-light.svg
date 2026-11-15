@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-label="Real edits as data: 30 Alight Motion edits and 36 Premiere cut moves, every shot and keyframe as editable JSON">
+<rect x="0.5" y="0.5" width="959" height="329" rx="12" fill="#F4F1EA" stroke="#D8D3C8"/>
+<text x="40" y="62" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="34" fill="#0B0B0C" text-anchor="start" letter-spacing="-1">Real edits, as data</text>
+<text x="40" y="94" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="17" fill="#8C877C" text-anchor="start" letter-spacing="0">30 edits from Alight Motion and 36 Premiere cut moves. Every shot, ramp and keyframe is JSON you can change.</text>
+<text x="40" y="150" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">shots</text>
+<rect x="120" y="134" width="40" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="164" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
+<rect x="224" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="252" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="332" y="134" width="40" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
+<rect x="376" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
+<rect x="404" y="134" width="32" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="440" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.75"/>
+<rect x="468" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="528" y="134" width="32" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="564" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.75"/>
+<rect x="644" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
+<rect x="672" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="700" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<rect x="780" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
+<rect x="860" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
+<text x="40" y="188" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">zoom</text>
+<line x1="120" y1="183" x2="144" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="123" y="178" width="10" height="10" transform="rotate(45 128 183)" fill="#0B0B0C"/>
+<line x1="148" y1="183" x2="188" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="154" y="178" width="10" height="10" transform="rotate(45 159 183)" fill="#0B0B0C"/>
+<line x1="192" y1="183" x2="268" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="214" y="178" width="10" height="10" transform="rotate(45 219 183)" fill="#0B0B0C"/>
+<line x1="272" y1="183" x2="296" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="277" y="178" width="10" height="10" transform="rotate(45 282 183)" fill="#0B0B0C"/>
+<line x1="300" y1="183" x2="340" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="303" y="178" width="10" height="10" transform="rotate(45 308 183)" fill="#0B0B0C"/>
+<line x1="344" y1="183" x2="420" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="369" y="178" width="10" height="10" transform="rotate(45 374 183)" fill="#0B0B0C"/>
+<line x1="424" y1="183" x2="480" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="484" y1="183" x2="540" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="544" y1="183" x2="600" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="572" y="178" width="10" height="10" transform="rotate(45 577 183)" fill="#0B0B0C"/>
+<line x1="604" y1="183" x2="644" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="614" y="178" width="10" height="10" transform="rotate(45 619 183)" fill="#0B0B0C"/>
+<line x1="648" y1="183" x2="680" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="656" y="178" width="10" height="10" transform="rotate(45 661 183)" fill="#0B0B0C"/>
+<line x1="684" y1="183" x2="760" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="726" y="178" width="10" height="10" transform="rotate(45 731 183)" fill="#0B0B0C"/>
+<line x1="764" y1="183" x2="820" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="767" y="178" width="10" height="10" transform="rotate(45 772 183)" fill="#0B0B0C"/>
+<line x1="824" y1="183" x2="848" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="828" y="178" width="10" height="10" transform="rotate(45 833 183)" fill="#0B0B0C"/>
+<line x1="852" y1="183" x2="892" y2="183" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="882" y="178" width="10" height="10" transform="rotate(45 887 183)" fill="#0B0B0C"/>
+<text x="40" y="226" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">shake</text>
+<line x1="120" y1="221" x2="144" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="148" y1="221" x2="172" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="176" y1="221" x2="252" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="256" y1="221" x2="296" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="277" y="216" width="10" height="10" transform="rotate(45 282 221)" fill="#8C877C"/>
+<line x1="300" y1="221" x2="376" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="357" y="216" width="10" height="10" transform="rotate(45 362 221)" fill="#8C877C"/>
+<line x1="380" y1="221" x2="404" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="408" y1="221" x2="448" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="411" y="216" width="10" height="10" transform="rotate(45 416 221)" fill="#8C877C"/>
+<line x1="452" y1="221" x2="476" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="480" y1="221" x2="520" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="524" y1="221" x2="580" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="547" y="216" width="10" height="10" transform="rotate(45 552 221)" fill="#8C877C"/>
+<line x1="584" y1="221" x2="624" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="612" y="216" width="10" height="10" transform="rotate(45 617 221)" fill="#8C877C"/>
+<line x1="628" y1="221" x2="668" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="634" y="216" width="10" height="10" transform="rotate(45 639 221)" fill="#8C877C"/>
+<line x1="672" y1="221" x2="728" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="689" y="216" width="10" height="10" transform="rotate(45 694 221)" fill="#8C877C"/>
+<line x1="732" y1="221" x2="764" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="768" y1="221" x2="824" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="798" y="216" width="10" height="10" transform="rotate(45 803 221)" fill="#8C877C"/>
+<line x1="828" y1="221" x2="852" y2="221" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="839" y="216" width="10" height="10" transform="rotate(45 844 221)" fill="#8C877C"/>
+<text x="40" y="264" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">speed</text>
+<line x1="120" y1="259" x2="160" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="164" y1="259" x2="220" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="224" y1="259" x2="264" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="268" y1="259" x2="308" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="312" y1="259" x2="368" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="372" y1="259" x2="404" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="375" y="254" width="10" height="10" transform="rotate(45 380 259)" fill="#0B0B0C"/>
+<line x1="408" y1="259" x2="440" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="444" y1="259" x2="468" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="448" y="254" width="10" height="10" transform="rotate(45 453 259)" fill="#0B0B0C"/>
+<line x1="472" y1="259" x2="512" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="480" y="254" width="10" height="10" transform="rotate(45 485 259)" fill="#0B0B0C"/>
+<line x1="516" y1="259" x2="572" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="554" y="254" width="10" height="10" transform="rotate(45 559 259)" fill="#0B0B0C"/>
+<line x1="576" y1="259" x2="652" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="591" y="254" width="10" height="10" transform="rotate(45 596 259)" fill="#0B0B0C"/>
+<line x1="656" y1="259" x2="732" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="736" y1="259" x2="760" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="747" y="254" width="10" height="10" transform="rotate(45 752 259)" fill="#0B0B0C"/>
+<line x1="764" y1="259" x2="820" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="769" y="254" width="10" height="10" transform="rotate(45 774 259)" fill="#0B0B0C"/>
+<line x1="824" y1="259" x2="880" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<line x1="884" y1="259" x2="908" y2="259" stroke="#D8D3C8" stroke-width="2"/>
+<rect x="889" y="254" width="10" height="10" transform="rotate(45 894 259)" fill="#0B0B0C"/>
+<text x="40" y="302" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">{"start": 3.9, "end": 4.73, "speed": 1.02, "zoom": [[0, 1.09, "linear"], [0.51, 1.9, "out 2.9"]]}</text>
+</svg>

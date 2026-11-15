@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="340" viewBox="0 0 960 340" role="img" aria-label="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
+<rect x="0.5" y="0.5" width="959" height="339" rx="12" fill="#F4F1EA" stroke="#D8D3C8"/>
+<text x="40" y="62" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="34" fill="#0B0B0C" text-anchor="start" letter-spacing="-1">Your AI agent edits for you</text>
+<text x="40" y="94" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="17" fill="#8C877C" text-anchor="start" letter-spacing="0">EditsMaker is an MCP server. Ask in plain words; the agent picks the preset, the song and the lines.</text>
+<rect x="40" y="120" width="430" height="140" rx="14" fill="#EAE5DA" stroke="#D8D3C8"/>
+<text x="60" y="150" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">You</text>
+<text x="60" y="182" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="500" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="0">"Make 3 sad edits from @channel</text>
+<text x="60" y="208" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="500" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="0">with a trending song and words</text>
+<text x="60" y="234" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="500" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="0">from his own videos."</text>
+<path d="M482 190 h36" stroke="#E5332A" stroke-width="3"/><path d="M512 182 l10 8 l-10 8" fill="none" stroke="#E5332A" stroke-width="3"/>
+<rect x="530" y="120" width="390" height="140" rx="14" fill="#EAE5DA" stroke="#D8D3C8"/>
+<text x="550" y="150" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">MCP tools</text>
+<text x="550" y="178" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_make</text>
+<text x="740" y="178" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_preset_get</text>
+<text x="550" y="199" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_preset_save</text>
+<text x="740" y="199" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_trends</text>
+<text x="550" y="220" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_looks</text>
+<text x="740" y="220" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_presets</text>
+<text x="550" y="241" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="500" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">edits_doctor</text>
+<text x="40" y="308" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="15" fill="#8C877C" text-anchor="start" letter-spacing="0">Works with</text>
+<rect x="140" y="288" width="127" height="30" rx="15" fill="none" stroke="#D8D3C8"/><text x="203.5" y="308" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="15" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">Claude Code</text>
+<rect x="277" y="288" width="73" height="30" rx="15" fill="none" stroke="#D8D3C8"/><text x="313.5" y="308" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="15" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">Codex</text>
+<rect x="360" y="288" width="82" height="30" rx="15" fill="none" stroke="#D8D3C8"/><text x="401.0" y="308" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="15" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">Cursor</text>
+<rect x="452" y="288" width="118" height="30" rx="15" fill="none" stroke="#D8D3C8"/><text x="511.0" y="308" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="15" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">Gemini CLI</text>
+<rect x="580" y="288" width="154" height="30" rx="15" fill="none" stroke="#D8D3C8"/><text x="657.0" y="308" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="15" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">any MCP client</text>
+</svg>
