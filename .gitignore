@@ -2,3 +2,4 @@ target
 edits-out
 .serena
 assets/*.zip
+.upload/
