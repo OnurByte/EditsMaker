@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="590" viewBox="0 0 960 590" role="img" aria-label="The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked under the voice, cuts on the beat, faces followed into 9:16">
+<rect x="0.5" y="0.5" width="959" height="589" rx="12" fill="#F4F1EA" stroke="#D8D3C8"/>
+<text x="40" y="62" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="34" fill="#0B0B0C" text-anchor="start" letter-spacing="-1">The basics, done for you</text>
+<text x="40" y="94" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="17" fill="#8C877C" text-anchor="start" letter-spacing="0">Every talking clip gets these before you ask for anything.</text>
+<rect x="40" y="125" width="280" height="220" rx="12" fill="none" stroke="#D8D3C8"/>
+<text x="58" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="1">JUMP CUTS</text>
+<text x="58" y="333" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12.5" fill="#8C877C" text-anchor="start" letter-spacing="0">pauses cut out, every other cut punches in</text>
+<rect x="58" y="173" width="50" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="128" y="173" width="40" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="183" y="173" width="55" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="253" y="173" width="30" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="108" y="173" width="20" height="22" rx="4" fill="none" stroke="#8C877C" stroke-dasharray="3 3"/>
+<rect x="168" y="173" width="15" height="22" rx="4" fill="none" stroke="#8C877C" stroke-dasharray="3 3"/>
+<rect x="238" y="173" width="20" height="22" rx="4" fill="none" stroke="#8C877C" stroke-dasharray="3 3"/>
+<text x="78" y="223" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">pauses</text>
+<path d="M178 233 v22" stroke="#E5332A" stroke-width="2" fill="none"/><path d="M172 249 l6 8 l6 -8" stroke="#E5332A" stroke-width="2" fill="none"/>
+<rect x="58" y="269" width="50" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="111" y="269" width="40" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="154" y="269" width="55" height="22" rx="4" fill="#0B0B0C"/>
+<rect x="212" y="269" width="30" height="22" rx="4" fill="#0B0B0C"/>
+<text x="274" y="285" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">tight</text>
+<path d="M109.5 265 v30 M152.5 265 v30 M210.5 265 v30" stroke="#E5332A" stroke-width="2"/>
+<rect x="340" y="125" width="280" height="220" rx="12" fill="none" stroke="#D8D3C8"/>
+<text x="358" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="1">CAPTIONS</text>
+<text x="358" y="333" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12.5" fill="#8C877C" text-anchor="start" letter-spacing="0">word by word, 11 styles, burned in</text>
+<rect x="358" y="173" width="244" height="104" rx="8" fill="none" stroke="#D8D3C8"/>
+<rect x="372" y="187" width="216" height="40" rx="6" fill="#D8D3C8" opacity="0.5"/>
+<text x="412" y="259" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="800" font-size="18" fill="#0B0B0C" text-anchor="middle" letter-spacing="-0.3">NOBODY</text><text x="484" y="259" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="800" font-size="18" fill="#E5332A" text-anchor="middle" letter-spacing="-0.3">SAW</text><text x="548" y="259" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="800" font-size="18" fill="#0B0B0C" text-anchor="middle" letter-spacing="-0.3">THIS</text><rect x="640" y="125" width="280" height="220" rx="12" fill="none" stroke="#D8D3C8"/>
+<text x="658" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="1">HOOK</text>
+<text x="658" y="333" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12.5" fill="#8C877C" text-anchor="start" letter-spacing="0">a title on top for the first seconds</text>
+<rect x="658" y="173" width="244" height="104" rx="8" fill="none" stroke="#D8D3C8"/>
+<rect x="700" y="185" width="160" height="26" rx="13" fill="#E5332A"/>
+<text x="780" y="203" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">wait for it</text>
+<circle cx="780" cy="245" r="18" fill="none" stroke="#8C877C" stroke-width="2"/><path d="M750 277 q30 -34 60 0" fill="none" stroke="#8C877C" stroke-width="2"/>
+<rect x="40" y="365" width="280" height="220" rx="12" fill="none" stroke="#D8D3C8"/>
+<text x="58" y="395" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="1">MUSIC BED</text>
+<text x="58" y="573" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12.5" fill="#8C877C" text-anchor="start" letter-spacing="0">song under the voice, ducked while they talk</text>
+<rect x="58" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="66" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="74" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="82" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="90" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="98" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="106" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="114" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="122" y="433.6506570892068" width="4" height="18.69868582158645" rx="2" fill="#0B0B0C"/>
+<rect x="130" y="432.2408815132393" width="4" height="21.518236973521383" rx="2" fill="#0B0B0C"/>
+<rect x="138" y="436.70305211806595" width="4" height="12.593895763868105" rx="2" fill="#0B0B0C"/>
+<rect x="146" y="436.3397128497974" width="4" height="13.320574300405141" rx="2" fill="#0B0B0C"/>
+<rect x="154" y="432.1525101594681" width="4" height="21.694979681063863" rx="2" fill="#0B0B0C"/>
+<rect x="162" y="433.90413132864774" width="4" height="18.191737342704513" rx="2" fill="#0B0B0C"/>
+<rect x="170" y="439.7310156222309" width="4" height="6.537968755538187" rx="2" fill="#0B0B0C"/>
+<rect x="178" y="433.569724587587" width="4" height="18.860550824825935" rx="2" fill="#0B0B0C"/>
+<rect x="186" y="432.2747377876058" width="4" height="21.45052442478844" rx="2" fill="#0B0B0C"/>
+<rect x="194" y="436.8260754149551" width="4" height="12.347849170089793" rx="2" fill="#0B0B0C"/>
+<rect x="202" y="436.2206241088123" width="4" height="13.55875178237546" rx="2" fill="#0B0B0C"/>
+<rect x="210" y="432.12747995934683" width="4" height="21.745040081306293" rx="2" fill="#0B0B0C"/>
+<rect x="218" y="433.99210202582657" width="4" height="18.015795948346817" rx="2" fill="#0B0B0C"/>
+<rect x="226" y="439.5966184975455" width="4" height="6.806763004909036" rx="2" fill="#0B0B0C"/>
+<rect x="234" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="242" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="250" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="258" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="266" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="274" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="282" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<rect x="290" y="442.0" width="4" height="2" rx="2" fill="#0B0B0C"/>
+<text x="58" y="481" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">voice</text>
+<path d="M58 499 H122 Q138 499 148 517 H228 Q238 499 254 499 H298" fill="none" stroke="#E5332A" stroke-width="3"/>
+<text x="58" y="537" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">song</text>
+<rect x="340" y="365" width="280" height="220" rx="12" fill="none" stroke="#D8D3C8"/>
+<text x="358" y="395" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="1">BEAT CUTS</text>
+<text x="358" y="573" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12.5" fill="#8C877C" text-anchor="start" letter-spacing="0">shots land on the song's beats</text>
+<path d="M368 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M400 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M432 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M464 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M496 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M528 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M560 421 v34" stroke="#8C877C" stroke-width="2"/>
+<path d="M592 421 v34" stroke="#8C877C" stroke-width="2"/>
+<rect x="368" y="469" width="62" height="40" rx="4" fill="#0B0B0C"/>
+<rect x="432" y="469" width="30" height="40" rx="4" fill="#D8D3C8"/>
+<rect x="464" y="469" width="94" height="40" rx="4" fill="#0B0B0C"/>
+<rect x="560" y="469" width="30" height="40" rx="4" fill="#D8D3C8"/>
+<text x="358" y="533" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">beats</text><text x="602" y="533" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="600" font-size="12" fill="#E5332A" text-anchor="end" letter-spacing="0">cuts</text>
+<rect x="640" y="365" width="280" height="220" rx="12" fill="none" stroke="#D8D3C8"/>
+<text x="658" y="395" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="1">FACE REFRAME</text>
+<text x="658" y="573" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12.5" fill="#8C877C" text-anchor="start" letter-spacing="0">faces followed into 9:16, any frame size</text>
+<rect x="658" y="419" width="170" height="96" rx="6" fill="none" stroke="#D8D3C8"/>
+<circle cx="742" cy="457" r="14" fill="#8C877C"/><path d="M718 515 q24 -40 48 0" fill="#8C877C"/>
+<rect x="715" y="419" width="54" height="96" rx="4" fill="none" stroke="#E5332A" stroke-width="2.5"/>
+<text x="842" y="463" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">16:9</text><text x="842" y="481" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="0">→ 9:16</text>
+</svg>

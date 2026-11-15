@@ -115,14 +115,23 @@ impl Timeline {
     }
 
     pub fn srt(&self) -> String {
-        let t = |x: f64| {
-            let ms = (x.max(0.0) * 1000.0).round() as u64;
-            format!("{:02}:{:02}:{:02},{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
-        };
-        self.captions.iter().enumerate().map(|(i, (a, b, text))| format!("{}\n{} --> {}\n{}\n\n", i + 1, t(*a), t(*b), text)).collect()
+        self.cues(',').iter().enumerate().map(|(i, c)| format!("{}\n{c}", i + 1)).collect()
     }
 
-    /// Writes the asked-for kinds ("fcpxml", "edl", "srt") beside `out` (the rendered clip).
+    /// WebVTT: the same cues with dots in the times and a header.
+    pub fn vtt(&self) -> String {
+        format!("WEBVTT\n\n{}", self.cues('.').concat())
+    }
+
+    fn cues(&self, dot: char) -> Vec<String> {
+        let t = |x: f64| {
+            let ms = (x.max(0.0) * 1000.0).round() as u64;
+            format!("{:02}:{:02}:{:02}{dot}{:03}", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
+        };
+        self.captions.iter().map(|(a, b, text)| format!("{} --> {}\n{}\n\n", t(*a), t(*b), text)).collect()
+    }
+
+    /// Writes the asked-for kinds ("fcpxml", "edl", "srt", "vtt") beside `out` (the rendered clip).
     pub fn write(&self, out: &Path, kinds: &[String]) -> Result<Vec<PathBuf>, String> {
         let mut written = vec![];
         for k in kinds {
@@ -131,7 +140,9 @@ impl Timeline {
                 "edl" => ("edl", self.edl()),
                 "srt" if !self.captions.is_empty() => ("srt", self.srt()),
                 "srt" => continue,
-                other => return Err(format!("--export: {other} is not fcpxml, edl or srt")),
+                "vtt" if !self.captions.is_empty() => ("vtt", self.vtt()),
+                "vtt" => continue,
+                other => return Err(format!("--export: {other} is not fcpxml, edl, srt or vtt")),
             };
             let p = out.with_extension(ext);
             std::fs::write(&p, text).map_err(|e| format!("{}: {e}", p.display()))?;
@@ -182,6 +193,7 @@ mod tests {
         assert!(e.contains("001  AX001    AA/V  C        00:00:10:00 00:00:11:15 00:00:00:00 00:00:01:15"), "{e}");
         assert!(e.contains("* FROM CLIP NAME: a b.mp4") && e.contains("003  AX003    A     C        00:00:30:00 00:00:33:15 00:00:00:00 00:00:03:15"), "{e}");
         assert_eq!(tl().srt(), "1\n00:00:00,000 --> 00:00:01,200\nMerhaba dünya\n\n");
+        assert_eq!(tl().vtt(), "WEBVTT\n\n00:00:00.000 --> 00:00:01.200\nMerhaba dünya\n\n");
         assert!(tl().write(Path::new("/tmp/x.mp4"), &["mov".into()]).is_err());
     }
 }

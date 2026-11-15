@@ -33,7 +33,7 @@ fn tools() -> Value {
             "overlays": {"type": "array", "items": {"type": "string"}, "description": "library clips over the finished edit, NAME[@FROM[-TO]][:OPACITY] (names from edits_library): textures and backgrounds run under the whole edit screened, a transition or meme plays once at FROM, green screens are keyed. E.g. \"vhs texture:0.5\", \"burn 3@4.2\""},
             "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
             "boom": {"type": "string", "description": "talking clips: a library sound on the punchline instead of the made boom"},
-            "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt"},
+            "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt,vtt"},
             "say": {"type": "array", "items": {"type": "string"}, "description": "choose the moment yourself instead of the automatic pick: VIDEOID@FROM-TO seconds, one edit per entry (the speaker's words from there over their own footage, music under it); implies voice. Look at the captions and frames first"},
             "lang": {"type": "string", "description": "spoken language, two letters like tr or en (default: the system's)"},
             "like": {"type": "string", "description": "a reference edit (mp4) to copy: its music, cuts, flashes, colour and shape"},
@@ -53,6 +53,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
         {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the edit"}}, "required": ["video"]}},
+        {"name": "edits_check", "description": "Measure a finished clip: length, loudness (LUFS), cut rhythm, and write a contact sheet jpg beside it. Read the sheet to look at the edit before showing it; fast montages usually sit near -11 LUFS.",
+         "inputSchema": {"type": "object", "properties": {"clip": {"type": "string", "description": "path of the rendered mp4"}}, "required": ["clip"]}},
         {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_library", "description": "The user's asset library from imported editing packs: sound effects, music, overlays, transitions, green screens, backgrounds, memes, images. Without arguments: how many of each kind. With `kind` and/or `words`: the matching files. Use a name with edits_make music, overlays, whoosh or boom; a meme or background path works as `input`.",
          "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["sfx", "music", "overlay", "transition", "greenscreen", "background", "meme", "video", "image"]}, "words": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
@@ -71,6 +73,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_preset_get" => v.extend(["preset".into(), "show".into(), s("name").ok_or("name is needed")?]),
         "edits_preset_save" => v.extend(["preset".into(), "save".into(), "-".into()]),
         "edits_looks" => v.push("looks".into()),
+        "edits_check" => v.extend(["check".into(), s("clip").ok_or("clip is needed")?]),
         "edits_learn" => v.extend(["learn".into(), s("video").ok_or("video is needed")?]),
         "edits_doctor" => v.push("doctor".into()),
         "edits_library" => {
@@ -198,7 +201,7 @@ mod tests {
         assert_eq!(init["result"]["serverInfo"]["name"], "edits");
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 9);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 10);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 
@@ -206,6 +209,7 @@ mod tests {
     fn tool_calls_become_command_lines() {
         let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3});
         assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
+        assert_eq!(args_for("edits_check", &json!({"clip": "a.mp4"})).unwrap(), ["check", "a.mp4"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
         assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "whoosh": "main swoosh", "overlays": ["vhs:0.5"]})).unwrap(), ["a.mp4", "--whoosh", "main swoosh", "--overlay", "vhs:0.5"]);

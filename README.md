@@ -44,6 +44,11 @@ Install EditsMaker from github.com/OnurByte/EditsMaker, run "edits doctor", add 
 ```
 
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/loop-dark.svg">
+  <img src="assets/readme/loop-light.svg" width="100%" alt="How an agent makes an edit good: idea, footage, lines, render, check, fix">
+</picture>
+
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/steps-dark.svg">
   <img src="assets/readme/steps-light.svg" width="100%" alt="Link or topic, pick a preset, pick a song, your edit">
 </picture>
@@ -73,6 +78,11 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/fx-dark.svg">
   <img src="assets/readme/fx-light.svg" width="100%" alt="Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, music ducking, stabilize, ProRes">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/basics-dark.svg">
+  <img src="assets/readme/basics-light.svg" width="100%" alt="The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked under the voice, cuts on the beat, faces followed into 9:16">
 </picture>
 
 <picture>
@@ -173,6 +183,18 @@ then replay it over your own footage:
 
 ```sh
 edits learn liked-edit.mp4
+```
+
+Measure a finished clip: length, loudness, cut rhythm and a contact sheet to look at (the same as the `edits_check` tool):
+
+```sh
+edits check edits-out/01-VIDEO_ID.mp4
+```
+
+Timelines for other editors beside each clip (`fcpxml`, `edl`, captions as `srt` or `vtt`):
+
+```sh
+edits https://www.youtube.com/watch?v=VIDEO_ID --export fcpxml,srt,vtt
 ```
 
 A look as a .cube LUT for Premiere, DaVinci Resolve or CapCut:
