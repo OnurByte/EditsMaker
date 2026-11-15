@@ -137,6 +137,12 @@ Slow, faster, hidden faces, a cleaner finish:
 edits https://www.youtube.com/watch?v=VIDEO_ID --speed 1.2 --blur-faces --stabilize --denoise --codec h265
 ```
 
+Draw on it to point things out: an arrow, a ring, a cross, a burst, or your own .svg (`edits looks` lists them):
+
+```sh
+edits draw clip.mp4 "arrow@0.5-2.5:0.62,0.3,0.3" "circle@3-5:0.5,0.4,0.6#ffffff" "question@8-10:0.75,0.2,0.2"
+```
+
 What is trending on TikTok:
 
 ```sh

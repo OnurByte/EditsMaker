@@ -8,6 +8,7 @@ USAGE
   edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
   edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects and Premiere presets into presets
   edits looks                  the colour looks
+  edits draw <video> SPEC...   draw arrows, rings, crosses or your own .svg over a finished clip (see --svg)
   edits mcp                    serve every command to an AI agent (MCP over stdio)
   edits skills [install]       agent skills for every command
   edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
@@ -45,6 +46,8 @@ OPTIONS
       --lines N       N sentences from the videos' own words on screen (music and preset edits)
       --line TEXT     a line of your own on screen (repeat for more); replaces the picked ones
       --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)
+      --svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR]   draw an arrow, circle, underline, cross, check, burst,
+                      question, exclaim, heart, sparkle or your own .svg over the edit (repeatable)
       --stabilize  --denoise  --smooth  --fps N  --codec h264|h265|prores|av1  --quality draft|high|master
       --export LIST   timelines beside each clip for other editors: fcpxml, edl, srt
       --no-jumpcuts   keep the pauses   --no-sfx  no whoosh/boom   --no-hook  no title on top

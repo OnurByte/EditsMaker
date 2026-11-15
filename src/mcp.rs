@@ -29,6 +29,7 @@ fn tools() -> Value {
             "blur_faces": {"type": "boolean"}, "blur_box": {"type": "string", "description": "x,y,w,h fractions of the frame to blur (a watermark, a plate)"},
             "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
             "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]},
+            "svgs": {"type": "array", "items": {"type": "string"}, "description": "drawn graphics over the edit to point things out: NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], e.g. arrow@1.2-2.5:0.6,0.3,0.25 or circle@4:0.5,0.35#ffffff. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart, sparkle, or an .svg file. X,Y is the centre and SIZE the width, as fractions of the frame; times are seconds of the finished edit"},
             "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt"},
             "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder"}},
           "required": ["input"]}},
@@ -37,7 +38,7 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
-        {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles and the beat hits for fx.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_trends", "description": "What is trending on TikTok now in a country (two letters, default tr). Use one with music \"trend:N\".",
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
@@ -70,6 +71,9 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             }
             for t in a["line_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--line".into(), t.into()]);
+            }
+            for t in a["svgs"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--svg".into(), t.into()]);
             }
             for (key, flag) in [("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth")] {
                 if a[key].as_bool() == Some(true) {

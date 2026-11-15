@@ -13,6 +13,7 @@ mod presets;
 mod render;
 mod signals;
 mod study;
+mod svg;
 mod talk;
 mod timeline;
 mod transcribe;
@@ -49,8 +50,22 @@ fn main() -> ExitCode {
             println!("\ncaptions (--captions):");
             talk::styles().iter().for_each(|st| println!("  {:<12} {}", st.name, st.about));
             println!("\nbeat hits (--fx a,b,...): {}", fx::HITS.join(", "));
+            println!("\ndrawn graphics (--svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], or your own .svg):");
+            svg::STICKERS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
             Ok(())
         }
+        Some("draw") => match (args.get(1), args.len() > 2) {
+            (Some(v), true) => (|| {
+                let st = args[2..].iter().map(|x| svg::parse(x)).collect::<Result<Vec<_>, _>>()?;
+                let src = Path::new(v);
+                let out = src.with_file_name(format!("{}-drawn.mp4", src.file_stem().unwrap_or_default().to_string_lossy()));
+                std::fs::copy(src, &out).map_err(|e| format!("{v}: {e}"))?;
+                svg::apply(&out, &st)?;
+                println!("{}", out.display());
+                Ok(())
+            })(),
+            _ => Err("usage: edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ...".into()),
+        },
         Some("study") => match args.get(1) {
             Some(dir) => study::study(Path::new(dir)),
             None => Err("usage: edits study <folder of edits you like>".into()),
@@ -106,6 +121,8 @@ struct Cli {
     hits: Vec<String>,
     blur_faces: bool,
     blur_box: Option<(f64, f64, f64, f64)>,
+    /// drawn graphics over the finished edit (--svg)
+    svgs: Vec<svg::Sticker>,
     /// sentences on screen in music and preset edits
     lines: usize,
     /// lines given by hand (--line), used instead of picked ones
@@ -131,7 +148,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -196,6 +213,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                 c.lines = c.lines.max(c.line_texts.len());
             }
             "--lines" => c.lines = val("--lines")?.parse().ok().filter(|n| (1..=12).contains(n)).ok_or("--lines must be 1-12")?,
+            "--svg" => c.svgs.push(svg::parse(&val("--svg")?)?),
             "--export" => {
                 c.export = val("--export")?.split(',').map(|x| x.trim().to_lowercase()).collect();
                 if let Some(bad) = c.export.iter().find(|x| !["fcpxml", "edl", "srt"].contains(&x.as_str())) {
@@ -590,6 +608,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
 
 /// The last pass (stabilise, clean the voice, frame rate, codec) and the timelines for other editors.
 fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, String> {
+    svg::apply(out, &c.svgs)?;
     let fin = finish::apply(out, &c.finish)?;
     if !c.export.is_empty() {
         for p in tl.write(&fin, &c.export)? {

@@ -46,6 +46,10 @@ Other kinds, when asked for:
 - `--line "..."` (repeat) puts words on screen over music/preset edits. Read the videos' own words and pick
   short, felt sentences yourself; `--lines N` picks automatically when you cannot.
 - Faces are followed through each shot automatically. `--blur-faces`, `--blur-box x,y,w,h` hide things.
+- Point at things with drawn graphics: `--svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR]` (repeatable), or afterwards
+  `edits draw clip.mp4 SPEC...`. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart,
+  sparkle, or an .svg file. X,Y is the centre and SIZE the width as fractions; look at a frame first so the ring
+  lands on the face or the detail, and keep each up for 1.5-2.5 s on the line it explains.
 - Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
 - Shots are spread over every downloaded video; do not settle for an edit cut from one video.
 
