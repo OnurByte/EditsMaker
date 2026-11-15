@@ -166,6 +166,7 @@ pub fn parse(spec: &str) -> Result<Overlay, String> {
 /// How a clip goes over the picture: (input options, filter chain for it, joining filter).
 /// Green screens are keyed, clips with transparency laid on top, everything else screened (black disappears).
 /// `alpha`: the file has transparency. `len`: its length, None for a still.
+#[allow(clippy::too_many_arguments)]
 fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bool, len: Option<f64>) -> (Vec<String>, String) {
     let rel = o.file.to_string_lossy().to_lowercase();
     let k = kind(&rel).unwrap_or("video");
