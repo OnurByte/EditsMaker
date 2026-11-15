@@ -63,7 +63,7 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
   </tr>
 </table>
 
-<sub>Every one is a single `edits` command.</sub>
+<sub>Every one is a single `edits` command. GitHub starts videos muted: click 🔊 on each.</sub>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
