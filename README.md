@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 5 agent skills, 32 presets, 178 cut moves, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 6 agent skills, 32 presets, 178 cut moves, 40 looks">
 </picture>
 
 <picture>
@@ -183,6 +183,12 @@ then replay it over your own footage:
 
 ```sh
 edits learn liked-edit.mp4
+```
+
+Or make a preset from scratch for your footage: the video sets the rhythm, other presets lend the moves.
+
+```sh
+edits preset create footage.mp4 --name mine --like yuraprst,madara
 ```
 
 Measure a finished clip: length, loudness, cut rhythm and a contact sheet to look at (the same as the `edits_check` tool):

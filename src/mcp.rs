@@ -53,6 +53,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
         {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the edit"}}, "required": ["video"]}},
+        {"name": "edits_preset_create", "description": "Make a new preset from scratch for a video: the video sets the rhythm (its cuts, extra cuts where it moves most) and which shots hit hardest; the moves, flashes and look are borrowed from other presets (`like`: names from edits_presets, default the three with the closest shot length). Saved like any preset; read it with edits_preset_get, change it, then edits_make preset.",
+         "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the footage"}, "name": {"type": "string"}, "like": {"type": "array", "items": {"type": "string"}, "description": "presets to take inspiration from"}, "length": {"type": "number", "description": "seconds of the video to use (default 18)"}}, "required": ["video"]}},
         {"name": "edits_check", "description": "Measure a finished clip: length, loudness (LUFS), cut rhythm, and write a contact sheet jpg beside it. Read the sheet to look at the edit before showing it; fast montages usually sit near -11 LUFS.",
          "inputSchema": {"type": "object", "properties": {"clip": {"type": "string", "description": "path of the rendered mp4"}}, "required": ["clip"]}},
         {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
@@ -74,6 +76,18 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_preset_save" => v.extend(["preset".into(), "save".into(), "-".into()]),
         "edits_looks" => v.push("looks".into()),
         "edits_check" => v.extend(["check".into(), s("clip").ok_or("clip is needed")?]),
+        "edits_preset_create" => {
+            v.extend(["preset".into(), "create".into(), s("video").ok_or("video is needed")?]);
+            for (key, flag) in [("name", "--name"), ("length", "--length")] {
+                if let Some(x) = a[key].as_str().map(String::from).or(a[key].as_f64().map(|n| n.to_string())) {
+                    v.extend([flag.into(), x]);
+                }
+            }
+            let like: Vec<&str> = a["like"].as_array().into_iter().flatten().filter_map(|x| x.as_str()).collect();
+            if !like.is_empty() {
+                v.extend(["--like".into(), like.join(",")]);
+            }
+        }
         "edits_learn" => v.extend(["learn".into(), s("video").ok_or("video is needed")?]),
         "edits_doctor" => v.push("doctor".into()),
         "edits_library" => {
@@ -201,7 +215,7 @@ mod tests {
         assert_eq!(init["result"]["serverInfo"]["name"], "edits");
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 10);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 11);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 
@@ -210,6 +224,7 @@ mod tests {
         let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3});
         assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
         assert_eq!(args_for("edits_check", &json!({"clip": "a.mp4"})).unwrap(), ["check", "a.mp4"]);
+        assert_eq!(args_for("edits_preset_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["preset", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
         assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "whoosh": "main swoosh", "overlays": ["vhs:0.5"]})).unwrap(), ["a.mp4", "--whoosh", "main swoosh", "--overlay", "vhs:0.5"]);

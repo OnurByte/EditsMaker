@@ -1,5 +1,6 @@
 #![recursion_limit = "256"]
 mod check;
+mod create;
 mod face;
 mod fetch;
 mod finish;
@@ -979,6 +980,7 @@ const SKILLS: &[(&str, &str)] = &[
     ("edits-trends", include_str!("../skills/edits-trends/SKILL.md")),
     ("edits-presets-import", include_str!("../skills/edits-presets-import/SKILL.md")),
     ("edits-mcp", include_str!("../skills/edits-mcp/SKILL.md")),
+    ("edits-preset-create", include_str!("../skills/edits-preset-create/SKILL.md")),
 ];
 
 /// `edits skills install [DIR]`: the agent skills into ~/.claude/skills (or DIR). `edits skills` lists them.
@@ -1013,6 +1015,19 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
                 println!("{:<40} {:>2} shots {:>5.1}s {}x{}{}", p.name, p.slots.len(), p.total, p.w, p.h, p.song.as_ref().map(|s| format!("  song: {}", s.title)).unwrap_or_default());
             }
             println!("\n{} cut moves; your presets: {}", presets::motions().len(), presets::user_dir().display());
+            Ok(())
+        }
+        (Some("create"), Some(video)) => {
+            // from nothing but a video; --like a,b picks the presets whose moves it borrows (default: the closest three)
+            let opt = |k: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1));
+            let name = opt("--name").cloned().unwrap_or_else(|| Path::new(video).file_stem().unwrap_or_default().to_string_lossy().into_owned());
+            let like: Vec<String> = opt("--like").map(|l| l.split(',').map(str::to_string).collect()).unwrap_or_default();
+            let len = opt("--length").and_then(|l| l.parse().ok()).unwrap_or(18.0);
+            let p = create::create(Path::new(video), &name, &like, len)?;
+            std::fs::create_dir_all(presets::user_dir()).map_err(|e| e.to_string())?;
+            let to = presets::user_dir().join(format!("{}.json", preset::slug(&name)));
+            std::fs::write(&to, preset::pretty(&p)).map_err(|e| e.to_string())?;
+            println!("{}: {} ({:.1}s) -> --preset {}", to.display(), p.about, p.total, preset::slug(&name));
             Ok(())
         }
         (Some("show"), Some(name)) => {
