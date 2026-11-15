@@ -1,4 +1,5 @@
 #![recursion_limit = "256"]
+mod check;
 mod face;
 mod fetch;
 mod finish;
@@ -114,6 +115,10 @@ fn main() -> ExitCode {
             })(),
             _ => Err("usage: edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ... [--overlay NAME[@FROM[-TO]][:OPACITY]] ...".into()),
         },
+        Some("check") => match args.get(1) {
+            Some(clip) => check::check(Path::new(clip)).map(|s| println!("{s}")),
+            None => Err("usage: edits check <clip.mp4>   length, loudness, cut rhythm and a contact sheet to look at".into()),
+        },
         Some("study") => match args.get(1) {
             Some(dir) => study::study(Path::new(dir)),
             None => Err("usage: edits study <folder of edits you like>".into()),
@@ -180,7 +185,7 @@ struct Cli {
     lines: usize,
     /// lines given by hand (--line), used instead of picked ones
     line_texts: Vec<String>,
-    /// timelines to write beside each clip: fcpxml, edl, srt
+    /// timelines to write beside each clip: fcpxml, edl, srt, vtt
     export: Vec<String>,
     finish: finish::Finish,
     jumpcuts: bool,
@@ -279,8 +284,8 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             }
             "--export" => {
                 c.export = val("--export")?.split(',').map(|x| x.trim().to_lowercase()).collect();
-                if let Some(bad) = c.export.iter().find(|x| !["fcpxml", "edl", "srt"].contains(&x.as_str())) {
-                    return Err(format!("--export: {bad} is not fcpxml, edl or srt"));
+                if let Some(bad) = c.export.iter().find(|x| !["fcpxml", "edl", "srt", "vtt"].contains(&x.as_str())) {
+                    return Err(format!("--export: {bad} is not fcpxml, edl, srt or vtt"));
                 }
             }
             "--stabilize" => c.finish.stabilize = true,

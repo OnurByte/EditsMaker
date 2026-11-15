@@ -22,7 +22,7 @@ sees or hears the footage) and replays a preset. What makes an edit land is your
    from the transcript unless it IS the punchline. A line on screen is where an edit becomes funny or moving.
 5. **Match song, speed and colour to the feeling** (see "Funny" and "Emotional" below), then tweak the preset
    (edits-preset-tweak) rather than taking the stock one.
-6. **Render one, look at its frames, judge honestly, fix, render again.** First render is a draft. Check: does the
+6. **Render one, measure it, look at its frames, judge honestly, fix, render again.** `edits_check` (CLI `edits check clip.mp4`) gives length, LUFS, cut rhythm and a contact sheet jpg to Read. First render is a draft. Check: does the
    first second hook? does the line land on the beat? is any face/text cut off? Only then show it, with the clip's
    absolute path. Rate good ones with `edits rate clip.mp4 +` so taste.md learns.
 
