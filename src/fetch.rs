@@ -130,8 +130,12 @@ pub fn music(spec: &str) -> Result<String, String> {
     let Some(rest) = spec.strip_prefix("trend") else {
         // a file or a link as it is; any other text is a song title to look up
         let is_link = spec.starts_with("http://") || spec.starts_with("https://");
-        if is_link || Path::new(spec).exists() {
+        if is_link {
             return Ok(spec.to_string());
+        }
+        // absolute: ffmpeg runs in the work folder, where a relative path points nowhere
+        if Path::new(spec).exists() {
+            return std::path::absolute(spec).map(|p| p.to_string_lossy().into_owned()).map_err(|e| e.to_string());
         }
         // a song of yours by name before a search
         return match crate::library::find(&["music"], spec) {

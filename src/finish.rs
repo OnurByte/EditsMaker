@@ -29,7 +29,11 @@ pub const QUALITIES: &[&str] = &["draft", "high", "master"];
 /// Encoder arguments and the file extension for a codec at a quality.
 pub fn encoder(codec: &str, quality: &str) -> (Vec<String>, &'static str) {
     let q = |d: u32, h: u32, m: u32| match quality { "draft" => d, "master" => m, _ => h }.to_string();
+    let nv = crate::util::nvenc();
     let v: Vec<&str> = match codec {
+        "h265" if nv => vec!["-c:v", "hevc_nvenc", "-tag:v", "hvc1", "-preset", "p5", "-rc", "vbr", "-b:v", "0", "-cq"],
+        "av1" if nv => vec!["-c:v", "av1_nvenc", "-preset", "p5", "-rc", "vbr", "-b:v", "0", "-cq"],
+        "h264" | "" if nv => vec!["-c:v", "h264_nvenc", "-preset", if quality == "master" { "p7" } else { "p5" }, "-rc", "vbr", "-b:v", "0", "-cq"],
         "h265" => vec!["-c:v", "libx265", "-tag:v", "hvc1", "-preset", "medium", "-crf"],
         "prores" => vec!["-c:v", "prores_ks", "-profile:v"],
         "av1" => vec!["-c:v", "libsvtav1", "-preset", "6", "-crf"],

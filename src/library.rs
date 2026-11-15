@@ -223,7 +223,8 @@ pub fn apply(clip: &Path, ov: &[Overlay]) -> Result<(), String> {
     g.push_str(&format!("[x{}]format=yuv420p[v]", ov.len() - 1));
     let tmp = clip.with_extension("overlay.mp4");
     args.extend(["-filter_complex".into(), g, "-map".into(), "[v]".into(), "-map".into(), "0:a?".into(), "-t".into(), format!("{total:.3}")]);
-    args.extend(["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
+    args.extend(crate::util::h264(18));
+    args.extend(["-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(tmp.to_string_lossy().into());
     run(None, "ffmpeg", &args)?;
     std::fs::rename(&tmp, clip).map_err(|e| e.to_string())

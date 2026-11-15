@@ -462,7 +462,8 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
     g.push_str(&format!("{}amix=inputs={}:normalize=0:duration=first,loudnorm=I={:.1}:TP=-1.5[aout]", mix.join(""), mix.len(), o.lufs));
     args.extend(["-filter_complex".into(), g, "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into(),
         "-t".into(), format!("{total:.3}"), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
-    args.extend(["-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
+    args.extend(crate::util::h264(20));
+    args.extend(["-maxrate", "8M", "-bufsize", "16M", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(abs(out)?);
     let _ = std::fs::write(work.join("ffmpeg.txt"), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
     run(Some(work), "ffmpeg", &args).map(|_| segs)

@@ -220,6 +220,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                 lang::set(&c.lang);
             }
             "-o" | "--out" => c.out = PathBuf::from(val("--out")?),
+            "--encoder" => util::set_encoder(&val("--encoder")?)?,
             "--look" => {
                 c.opts.grade = val("--look")?;
                 c.looked = true;
@@ -721,7 +722,9 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=out:st={:.3}:d=0.6,loudnorm=I={:.1}:TP=-1.5[aout]", (p.total - 0.6).max(0.0), opts.lufs));
         args.extend(["-ss".into(), format!("{song_from:.3}"), "-t".into(), format!("{:.3}", p.total), "-i".into(), song.file.to_string_lossy().into_owned()]);
         args.extend(["-filter_complex".into(), g, "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
-        args.extend(["-t", &format!("{:.3}", p.total), "-fps_mode", "cfr", "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M",
+        args.extend(["-t".into(), format!("{:.3}", p.total), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
+        args.extend(util::h264(20));
+        args.extend(["-maxrate", "8M", "-bufsize", "16M",
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
         args.push(std::path::absolute(&out).map_err(|e| e.to_string())?.to_string_lossy().into_owned());
         let _ = std::fs::write(work.join("ffmpeg.txt"), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
@@ -1038,6 +1041,7 @@ const SKILLS: &[(&str, &str)] = &[
     ("edits-presets-import", include_str!("../skills/edits-presets-import/SKILL.md")),
     ("edits-mcp", include_str!("../skills/edits-mcp/SKILL.md")),
     ("edits-preset-create", include_str!("../skills/edits-preset-create/SKILL.md")),
+    ("edits-tricks", include_str!("../skills/edits-tricks/SKILL.md")),
 ];
 
 /// `edits skills install [DIR]`: the agent skills into ~/.claude/skills (or DIR). `edits skills` lists them.

@@ -876,7 +876,9 @@ pub fn render(picks: &[(PathBuf, f64, f64)], cuts: &[f64], joins: &[Join], beats
     }
     let focus: Vec<f64> = picks.iter().map(|p| p.2).collect();
     args.extend(["-filter_complex".into(), filter_graph(o, look, &focus, &spans, joins, beats, total, voice, has_subs), "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
-    args.extend(["-t", &format!("{total:.3}"), "-fps_mode", "cfr", "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "22", "-maxrate", "6M", "-bufsize", "12M",
+    args.extend(["-t".into(), format!("{total:.3}"), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
+    args.extend(crate::util::h264(22));
+    args.extend(["-maxrate", "6M", "-bufsize", "12M",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(abs(out)?);
     // kept next to the subtitles so a bad edit can be re-run by hand
