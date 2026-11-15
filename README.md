@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 6 agent skills, 32 presets, 178 cut moves, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 39 presets, 178 cut moves, 40 looks">
 </picture>
 
 <picture>
@@ -194,7 +194,7 @@ edits preset create footage.mp4 --name mine --like yuraprst,madara
 Measure a finished clip: length, loudness, cut rhythm and a contact sheet to look at (the same as the `edits_check` tool):
 
 ```sh
-edits check edits-out/01-VIDEO_ID.mp4
+edits check ~/Videos/edits/2026-11-16/"21.04 Video title"/01-VIDEO_ID.mp4
 ```
 
 Timelines for other editors beside each clip (`fcpxml`, `edl`, captions as `srt` or `vtt`):

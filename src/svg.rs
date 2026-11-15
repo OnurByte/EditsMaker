@@ -110,7 +110,8 @@ pub fn apply(clip: &Path, st: &[Sticker]) -> Result<PathBuf, String> {
         pngs.push(png);
     }
     args.extend(["-filter_complex".into(), graph(st, &sizes, w, h), "-map".into(), "[v]".into(), "-map".into(), "0:a?".into()]);
-    args.extend(["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
+    args.extend(crate::util::h264(18));
+    args.extend(["-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(tmp.to_string_lossy().into());
     let res = run(None, "ffmpeg", &args);
     pngs.iter().for_each(|p| { let _ = std::fs::remove_file(p); });

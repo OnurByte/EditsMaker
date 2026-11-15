@@ -19,6 +19,42 @@ pub fn run<S: AsRef<OsStr>>(dir: Option<&Path>, cmd: &str, args: &[S]) -> Result
     Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
+static NVENC: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+
+/// The video encoder for this run (from --encoder, else EDITS_ENCODER): cpu (default), nvenc, or auto (nvenc when it works).
+pub fn set_encoder(name: &str) -> Result<(), String> {
+    let on = match name {
+        "cpu" => false,
+        "nvenc" => true,
+        "auto" => nvenc_works(),
+        _ => return Err("--encoder must be cpu, nvenc or auto".into()),
+    };
+    let _ = NVENC.set(on);
+    Ok(())
+}
+
+pub fn nvenc() -> bool {
+    *NVENC.get_or_init(|| match std::env::var("EDITS_ENCODER").as_deref() {
+        Ok("nvenc") => true,
+        Ok("auto") => nvenc_works(),
+        _ => false,
+    })
+}
+
+/// A tiny test encode: ffmpeg can list h264_nvenc without a usable NVIDIA GPU or driver.
+fn nvenc_works() -> bool {
+    run(None, "ffmpeg", &["-v", "error", "-f", "lavfi", "-i", "color=s=256x256:d=0.1", "-c:v", "h264_nvenc", "-f", "null", "-"]).is_ok()
+}
+
+/// H.264 arguments at an x264-style quality `crf` (lower = better), on the GPU when --encoder says so.
+pub fn h264(crf: u32) -> Vec<String> {
+    if nvenc() {
+        ["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr", "-cq"].iter().map(|s| s.to_string()).chain([crf.to_string(), "-b:v".into(), "0".into()]).collect()
+    } else {
+        ["-c:v", "libx264", "-preset", "medium", "-crf"].iter().map(|s| s.to_string()).chain([crf.to_string()]).collect()
+    }
+}
+
 /// Like `run` without a working directory, for binary stdout (raw video frames).
 pub fn run_bytes<S: AsRef<OsStr>>(cmd: &str, args: &[S]) -> Result<Vec<u8>, String> {
     let out = Command::new(cmd).args(args).stdin(Stdio::null()).stderr(Stdio::null()).output().map_err(|e| format!("{cmd}: {e}"))?;

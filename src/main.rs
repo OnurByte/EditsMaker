@@ -205,7 +205,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let (w, h) = size(&style.aspect).unwrap_or((1080, 1920));
     let grade = if looks::names().contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
     let mut c = Cli {
-        input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::from("edits-out"),
+        input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
         llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
@@ -220,6 +220,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                 lang::set(&c.lang);
             }
             "-o" | "--out" => c.out = PathBuf::from(val("--out")?),
+            "--encoder" => util::set_encoder(&val("--encoder")?)?,
             "--look" => {
                 c.opts.grade = val("--look")?;
                 c.looked = true;
@@ -427,6 +428,45 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
     Ok(side)
 }
 
+/// Where a run's clips go without --out: one folder per run, the same place whoever starts edits (the CLI in any
+/// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then "HH.MM what it was made from".
+fn auto_out(input: &str) -> PathBuf {
+    let base = std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"));
+    let now = util::run(None, "date", &["+%F %H.%M"]).unwrap_or_default();
+    let (day, time) = now.trim().split_once(' ').unwrap_or(("undated", "00.00"));
+    let dir = base.join(day).join(format!("{time} {}", folder_name(&subject(input))));
+    // a second run in the same minute on the same footage gets its own folder, never overwrites
+    (1..).map(|k| if k == 1 { dir.clone() } else { PathBuf::from(format!("{} ({k})", dir.display())) }).find(|d| !d.exists()).unwrap()
+}
+
+/// What the edit was made from, in words: a file's name, a video's or channel's title, or the topic searched.
+fn subject(input: &str) -> String {
+    let p = Path::new(input);
+    if p.is_file() {
+        return p.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+    }
+    if input.starts_with("http://") || input.starts_with("https://") {
+        let title = util::yt(&["--no-warnings", "--flat-playlist", "--playlist-items", "1", "--print", "%(playlist_title,title)s", "--", input]);
+        return title.ok().and_then(|t| t.lines().next().map(str::to_string)).filter(|t| !t.trim().is_empty() && t != "NA").unwrap_or_else(|| input.to_string());
+    }
+    input.to_string()
+}
+
+/// A title as a folder name: words kept (any alphabet), path and shell characters dropped, at most 60 characters.
+fn folder_name(title: &str) -> String {
+    let words: String = title.chars().map(|c| if c.is_alphanumeric() || " -_.'&()".contains(c) { c } else { ' ' }).collect();
+    // whole words up to 60 characters; a single longer word is cut
+    let mut name = String::new();
+    for w in words.split_whitespace() {
+        if !name.is_empty() && name.chars().count() + 1 + w.chars().count() > 60 {
+            break;
+        }
+        name = if name.is_empty() { w.chars().take(60).collect() } else { format!("{name} {w}") };
+    }
+    let name = name.trim_matches(|c: char| c == '.' || c == ' ').to_string();
+    if name.is_empty() { "edit".into() } else { name }
+}
+
 fn make(args: &[String]) -> Result<(), String> {
     let mut cli = parse(args, study::load())?;
     let cache = &util::home().join(".cache/edits");
@@ -436,8 +476,26 @@ fn make(args: &[String]) -> Result<(), String> {
     } else if let Some(g) = grades::find(&cli.opts.grade) {
         cli.opts.grade = grades::lut(&g, cache)?;
     }
+    // ffmpeg runs from work folders, so a relative footage path must become absolute
+    if let Ok(abs) = std::fs::canonicalize(&cli.input).map_err(|_| ()).and_then(|p| if p.is_file() { Ok(p) } else { Err(()) }) {
+        cli.input = abs.to_string_lossy().into_owned();
+    }
+    let auto = cli.out.as_os_str().is_empty();
+    if auto {
+        cli.out = auto_out(&cli.input);
+    }
     let c = &cli;
     std::fs::create_dir_all(&c.out).map_err(|e| e.to_string())?;
+    // a run that made nothing leaves no empty folder behind (remove_dir only removes an empty one)
+    struct RemoveIfEmpty(Option<PathBuf>);
+    impl Drop for RemoveIfEmpty {
+        fn drop(&mut self) {
+            if let Some(d) = &self.0 {
+                let _ = std::fs::remove_dir(d);
+            }
+        }
+    }
+    let _cleanup = RemoveIfEmpty(auto.then(|| c.out.clone()));
     let clock = std::time::Instant::now();
     let lap = |what: &str| eprintln!("edits: [{:>5.1}s] {what}", clock.elapsed().as_secs_f64());
     if let Some(name) = &c.preset {
@@ -664,7 +722,9 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=out:st={:.3}:d=0.6,loudnorm=I={:.1}:TP=-1.5[aout]", (p.total - 0.6).max(0.0), opts.lufs));
         args.extend(["-ss".into(), format!("{song_from:.3}"), "-t".into(), format!("{:.3}", p.total), "-i".into(), song.file.to_string_lossy().into_owned()]);
         args.extend(["-filter_complex".into(), g, "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
-        args.extend(["-t", &format!("{:.3}", p.total), "-fps_mode", "cfr", "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M",
+        args.extend(["-t".into(), format!("{:.3}", p.total), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
+        args.extend(util::h264(20));
+        args.extend(["-maxrate", "8M", "-bufsize", "16M",
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
         args.push(std::path::absolute(&out).map_err(|e| e.to_string())?.to_string_lossy().into_owned());
         let _ = std::fs::write(work.join("ffmpeg.txt"), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
@@ -981,6 +1041,7 @@ const SKILLS: &[(&str, &str)] = &[
     ("edits-presets-import", include_str!("../skills/edits-presets-import/SKILL.md")),
     ("edits-mcp", include_str!("../skills/edits-mcp/SKILL.md")),
     ("edits-preset-create", include_str!("../skills/edits-preset-create/SKILL.md")),
+    ("edits-tricks", include_str!("../skills/edits-tricks/SKILL.md")),
 ];
 
 /// `edits skills install [DIR]`: the agent skills into ~/.claude/skills (or DIR). `edits skills` lists them.
@@ -1163,6 +1224,22 @@ mod tests {
 
     fn args(s: &str) -> Vec<String> {
         s.split_whitespace().map(String::from).collect()
+    }
+
+    #[test]
+    fn output_folders_are_readable_and_never_reused() {
+        assert_eq!(folder_name("İskender Büyük'ten Tataroğlu Ailesine Ağır Darbe! | Kurtlar Vadisi Pusu"), "İskender Büyük'ten Tataroğlu Ailesine Ağır Darbe Kurtlar");
+        assert_eq!(folder_name("../../etc/passwd"), "etc passwd");
+        assert_eq!(folder_name("???"), "edit");
+        assert_eq!(subject("sad cats"), "sad cats");
+        let base = std::env::temp_dir().join(format!("edits-out-test-{}", std::process::id()));
+        std::env::set_var("EDITS_OUT", &base);
+        let first = auto_out("sad cats");
+        assert!(first.starts_with(&base) && first.to_string_lossy().ends_with(" sad cats"));
+        std::fs::create_dir_all(&first).unwrap();
+        assert!(auto_out("sad cats").to_string_lossy().ends_with(" sad cats (2)"));
+        std::fs::remove_dir_all(&base).unwrap();
+        assert!(parse(&args("x"), None).unwrap().out.as_os_str().is_empty(), "no --out means the automatic folder");
     }
 
     #[test]
