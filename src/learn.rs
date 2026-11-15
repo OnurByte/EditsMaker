@@ -59,7 +59,7 @@ fn luma(f: &[u8]) -> f64 {
 }
 
 /// How different two frames are: half grey-histogram distance, half mean pixel difference (0..1 each).
-fn change(a: &[u8], b: &[u8]) -> f64 {
+pub fn change(a: &[u8], b: &[u8]) -> f64 {
     let hist = |f: &[u8]| {
         let mut h = [0f64; 32];
         f.iter().for_each(|&v| h[v as usize / 8] += 1.0);
