@@ -166,7 +166,8 @@ mod tests {
     fn fcpxml_has_the_cuts_and_the_song() {
         let x = tl().fcpxml();
         assert!(x.contains("<format id=\"r0\" frameDuration=\"1/30s\" width=\"1080\" height=\"1920\"/>"), "{x}");
-        assert!(x.contains("src=\"file:///v/a%20b.mp4\""), "{x}");
+        // Windows makes it file:///D:/v/..., so only check the encoded tail
+        assert!(x.contains("/v/a%20b.mp4\"") && x.contains("src=\"file:///"), "{x}");
         assert!(x.contains("<asset-clip ref=\"a0\" name=\"shot 1\" offset=\"0/30s\" start=\"300/30s\" duration=\"45/30s\" format=\"r0\">"), "{x}");
         assert!(x.contains("<asset-clip ref=\"music\" lane=\"-1\" name=\"music\" offset=\"300/30s\" start=\"900/30s\" duration=\"105/30s\"/>"), "{x}");
         assert!(x.contains("<asset-clip ref=\"a1\" name=\"shot 2\" offset=\"45/30s\" start=\"90/30s\" duration=\"60/30s\" format=\"r0\"/>"), "{x}");
