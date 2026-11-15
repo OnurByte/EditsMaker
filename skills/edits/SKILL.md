@@ -39,6 +39,16 @@ Other kinds, when asked for:
 - Music montage with no preset: `--music SONG` (add `--sad` for slow, black-and-white, dissolves).
 - A speaker's line over the edit: `--voice`, or `--say VIDEO@FROM-TO` to choose it. These rarely beat preset edits.
 
+## Make it hit harder
+
+- `--fx shake,flash,rgb,glitch,invert,blur,freeze,zoom`: effects on the hardest beats (freeze = the "buz" hold).
+- `--velocity`: speed ramps on longer shots; `--speed 0.8` slower, `1.3` faster (talking clips: speech speed).
+- `--line "..."` (repeat) puts words on screen over music/preset edits. Read the videos' own words and pick
+  short, felt sentences yourself; `--lines N` picks automatically when you cannot.
+- Faces are followed through each shot automatically. `--blur-faces`, `--blur-box x,y,w,h` hide things.
+- Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
+- Shots are spread over every downloaded video; do not settle for an edit cut from one video.
+
 ## After rendering
 
 Clips land in `edits-out/` with a `.json` beside each. Look at frames before calling it done:

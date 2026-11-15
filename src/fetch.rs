@@ -125,9 +125,13 @@ pub fn trends(country: &str) -> Result<Vec<String>, String> {
 }
 
 /// `--music trend`, `trend:3` or `trend:us:3`: the song at that place on TikTok's chart, found on YouTube.
-/// Anything else is passed through.
+/// A file or link is used as it is; any other text is a song title, found on YouTube.
 pub fn music(spec: &str) -> Result<String, String> {
-    let Some(rest) = spec.strip_prefix("trend") else { return Ok(spec.to_string()) };
+    let Some(rest) = spec.strip_prefix("trend") else {
+        // a file or a link as it is; any other text is a song title to look up
+        let is_link = spec.starts_with("http://") || spec.starts_with("https://");
+        return if is_link || Path::new(spec).exists() { Ok(spec.to_string()) } else { find_song(spec) };
+    };
     let parts: Vec<&str> = rest.split(':').filter(|p| !p.is_empty()).collect();
     let (cc, n) = match parts[..] {
         [] => ("tr", 1),
@@ -341,7 +345,7 @@ mod tests {
             <tr><td>2</td><td>=</td><td>Heijan &amp; Muti - Yansın Geceler</td></tr></table>";
         assert_eq!(parse_chart(html), vec!["Ravi İncigöz - Maşallah", "Heijan & Muti - Yansın Geceler"]);
         assert!(parse_chart("<html></html>").is_empty());
-        assert_eq!(music("song.mp3").unwrap(), "song.mp3");
+        assert_eq!(music("https://youtu.be/x").unwrap(), "https://youtu.be/x");
     }
 
     #[test]

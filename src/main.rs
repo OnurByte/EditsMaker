@@ -1,5 +1,8 @@
+#![recursion_limit = "256"]
 mod face;
 mod fetch;
+mod finish;
+mod fx;
 mod looks;
 mod mcp;
 mod montage;
@@ -11,6 +14,7 @@ mod render;
 mod signals;
 mod study;
 mod talk;
+mod timeline;
 mod transcribe;
 mod util;
 
@@ -40,7 +44,11 @@ fn main() -> ExitCode {
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
         Some("looks") => {
-            looks::LOOKS.iter().for_each(|(n, about, _)| println!("{n:<12} {about}"));
+            println!("colour (--look):");
+            looks::LOOKS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
+            println!("\ncaptions (--captions):");
+            talk::styles().iter().for_each(|st| println!("  {:<12} {}", st.name, st.about));
+            println!("\nbeat hits (--fx a,b,...): {}", fx::HITS.join(", "));
             Ok(())
         }
         Some("study") => match args.get(1) {
@@ -90,6 +98,21 @@ struct Cli {
     say: Vec<String>,
     /// talking clips: caption style, jump cuts, sound effects, hook line, music bed
     caption_style: String,
+    captions_given: bool,
+    /// footage speed for every shot, 1 as made
+    speed: f64,
+    velocity: bool,
+    /// effects on the hardest beats
+    hits: Vec<String>,
+    blur_faces: bool,
+    blur_box: Option<(f64, f64, f64, f64)>,
+    /// sentences on screen in music and preset edits
+    lines: usize,
+    /// lines given by hand (--line), used instead of picked ones
+    line_texts: Vec<String>,
+    /// timelines to write beside each clip: fcpxml, edl, srt
+    export: Vec<String>,
+    finish: finish::Finish,
     jumpcuts: bool,
     sfx: bool,
     hook: bool,
@@ -108,7 +131,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new() },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -155,7 +178,45 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--text" => c.look.text = val("--text")?.chars().take(60).collect(),
             "--captions" => {
                 c.caption_style = val("--captions")?;
+                c.captions_given = true;
                 talk::style(&c.caption_style)?;
+            }
+            "--speed" => c.speed = val("--speed")?.parse().ok().filter(|k| (0.1..=8.0).contains(k)).ok_or("--speed must be 0.1-8")?,
+            "--velocity" => c.velocity = true,
+            "--fx" => {
+                c.hits = val("--fx")?.split(',').map(|x| x.trim().to_lowercase()).filter(|x| !x.is_empty()).collect();
+                if let Some(bad) = c.hits.iter().find(|h| !fx::HITS.contains(&h.as_str())) {
+                    return Err(format!("--fx: {bad} is not one of {}", fx::HITS.join(", ")));
+                }
+            }
+            "--blur-faces" => c.blur_faces = true,
+            "--blur-box" => c.blur_box = Some(fx::parse_box(&val("--blur-box")?).ok_or("--blur-box must be x,y,w,h as fractions, like 0.7,0.85,0.3,0.15")?),
+            "--line" => {
+                c.line_texts.push(val("--line")?.chars().take(120).collect());
+                c.lines = c.lines.max(c.line_texts.len());
+            }
+            "--lines" => c.lines = val("--lines")?.parse().ok().filter(|n| (1..=12).contains(n)).ok_or("--lines must be 1-12")?,
+            "--export" => {
+                c.export = val("--export")?.split(',').map(|x| x.trim().to_lowercase()).collect();
+                if let Some(bad) = c.export.iter().find(|x| !["fcpxml", "edl", "srt"].contains(&x.as_str())) {
+                    return Err(format!("--export: {bad} is not fcpxml, edl or srt"));
+                }
+            }
+            "--stabilize" => c.finish.stabilize = true,
+            "--denoise" => c.finish.denoise = true,
+            "--smooth" => c.finish.smooth = true,
+            "--fps" => c.finish.fps = Some(val("--fps")?.parse().ok().filter(|f| (12..=120).contains(f)).ok_or("--fps must be 12-120")?),
+            "--codec" => {
+                c.finish.codec = val("--codec")?;
+                if !finish::CODECS.contains(&c.finish.codec.as_str()) {
+                    return Err(format!("--codec must be one of {}", finish::CODECS.join(", ")));
+                }
+            }
+            "--quality" => {
+                c.finish.quality = val("--quality")?;
+                if !finish::QUALITIES.contains(&c.finish.quality.as_str()) {
+                    return Err(format!("--quality must be one of {}", finish::QUALITIES.join(", ")));
+                }
             }
             "--no-jumpcuts" => c.jumpcuts = false,
             "--no-sfx" => c.sfx = false,
@@ -241,8 +302,27 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
         sfx: c.sfx,
         hook,
         bed: bed.cloned(),
+        pace: c.speed,
+        frames: if opts.layout == "fill" { montage::frames(&video).unwrap_or_default() } else { vec![] },
+        pre: {
+            let mut pre = c.blur_box.map(|b| fx::blur_box("tb", b)).unwrap_or_default();
+            if c.blur_faces {
+                if let Some(b) = fx::face_box(&mut face::boxes(&video, seek, m.end - m.start, w, h)) {
+                    pre.push_str(&fx::blur_box("tf", b));
+                }
+            }
+            pre
+        },
     };
-    talk::render(&video, seek, m, &a.words, &opts, &t, focus.unwrap_or(0.5), cache, &work, out)?;
+    let segs = talk::render(&video, seek, m, &a.words, &opts, &t, focus.unwrap_or(0.5), cache, &work, out)?;
+    let tl = timeline::Timeline {
+        name: a.src.title.clone(), w: opts.w, h: opts.h,
+        clips: segs.iter().map(|(x, y)| (video.clone(), x - m.start + seek, y - x)).collect(),
+        music: bed.cloned(),
+        captions: transcribe::lines(&a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).cloned().collect::<Vec<_>>()).iter()
+            .filter_map(|l| Some((talk::remap(l.s, &segs)? / c.speed, talk::remap(l.e, &segs).unwrap_or(talk::remap(l.s, &segs)? + 1.0) / c.speed, l.text.clone()))).collect(),
+    };
+    let out = &deliver(c, out, &tl)?;
     let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
     let side = serde_json::json!({ "clip": out, "source": a.src.title, "id": a.src.id, "moment": m, "text": text, "framed_on_faces": focus.is_some() });
     std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
@@ -340,7 +420,10 @@ fn make(args: &[String]) -> Result<(), String> {
 }
 
 /// The footage to cut from: picture-only downloads (or the file given), and its shots.
-fn footage(c: &Cli, cache: &Path) -> (Vec<(String, PathBuf)>, Vec<montage::Shot>) {
+/// (id, file) per video, every shot, and each video's measured frames.
+type Footage = (Vec<(String, PathBuf)>, Vec<montage::Shot>, Vec<Vec<montage::Frame>>);
+
+fn footage(c: &Cli, cache: &Path) -> Footage {
     let videos: Vec<(String, PathBuf)> = if Path::new(&c.input).is_file() {
         vec![(c.input.clone(), PathBuf::from(&c.input))]
     } else {
@@ -354,11 +437,12 @@ fn footage(c: &Cli, cache: &Path) -> (Vec<(String, PathBuf)>, Vec<montage::Shot>
             jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: skipped a video: {e}")).ok()).collect()
         })
     };
-    let shots = std::thread::scope(|s| {
-        let jobs: Vec<_> = videos.iter().enumerate().map(|(i, (_, f))| s.spawn(move || montage::frames(f).map(|fs| montage::segment(&fs, i)))).collect();
-        jobs.into_iter().flat_map(|j| j.join().ok().and_then(|r| r.map_err(|e| eprintln!("edits: {e}")).ok()).unwrap_or_default()).collect()
+    let frames: Vec<Vec<montage::Frame>> = std::thread::scope(|s| {
+        let jobs: Vec<_> = videos.iter().map(|(_, f)| s.spawn(move || montage::frames(f))).collect();
+        jobs.into_iter().map(|j| j.join().ok().and_then(|r| r.map_err(|e| eprintln!("edits: {e}")).ok()).unwrap_or_default()).collect()
     });
-    (videos, shots)
+    let shots = frames.iter().enumerate().flat_map(|(i, fs)| montage::segment(fs, i)).collect();
+    (videos, shots, frames)
 }
 
 /// An Alight Motion project replayed over the footage: its shot timing, speed ramps, camera moves, shakes,
@@ -372,7 +456,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         (None, Some(s)) => fetch::find_song(&s.title)?,
         (None, None) => return Err("this preset names no song: give one with --music".into()),
     };
-    let (song, (videos, shots)) = std::thread::scope(|s| {
+    let (song, (videos, shots, frames)) = std::thread::scope(|s| {
         let song = s.spawn(|| montage::song(&music, cache));
         (song.join().unwrap_or_else(|_| Err("song thread crashed".into())), footage(c, cache))
     });
@@ -392,6 +476,13 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         let beats: Vec<f64> = song.beats.iter().map(|b| b - song_from).filter(|b| *b >= 0.0 && *b <= p.total).collect();
         p = p.fit_to(&beats);
     }
+    // --speed plays every shot faster or slower; --velocity gives each longer shot a speed ramp
+    for s in &mut p.slots {
+        s.speed = (s.speed * c.speed).clamp(0.1, 8.0);
+        if c.velocity && s.ramp.is_empty() && s.end - s.start >= 0.45 {
+            s.ramp = fx::velocity();
+        }
+    }
     // one piece per slot, end to end: a slot runs until the next one starts
     let starts: Vec<f64> = p.slots.iter().enumerate().map(|(i, s)| if i == 0 { 0.0 } else { s.start }).collect();
     let spans: Vec<(f64, f64)> = (0..p.slots.len()).map(|i| (starts[i], starts.get(i + 1).copied().unwrap_or(p.total))).filter(|(a, b)| b - a > 0.02).collect();
@@ -402,27 +493,71 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     if let (false, Some(look)) = (c.looked, &p.look) {
         opts.grade = look.clone();
     }
+    // the hardest beats the shots start on get the hits (--fx); the very hardest also freeze
+    let strength: Vec<f64> = spans.iter().map(|(a, _)| montage::hit_at(&song.beats, &song.strength, song_from + a)).collect();
+    let mut ranked = strength.clone();
+    ranked.sort_by(|a, b| b.total_cmp(a));
+    let cut_at = |q: f64| ranked.get(((ranked.len() as f64 * q) as usize).min(ranked.len().saturating_sub(1))).copied().unwrap_or(f64::MAX);
+    let (hard, hardest) = (cut_at(0.35), cut_at(0.12));
+    // words on screen (--lines): the channel's most quotable short sentences, one per stretch of the edit
+    let pool = match (c.lines, c.line_texts.is_empty()) {
+        (0, _) => vec![],
+        (_, false) => c.line_texts.clone(),
+        (n, true) => quote_lines(&videos, cache, c, n * c.n),
+    };
     let mut used = vec![false; shots.len()];
     let mut made = 0;
     for k in 0..c.n {
         let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
-        let needs: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (b - a) * s.speed + 0.2).collect();
+        let lens: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (s.end - s.start).max(b - a)).collect();
+        let needs: Vec<f64> = slots.iter().zip(&lens).map(|(s, l)| s.source_len(*l) + 0.2).collect();
         let picks = montage::assign(&shots, &mut used, &needs, None);
         if picks.len() < needs.len() {
             eprintln!("edits: not enough usable shots for edit {}", k + 1);
             break;
         }
         let out = c.out.join(format!("{}-{:02}.mp4", fetch::safe(&p.name), k + 1));
+        let work = cache.join("renders").join(format!("{}-{:02}", fetch::safe(&p.name), k + 1));
+        std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
         let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into()];
         let mut g = String::new();
+        let mut tl = timeline::Timeline { name: p.name.clone(), w: opts.w, h: opts.h, music: Some((song.file.clone(), song_from)), ..Default::default() };
         for (i, (((a, b), s), (shot, from))) in spans.iter().zip(&slots).zip(&picks).enumerate() {
-            args.extend(["-ss".into(), format!("{from:.3}"), "-t".into(), format!("{:.3}", needs[i] + 0.2), "-i".into(), videos[shots[*shot].video].1.to_string_lossy().into_owned()]);
-            g.push_str(&preset::chain(s, i, p.w, p.h, shots[*shot].focus.unwrap_or(0.5), (s.end - s.start).max(b - a)));
-            let _ = a;
+            let v = shots[*shot].video;
+            args.extend(["-ss".into(), format!("{from:.3}"), "-t".into(), format!("{:.3}", needs[i] + 0.2), "-i".into(), videos[v].1.to_string_lossy().into_owned()]);
+            // the frame follows the face through the shot; without one it holds the shot's centre
+            let focus = fx::track(&frames[v], 4.0, *from, needs[i]).map_or(format!("{:.3}", shots[*shot].focus.unwrap_or(0.5)), |cv| cv.expr("t", lens[i]));
+            let mut pre = String::new();
+            if let Some(bx) = c.blur_box {
+                pre.push_str(&fx::blur_box(&format!("bb{i}"), bx));
+            }
+            if c.blur_faces {
+                let (sw, sh) = fetch::dims(&videos[v].1);
+                if let Some(bx) = fx::face_box(&mut face::boxes(&videos[v].1, *from, needs[i], sw, sh)) {
+                    pre.push_str(&fx::blur_box(&format!("bf{i}"), bx));
+                }
+            }
+            let hit = i > 0 && strength[i] >= hard;
+            let extra = preset::Extra {
+                focus,
+                pre,
+                post: if hit { fx::hit(&c.hits, opts.w, opts.h) } else { String::new() },
+                freeze: (i > 0 && strength[i] >= hardest && fx::wants_freeze(&c.hits)).then_some(0.3),
+            };
+            g.push_str(&preset::chain(s, i, opts.w, opts.h, &extra, lens[i]).replacen(&format!("trim=duration={:.3}", lens[i]), &format!("trim=duration={:.3}", b - a), 1));
+            tl.clips.push((videos[v].1.clone(), *from, b - a));
         }
         let m = spans.len();
+        // each edit its own lines when there are enough, else they repeat
+        let quotes: Vec<String> = if pool.is_empty() { vec![] } else { (0..c.lines.min(pool.len())).map(|j| pool[(k * c.lines + j) % pool.len()].clone()).collect() };
+        let subs = talk::lines_ass(&quotes, p.total, &line_style(c)?, opts.w, opts.h);
+        let has_subs = subs.contains("Dialogue:");
+        if has_subs {
+            std::fs::write(work.join("cap.ass"), &subs).map_err(|e| e.to_string())?;
+        }
         (0..m).for_each(|i| g.push_str(&format!("[v{i}]")));
-        g.push_str(&format!("concat=n={m}:v=1:a=0,settb=1/30,fps=30{}{},fade=t=out:st={:.3}:d=0.5", render::grade(&opts.grade), preset::flashes(&p), (p.total - 0.5).max(0.0)));
+        g.push_str(&format!("concat=n={m}:v=1:a=0,settb=1/30,fps=30{}{}{},fade=t=out:st={:.3}:d=0.5", render::grade(&opts.grade), preset::flashes(&p),
+            if has_subs { ",ass=cap.ass" } else { "" }, (p.total - 0.5).max(0.0)));
         if !c.look.tag.is_empty() {
             g.push_str(&format!(",drawtext=text='{}':font=Adwaita Sans:fontsize=h*0.022:fontcolor=white@0.7:x=(w-tw)/2:y=h*0.94", c.look.tag));
         }
@@ -432,14 +567,14 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         args.extend(["-t", &format!("{:.3}", p.total), "-fps_mode", "cfr", "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M",
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
         args.push(std::path::absolute(&out).map_err(|e| e.to_string())?.to_string_lossy().into_owned());
-        let work = cache.join("renders").join(fetch::safe(&p.name));
-        std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
-        let _ = std::fs::write(work.join(format!("ffmpeg-{:02}.txt", k + 1)), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
+        let _ = std::fs::write(work.join("ffmpeg.txt"), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
         match util::run(Some(&work), "ffmpeg", &args) {
             Ok(_) => {
-                let side = serde_json::json!({ "clip": out, "preset": p.name, "song": song.title, "song_from": song_from, "seconds": p.total,
+                tl.captions = talk::lines_srt(&quotes, p.total);
+                let fin = deliver(c, &out, &tl)?;
+                let side = serde_json::json!({ "clip": fin, "preset": p.name, "song": song.title, "song_from": song_from, "seconds": p.total, "lines": quotes,
                     "shots": picks.iter().map(|(i, st)| serde_json::json!({ "video": videos[shots[*i].video].0, "from": st })).collect::<Vec<_>>() });
-                std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
+                std::fs::write(fin.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
                 println!("{side}");
                 made += 1;
             }
@@ -451,6 +586,34 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         return Err("no edits made".into());
     }
     Ok(())
+}
+
+/// The last pass (stabilise, clean the voice, frame rate, codec) and the timelines for other editors.
+fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, String> {
+    let fin = finish::apply(out, &c.finish)?;
+    if !c.export.is_empty() {
+        for p in tl.write(&fin, &c.export)? {
+            eprintln!("edits: wrote {}", p.display());
+        }
+    }
+    Ok(fin)
+}
+
+/// The caption style for words on screen: --captions when given, else a quiet one.
+fn line_style(c: &Cli) -> Result<talk::CaptionStyle, String> {
+    talk::style(if c.captions_given { &c.caption_style } else { "karaoke" })
+}
+
+/// Short sentences worth putting on screen, from the footage videos' captions: the model picks when it can,
+/// else sentences of 4 to 10 words that carry feeling.
+fn quote_lines(videos: &[(String, PathBuf)], cache: &Path, c: &Cli, n: usize) -> Vec<String> {
+    let mut all: Vec<String> = vec![];
+    for (id, _) in videos {
+        if let Ok(pv) = fetch::preview(id, &format!("https://www.youtube.com/watch?v={id}"), cache, &c.lang) {
+            all.extend(talk::sentences(&pv.text));
+        }
+    }
+    talk::best_lines(&all, n, c.llm)
 }
 
 /// One music edit, decided and ready to render.
@@ -492,7 +655,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         lap(&format!("reference: {} cuts, {} white flashes, {} dips, grade {}, {}", t.cuts.len() - 2,
             t.joins.iter().filter(|j| j.kind == "fadewhite").count(), t.joins.iter().filter(|j| j.kind == "fadeblack").count(), t.grade, t.aspect));
     }
-    let look = montage::Look { punch: !c.look.sad && template.is_none(), ..c.look.clone() };
+    let look = montage::Look { punch: !c.look.sad && template.is_none(), pace: c.speed, hits: c.hits.clone(), ..c.look.clone() };
     let music = match (&template, &c.music) {
         (Some(t), _) => t.music.to_string_lossy().into_owned(),
         (None, Some(m)) => fetch::music(m)?,
@@ -674,6 +837,13 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 };
                 let subs = montage::captions(words, line, p.at, &look.text, !look.punch, *p.cuts.last().unwrap(), opts);
                 montage::render(&p.files, &p.cuts, &p.joins, &p.beats, &song.file, p.start, v.as_ref(), &subs, look, opts, &work, &out)?;
+                let tl = timeline::Timeline {
+                    name: format!("{kind}-{:02}", p.k + 1), w: opts.w, h: opts.h,
+                    clips: p.files.iter().zip(p.cuts.windows(2)).map(|((f, from, _), w)| (f.clone(), *from, w[1] - w[0])).collect(),
+                    music: Some((song.file.clone(), p.start)),
+                    captions: vec![],
+                };
+                let out = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({
                     "clip": out, "song": song.title, "song_from": p.start, "seconds": p.cuts.last(),
                     "voice": p.voice.map(|(a, m)| serde_json::json!({ "video": a.src.id, "moment": m, "at": p.at, "text": said(a, m) })),

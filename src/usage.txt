@@ -39,6 +39,14 @@ OPTIONS
       --join          also join all clips into joined.mp4
       --captions S    talking clips' caption style: hormozi (default), mrbeast, karaoke, box, minimal, neon
       --bed SONG      music under talking clips, ducked under the voice (link, file or trend:N)
+      --speed K       footage speed (talking clips: speech speed), 0.5 slow motion, 2 double
+      --velocity      speed ramps on every longer shot: slow, rushing, slow onto the beat
+      --fx LIST       hits on the hardest beats: shake, flash, rgb, glitch, invert, blur, freeze, zoom
+      --lines N       N sentences from the videos' own words on screen (music and preset edits)
+      --line TEXT     a line of your own on screen (repeat for more); replaces the picked ones
+      --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)
+      --stabilize  --denoise  --smooth  --fps N  --codec h264|h265|prores|av1  --quality draft|high|master
+      --export LIST   timelines beside each clip for other editors: fcpxml, edl, srt
       --no-jumpcuts   keep the pauses   --no-sfx  no whoosh/boom   --no-hook  no title on top
       --no-captions   no burned-in captions
       --no-llm        pick moments from viewer signals only

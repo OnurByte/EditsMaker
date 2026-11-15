@@ -75,6 +75,28 @@ pub struct Talk {
     pub hook: Option<String>,
     /// (music file, seconds into it)
     pub bed: Option<(PathBuf, f64)>,
+    /// talking speed, 1 as said (CapCut's 1.2x)
+    pub pace: f64,
+    /// the clip's measured frames (4 a second), so the frame follows the face
+    pub frames: Vec<crate::montage::Frame>,
+    /// filters on the source frame before the crop (blurs)
+    pub pre: String,
+}
+
+/// atempo takes 0.5..2 per stage: chain stages for anything beyond.
+fn atempo(k: f64) -> String {
+    let mut k = k.clamp(0.25, 4.0);
+    let mut out = vec![];
+    while k > 2.0 {
+        out.push("atempo=2".to_string());
+        k /= 2.0;
+    }
+    while k < 0.5 {
+        out.push("atempo=0.5".to_string());
+        k /= 0.5;
+    }
+    out.push(format!("atempo={k:.4}"));
+    out.join(",")
 }
 
 /// "#RRGGBB" as ASS wants it: &H00BBGGRR&.
@@ -125,7 +147,8 @@ pub fn remap(t: f64, segs: &[(f64, f64)]) -> Option<f64> {
 }
 
 /// Captions and the hook as ASS, on the cut clip's clock.
-pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], st: Option<&CaptionStyle>, hook: Option<&str>, w: u32, h: u32) -> String {
+#[allow(clippy::too_many_arguments)]
+pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], pace: f64, st: Option<&CaptionStyle>, hook: Option<&str>, w: u32, h: u32) -> String {
     let mut s = format!(
         "[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n\
          [V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n\
@@ -142,14 +165,14 @@ pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], st: Option<&Cap
     }
     s.push_str("\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n");
     let clean = |t: &str| t.chars().filter(|c| !matches!(c, '{' | '}' | '\\')).collect::<String>();
-    let total: f64 = segs.iter().map(|x| x.1 - x.0).sum();
+    let total: f64 = segs.iter().map(|x| x.1 - x.0).sum::<f64>() / pace;
     if let Some(hk) = hook.filter(|x| !x.trim().is_empty()) {
         s.push_str(&format!("Dialogue: 1,{},{},H,,0,0,0,,{{\\fad(120,200)}}{}\n", ass_time(0.0), ass_time(2.8f64.min(total)), clean(hk.trim())));
     }
     let Some(st) = st else { return s };
     // words on the cut clock, in chunks that break on punctuation, pauses and the style's word count
     let ws: Vec<(f64, f64, String, bool)> = words.iter().filter(|x| x.s >= m.start - 0.05 && x.e <= m.end + 0.05)
-        .filter_map(|x| Some((remap(x.s, segs)?, remap(x.e, segs).unwrap_or(remap(x.s, segs)? + 0.3), clean(&x.t), x.s >= m.punch - 0.05)))
+        .filter_map(|x| Some((remap(x.s, segs)? / pace, remap(x.e, segs).unwrap_or(remap(x.s, segs)? + 0.3) / pace, clean(&x.t), x.s >= m.punch - 0.05)))
         .collect();
     let mut chunks: Vec<Vec<usize>> = vec![];
     for i in 0..ws.len() {
@@ -180,6 +203,102 @@ pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], st: Option<&Cap
     s
 }
 
+/// Sentences of a transcript: split on . ? ! and trimmed.
+pub fn sentences(text: &str) -> Vec<String> {
+    let mut out = vec![];
+    let mut cur = String::new();
+    for ch in text.chars() {
+        cur.push(ch);
+        if matches!(ch, '.' | '?' | '!') {
+            let t = cur.trim().to_string();
+            if !t.is_empty() {
+                out.push(t);
+            }
+            cur.clear();
+        }
+    }
+    out
+}
+
+const FEELING: &[&str] = &["ben", "sen", "hiç", "artık", "asla", "hep", "kimse", "neden", "sadece", "hayat", "yalnız", "zaman", "gerçek",
+    "kalp", "unut", "kaybet", "bitti", "son", "değil", "olmadı", "keşke", "yine", "herkes", "hiçbir", "never", "alone", "life", "nobody", "why", "only"];
+
+/// How much a sentence works as words on screen: short, felt, not technical.
+pub fn line_score(s: &str) -> f64 {
+    let words: Vec<String> = s.split_whitespace().map(|w| w.to_lowercase().trim_matches(|c: char| !c.is_alphanumeric()).to_string()).collect();
+    let n = words.len();
+    if !(4..=11).contains(&n) {
+        return -10.0;
+    }
+    let felt = words.iter().filter(|w| FEELING.iter().any(|f| w.starts_with(f))).count() as f64;
+    let techy = s.split_whitespace().filter(|w| w.chars().any(|c| c.is_ascii_digit()) || w.chars().filter(|c| c.is_uppercase()).count() >= 2).count() as f64;
+    felt * 1.5 - techy * 2.0 + if s.ends_with(['?', '!']) { 0.5 } else { 0.0 } + if (5..=9).contains(&n) { 0.5 } else { 0.0 }
+}
+
+/// The `n` best lines; a model picks when asked and able, else `line_score`.
+pub fn best_lines(all: &[String], n: usize, use_llm: bool) -> Vec<String> {
+    let mut ranked: Vec<&String> = all.iter().filter(|s| line_score(s) > -10.0).collect();
+    ranked.sort_by(|a, b| line_score(b).total_cmp(&line_score(a)));
+    ranked.dedup();
+    let top: Vec<String> = ranked.iter().take(40).map(|s| s.to_string()).collect();
+    if use_llm && top.len() > n {
+        let mut p = format!("Bir sad / viral edit'in üstüne yazı olarak konacak en iyi {n} cümleyi seç: kendi başına anlamlı, duygusu güçlü, akılda kalan. Teknik ve bağlam isteyenleri seçme.\n\n");
+        for (i, l) in top.iter().enumerate() {
+            p.push_str(&format!("[{i}] {l}\n"));
+        }
+        p.push_str(&format!("\nSadece JSON dizisi yaz, sırayla gösterilecek {n} sayı: [4, 1, 9]\n"));
+        let picked = crate::util::run_stdin(&crate::pick::llm_cmd(), &p).ok().and_then(|r| {
+            let (a, b) = (r.find('[')?, r.rfind(']')?);
+            serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
+        });
+        if let Some(v) = picked {
+            let v: Vec<String> = v.into_iter().filter_map(|i| top.get(i).cloned()).take(n).collect();
+            if !v.is_empty() {
+                return v;
+            }
+        }
+    }
+    top.into_iter().take(n).collect()
+}
+
+/// Where each line shows: the edit split evenly, a breath at each end. (start, end) per line.
+fn line_spans(n: usize, total: f64) -> Vec<(f64, f64)> {
+    let d = total / n.max(1) as f64;
+    (0..n).map(|k| (k as f64 * d + 0.4, ((k + 1) as f64 * d - 0.3).max(k as f64 * d + 0.8))).collect()
+}
+
+/// Lines on screen as ASS: each types itself out word by word, holds, and fades.
+pub fn lines_ass(lines: &[String], total: f64, st: &CaptionStyle, w: u32, h: u32) -> String {
+    let mut s = format!(
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n\
+         [V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n\
+         Style: L,{},{},{},{},{},&H99000000&,-1,0,0,0,100,100,0,0,{},{},{},2,90,90,{},1\n\n\
+         [Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n",
+        st.font, (w as f64 * st.size * 0.9) as u32, ass_color(&st.color), ass_color(&st.color), ass_color(&st.outline_color),
+        if st.boxed { 3 } else { 1 }, st.outline, st.shadow, (h as f64 * (st.position + 0.08)) as u32
+    );
+    let clean = |t: &str| t.chars().filter(|c| !matches!(c, '{' | '}' | '\\')).collect::<String>();
+    for (line, (a, b)) in lines.iter().zip(line_spans(lines.len(), total)) {
+        let words: Vec<String> = clean(line).split_whitespace().map(|w| if st.upper { upper_tr(w) } else { w.to_string() }).collect();
+        let step = (0.9 / words.len().max(1) as f64).min(0.18);
+        for k in 0..words.len() {
+            let start = a + k as f64 * step;
+            let end = if k + 1 == words.len() { b } else { a + (k + 1) as f64 * step };
+            // the words not yet said are there but invisible, so the line never jumps sideways as it grows
+            let shown = words[..=k].join(" ");
+            let hidden = words[k + 1..].join(" ");
+            let fade = if k + 1 == words.len() { "{\\fad(0,300)}" } else { "" };
+            let rest = if hidden.is_empty() { String::new() } else { format!(" {{\\alpha&HFF&}}{hidden}") };
+            s.push_str(&format!("Dialogue: 0,{},{},L,,0,0,0,,{fade}{shown}{rest}\n", ass_time(start), ass_time(end)));
+        }
+    }
+    s
+}
+
+pub fn lines_srt(lines: &[String], total: f64) -> Vec<(f64, f64, String)> {
+    lines.iter().zip(line_spans(lines.len(), total)).map(|(l, (a, b))| (a, b, l.clone())).collect()
+}
+
 /// The sound effects, made with ffmpeg the first time (nothing to license): (whoosh, boom).
 pub fn sfx(cache: &Path) -> Result<(PathBuf, PathBuf), String> {
     let dir = cache.join("sfx");
@@ -198,12 +317,14 @@ pub fn sfx(cache: &Path) -> Result<(PathBuf, PathBuf), String> {
 
 /// One finished talking clip. The moment starts `seek` seconds into `video`.
 #[allow(clippy::too_many_arguments)]
-pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: &Talk, focus: f64, cache: &Path, work: &Path, out: &Path) -> Result<(), String> {
+/// Returns the kept stretches of source time.
+pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: &Talk, focus: f64, cache: &Path, work: &Path, out: &Path) -> Result<Vec<(f64, f64)>, String> {
     let abs = |p: &Path| std::path::absolute(p).map(|p| p.to_string_lossy().into_owned()).map_err(|e| e.to_string());
     let segs = if t.jumpcuts { segments(words, m, 0.35) } else { vec![(m.start, m.end)] };
-    let total: f64 = segs.iter().map(|x| x.1 - x.0).sum();
-    let punch = remap(m.punch, &segs).filter(|p| *p > 0.3);
-    let subs = captions(words, m, &segs, t.captions.as_ref(), t.hook.as_deref(), o.w, o.h);
+    let pace = if t.pace > 0.0 { t.pace } else { 1.0 };
+    let total: f64 = segs.iter().map(|x| x.1 - x.0).sum::<f64>() / pace;
+    let punch = remap(m.punch, &segs).map(|p| p / pace).filter(|p| *p > 0.3);
+    let subs = captions(words, m, &segs, pace, t.captions.as_ref(), t.hook.as_deref(), o.w, o.h);
     std::fs::write(work.join("cap.ass"), &subs).map_err(|e| e.to_string())?;
     let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into(), "-i".into(), abs(video)?];
     let mut g = String::new();
@@ -211,7 +332,12 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
     let mut cuts = vec![];
     for (i, (a, b)) in segs.iter().enumerate() {
         let (fa, fb) = (a - m.start + seek, b - m.start + seek);
-        let len = b - a;
+        let len = (b - a) / pace;
+        // the frame follows the face through the stretch when there is one
+        let framing = match (o.layout.as_str(), crate::fx::track(&t.frames, 4.0, fa, b - a)) {
+            ("fill", Some(cv)) => crate::fx::follow(o.w, o.h, &cv.expr("t", len)),
+            _ => shape(o, focus),
+        };
         // every other cut punches in; the punchline punches in harder
         let base = if i % 2 == 1 { 1.14 } else { 1.0 };
         let z = match punch.filter(|p| *p >= at && *p < at + len) {
@@ -219,9 +345,9 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
             None => format!("{base}"),
         };
         g.push_str(&format!(
-            "[0:v]trim=start={fa:.3}:end={fb:.3},setpts=PTS-STARTPTS,fps=30,{},zoompan=z='{z}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={}x{}:fps=30,setsar=1[v{i}];\
-             [0:a]atrim=start={fa:.3}:end={fb:.3},asetpts=PTS-STARTPTS,afade=t=in:d=0.02,afade=t=out:st={:.3}:d=0.03[a{i}];",
-            shape(o, focus), o.w, o.h, (len - 0.03).max(0.0)
+            "[0:v]trim=start={fa:.3}:end={fb:.3},setpts=(PTS-STARTPTS)/{pace},fps=30{},{framing},zoompan=z='{z}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={}x{}:fps=30,setsar=1[v{i}];\
+             [0:a]atrim=start={fa:.3}:end={fb:.3},asetpts=PTS-STARTPTS,{},afade=t=in:d=0.02,afade=t=out:st={:.3}:d=0.03[a{i}];",
+            t.pre, o.w, o.h, atempo(pace), (len - 0.03).max(0.0)
         ));
         if i > 0 {
             cuts.push(at);
@@ -267,7 +393,7 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
     args.extend(["-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "8M", "-bufsize", "16M", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(abs(out)?);
     let _ = std::fs::write(work.join("ffmpeg.txt"), args.iter().map(|a| format!("'{}'", a.replace('\'', "'\\''"))).collect::<Vec<_>>().join(" "));
-    run(Some(work), "ffmpeg", &args).map(|_| ())
+    run(Some(work), "ffmpeg", &args).map(|_| segs)
 }
 
 #[cfg(test)]
@@ -299,7 +425,9 @@ mod tests {
             punch: "#E5332A".into(), outline: 6.0, outline_color: "#000000".into(), shadow: 0.0, boxed: false, upper: true, words: 3, position: 0.2, pop: true };
         let words = [w(10.0, 10.4, "bunu"), w(10.4, 10.8, "biliyor"), w(10.8, 11.2, "musun?"), w(15.0, 15.5, "hayır")];
         let segs = vec![(10.0, 11.5), (14.9, 16.0)];
-        let a = captions(&words, &m(), &segs, Some(&st), Some("Bunu kimse bilmiyor"), 1080, 1920);
+        let a = captions(&words, &m(), &segs, 1.0, Some(&st), Some("Bunu kimse bilmiyor"), 1080, 1920);
+        assert_eq!(atempo(1.2), "atempo=1.2000");
+        assert_eq!(atempo(3.0), "atempo=2,atempo=1.5000");
         assert!(a.contains("Style: C,X,86,&H00FFFFFF&"), "{a}");
         assert!(a.contains(&format!("{{\\c{}\\fscx125\\fscy125\\t(0,90,\\fscx108\\fscy108)}}BİLİYOR{{\\r}}", ass_color("#FFE600"))), "{a}");
         assert!(a.contains(&format!("{{\\c{}", ass_color("#E5332A"))) && a.contains("HAYIR"), "{a}"); // punchline colour
@@ -312,6 +440,22 @@ mod tests {
         }).collect();
         spans.sort();
         assert!(spans.windows(2).all(|p| p[0].1 <= p[1].0), "{spans:?}");
+    }
+
+    #[test]
+    fn lines_on_screen() {
+        assert_eq!(sentences("Bir. İki üç? Dört"), vec!["Bir.", "İki üç?"]);
+        let good = "Artık hiç kimse bunu yazmıyor.";
+        let techy = "GPT 5 ile 3 API key ayarladım.";
+        assert!(line_score(good) > line_score(techy));
+        assert_eq!(line_score("Kısa."), -10.0);
+        let best = best_lines(&[techy.into(), good.into(), "Ben de öyle düşünmüştüm ama olmadı.".into()], 2, false);
+        assert_eq!(best.len(), 2);
+        assert!(!best.contains(&techy.to_string()));
+        let st = style("karaoke").unwrap();
+        let a = lines_ass(&[good.into()], 10.0, &st, 1080, 1920);
+        assert!(a.contains("Dialogue: 0,0:00:00.40,") && a.contains("Artık {\\alpha&HFF&}hiç kimse") && a.contains("{\\fad(0,300)}Artık hiç kimse bunu yazmıyor."), "{a}");
+        assert_eq!(lines_srt(&[good.into()], 10.0)[0].0, 0.4);
     }
 
     #[test]

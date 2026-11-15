@@ -123,7 +123,6 @@ impl Curve {
         Curve { keys: self.keys.iter().map(|&(t, v, e)| (t, f(v), e)).collect() }
     }
     /// Value at `u` (0..1 of the layer).
-    #[cfg(test)]
     pub fn at(&self, u: f64) -> f64 {
         let k = &self.keys;
         match k.iter().position(|x| x.0 > u) {
@@ -197,6 +196,32 @@ pub struct Slot {
     pub invert: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub motion_blur: bool,
+    /// a speed ramp over the shot, multiplying `speed` (2.5 = rushing, 0.5 = slow motion)
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
+    pub ramp: Curve,
+}
+
+impl Slot {
+    /// Seconds of footage the shot plays in `len` seconds of edit.
+    pub fn source_len(&self, len: f64) -> f64 {
+        if self.ramp.is_empty() {
+            len * self.speed
+        } else {
+            crate::fx::ramp_parts(&self.ramp, self.speed, len, RAMP_PARTS).iter().map(|p| p.1).sum()
+        }
+    }
+}
+
+const RAMP_PARTS: usize = 6;
+
+/// What a shot gets beyond its preset: where its frame looks (an expression in `t`, 0..1 across), filters on the
+/// source frame before the crop (blurs), filters at the end (beat hits) and a freeze at its start.
+#[derive(Clone, Debug, Default)]
+pub struct Extra {
+    pub focus: String,
+    pub pre: String,
+    pub post: String,
+    pub freeze: Option<f64>,
 }
 
 /// A coloured layer over the picture: flashes, dips, light hits.
@@ -427,6 +452,7 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         saturation,
         rgb: [n, m].iter().any(|x| has_effect(*x, "rgbsepnew") || has_effect(*x, "chromabbr")),
         invert: has_effect(n, "invert") || has_effect(m, "invert"),
+        ramp: Curve::default(),
         motion_blur: ["motionblur4", "motionblur2", "motionblur", "moblurplus", "zoomblur3", "spinblur2"].iter().any(|e| has_effect(n, e) || has_effect(m, e)),
     })
 }
@@ -574,9 +600,26 @@ pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
 }
 
 /// The ffmpeg chain for one slot's footage, already cut to `len` seconds at the slot's speed. Labels use `p`.
-pub fn chain(s: &Slot, i: usize, w: u32, h: u32, focus: f64, len: f64) -> String {
-    let fill = format!("crop=w='min(iw,ih*{w}/{h})':h='min(ih,iw*{h}/{w})':x='max(0,min(iw-ow,iw*{focus:.3}-ow/2))',scale={w}:{h},setsar=1");
-    let mut f = format!("[{i}:v]setpts=(PTS-STARTPTS)/{:.4},fps=30,{fill}", s.speed);
+pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String {
+    let fill = crate::fx::follow(w, h, if x.focus.is_empty() { "0.5" } else { &x.focus });
+    let mut f = if s.ramp.is_empty() {
+        format!("[{i}:v]setpts=(PTS-STARTPTS)/{:.4},fps=30", s.speed)
+    } else {
+        // a speed ramp: the shot cut into stretches, each played at its own speed, joined back up
+        let parts = crate::fx::ramp_parts(&s.ramp, s.speed, len, RAMP_PARTS);
+        let mut g = format!("[{i}:v]fps=30,split={}{};", parts.len(), (0..parts.len()).map(|k| format!("[r{i}x{k}]")).collect::<String>());
+        for (k, (from, src, out)) in parts.iter().enumerate() {
+            g.push_str(&format!("[r{i}x{k}]trim=start={from:.3}:end={:.3},setpts=(PTS-STARTPTS)/{:.4},fps=30[r{i}y{k}];", from + src, src / out));
+        }
+        g.push_str(&format!("{}concat=n={}:v=1:a=0,fps=30", (0..parts.len()).map(|k| format!("[r{i}y{k}]")).collect::<String>(), parts.len()));
+        g
+    };
+    f.push_str(&x.pre);
+    if let Some(secs) = x.freeze {
+        f.push_str(&crate::fx::freeze(secs));
+    }
+    f.push(',');
+    f.push_str(&fill);
     if s.saturation != 1.0 || s.exposure.max() > 0.01 {
         f.push_str(&format!(",eq=saturation={:.2}:brightness='{}':eval=frame", s.saturation, s.exposure.map(|v| v * 0.25).expr("t", len)));
     }
@@ -603,6 +646,9 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, focus: f64, len: f64) -> String
     if s.invert {
         f.push_str(",negate");
     }
+    f.push_str(&x.post);
+    // every shot square-pixelled, or concat refuses to join them
+    f.push_str(",setsar=1");
     f.push_str(&format!(",trim=duration={len:.3},setpts=PTS-STARTPTS[v{i}];"));
     f
 }
@@ -733,10 +779,16 @@ mod tests {
     #[test]
     fn chains_for_slots() {
         let p = parse(XML, "t").unwrap();
-        let a = chain(&p.slots[0], 0, 1080, 1200, 0.5, 1.0);
+        let a = chain(&p.slots[0], 0, 1080, 1200, &Extra::default(), 1.0);
         assert!(a.starts_with("[0:v]setpts=(PTS-STARTPTS)/3.0000,fps=30,crop=") && a.contains("zoompan=z='min(2.2,max(1,") && a.contains("hstack=3") && a.contains("tmix=frames=3"), "{a}");
         assert!(a.ends_with("trim=duration=1.000,setpts=PTS-STARTPTS[v0];"), "{a}");
-        let b = chain(&p.slots[1], 1, 1080, 1200, 0.5, 1.0);
+        let b = chain(&p.slots[1], 1, 1080, 1200, &Extra { post: ",negate".into(), freeze: Some(0.3), ..Default::default() }, 1.0);
+        assert!(b.contains(",tpad=start_mode=clone:start_duration=0.30,crop=") && b.contains(",negate,setsar=1,trim=duration"), "{b}");
+        let mut ramped = p.slots[1].clone();
+        ramped.ramp = crate::fx::velocity();
+        let r = chain(&ramped, 1, 1080, 1200, &Extra::default(), 1.0);
+        assert!(r.starts_with("[1:v]fps=30,split=6[r1x0]") && r.contains("concat=n=6:v=1:a=0,fps=30,crop="), "{r}");
+        assert!(ramped.source_len(1.0) > 1.0);
         assert!(b.contains("gblur=sigma=14:enable=") && b.contains("crop=1080:1200:x='1080-(") && !b.contains("zoompan"), "{b}");
         // a preset survives being written out as JSON and read back
         let back: Preset = serde_json::from_str(&serde_json::to_string_pretty(&p).unwrap()).unwrap();

@@ -20,6 +20,10 @@ pub struct Look {
     pub tag: String,
     /// a line shown over the whole edit, like "THE PROBLEM"
     pub text: String,
+    /// footage speed on top of the look's own (--speed)
+    pub pace: f64,
+    /// effects on the hardest cuts (--fx)
+    pub hits: Vec<String>,
 }
 
 impl Look {
@@ -28,7 +32,7 @@ impl Look {
         if self.sad { 2.4 } else { 1.1 }
     }
     pub fn speed(&self) -> f64 {
-        if self.sad { 0.8 } else { 1.0 }
+        (if self.sad { 0.8 } else { 1.0 }) * if self.pace > 0.0 { self.pace } else { 1.0 }
     }
 }
 
@@ -423,18 +427,49 @@ pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(
         used.iter_mut().for_each(|u| *u = false); // footage ran out: reuse rather than make a short edit
     }
     // pieces of the same scene back to back read as one long shot: keep picks 12 s apart
+    // and spread over every video: each pick from a video costs the next one from it a point
+    let free: Vec<usize> = order.into_iter().filter(|&i| !used[i]).collect();
     let mut pick: Vec<usize> = vec![];
-    for i in order.into_iter().filter(|&i| !used[i]) {
-        if pick.len() == needs.len() {
-            break;
-        }
-        if pick.iter().all(|&p| shots[p].video != shots[i].video || (shots[p].s - shots[i].s).abs() >= 12.0) {
-            pick.push(i);
+    while pick.len() < needs.len() {
+        let from = |v: usize| pick.iter().filter(|&&p| shots[p].video == v).count() as f64;
+        let best = free.iter().copied()
+            .filter(|i| !pick.contains(i) && pick.iter().all(|&p| shots[p].video != shots[*i].video || (shots[p].s - shots[*i].s).abs() >= 12.0))
+            .max_by(|a, b| (score(*a) - from(shots[*a].video)).total_cmp(&(score(*b) - from(shots[*b].video))));
+        match best {
+            Some(i) => pick.push(i),
+            None => break,
         }
     }
     pick.iter().for_each(|&i| used[i] = true);
     if pick.len() > 1 {
-        pick[1..].sort_by(|a, b| (shots[*a].video, shots[*a].s).partial_cmp(&(shots[*b].video, shots[*b].s)).unwrap());
+        // after the hook, videos take turns, each in its own story order
+        let hook = pick[0];
+        let mut queues: Vec<Vec<usize>> = vec![];
+        let mut rest: Vec<usize> = pick[1..].to_vec();
+        rest.sort_by(|a, b| (shots[*a].video, shots[*a].s).partial_cmp(&(shots[*b].video, shots[*b].s)).unwrap());
+        for i in rest {
+            match queues.iter_mut().find(|q| shots[q[0]].video == shots[i].video) {
+                Some(q) => q.push(i),
+                None => queues.push(vec![i]),
+            }
+        }
+        // the hook's own video waits its turn
+        queues.sort_by_key(|q| shots[q[0]].video == shots[hook].video);
+        pick = vec![hook];
+        let mut k = 0;
+        while queues.iter().any(|q| !q.is_empty()) {
+            let n = queues.len();
+            if !queues[k % n].is_empty() {
+                let i = queues[k % n].remove(0);
+                // never the same video twice running when another can go
+                if pick.last().is_some_and(|&l| shots[l].video == shots[i].video) && queues.iter().any(|q| !q.is_empty() && shots[q[0]].video != shots[i].video) {
+                    queues[k % n].insert(0, i);
+                } else {
+                    pick.push(i);
+                }
+            }
+            k += 1;
+        }
     }
     // centred in its piece when it fits, else from the piece's start on into the rest of the scene
     pick.iter().zip(needs).map(|(&i, n)| (i, if shots[i].e - shots[i].s >= *n { (shots[i].s + shots[i].e - n) / 2.0 } else { shots[i].s })).collect()
@@ -600,13 +635,17 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         if !blur.is_empty() {
             smear.push_str(&format!(",gblur=sigma=12:enable='gt({blur},0.25)'"));
         }
-        let tone = if look.sad {
+        let mut tone = if look.sad {
             ",hue=s=0,eq=contrast=1.22:brightness=-0.05,vignette=PI/4.2,noise=alls=5:allf=t".to_string()
         } else {
             format!("{},eq=contrast=1.08,vignette=PI/5", grade(&o.grade))
         };
+        // the hardest cuts land with the chosen hits (--fx)
+        if i > 0 && joins[i].kind == "fadewhite" {
+            tone.push_str(&crate::fx::hit(&look.hits, w, h));
+        }
         g.push_str(&format!(
-            "[{i}:v]setpts=(PTS-STARTPTS)/{speed},fps=30,{},zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30{smear}{tone},trim=duration={len:.3},setpts=PTS-STARTPTS,settb=AVTB[v{i}];",
+            "[{i}:v]setpts=(PTS-STARTPTS)/{speed},fps=30,{},zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30{smear}{tone},setsar=1,trim=duration={len:.3},setpts=PTS-STARTPTS,settb=AVTB[v{i}];",
             shape(&Opts { layout: "fill".into(), ..o.clone() }, *f)
         ));
     }
@@ -936,6 +975,19 @@ mod tests {
     }
 
     #[test]
+    fn picks_spread_over_videos() {
+        let sh = |video: usize, s: f64, score: f64| Shot { video, s, e: s + 3.0, scene_end: s + 3.0, score, focus: None };
+        // video 0 has all the best shots, video 1 slightly worse ones
+        let shots: Vec<Shot> = (0..6).map(|k| sh(0, k as f64 * 20.0, 3.0)).chain((0..6).map(|k| sh(1, k as f64 * 20.0, 2.5))).collect();
+        let p = assign(&shots, &mut [false; 12], &[2.0; 4], None);
+        let from0 = p.iter().filter(|(i, _)| shots[*i].video == 0).count();
+        assert_eq!(from0, 2, "{p:?}");
+        // and they alternate after the hook
+        let order: Vec<usize> = p.iter().map(|(i, _)| shots[*i].video).collect();
+        assert!(order.windows(2).skip(1).all(|w| w[0] != w[1]), "{order:?}");
+    }
+
+    #[test]
     fn hook_first_then_story_order() {
         let sh = |s: f64, score: f64| Shot { video: 0, s, e: s + 3.0, scene_end: s + 3.0, score, focus: None };
         let shots = vec![sh(0.0, 1.0), sh(15.0, 5.0), sh(30.0, 2.0), sh(45.0, 3.0), Shot { e: 61.0, scene_end: 61.0, ..sh(60.0, 9.0) }];
@@ -1000,13 +1052,13 @@ mod tests {
     #[test]
     fn graph_shapes() {
         let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: false, layout: "fit".into(), lufs: -12.0 };
-        let sad = Look { sad: true, punch: false, length: 6.0, tag: "@me".into(), text: String::new() };
+        let sad = Look { sad: true, punch: false, length: 6.0, tag: "@me".into(), text: String::new(), pace: 1.0, hits: vec![] };
         let cuts = [0.0, 2.0, 4.0];
         let js = joins(&[1.0, 5.0, 1.0], true);
         let g = filter_graph(&o, &sad, &[0.5, 0.4], &pieces(&cuts, &js), &js, &[], 4.0, None, false);
         assert!(g.contains("[0:v]setpts=(PTS-STARTPTS)/0.8,fps=30,crop=") && g.contains("[v0][v1]xfade=transition=fadeblack:duration=0.700:offset=1.650[x1];[x1]settb=1/30,fps=30,fade=t=in"), "{g}");
         assert!(g.contains("drawtext=text='@me'") && g.contains("[2:a]afade") && g.contains("loudnorm=I=-12.0") && !g.contains("ass="), "{g}");
-        let hype = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new() };
+        let hype = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] };
         let js = joins(&[0.0, 1.0, 0.0], false);
         let v = Voice { file: "a.m4a".into(), start: 30.0, len: 1.5, at: 0.5 };
         let g = filter_graph(&o, &hype, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, &[0.0, 0.5, 1.0, 1.5], 2.0, Some(&v), true);

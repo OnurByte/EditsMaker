@@ -100,6 +100,18 @@ Caption styles: hormozi, mrbeast, karaoke, box, minimal, neon:
 edits https://www.youtube.com/watch?v=VIDEO_ID --captions mrbeast
 ```
 
+Hits on the hardest beats, speed ramps and words on screen:
+
+```sh
+edits https://www.youtube.com/@channel --preset yuraprst --velocity --fx shake,rgb,freeze --line "Yok artık kaliteye bak."
+```
+
+Slow, faster, hidden faces, a cleaner finish:
+
+```sh
+edits https://www.youtube.com/watch?v=VIDEO_ID --speed 1.2 --blur-faces --stabilize --denoise --codec h265
+```
+
 What is trending on TikTok:
 
 ```sh

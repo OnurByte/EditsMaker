@@ -19,6 +19,17 @@ fn tools() -> Value {
             "videos": {"type": "integer", "description": "videos to look at for a channel or topic"},
             "use": {"type": "integer", "description": "of those, how many to download after reading captions"},
             "sad": {"type": "boolean"}, "voice": {"type": "boolean"},
+            "speed": {"type": "number", "description": "footage speed (talking clips: speech speed), 0.5 slow motion, 2 double"},
+            "velocity": {"type": "boolean", "description": "speed ramps on every longer shot: slow, rushing, slow onto the beat"},
+            "fx": {"type": "string", "description": "hits on the hardest beats, comma-separated: shake, flash, rgb, glitch, invert, blur, freeze, zoom"},
+            "lines": {"type": "integer", "description": "sentences from the videos' own words shown on screen (music and preset edits)"},
+            "line_texts": {"type": "array", "items": {"type": "string"}, "description": "your own lines on screen, in order (read the videos' words and pick the strongest)"},
+            "captions": {"type": "string", "description": "caption style: hormozi, mrbeast, karaoke, box, minimal, neon"},
+            "bed": {"type": "string", "description": "music under talking clips, ducked under the voice"},
+            "blur_faces": {"type": "boolean"}, "blur_box": {"type": "string", "description": "x,y,w,h fractions of the frame to blur (a watermark, a plate)"},
+            "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
+            "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]},
+            "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt"},
             "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length, frame, song.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
@@ -26,7 +37,7 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
-        {"name": "edits_looks", "description": "The colour looks.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles and the beat hits for fx.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_trends", "description": "What is trending on TikTok now in a country (two letters, default tr). Use one with music \"trend:N\".",
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
@@ -46,17 +57,21 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_trends" => v.extend(["trends".into(), s("country").unwrap_or_else(|| "tr".into())]),
         "edits_make" => {
             v.push(s("input").ok_or("input is needed")?);
-            for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"), ("out", "--out")] {
+            for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"), ("out", "--out"),
+                ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("export", "--export")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
             }
-            for (key, flag) in [("n", "-n"), ("videos", "--videos"), ("use", "--use"), ("intensity", "--intensity")] {
+            for (key, flag) in [("n", "-n"), ("videos", "--videos"), ("use", "--use"), ("intensity", "--intensity"), ("speed", "--speed"), ("lines", "--lines"), ("fps", "--fps")] {
                 if let Some(x) = a[key].as_f64() {
-                    v.extend([flag.into(), if key == "intensity" { x.to_string() } else { (x as u64).to_string() }]);
+                    v.extend([flag.into(), if matches!(key, "intensity" | "speed") { x.to_string() } else { (x as u64).to_string() }]);
                 }
             }
-            for (key, flag) in [("sad", "--sad"), ("voice", "--voice")] {
+            for t in a["line_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--line".into(), t.into()]);
+            }
+            for (key, flag) in [("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
                 }
@@ -154,8 +169,8 @@ mod tests {
 
     #[test]
     fn tool_calls_become_command_lines() {
-        let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false});
-        assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "-n", "2", "--intensity", "1.5", "--sad"]);
+        let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3});
+        assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
         assert!(args_for("edits_make", &json!({})).is_err() && args_for("nope", &json!({})).is_err());
     }
