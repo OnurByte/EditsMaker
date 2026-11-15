@@ -11,6 +11,9 @@ edits preset import ... --into presets/        # into the repo, to build them in
 edits preset list
 ```
 
+- A whole editing pack (sounds, music, overlays, transitions, green screens, memes, images, fonts, presets):
+  `edits library add pack.zip` copies the media to ~/.config/edits/library, installs the fonts (name one in a
+  caption style's `font`) and imports the presets inside. `edits library [KIND] [WORDS]` lists it.
 - Alight Motion projects become edit presets: shot timing, speed, zooms, slides, turns, shakes, blurs, flashes,
   the song's name. Footage and music are never copied.
 - Alight colour packs ("cc", adjustment layers with no footage of their own) become looks in grades.json, one per
@@ -18,7 +21,7 @@ edits preset list
   a LUT; `edits cube NAME` writes it as a .cube for Premiere, Resolve or CapCut. Glows and streaks are left out.
 - Text packs: their styles are not imported automatically; read the text layers (font, colour, glow, letter
   spacing, how they come in) and add a caption style to captions.json (`glow`, `spacing`, `reveal`).
-- Premiere `.prfpset` files become cut moves (spins, whips, slides, zooms) that music edits put on the hardest beats.
+- Premiere `.prfpset` / `.prfpset.xml` files become cut moves (spins, whips, slides, zooms) that music edits put on the hardest beats.
 - After importing, open one with `edits preset show NAME` and check it reads sensibly.
 
 Reference edits (mp4s of edits the user likes):

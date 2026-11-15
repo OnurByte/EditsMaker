@@ -6,6 +6,7 @@ mod fx;
 mod grades;
 mod lang;
 mod learn;
+mod library;
 mod looks;
 mod mcp;
 mod montage;
@@ -45,6 +46,20 @@ fn main() -> ExitCode {
         }),
         Some("rate") => rate(&args[1..]),
         Some("preset") => preset_cmd(&args[1..]),
+        Some("library") if args.get(1).is_some_and(|a| a == "add") && args.len() > 2 => (|| {
+            // the pack's media into the library, then its presets (Alight projects, Premiere moves) like preset import
+            for src in &args[2..] {
+                let root = library::add(Path::new(src))?;
+                let mut import = vec!["import".to_string(), root.to_string_lossy().into_owned()];
+                import.extend(library::walk(&root).iter().map(|f| f.to_string_lossy().into_owned()).filter(|f| f.to_lowercase().contains(".prfpset")));
+                preset_cmd(&import)?;
+            }
+            Ok(())
+        })(),
+        Some("library") => {
+            library::list(&args[1..]);
+            Ok(())
+        }
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
         Some("looks") => {
@@ -85,15 +100,19 @@ fn main() -> ExitCode {
         },
         Some("draw") => match (args.get(1), args.len() > 2) {
             (Some(v), true) => (|| {
-                let st = args[2..].iter().map(|x| svg::parse(x)).collect::<Result<Vec<_>, _>>()?;
+                // "--overlay SPEC" items are library clips, the rest drawn graphics
+                let over: Vec<usize> = (2..args.len()).filter(|&i| args[i - 1] == "--overlay").collect();
+                let ov = over.iter().map(|&i| library::parse(&args[i])).collect::<Result<Vec<_>, _>>()?;
+                let st = (2..args.len()).filter(|i| !over.contains(i) && args[*i] != "--overlay").map(|i| svg::parse(&args[i])).collect::<Result<Vec<_>, _>>()?;
                 let src = Path::new(v);
                 let out = src.with_file_name(format!("{}-drawn.mp4", src.file_stem().unwrap_or_default().to_string_lossy()));
                 std::fs::copy(src, &out).map_err(|e| format!("{v}: {e}"))?;
                 svg::apply(&out, &st)?;
+                library::apply(&out, &ov)?;
                 println!("{}", out.display());
                 Ok(())
             })(),
-            _ => Err("usage: edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ...".into()),
+            _ => Err("usage: edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ... [--overlay NAME[@FROM[-TO]][:OPACITY]] ...".into()),
         },
         Some("study") => match args.get(1) {
             Some(dir) => study::study(Path::new(dir)),
@@ -152,6 +171,11 @@ struct Cli {
     blur_box: Option<(f64, f64, f64, f64)>,
     /// drawn graphics over the finished edit (--svg)
     svgs: Vec<svg::Sticker>,
+    /// library clips over the finished edit
+    overlays: Vec<library::Overlay>,
+    /// talking clips: library sounds in place of the made whoosh and boom
+    whoosh: Option<PathBuf>,
+    boom: Option<PathBuf>,
     /// sentences on screen in music and preset edits
     lines: usize,
     /// lines given by hand (--line), used instead of picked ones
@@ -177,7 +201,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -247,6 +271,12 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             }
             "--lines" => c.lines = val("--lines")?.parse().ok().filter(|n| (1..=12).contains(n)).ok_or("--lines must be 1-12")?,
             "--svg" => c.svgs.push(svg::parse(&val("--svg")?)?),
+            "--overlay" => c.overlays.push(library::parse(&val("--overlay")?)?),
+            "--whoosh" | "--boom" => {
+                let name = val(a)?;
+                let f = library::find(&["sfx"], &name).ok_or(format!("{a} {name}: no such file or library sound (edits library sfx)"))?;
+                if a == "--whoosh" { c.whoosh = Some(f) } else { c.boom = Some(f) }
+            }
             "--export" => {
                 c.export = val("--export")?.split(',').map(|x| x.trim().to_lowercase()).collect();
                 if let Some(bad) = c.export.iter().find(|x| !["fcpxml", "edl", "srt"].contains(&x.as_str())) {
@@ -351,6 +381,8 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
         captions: if opts.captions { Some(talk::style(&c.caption_style)?) } else { None },
         jumpcuts: c.jumpcuts,
         sfx: c.sfx,
+        whoosh: c.whoosh.clone(),
+        boom: c.boom.clone(),
         hook,
         bed: bed.cloned(),
         pace: c.speed,
@@ -644,6 +676,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
 /// The last pass (stabilise, clean the voice, frame rate, codec) and the timelines for other editors.
 fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, String> {
     svg::apply(out, &c.svgs)?;
+    library::apply(out, &c.overlays)?;
     let fin = finish::apply(out, &c.finish)?;
     if !c.export.is_empty() {
         for p in tl.write(&fin, &c.export)? {
@@ -997,13 +1030,16 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
                 None => (presets::user_dir(), args[1..].iter().collect()),
             };
             std::fs::create_dir_all(&into).map_err(|e| e.to_string())?;
-            let mut moves: Vec<preset::Motion> = std::fs::read_to_string(into.join("moves.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+            // a saved moves.json replaces the built-in one, so it starts from the built-in moves
+            let mut moves: Vec<preset::Motion> = std::fs::read_to_string(into.join("moves.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_else(|| presets::motions().to_vec());
             let mut taken: Vec<String> = vec![];
             for src in sources {
                 let path = Path::new(src);
-                if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("prfpset")) {
+                // Premiere exports are named x.prfpset or x.prfpset.xml
+                let file = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+                if let Some(stem) = file.strip_suffix(".prfpset").or(file.strip_suffix(".prfpset.xml")) {
                     let xml = std::fs::read_to_string(path).map_err(|e| format!("{src}: {e}"))?;
-                    let found = premiere::parse(&xml, &path.file_stem().unwrap_or_default().to_string_lossy())?;
+                    let found = premiere::parse(&xml, stem)?;
                     println!("{src}: {} cut moves", found.len());
                     moves.retain(|m| !found.iter().any(|f| f.name == m.name));
                     moves.extend(found);

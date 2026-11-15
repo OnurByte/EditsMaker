@@ -580,8 +580,8 @@ pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
     while let Some(p) = stack.pop() {
         if p.is_dir() {
             stack.extend(std::fs::read_dir(&p).map_err(|e| e.to_string())?.flatten().map(|e| e.path()));
-        } else if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("xml")) {
-            files.push(p);
+        } else if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("xml")) && !p.to_string_lossy().to_lowercase().contains(".prfpset") {
+            files.push(p); // Premiere's .prfpset.xml are cut moves, read elsewhere
         }
     }
     files.sort();
@@ -632,7 +632,7 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
         // a mirrored 3x3 tile, so moving and turning never shows an edge (Alight's "tile" with mirror)
         let sh = |c: &Curve, phase: f64| if shaking { format!("+{}*sin(2*PI*{:.2}*t+{phase})", c.expr("t", len), s.shake_hz) } else { String::new() };
         let rot = if s.rot.is_moving() { s.rot.expr("t", len) } else { String::new() };
-        f.push_str(&moves(&format!("p{i}"), w, h, &format!("{}{}", s.x.expr("t", len), sh(&s.shake, 0.0)), &format!("{}{}", s.y.expr("t", len), sh(&s.shake, 1.3)), &rot));
+        f.push_str(&moves(w, h, &format!("{}{}", s.x.expr("t", len), sh(&s.shake, 0.0)), &format!("{}{}", s.y.expr("t", len), sh(&s.shake, 1.3)), &rot, reach(&[&s.x, &s.y]) + if shaking { reach(&[&s.shake]) } else { 0.0 }));
     }
     if s.blur.max() > 0.25 {
         f.push_str(&format!(",gblur=sigma=14:enable='gt({},0.25)'", s.blur.expr("t", len)));
@@ -655,17 +655,24 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
 
 /// Moving and turning a picture without ever showing an edge: a mirrored 3x3 tile (Alight's "tile" with mirror,
 /// Premiere's "Mirror"/"Replicate" trick), turned by `rot` degrees, then cut back to w x h offset by `x`, `y`
-/// (fractions of the frame; positive moves the picture right / down). Expressions in `t`. `p` makes labels unique.
-pub fn moves(p: &str, w: u32, h: u32, x: &str, y: &str, rot: &str) -> String {
-    let mut f = format!(
-        ",split=3[{p}a][{p}b][{p}c];[{p}a]hflip[{p}l];[{p}c]hflip[{p}r];[{p}l][{p}b][{p}r]hstack=3,split=3[{p}t][{p}m][{p}d];\
-         [{p}t]vflip[{p}t2];[{p}d]vflip[{p}d2];[{p}t2][{p}m][{p}d2]vstack=3"
-    );
+/// (fractions of the frame; positive moves the picture right / down). Expressions in `t`. `reach`: the largest
+/// offset the expressions give, 1 when unknown.
+pub fn moves(w: u32, h: u32, x: &str, y: &str, rot: &str, reach: f64) -> String {
+    let mut f = format!(",pad=3*iw:3*ih:iw:ih,fillborders=left={w}:right={w}:top={h}:bottom={h}:mode=mirror");
+    let (mut mx, mut my) = (w, h);
     if !rot.is_empty() {
-        f.push_str(&format!(",rotate=a='({rot})*PI/180':c=black"));
+        // turning costs by the canvas: turn only as much of the tile as the slide can reach
+        let margin = |d: u32| (((reach * 1.25).clamp(0.0, 1.0) * d as f64).ceil() as u32).div_ceil(2) * 2;
+        (mx, my) = (margin(w), margin(h));
+        f.push_str(&format!(",rotate=a='({rot})*PI/180':ow={}:oh={}:c=black", w + 2 * mx, h + 2 * my));
     }
-    f.push_str(&format!(",crop={w}:{h}:x='{w}-({x})*{w}':y='{h}-({y})*{h}'"));
+    f.push_str(&format!(",crop={w}:{h}:x='{mx}-({x})*{w}':y='{my}-({y})*{h}'"));
     f
+}
+
+/// The furthest these curves go from zero: how far a slide or shake can push the picture.
+pub fn reach(curves: &[&Curve]) -> f64 {
+    curves.iter().flat_map(|c| c.keys.iter().map(|k| k.1.abs())).fold(0.0, f64::max)
 }
 
 /// A camera move around a cut, from a Premiere Pro preset: the outgoing shot plays the part before `cut`
@@ -706,6 +713,17 @@ pub fn flashes(p: &Preset) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn turning_uses_only_the_reach() {
+        // no slide: the turn runs on the frame itself, not the 3x3 tile
+        assert!(moves(1080, 1920, "0", "0", "t*90", 0.0).ends_with("rotate=a='(t*90)*PI/180':ow=1080:oh=1920:c=black,crop=1080:1920:x='0-(0)*1080':y='0-(0)*1920'"));
+        assert!(moves(1080, 1920, "0.2*t", "0", "t*90", 0.2).contains(":ow=1620:oh=2880:c=black,crop=1080:1920:x='270-(0.2*t)*1080'"));
+        // unknown or large slides keep the whole tile; without a turn nothing changes
+        assert!(moves(1080, 1920, "x", "y", "r", 9.0).contains(":ow=3240:oh=5760:"));
+        assert!(moves(1080, 1920, "x", "0", "", 0.1).ends_with("mode=mirror,crop=1080:1920:x='1080-(x)*1080':y='1920-(0)*1920'"));
+        assert_eq!(reach(&[&Curve::default(), &Curve { keys: vec![(0.0, -0.4, Ease::Linear), (1.0, 0.3, Ease::Linear)] }]), 0.4);
+    }
 
     #[test]
     fn easing() {
@@ -780,7 +798,7 @@ mod tests {
     fn chains_for_slots() {
         let p = parse(XML, "t").unwrap();
         let a = chain(&p.slots[0], 0, 1080, 1200, &Extra::default(), 1.0);
-        assert!(a.starts_with("[0:v]setpts=(PTS-STARTPTS)/3.0000,fps=30,crop=") && a.contains("zoompan=z='min(2.2,max(1,") && a.contains("hstack=3") && a.contains("tmix=frames=3"), "{a}");
+        assert!(a.starts_with("[0:v]setpts=(PTS-STARTPTS)/3.0000,fps=30,crop=") && a.contains("zoompan=z='min(2.2,max(1,") && a.contains("fillborders=left=") && a.contains("tmix=frames=3"), "{a}");
         assert!(a.ends_with("trim=duration=1.000,setpts=PTS-STARTPTS[v0];"), "{a}");
         let b = chain(&p.slots[1], 1, 1080, 1200, &Extra { post: ",negate".into(), freeze: Some(0.3), ..Default::default() }, 1.0);
         assert!(b.contains(",tpad=start_mode=clone:start_duration=0.30,crop=") && b.contains(",negate,setsar=1,trim=duration"), "{b}");

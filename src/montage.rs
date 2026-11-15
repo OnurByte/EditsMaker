@@ -661,7 +661,8 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         let mut smear = if look.punch { ",tmix=frames=2".to_string() } else { String::new() };
         if !(mx.is_empty() && my.is_empty() && mr.is_empty()) {
             let or0 = |e: &String| if e.is_empty() { "0".to_string() } else { format!("0{e}") };
-            smear.push_str(&crate::preset::moves(&format!("q{i}"), w, h, &or0(&mx), &or0(&my), if mr.is_empty() { "" } else { &mr[1..] }));
+            let reach: f64 = ends.iter().map(|(m, _)| crate::preset::reach(&[&m.x, &m.y])).sum();
+            smear.push_str(&crate::preset::moves(w, h, &or0(&mx), &or0(&my), if mr.is_empty() { "" } else { &mr[1..] }, reach));
         }
         // ffmpeg's max takes two arguments: fold them
         let blur = ends.iter().filter(|(m, _)| !m.blur.keys.is_empty())

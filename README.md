@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 5 agent skills, 32 presets, 36 cut moves, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 5 agent skills, 32 presets, 178 cut moves, 40 looks">
 </picture>
 
 <picture>
@@ -77,7 +77,7 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
-  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 32 Alight Motion edits, 24 colour looks and 36 Premiere cut moves, every shot and keyframe as editable JSON">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 32 Alight Motion edits, 24 colour looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
 <picture>
@@ -212,6 +212,19 @@ Import Alight Motion or Premiere presets:
 edits preset import presets.zip
 ```
 
+Take a whole editing pack in (sound effects, music, overlays, transitions, green screens, memes, images, fonts and
+presets) and use it by name:
+
+```sh
+edits library add pack.zip
+edits library sfx whoosh
+edits <link> --music "montagem rave" --overlay "vhs texture:0.5" --overlay "burn 3@4.2"
+edits <link> --whoosh "main swoosh" --boom "bass drop"
+```
+
+The files stay on your machine in `~/.config/edits/library`. Textures run screened under the whole edit, a
+transition or meme plays once where you put it, green screens are keyed.
+
 Check the tools:
 
 ```sh
@@ -223,7 +236,7 @@ edits doctor
 <details>
 <summary><b>Presets</b></summary>
 
-30 edits (anime and 9:16 community edits made in Alight Motion) and 36 cut moves (Premiere transitions), kept as
+30 edits (anime and 9:16 community edits made in Alight Motion) and 178 cut moves (Premiere transitions), kept as
 JSON in [`presets/`](presets). Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
 look or song, then use the file for one edit or save it. With another song, cuts move onto its beats.
 

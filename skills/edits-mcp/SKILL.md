@@ -14,7 +14,7 @@ codex mcp add edits -- edits mcp                        # Codex
 
 Other clients: command `edits`, args `["mcp"]`.
 
-Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_looks`, `edits_trends`,
+Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_looks`, `edits_library`, `edits_trends`,
 `edits_doctor`. A typical turn: `edits_presets` → `edits_preset_get` → change the JSON for the footage →
 `edits_make` with `preset_json`. Rendering takes from seconds to a few minutes; the result lists each clip's path.
 Install the skills too: `edits skills install`.
