@@ -5,7 +5,53 @@ description: Make short viral edits (TikTok, Reels, Shorts) from a YouTube link,
 
 # Making edits with `edits`
 
+## Work like an editor, not a command runner
+
+The tool alone makes a generic edit: it picks moments from the transcript (a `claude -p` call that reads text, never
+sees or hears the footage) and replays a preset. What makes an edit land is your judgment on top. Every edit:
+
+1. **Load the tools first.** If `mcp__edits__*` is listed as deferred, load all of it in one call:
+   `ToolSearch select:mcp__edits__edits_make,mcp__edits__edits_presets,mcp__edits__edits_preset_get,mcp__edits__edits_preset_save,mcp__edits__edits_looks,mcp__edits__edits_trends,mcp__edits__edits_library,mcp__edits__edits_learn,mcp__edits__edits_doctor`.
+   Use them over the CLI: only `edits_make` takes `line_texts`, `preset_json`, `overlays`, `svgs`, `whoosh`/`boom`.
+2. **Decide the idea before any command**: one sentence on what the viewer feels (laughs at X, aches at Y) and the
+   one line or moment it hangs on. No idea, no render.
+3. **Know the footage.** Download first, then read the captions/`.json` and look at a contact sheet
+   (`ffmpeg -i v.mp4 -vf fps=0.5,scale=160:-2,tile=8x4 -frames:v 1 sheet.jpg`, then Read it). Choose the moment
+   yourself and force it with `--say ID@A-B` (MCP: `say: ["ID@A-B"]`, plus `lang`) instead of trusting the automatic pick.
+4. **Write the words yourself** (`line_texts` / `--line`): short, felt, in the viewer's language, none copied raw
+   from the transcript unless it IS the punchline. A line on screen is where an edit becomes funny or moving.
+5. **Match song, speed and colour to the feeling** (see "Funny" and "Emotional" below), then tweak the preset
+   (edits-preset-tweak) rather than taking the stock one.
+6. **Render one, look at its frames, judge honestly, fix, render again.** First render is a draft. Check: does the
+   first second hook? does the line land on the beat? is any face/text cut off? Only then show it, with the clip's
+   absolute path. Rate good ones with `edits rate clip.mp4 +` so taste.md learns.
+
+Gotchas: `trend:N` uses the system language's chart (often us), so pass `trend:tr:N`. `--say` makes a talking clip
+(captions, `--bed`) when there is no `--music`. Whisper mishears Turkish ("mecburum" became "meşgul"): read the
+clip's `.json` `text` against what you chose and fix wrong caption words before showing it.
+
+Over-effecting reads amateur: flashes and shakes only on the real peaks; one signature effect plus one colour look.
+
+If the user shows a reference edit they like, use `edits learn ref.mp4` (preset) or `--like ref.mp4` (music, cuts,
+colour), and take only the parts they name; if they only say "like this", ask which part (pacing, colour, effects).
+
 Check the tools once: `edits doctor` (needs ffmpeg; yt-dlp for links; whisper only for captions).
+
+## Funny
+
+- It is the cut, not the footage: start on the setup's shortest form, cut 0-1 s after the punchline, no explaining.
+- Land the punchline with one hit (`boom`, one `zoom`/`shake`, a caption word), never a pile of effects.
+- A deadpan or a silence before the line is funnier than speeding up. Do not velocity-ramp a joke.
+- A second, ironic line on screen under a serious moment ("him: calm") often beats the original audio alone.
+
+## Emotional
+
+- Slow, simple and quiet: `--sad`, `speed` 0.8-0.9, `look` bw/faded/cold, no shake, no flash, few cuts.
+- Pick a slow song and cut on its phrases, not every beat. Let one shot breathe for 2-3 s on a face or an empty place.
+- Say one honest sentence (`line_texts`, 3-8 words, lowercase, no cliché like "never give up"), and let it appear late.
+- End on stillness: the last shot holds, the song fades, no outro line.
+- Sad is not just slow: if the footage has no feeling in it (a gameplay clip, a lecture), say so and ask for better
+  footage instead of rendering it.
 
 ## Pick the kind of edit
 
@@ -63,3 +109,21 @@ Other kinds, when asked for:
 Clips land in `edits-out/` with a `.json` beside each. Look at frames before calling it done:
 `ffmpeg -i edits-out/x.mp4 -vf fps=1.5,scale=100:-2,tile=18x2 -frames:v 1 sheet.jpg`. If a preset does not suit
 the footage, change the preset (edits-preset-tweak skill) rather than giving up on it.
+
+## Learned the hard way (küfür/shitpost kanalları)
+
+- **Kanal linki**: `@Kanal` ile başlatınca yanlış kanaldan videolar gelebiliyor. Önce
+  `yt-dlp --flat-playlist --playlist-end 8 --print "%(id)s | %(title)s" https://www.youtube.com/@KANAL/videos`
+  ile doğru kanalı doğrula, sonra `@KANAL/videos` adresini ver. Çıkan klibin `.json`'undaki `source` başlığını kontrol et.
+- **Küfür odaklı**: moment seçimini `~/.config/edits/taste.md` yönlendirir ("küfür punchline'dır"). Render sonrası
+  `.json` içindeki `text` alanını oku. Küfür yoksa klibi at. `--lang tr` ver.
+- **Düz konuşma klibi sönük kalır**: küfür anına vurgu için `--fx shake,flash,rgb,zoom --intensity 1.5`,
+  renk/kontrast için `--look pop` (canlı) ya da `bleach` (sert kontrast), bass için
+  `--boom "Distored Bass Drop 01"` (`edits library sfx "bass drop"` ile diğerleri). `bw/noir/dark/sepia` "sigma" havası verir, istenmiyorsa kullanma.
+- **Yavaşlık**: `whisper-cli` CPU'da 12-20 dk'lık videolarda saatler sürüyor ve log'a yazmıyor. GPU sürümü kur:
+  Arch'ta `ggml-vulkan` + `whisper-cpp` paketleri. Sudo yoksa (Claude Code içinde `no new privileges`):
+  `pacman -Sp whisper-cpp ggml ggml-vulkan` URL'lerini indir, `bsdtar -xf` ile `~/.local/whispervk` altına aç,
+  `usr/lib/ggml/*.so` dosyalarını `usr/bin/` yanına symlink'le (backend'ler exe klasöründen yükleniyor),
+  `LD_LIBRARY_PATH=~/.local/whispervk/usr/lib` ile saran bir `whisper-cli` script'ini PATH'e koy. Sonuç: Radeon 680M (Vulkan cihaz 0), RTX 3050 VRAM'i başka süreçlerce dolu olabilir.
+- Uzun süren işi `nohup ... > log &` ile başlat. Süreci `pkill -f` ile öldürürken kendi shell'ini vurma, PID kullan.
+- Bitince `ls -l edits-out/0*.mp4` ve `.json`'a bak; log "rendered" yazınca bitmiş demektir.

@@ -347,7 +347,16 @@ fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
     hits.extend(t.laughs.iter().map(|&s| signals::Hit { t: (s - 4.0).max(0.0), weight: 4.0, text: lang::prompt("notes", "laugh", &[]) }));
     let loud = signals::loudness(&src.wav).unwrap_or_default();
     let curve = signals::curve(src.duration, &src.heat, &hits, &loud);
-    let moments = if clips { pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm) } else { vec![] };
+    // --say ID@FROM-TO in a talking-clip run: that stretch, widened to whole words, instead of the pick
+    let by_hand: Vec<pick::Moment> = c.say.iter().filter_map(|w| {
+        let (id, range) = w.split_once('@')?;
+        let (a, b) = range.split_once('-')?;
+        let (a, b): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
+        let ws: Vec<&transcribe::Word> = t.words.iter().filter(|w| w.s >= a - 0.3 && w.s < b).collect();
+        let (first, last) = (ws.first()?, ws.last()?);
+        (id == src.id).then(|| pick::Moment { start: (first.s - 0.05).max(0.0), end: last.e + 0.25, punch: last.s, score: 0.0, title: String::new(), why: "chosen by hand".into() })
+    }).collect();
+    let moments = if !clips { vec![] } else if !by_hand.is_empty() { by_hand } else { pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm) };
     eprintln!("edits: {} ({}): words from {}, {comments} timestamped comments, {} laughs, replay heat {}, {} moments",
         src.title, util::mmss(src.duration), if t.from.is_empty() { "nothing" } else { t.from }, t.laughs.len(), if src.heat.is_empty() { "no" } else { "yes" }, moments.len());
     Analysed { src, words: t.words, lines, moments, curve }

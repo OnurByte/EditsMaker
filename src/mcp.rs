@@ -34,6 +34,16 @@ fn tools() -> Value {
             "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
             "boom": {"type": "string", "description": "talking clips: a library sound on the punchline instead of the made boom"},
             "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt"},
+            "say": {"type": "array", "items": {"type": "string"}, "description": "choose the moment yourself instead of the automatic pick: VIDEOID@FROM-TO seconds, one edit per entry (the speaker's words from there over their own footage, music under it); implies voice. Look at the captions and frames first"},
+            "lang": {"type": "string", "description": "spoken language, two letters like tr or en (default: the system's)"},
+            "like": {"type": "string", "description": "a reference edit (mp4) to copy: its music, cuts, flashes, colour and shape"},
+            "text": {"type": "string", "description": "one line over the whole music edit, in heavy capitals"},
+            "length": {"type": "number", "description": "seconds per music edit (default 18, sad 24)"},
+            "lut": {"type": "string", "description": "a .cube LUT file over the picture"},
+            "fit": {"type": "boolean", "description": "keep the whole frame over a blurred copy instead of cropping around faces"},
+            "join": {"type": "boolean", "description": "also join all clips into joined.mp4"},
+            "no_jumpcuts": {"type": "boolean"}, "no_sfx": {"type": "boolean", "description": "no made whoosh/boom (use for quiet, emotional edits)"},
+            "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
             "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length, frame, song.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
@@ -72,14 +82,15 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_make" => {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"), ("out", "--out"),
-                ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("export", "--export")] {
+                ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("export", "--export"),
+                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
             }
-            for (key, flag) in [("n", "-n"), ("videos", "--videos"), ("use", "--use"), ("intensity", "--intensity"), ("speed", "--speed"), ("lines", "--lines"), ("fps", "--fps")] {
+            for (key, flag) in [("n", "-n"), ("videos", "--videos"), ("use", "--use"), ("intensity", "--intensity"), ("speed", "--speed"), ("lines", "--lines"), ("fps", "--fps"), ("length", "--length")] {
                 if let Some(x) = a[key].as_f64() {
-                    v.extend([flag.into(), if matches!(key, "intensity" | "speed") { x.to_string() } else { (x as u64).to_string() }]);
+                    v.extend([flag.into(), if matches!(key, "intensity" | "speed" | "length") { x.to_string() } else { (x as u64).to_string() }]);
                 }
             }
             for t in a["line_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
@@ -91,7 +102,11 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             for t in a["svgs"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--svg".into(), t.into()]);
             }
-            for (key, flag) in [("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth")] {
+            for t in a["say"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--say".into(), t.into()]);
+            }
+            for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
+                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
                 }
@@ -194,6 +209,7 @@ mod tests {
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
         assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "whoosh": "main swoosh", "overlays": ["vhs:0.5"]})).unwrap(), ["a.mp4", "--whoosh", "main swoosh", "--overlay", "vhs:0.5"]);
+        assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "say": ["abc@10-40"], "lang": "tr", "length": 20.5, "no_sfx": true, "fit": false})).unwrap(), ["a.mp4", "--lang", "tr", "--length", "20.5", "--say", "abc@10-40", "--no-sfx"]);
         assert!(args_for("edits_make", &json!({})).is_err() && args_for("nope", &json!({})).is_err());
     }
 }
