@@ -56,14 +56,14 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-velocity.mp4"><img src="assets/readme/examples/velocity.gif" width="180" alt="Velocity preset, made with EditsMaker"></a><br><sub>Velocity preset</sub></td>
-    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-preset.mp4"><img src="assets/readme/examples/preset.gif" width="180" alt="Alight Motion preset, made with EditsMaker"></a><br><sub>Alight Motion preset</sub></td>
-    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-sad.mp4"><img src="assets/readme/examples/sad.gif" width="180" alt="Sad edit, made with EditsMaker"></a><br><sub>Sad edit</sub></td>
-    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-sad-voice.mp4"><img src="assets/readme/examples/sad-voice.gif" width="180" alt="Sad edit, own voice, made with EditsMaker"></a><br><sub>Sad edit, own voice</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/b8791efc-8e9c-4dfa-86cf-314610cd6013" width="180" controls></video><br><sub>Velocity preset</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/caa41be2-47f4-4f32-bde0-53b87bbde2ca" width="180" controls></video><br><sub>Alight Motion preset</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/62d9bf57-3a64-42e7-b92a-b8af929f41b7" width="180" controls></video><br><sub>Sad edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/deedfb5a-d044-400d-af0d-884ec000410a" width="180" controls></video><br><sub>Sad edit, own voice</sub></td>
   </tr>
 </table>
 
-<sub>Click one for the full video with sound. Every one is a single `edits` command.</sub>
+<sub>Every one is a single `edits` command.</sub>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
