@@ -50,7 +50,7 @@ fn half(name: &str) -> (String, Option<f64>, bool) {
             return (n.to_string(), Some(frames / 30.0), true);
         }
     }
-    for (suffix, out) in [(" - a", true), (" - b", false), (" out", true), (" in", false)] {
+    for (suffix, out) in [(" - a", true), (" - b", false), (" transition a", true), (" transition b", false), (" out", true), (" in", false)] {
         if let Some(stem) = lower.strip_suffix(suffix) {
             return (n[..stem.len()].to_string(), None, out);
         }
@@ -86,9 +86,13 @@ pub fn parse(xml: &str, file: &str) -> Result<Vec<Motion>, String> {
                 _ => {}
             }
         }
+        // the picture never shrinks inside the frame: a scale that only goes below 1 is a layer popping in, not a camera move
+        if m.zoom.keys.iter().all(|k| k.1 <= 1.0) {
+            m.zoom = Curve::default();
+        }
         let curves = [&m.zoom, &m.x, &m.y, &m.rot, &m.blur];
         m.dur = curves.iter().flat_map(|c| c.keys.iter().map(|k| k.0)).fold(0.0, f64::max);
-        if m.dur < 0.05 || m.dur > 3.0 {
+        if m.dur < 0.05 || m.dur > 3.0 || m.strength() < 0.01 {
             continue; // nothing moves, or a slow drift rather than a move around a cut
         }
         let (stem, cut, out) = half(&m.name);
@@ -133,6 +137,7 @@ mod tests {
     fn halves() {
         assert_eq!(half("Rotation Transition (Clockwise) - A"), ("Rotation Transition (Clockwise)".into(), None, true));
         assert_eq!(half("Cross Spin IN"), ("Cross Spin".into(), None, false));
+        assert_eq!(half("Malice Rumble Transition B"), ("Malice Rumble".into(), None, false));
         let (_, cut, _) = half("Blur Warp In Out (Start 9 Frames Before Cut)");
         assert_eq!(cut, Some(0.3));
     }
@@ -155,12 +160,14 @@ mod tests {
   <TreeItem ObjectID="9"><TreeItemBase><Name>Spin - B</Name><Data ObjectRef="10"/></TreeItemBase></TreeItem>
   <Param ObjectID="10"><Name>Rotation</Name><Keyframes>0,-90.,0,0,0,0,0,0;127008000000,0.,0,0,0,0,0,0;</Keyframes></Param>
   <TreeItem ObjectID="11"><TreeItemBase><Name>0. Base Preset</Name></TreeItemBase></TreeItem>
+  <TreeItem ObjectID="12"><TreeItemBase><Name>Pop In</Name><Data ObjectRef="13"/></TreeItemBase></TreeItem>
+  <Param ObjectID="13"><Name>Scale</Name><Keyframes>0,0.1,0,0,0,0,0,0;63504000000,100.,0,0,0,0,0,0;</Keyframes></Param>
 </PremiereData>"#;
 
     #[test]
     fn pairs_become_one_move() {
         let m = parse(XML, "spin").unwrap();
-        assert_eq!(m.len(), 1);
+        assert_eq!(m.len(), 1, "a layer scaling up from nothing is not a cut move");
         let s = &m[0];
         assert_eq!((s.name.as_str(), s.dur, s.cut), ("spin: Spin", 0.75, 0.25));
         // the outgoing shot turns to 90 and blurs; the incoming one comes from -90 back to rest

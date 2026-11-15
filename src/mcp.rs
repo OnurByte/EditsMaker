@@ -30,6 +30,9 @@ fn tools() -> Value {
             "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
             "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]},
             "svgs": {"type": "array", "items": {"type": "string"}, "description": "drawn graphics over the edit to point things out: NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], e.g. arrow@1.2-2.5:0.6,0.3,0.25 or circle@4:0.5,0.35#ffffff. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart, sparkle, or an .svg file. X,Y is the centre and SIZE the width, as fractions of the frame; times are seconds of the finished edit"},
+            "overlays": {"type": "array", "items": {"type": "string"}, "description": "library clips over the finished edit, NAME[@FROM[-TO]][:OPACITY] (names from edits_library): textures and backgrounds run under the whole edit screened, a transition or meme plays once at FROM, green screens are keyed. E.g. \"vhs texture:0.5\", \"burn 3@4.2\""},
+            "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
+            "boom": {"type": "string", "description": "talking clips: a library sound on the punchline instead of the made boom"},
             "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt"},
             "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder"}},
           "required": ["input"]}},
@@ -41,6 +44,8 @@ fn tools() -> Value {
         {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the edit"}}, "required": ["video"]}},
         {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_library", "description": "The user's asset library from imported editing packs: sound effects, music, overlays, transitions, green screens, backgrounds, memes, images. Without arguments: how many of each kind. With `kind` and/or `words`: the matching files. Use a name with edits_make music, overlays, whoosh or boom; a meme or background path works as `input`.",
+         "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["sfx", "music", "overlay", "transition", "greenscreen", "background", "meme", "video", "image"]}, "words": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_trends", "description": "What is trending on TikTok now in a country (two letters, default tr). Use one with music \"trend:N\".",
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
@@ -58,11 +63,16 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_looks" => v.push("looks".into()),
         "edits_learn" => v.extend(["learn".into(), s("video").ok_or("video is needed")?]),
         "edits_doctor" => v.push("doctor".into()),
+        "edits_library" => {
+            v.push("library".into());
+            v.extend(s("kind"));
+            v.extend(s("words").iter().flat_map(|w| w.split_whitespace().map(String::from)));
+        }
         "edits_trends" => v.extend(["trends".into(), s("country").unwrap_or_else(|| crate::lang::system().1)]),
         "edits_make" => {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"), ("out", "--out"),
-                ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("export", "--export")] {
+                ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("export", "--export")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
@@ -74,6 +84,9 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             }
             for t in a["line_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--line".into(), t.into()]);
+            }
+            for t in a["overlays"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--overlay".into(), t.into()]);
             }
             for t in a["svgs"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--svg".into(), t.into()]);
@@ -170,7 +183,7 @@ mod tests {
         assert_eq!(init["result"]["serverInfo"]["name"], "edits");
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 8);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 9);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 
@@ -179,6 +192,8 @@ mod tests {
         let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3});
         assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
+        assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);
+        assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "whoosh": "main swoosh", "overlays": ["vhs:0.5"]})).unwrap(), ["a.mp4", "--whoosh", "main swoosh", "--overlay", "vhs:0.5"]);
         assert!(args_for("edits_make", &json!({})).is_err() && args_for("nope", &json!({})).is_err());
     }
 }

@@ -126,6 +126,9 @@ pub struct Talk {
     pub captions: Option<CaptionStyle>,
     pub jumpcuts: bool,
     pub sfx: bool,
+    /// your own sounds for the cuts and the punchline (the library's), else the made ones
+    pub whoosh: Option<PathBuf>,
+    pub boom: Option<PathBuf>,
     /// the line shown on top for the first seconds
     pub hook: Option<String>,
     /// (music file, seconds into it)
@@ -432,6 +435,7 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
     let mut input = 1;
     if t.sfx {
         let (whoosh, boom) = sfx(cache)?;
+        let (whoosh, boom) = (t.whoosh.clone().unwrap_or(whoosh), t.boom.clone().unwrap_or(boom));
         if !cuts.is_empty() {
             args.extend(["-i".into(), abs(&whoosh)?]);
             g.push_str(&format!("[{input}:a]asplit={}{};", cuts.len(), (0..cuts.len()).map(|k| format!("[w{k}]")).collect::<String>()));

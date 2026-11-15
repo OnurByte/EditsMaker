@@ -7,9 +7,13 @@ USAGE
   edits preset list | show NAME           presets are JSON: read one in full
   edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
   edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects and Premiere presets into presets
+  edits library add <zip|folder>...       a whole editing pack: sounds, music, overlays, transitions, green screens,
+                               memes, images into your library, fonts installed, presets imported
+  edits library [KIND] [WORDS] what is in it (sfx, music, overlay, transition, greenscreen, background, meme, image)
   edits looks                  the colour looks
   edits learn <edit.mp4>...     reverse-engineer an edit you like into a preset (cuts, flashes, zoom, slide, shake)
   edits draw <video> SPEC...   draw arrows, rings, crosses or your own .svg over a finished clip (see --svg)
+                               and --overlay SPEC library clips (see --overlay)
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
   edits skills [install]       agent skills for every command
@@ -17,7 +21,7 @@ USAGE
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
 
 OPTIONS
-      --music SONG    make music edits: the footage's best shots cut on the song's beats (link, file, or
+      --music SONG    make music edits: the footage's best shots cut on the song's beats (link, file, a library song, or
                       trend:N for TikTok's Nth trending song, trend:us:N for another country)
       --preset NAME   replay a preset (name or .json file) over the footage: timing, speed, moves, shakes, flashes, song
       --intensity K   preset moves: 0.5 calmer, 2 wilder (default: the preset's own)
@@ -50,6 +54,9 @@ OPTIONS
       --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)
       --svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR]   draw an arrow, circle, underline, cross, check, burst,
                       question, exclaim, heart, sparkle or your own .svg over the edit (repeatable)
+      --overlay NAME[@FROM[-TO]][:OPACITY]   a library clip (or file) over the edit: textures screened under all of
+                      it, a transition or meme once at FROM, green screens keyed (repeatable)
+      --whoosh NAME   --boom NAME   talking clips: library sounds for the cuts and the punchline
       --stabilize  --denoise  --smooth  --fps N  --codec h264|h265|prores|av1  --quality draft|high|master
       --export LIST   timelines beside each clip for other editors: fcpxml, edl, srt
       --no-jumpcuts   keep the pauses   --no-sfx  no whoosh/boom   --no-hook  no title on top

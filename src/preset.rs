@@ -580,8 +580,8 @@ pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
     while let Some(p) = stack.pop() {
         if p.is_dir() {
             stack.extend(std::fs::read_dir(&p).map_err(|e| e.to_string())?.flatten().map(|e| e.path()));
-        } else if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("xml")) {
-            files.push(p);
+        } else if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("xml")) && !p.to_string_lossy().to_lowercase().contains(".prfpset") {
+            files.push(p); // Premiere's .prfpset.xml are cut moves, read elsewhere
         }
     }
     files.sort();

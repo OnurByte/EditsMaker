@@ -130,7 +130,17 @@ pub fn music(spec: &str) -> Result<String, String> {
     let Some(rest) = spec.strip_prefix("trend") else {
         // a file or a link as it is; any other text is a song title to look up
         let is_link = spec.starts_with("http://") || spec.starts_with("https://");
-        return if is_link || Path::new(spec).exists() { Ok(spec.to_string()) } else { find_song(spec) };
+        if is_link || Path::new(spec).exists() {
+            return Ok(spec.to_string());
+        }
+        // a song of yours by name before a search
+        return match crate::library::find(&["music"], spec) {
+            Some(f) => {
+                eprintln!("edits: music from your library: {}", f.display());
+                Ok(f.to_string_lossy().into_owned())
+            }
+            None => find_song(spec),
+        };
     };
     let parts: Vec<&str> = rest.split(':').filter(|p| !p.is_empty()).collect();
     let home = crate::lang::system().1;
