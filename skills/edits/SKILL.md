@@ -53,6 +53,22 @@ Check the tools once: `edits doctor` (needs ffmpeg; yt-dlp for links; whisper on
 - Sad is not just slow: if the footage has no feeling in it (a gameplay clip, a lecture), say so and ask for better
   footage instead of rendering it.
 
+## Character edit (dizi): make one person look huge
+
+The idea is to praise a character, not to tell a story. The viewer should leave thinking "he is the one".
+
+- One character, the whole edit. Every shot is him or someone reacting to him (fear, respect, silence); cut shots
+  of anyone else that do not feed that.
+- Build up, then land: start on reactions and the walk-in, hold his face when it matters, and put the hardest hit
+  (flash, shake, zoom, the bass) on his best line or look. Do not spend the hits early.
+- Low angle, slow push-in, slow-mo (`speed` 0.8) on his big moment; fast cuts for everyone else's reaction.
+- Sound: a song with a real drop, cut on its beats; take one short line of his own voice (3-6 s, a threat or a
+  flex) over the drop with the song ducked to ~20% under it. Preset mode ignores `voice`, so mix the line in with
+  ffmpeg: `-ss A -t D -i src.m4a`, `adelay`, `amix`, then `loudnorm=I=-12`.
+- Colour: one grade for the whole thing (teal, or black and white for a colder, bigger look).
+- Optional: a caption of one word about him (his name, "KRAL"), never a sentence that explains the scene.
+- Check: can you say in one sentence why he is the strongest person in it? If not, the shots are wrong.
+
 ## What the user's own reference edits look like (measured from ~/Documents/edits, 11 clips)
 
 Study results, not taste guesses. Match these before adding anything fancy:
@@ -147,3 +163,22 @@ the footage, change the preset (edits-preset-tweak skill) rather than giving up 
   `LD_LIBRARY_PATH=~/.local/whispervk/usr/lib` ile saran bir `whisper-cli` script'ini PATH'e koy. Sonuç: Radeon 680M (Vulkan cihaz 0), RTX 3050 VRAM'i başka süreçlerce dolu olabilir.
 - Uzun süren işi `nohup ... > log &` ile başlat. Süreci `pkill -f` ile öldürürken kendi shell'ini vurma, PID kullan.
 - Bitince `ls -l edits-out/0*.mp4` ve `.json`'a bak; log "rendered" yazınca bitmiş demektir.
+
+## Never cut a spoken sentence mid-word (voice over a hand-picked moment)
+
+Cutting the voice by eye (a guessed `-t`) clipped the last word ("çalışıyorsun" cut at 6.45 s, it ends at 6.76 s).
+Before trimming any voice, get the real word ends and cut after the last word, never before:
+
+```sh
+ffmpeg -i clip.mp4 -ar 16000 -ac 1 v.wav
+whisper-cli -m MODEL.bin -l tr -f v.wav -ml 1 -sow -np     # one word per line with end times
+```
+
+- Cut at the last word's end `+0.03 s`, with a 0.05 s fade out. Judge speed first: at `speed 0.8` every time divides by 0.8.
+- If the visual hit (zoom/flash/cut) must land after the sentence but the picture changes scene earlier, freeze the
+  last frame (`tpad=stop_mode=clone`) instead of shortening the voice.
+- After rendering, check the tail: `ffmpeg -ss END-0.3 -t 0.5 -i out.mp4 -af volumedetect -f null -` should be quiet
+  only after the last word, not inside it. Read the first and last transcribed word of the render against what you chose.
+- Song intros are often silent: measure 10 s windows (`ebur128`) and pick the section with the hook, then time
+  the hook to the visual hit instead of starting the song at 0.
+- Colour: blend overlays (VHS texture) in `format=gray`, a screen blend in YUV tints black-and-white edits purple.
