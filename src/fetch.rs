@@ -133,9 +133,10 @@ pub fn music(spec: &str) -> Result<String, String> {
         return if is_link || Path::new(spec).exists() { Ok(spec.to_string()) } else { find_song(spec) };
     };
     let parts: Vec<&str> = rest.split(':').filter(|p| !p.is_empty()).collect();
+    let home = crate::lang::system().1;
     let (cc, n) = match parts[..] {
-        [] => ("tr", 1),
-        [x] => x.parse().map_or((x, 1), |n| ("tr", n)),
+        [] => (home.as_str(), 1),
+        [x] => x.parse().map_or((x, 1), |n| (home.as_str(), n)),
         [c, x, ..] => (c, x.parse().unwrap_or(1)),
     };
     let list = trends(cc)?;
@@ -256,12 +257,12 @@ pub fn screen(found: Vec<(String, String)>, keep: usize, cache: &Path, lang: &st
     let mut order: Vec<usize> = (0..previews.len()).collect();
     order.sort_by(|a, b| preview_score(&previews[*b]).total_cmp(&preview_score(&previews[*a])));
     if use_llm {
-        let mut p = format!("Bu videolardan müzikli edit (sad edit / viral edit) yapmak için en iyi malzeme olan {keep} tanesini seç. \
-            İyi malzeme: güçlü, akılda kalan, duygusu olan konuşmalar ve ilginç görüntüler. Sıkıcı, teknik, liste okuyan videoları seçme.\n\n");
+        use crate::lang::prompt;
+        let mut p = prompt("videos", "head", &[("n", keep.to_string())]);
         for (i, v) in previews.iter().enumerate() {
-            p.push_str(&format!("[{i}] {} ({:.0} görüntülenme): {}\n", v.title, v.views, v.text.chars().take(500).collect::<String>()));
+            p.push_str(&prompt("videos", "item", &[("i", i.to_string()), ("title", v.title.clone()), ("views", format!("{:.0}", v.views)), ("text", v.text.chars().take(500).collect())]));
         }
-        p.push_str(&format!("\nSadece JSON dizisi yaz, en iyisi başta, {keep} sayı: [2, 0]\n"));
+        p.push_str(&prompt("videos", "tail", &[("n", keep.to_string())]));
         let picked = crate::util::run_stdin(&crate::pick::llm_cmd(), &p).ok().and_then(|r| {
             let (a, b) = (r.find('[')?, r.rfind(']')?);
             serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()

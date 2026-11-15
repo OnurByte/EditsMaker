@@ -39,26 +39,21 @@ pub fn taste() -> String {
 }
 
 pub fn prompt(taste: &str, title: &str, lines: &[Line], curve: &[f64], hits: &[Hit], n: usize) -> String {
-    let mut p = format!(
-        "Bir videodan en komik {n} anı seçeceksin. Önce zevk dosyasını oku, ona harfiyen uy.\n\n{taste}\n\n\
-         # Video: {title}\n\n# Döküm\nHer satır: [başlangıç-bitiş saniye] metin. 🔥 = izleyici ilgisi (yüksek = çok tekrar izlenmiş).\n\n"
-    );
+    use crate::lang::prompt as part;
+    let mut p = part("moments", "head", &[("n", n.to_string()), ("taste", taste.to_string()), ("title", title.to_string())]);
     for l in lines {
         let (a, b) = (l.s as usize, (l.e.ceil() as usize).max(l.s as usize + 1));
         let heat = curve.iter().skip(a).take(b - a).cloned().fold(f64::MIN, f64::max);
         p.push_str(&format!("[{:.1}-{:.1}] {}", l.s, l.e, l.text));
         if heat > 1.0 {
-            p.push_str(&format!("  🔥{heat:.1}"));
+            p.push_str(&part("moments", "heat", &[("heat", format!("{heat:.1}"))]));
         }
         for h in hits.iter().filter(|h| h.t >= l.s - 2.0 && h.t < l.e) {
-            p.push_str(&format!("  yorum({}): \"{}\"", mmss(h.t), h.text.chars().take(90).collect::<String>()));
+            p.push_str(&part("moments", "comment", &[("at", mmss(h.t)), ("text", h.text.chars().take(90).collect())]));
         }
         p.push('\n');
     }
-    p.push_str(&format!(
-        "\n# Cevap\nSadece JSON dizisi yaz, başka hiçbir şey yazma. En iyi an başta, en fazla {n} an, anlar çakışmasın:\n\
-         [{{\"start\": saniye, \"end\": saniye, \"punch\": punchline'ın başladığı saniye, \"score\": 0-10 ne kadar komik, \"title\": \"kısa başlık\", \"why\": \"neden komik, tek cümle\"}}]\n"
-    ));
+    p.push_str(&part("moments", "tail", &[("n", n.to_string())]));
     p
 }
 
@@ -160,15 +155,12 @@ pub fn choose_passages(cands: &[(String, Moment, String)], n: usize, use_llm: bo
     if !use_llm || cands.len() <= n {
         return fallback;
     }
-    let mut p = format!(
-        "Bir müzikli edit'in (sad edit / viral edit) üstüne konuşmacının sesi konacak. Aşağıdaki pasajlardan en iyi {n} tanesini seç.\n\
-         İyi pasaj: kendi başına anlaşılır, bağlam istemez, duygusu ya da iddiası güçlü, akılda kalan bir cümleyle biter.\n\
-         Kötü pasaj: yarım fikir, ekrana/linke/aboneliğe/sponsora atıf, teknik talimat listesi.\n\n"
-    );
+    use crate::lang::prompt as part;
+    let mut p = part("passages", "head", &[("n", n.to_string())]);
     for (i, (title, m, text)) in cands.iter().enumerate() {
-        p.push_str(&format!("[{i}] ({:.0} sn, {title}) {text}\n", m.end - m.start));
+        p.push_str(&part("passages", "item", &[("i", i.to_string()), ("secs", format!("{:.0}", m.end - m.start)), ("title", title.clone()), ("text", text.clone())]));
     }
-    p.push_str(&format!("\nSadece JSON dizisi yaz, en iyisi başta, en fazla {n} sayı: [3, 0, 7]\n"));
+    p.push_str(&part("passages", "tail", &[("n", n.to_string())]));
     let picked = run_stdin(&llm_cmd(), &p).ok().and_then(|r| {
         let (a, b) = (r.find('[')?, r.rfind(']')?);
         serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
@@ -246,7 +238,7 @@ mod tests {
         let hits = vec![Hit { t: 49.0, weight: 1.0, text: "0:49 gariban :D".into() }];
         let curve = vec![0.0; 49].into_iter().chain([2.5, 2.5, 0.0]).collect::<Vec<_>>();
         let p = prompt("ZEVK", "başlık", &lines, &curve, &hits, 3);
-        assert!(p.contains("ZEVK") && p.contains("[48.0-52.0] buda boynu bükük kalmasın  🔥2.5  yorum(0:49): \"0:49 gariban :D\""), "{p}");
+        assert!(p.contains("ZEVK") && p.contains("[48.0-52.0] buda boynu bükük kalmasın  🔥2.5  comment(0:49): \"0:49 gariban :D\""), "{p}");
     }
 
     #[test]

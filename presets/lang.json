@@ -1,0 +1,92 @@
+{
+  "any": {
+    "about": "used whatever the language",
+    "laugh": [
+      "😂",
+      "🤣",
+      "😭",
+      "💀",
+      "haha",
+      "ahah",
+      "lol",
+      "lmao"
+    ],
+    "sound_tags": [
+      "laugh",
+      "applau"
+    ]
+  },
+  "en": {
+    "about": "English",
+    "feeling": [
+      "never",
+      "alone",
+      "life",
+      "nobody",
+      "why",
+      "only",
+      "always",
+      "nothing",
+      "everyone",
+      "forget",
+      "lost",
+      "gone",
+      "heart",
+      "truth",
+      "again",
+      "still",
+      "wish",
+      "end",
+      "real",
+      "time"
+    ],
+    "whisper_prompt": "Uncensored, word for word: damn, shit, fuck, bullshit, bro, dude."
+  },
+  "tr": {
+    "about": "Turkish",
+    "laugh": [
+      "sjsj",
+      "kdkd",
+      "öldüm",
+      "koptum",
+      "yarıldım"
+    ],
+    "sound_tags": [
+      "gül",
+      "kahka",
+      "alkış"
+    ],
+    "feeling": [
+      "ben",
+      "sen",
+      "hiç",
+      "artık",
+      "asla",
+      "hep",
+      "kimse",
+      "neden",
+      "sadece",
+      "hayat",
+      "yalnız",
+      "zaman",
+      "gerçek",
+      "kalp",
+      "unut",
+      "kaybet",
+      "bitti",
+      "son",
+      "değil",
+      "olmadı",
+      "keşke",
+      "yine",
+      "herkes",
+      "hiçbir"
+    ],
+    "whisper_prompt": "Sansürsüz, olduğu gibi yaz: lan, amk, aq, siktir, ulan, hassiktir, mal, gerizekalı.",
+    "dotted_i": true
+  },
+  "az": {
+    "about": "Azerbaijani",
+    "dotted_i": true
+  }
+}

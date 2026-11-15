@@ -3,6 +3,9 @@ mod face;
 mod fetch;
 mod finish;
 mod fx;
+mod grades;
+mod lang;
+mod learn;
 mod looks;
 mod mcp;
 mod montage;
@@ -36,7 +39,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
-        Some("trends") => fetch::trends(args.get(1).map_or("tr", String::as_str)).map(|list| {
+        Some("trends") => fetch::trends(&args.get(1).cloned().unwrap_or_else(|| lang::system().1)).map(|list| {
             list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
             println!("\nuse one: --music trend:N  (another country: --music trend:us:N)");
         }),
@@ -47,6 +50,7 @@ fn main() -> ExitCode {
         Some("looks") => {
             println!("colour (--look):");
             looks::LOOKS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
+            grades::all().iter().for_each(|g| println!("  {:<12} {}", g.name, g.about));
             println!("\ncaptions (--captions):");
             talk::styles().iter().for_each(|st| println!("  {:<12} {}", st.name, st.about));
             println!("\nbeat hits (--fx a,b,...): {}", fx::HITS.join(", "));
@@ -54,6 +58,31 @@ fn main() -> ExitCode {
             svg::STICKERS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
             Ok(())
         }
+        Some("learn") if args.len() > 1 => (|| {
+            // --into DIR writes elsewhere; default: your preset folder
+            let into = args.iter().position(|a| a == "--into").and_then(|i| args.get(i + 1)).map(PathBuf::from).unwrap_or_else(presets::user_dir);
+            std::fs::create_dir_all(&into).map_err(|e| e.to_string())?;
+            for v in args[1..].iter().filter(|a| a.as_str() != "--into" && Path::new(a) != into) {
+                let path = Path::new(v);
+                let name = path.file_stem().unwrap_or_default().to_string_lossy().into_owned();
+                let p = learn::learn(path, &name)?;
+                let file = into.join(format!("{}.json", preset::slug(&name)));
+                std::fs::write(&file, preset::pretty(&p)).map_err(|e| e.to_string())?;
+                println!("{}: {} ({:.1}s) -> --preset {}", file.display(), p.about, p.total, preset::slug(&name));
+            }
+            Ok(())
+        })(),
+        Some("cube") => match (args.get(1).and_then(|n| grades::find(n)), args.get(2)) {
+            (Some(g), out) => (|| {
+                let tmp = std::env::temp_dir().join("edits-cube");
+                let made = grades::lut(&g, &tmp)?;
+                let to = out.map(PathBuf::from).unwrap_or_else(|| PathBuf::from(format!("{}.cube", g.name)));
+                std::fs::copy(made.trim_start_matches(",lut3d=file="), &to).map_err(|e| e.to_string())?;
+                println!("{}", to.display());
+                Ok(())
+            })(),
+            _ => Err("usage: edits cube <look from an Alight cc pack> [out.cube]   (edits looks lists them)".into()),
+        },
         Some("draw") => match (args.get(1), args.len() > 2) {
             (Some(v), true) => (|| {
                 let st = args[2..].iter().map(|x| svg::parse(x)).collect::<Result<Vec<_>, _>>()?;
@@ -146,7 +175,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let (w, h) = size(&style.aspect).unwrap_or((1080, 1920));
     let grade = if looks::names().contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
     let mut c = Cli {
-        input: String::new(), n: 3, videos: 5, lang: "tr".into(), out: PathBuf::from("edits-out"),
+        input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::from("edits-out"),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
         llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
@@ -156,13 +185,17 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
         match a.as_str() {
             "-n" | "--moments" => c.n = val("-n")?.parse().ok().filter(|n| (1..=20).contains(n)).ok_or("-n must be 1-20")?,
             "--videos" => c.videos = val("--videos")?.parse().ok().filter(|n| (1..=40).contains(n)).ok_or("--videos must be 1-40")?,
-            "--lang" => c.lang = val("--lang")?,
+            "--lang" => {
+                c.lang = val("--lang")?.to_lowercase();
+                lang::set(&c.lang);
+            }
             "-o" | "--out" => c.out = PathBuf::from(val("--out")?),
-            "--grade" | "--look" => {
+            "--look" => {
                 c.opts.grade = val("--look")?;
                 c.looked = true;
-                if !looks::names().contains(&c.opts.grade.as_str()) {
-                    return Err(format!("--look must be one of: {}", looks::names().join(", ")));
+                if !looks::names().contains(&c.opts.grade.as_str()) && grades::find(&c.opts.grade).is_none() {
+                    let more: Vec<String> = grades::all().into_iter().map(|g| g.name).collect();
+                    return Err(format!("--look must be one of: {}, {}", looks::names().join(", "), more.join(", ")));
                 }
             }
             "--lut" => c.lut = Some(PathBuf::from(val("--lut")?)),
@@ -281,7 +314,7 @@ fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
     let lines = transcribe::lines(&t.words);
     let mut hits = signals::comment_hits(&src.comments, src.duration);
     let comments = hits.len();
-    hits.extend(t.laughs.iter().map(|&s| signals::Hit { t: (s - 4.0).max(0.0), weight: 4.0, text: "(videoda kahkaha/alkış sesi)".into() }));
+    hits.extend(t.laughs.iter().map(|&s| signals::Hit { t: (s - 4.0).max(0.0), weight: 4.0, text: lang::prompt("notes", "laugh", &[]) }));
     let loud = signals::loudness(&src.wav).unwrap_or_default();
     let curve = signals::curve(src.duration, &src.heat, &hits, &loud);
     let moments = if clips { pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm) } else { vec![] };
@@ -353,6 +386,8 @@ fn make(args: &[String]) -> Result<(), String> {
     std::fs::create_dir_all(cache).map_err(|e| e.to_string())?;
     if let Some(l) = cli.lut.clone() {
         cli.opts.grade = looks::lut(&l, cache)?;
+    } else if let Some(g) = grades::find(&cli.opts.grade) {
+        cli.opts.grade = grades::lut(&g, cache)?;
     }
     let c = &cli;
     std::fs::create_dir_all(&c.out).map_err(|e| e.to_string())?;
@@ -974,7 +1009,25 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
                     moves.extend(found);
                     continue;
                 }
-                for p in preset::read_all(path)? {
+                let found = preset::read_all(path)?;
+                // no footage layers: maybe a colour pack, whose adjustment layers become looks
+                let mut found = found;
+                // no footage to fill, or one demo clip under many colour layers: a colour pack, whose looks we keep
+                if found.iter().all(|p| p.slots.len() <= 1) && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("xml")) {
+                    let xml = std::fs::read_to_string(path).map_err(|e| format!("{src}: {e}"))?;
+                    if let Some(gs) = grades::from_xml(&xml, &path.file_stem().unwrap_or_default().to_string_lossy()).ok().filter(|g| found.is_empty() || g.len() >= 2) {
+                        let file = into.join("grades.json");
+                        let mut all: Vec<grades::Grade> = std::fs::read_to_string(&file).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+                        all.retain(|g| !gs.iter().any(|n| n.name == g.name));
+                        for g in &gs {
+                            println!("grades.json: look {} ({} layers)", g.name, g.layers.len());
+                        }
+                        all.extend(gs);
+                        found.clear();
+                        std::fs::write(&file, preset::pretty(&all)).map_err(|e| e.to_string())?;
+                    }
+                }
+                for p in found {
                     let mut slug = preset::slug(&p.name);
                     while taken.contains(&slug) {
                         slug.push('-');
@@ -998,7 +1051,7 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
 /// `edits rate clip.mp4 +|-` appends the clip's text to the taste file as a liked or disliked example.
 fn rate(args: &[String]) -> Result<(), String> {
     let (clip, mark) = match args {
-        [clip, m] if m == "+" || m == "-" => (Path::new(clip), if m == "+" { "👍 böyle" } else { "👎 böyle değil" }),
+        [clip, m] if m == "+" || m == "-" => (Path::new(clip), lang::prompt("notes", if m == "+" { "liked" } else { "disliked" }, &[])),
         _ => return Err("usage: edits rate <clip.mp4> +|-".into()),
     };
     let side = std::fs::read_to_string(clip.with_extension("json")).map_err(|_| format!("no {} next to the clip", clip.with_extension("json").display()))?;
@@ -1050,11 +1103,11 @@ mod tests {
     #[test]
     fn cli() {
         let p = |s: &str| parse(&args(s), None);
-        let c = p("recep ivedik komik -n 5 --aspect 1:1 --grade dark --no-llm --fit").unwrap();
+        let c = p("recep ivedik komik -n 5 --aspect 1:1 --look dark --no-llm --fit").unwrap();
         assert_eq!((c.input.as_str(), c.n, c.opts.w, c.opts.h, c.opts.grade.as_str(), c.llm, c.opts.layout.as_str()), ("recep ivedik komik", 5, 1080, 1080, "dark", false, "fit"));
         assert!(p("-n 3").is_err());
         assert!(p("x -n 0").is_err());
-        assert!(p("x --grade pink").is_err());
+        assert!(p("x --look pink").is_err());
         assert!(p("x --aspect 2:1").is_err());
         assert!(p("x --wat").is_err());
         assert!(p("x -n").is_err());

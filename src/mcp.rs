@@ -11,7 +11,7 @@ fn tools() -> Value {
             "preset": {"type": "string", "description": "preset name from edits_presets"},
             "preset_json": {"type": "object", "description": "a whole preset (as from edits_preset_get), changed as needed; used as-is"},
             "music": {"type": "string"},
-            "look": {"type": "string", "description": "colour look from edits_looks"},
+            "look": {"type": "string", "description": "colour look from edits_looks: a built-in grade or one of the Alight Motion colour-pack looks (furkancc-1..4, rajjcc-1..20)"},
             "aspect": {"type": "string", "enum": ["9:16", "4:5", "1:1", "3:4", "4:3", "16:9", "21:9"]},
             "size": {"type": "string", "description": "WxH, like 1080x1350"},
             "intensity": {"type": "number", "description": "preset moves: 0.5 calmer, 2 wilder"},
@@ -24,7 +24,7 @@ fn tools() -> Value {
             "fx": {"type": "string", "description": "hits on the hardest beats, comma-separated: shake, flash, rgb, glitch, invert, blur, freeze, zoom"},
             "lines": {"type": "integer", "description": "sentences from the videos' own words shown on screen (music and preset edits)"},
             "line_texts": {"type": "array", "items": {"type": "string"}, "description": "your own lines on screen, in order (read the videos' words and pick the strongest)"},
-            "captions": {"type": "string", "description": "caption style: hormozi, mrbeast, karaoke, box, minimal, neon"},
+            "captions": {"type": "string", "description": "caption style from edits_looks: hormozi, mrbeast, karaoke, box, minimal, neon, cinematic, glow, redglow, thunder, typewriter"},
             "bed": {"type": "string", "description": "music under talking clips, ducked under the voice"},
             "blur_faces": {"type": "boolean"}, "blur_box": {"type": "string", "description": "x,y,w,h fractions of the frame to blur (a watermark, a plate)"},
             "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
@@ -38,6 +38,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
+        {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
+         "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the edit"}}, "required": ["video"]}},
         {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_trends", "description": "What is trending on TikTok now in a country (two letters, default tr). Use one with music \"trend:N\".",
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
@@ -54,8 +56,9 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_preset_get" => v.extend(["preset".into(), "show".into(), s("name").ok_or("name is needed")?]),
         "edits_preset_save" => v.extend(["preset".into(), "save".into(), "-".into()]),
         "edits_looks" => v.push("looks".into()),
+        "edits_learn" => v.extend(["learn".into(), s("video").ok_or("video is needed")?]),
         "edits_doctor" => v.push("doctor".into()),
-        "edits_trends" => v.extend(["trends".into(), s("country").unwrap_or_else(|| "tr".into())]),
+        "edits_trends" => v.extend(["trends".into(), s("country").unwrap_or_else(|| crate::lang::system().1)]),
         "edits_make" => {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"), ("out", "--out"),
@@ -167,7 +170,7 @@ mod tests {
         assert_eq!(init["result"]["serverInfo"]["name"], "edits");
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 7);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 8);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 

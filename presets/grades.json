@@ -1,0 +1,6799 @@
+[
+  {
+    "name": "rajjcc-1",
+    "about": "Rajj Editz premium cc #1, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff54a6fb",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffec94ab",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.430000",
+              "gamma": "0.555000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.4,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffc5e3ca",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "0",
+              "scale": "1.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.680000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.300000",
+              "strength": "0.100000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "10.000000",
+              "mag": "0.160000",
+              "seed": "0.400000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.5,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.245000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-2",
+    "about": "Rajj Editz premium cc #2, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "blend": "subtract",
+        "color": "#ffdd44dd",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.600000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff17e1e1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.325000",
+              "vib": "1.250000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.300000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "tile",
+            "p": {
+              "angle": "0.000000",
+              "mirror": "true",
+              "phase": "0.000000",
+              "scale": "1.000000",
+              "vertoffs": "false"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.110000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.75,
+        "blend": "screen",
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.040000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-overlay",
+        "color": "#ff428890",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.375000",
+              "vib": "1.420000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "41.512753,0.999198,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd5c0fe",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "0",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.030000",
+              "contrast": "0.100000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.050000",
+              "gamma": "0.950000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.100000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.15,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#ff476178",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.250000",
+              "brightness": "1.000000",
+              "color": "#ff3d3df5",
+              "contrast": "0.200000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "0.450000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.85,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff68a3e5",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.644531,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff17e1e1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.110000",
+              "vib": "1.250000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.060000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.500000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-3",
+    "about": "Rajj Editz premium cc #3, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 0.738281,
+        "color": "#ffa5e6bf",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.460000",
+              "vib": "1.940000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.480000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.590000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.355469,
+        "blend": "subtract",
+        "color": "#ff7f6f95",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.475000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.900000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff90b3a3",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.750000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "0",
+              "scale": "1.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.560000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.200000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#ff90b3a3",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.710000"
+            }
+          },
+          {
+            "id": "spectralmap",
+            "p": {
+              "alpha": "1.000000",
+              "blueColor": "#ff000000",
+              "greenColor": "#ff000000",
+              "phase": "0.000000",
+              "redColor": "#ffffffff",
+              "repeat": "1.000000",
+              "reverse": "false",
+              "saturation": "1.000000",
+              "scaleBrightness": "true",
+              "squeeze": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff8f6063",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.750000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "0",
+              "scale": "1.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.500000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "tile",
+            "p": {
+              "angle": "0.000000",
+              "mirror": "true",
+              "phase": "0.000000",
+              "scale": "1.000000",
+              "vertoffs": "false"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.400000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-4",
+    "about": "Rajj Editz premium cc #4, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ffa06dc7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.750000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "2",
+              "green": "2",
+              "red": "0"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.700000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#fff83c98",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.160156,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.357422,
+        "color": "#ff6348df",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "2",
+              "green": "2",
+              "red": "0"
+            }
+          },
+          {
+            "id": "colortune2",
+            "p": {
+              "lift": "-179.467117,0.133050,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.100000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.646484,
+        "blend": "screen",
+        "color": "#ffc776e7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "dblur",
+            "p": {
+              "angle": "0.000000",
+              "strength": "1.000000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "0.500000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "0.000000",
+              "scale": "1.180000",
+              "strength": "0.800000",
+              "tint": "0.200000"
+            }
+          },
+          {
+            "id": "offset",
+            "p": {
+              "feather": "0.000000",
+              "mask": "false",
+              "offset": "502.000000,0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.120000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-5",
+    "about": "Rajj Editz premium cc #5, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 0.65,
+        "blend": "subtract",
+        "color": "#ffb9d86c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.130000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.800000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#ff55f388",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "linear-dodge",
+        "color": "#ffd57ce0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.300000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "10.000000",
+              "mag": "0.750000",
+              "seed": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffccdc62",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "spinblur2",
+            "p": {
+              "angle": "0.900000"
+            }
+          },
+          {
+            "id": "lensblur2",
+            "p": {
+              "radius": "0.310000",
+              "strength": "0.050000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "lighten",
+        "color": "#ff4a4dd6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.496094,
+        "blend": "lighten",
+        "color": "#ff4a4dd6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.151000",
+              "feather": "100.000000",
+              "start": "0.106000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          },
+          {
+            "id": "feather",
+            "p": {
+              "iter": "1.000000",
+              "strength": "0.005000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ffbebebe",
+        "fx": [
+          {
+            "id": "displacemaprad",
+            "p": {
+              "edges": "3",
+              "fromctr": "true",
+              "invert": "true",
+              "offsAngle": "0.000000",
+              "offsRadius": "0.000000",
+              "typex": "0",
+              "typey": "2"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.800000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.510000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "scale": "1.500000"
+            }
+          },
+          {
+            "id": "rays",
+            "p": {
+              "blend": "0.000000",
+              "centerPoint": "140.000000,0.000000",
+              "fillColor": "#ff2d1ef6",
+              "intensity": "5.000000",
+              "quality": "150.000000",
+              "strength": "0.790000",
+              "threshold": "0.500000",
+              "thresholdColor": "#ff000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.005000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.950000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-6",
+    "about": "Rajj Editz premium cc #6, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff9f47fa",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffabc04e",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.300000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff433ce7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.250000",
+              "brightness": "0.900000",
+              "color": "#ffff5566",
+              "contrast": "0.300000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "0.680000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.100000",
+              "gamma": "0.900000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.402344,
+        "blend": "lighten",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.250000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.398438,
+        "blend": "lighten",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.245000"
+            }
+          },
+          {
+            "id": "mirror",
+            "p": {
+              "alpha": "1.000000",
+              "blendMode": "0",
+              "offset": "0.000000",
+              "type": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffa06dc7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.750000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.700000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#fff83c98",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.160156,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.357422,
+        "color": "#ff6348df",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colortune2",
+            "p": {
+              "lift": "-179.467117,0.133050,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.100000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.646484,
+        "blend": "screen",
+        "color": "#ffc776e7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "dblur",
+            "p": {
+              "angle": "0.000000",
+              "strength": "1.000000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "0.500000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "0.000000",
+              "scale": "1.180000",
+              "strength": "0.800000",
+              "tint": "0.200000"
+            }
+          },
+          {
+            "id": "offset",
+            "p": {
+              "feather": "0.000000",
+              "mask": "false",
+              "offset": "502.000000,0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.120000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-7",
+    "about": "Rajj Editz premium cc #7, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.200000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.201172,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "34.380520,0.023492,0.307653",
+              "tint": "-76.442940,0.008707,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.615000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.3,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.5,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd3644d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.320000",
+              "shadows": "0.930000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.050000",
+              "contrast": "0.070000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          },
+          {
+            "id": "transform",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "fill": "0.000000",
+              "maskToLayer": "false",
+              "sample": "1",
+              "scale": "1.010000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffa4658c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "unsharpmask",
+            "p": {
+              "amount": "0.250000",
+              "showMask": "false",
+              "strength": "0.350000",
+              "threshold": "0.500000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#fff8b76b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lightglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.000000",
+              "color": "#ff00ffff",
+              "halo": "0.000000",
+              "intensity": "1.190000",
+              "strength": "0.295000",
+              "threshold": "0.400000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff6348df",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "6",
+              "blue": "2",
+              "green": "2",
+              "red": "0"
+            }
+          },
+          {
+            "id": "colortune2",
+            "p": {
+              "lift": "-179.467117,0.133050,0.000000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-8",
+    "about": "Rajj Editz premium cc #8, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "blend": "subtract",
+        "color": "#ffdd44dd",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.600000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff17e1e1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.325000",
+              "vib": "1.250000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.580000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "tile",
+            "p": {
+              "angle": "0.000000",
+              "mirror": "true",
+              "phase": "0.000000",
+              "scale": "1.000000",
+              "vertoffs": "false"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.110000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.040000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-overlay",
+        "color": "#ff428890",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.375000",
+              "vib": "1.420000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "41.512753,0.999198,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd5c0fe",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "6",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.030000",
+              "contrast": "0.100000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.050000",
+              "gamma": "0.950000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.100000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.15,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#ff476178",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.250000",
+              "brightness": "1.000000",
+              "color": "#ff3d3df5",
+              "contrast": "0.200000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "0.450000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.85,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff68a3e5",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-9",
+    "about": "Rajj Editz premium cc #9, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff97c6d0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.65,
+        "blend": "subtract",
+        "color": "#ffb9d86c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.130000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.800000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#ff55f388",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "linear-dodge",
+        "color": "#ffd57ce0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.300000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "10.000000",
+              "mag": "0.750000",
+              "seed": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ffbebebe",
+        "fx": [
+          {
+            "id": "displacemaprad",
+            "p": {
+              "edges": "3",
+              "fromctr": "true",
+              "invert": "true",
+              "offsAngle": "0.000000",
+              "offsRadius": "0.000000",
+              "typex": "0",
+              "typey": "2"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "1.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.510000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "scale": "1.500000"
+            }
+          },
+          {
+            "id": "rays",
+            "p": {
+              "blend": "0.000000",
+              "fillColor": "#ff2d1ef6",
+              "intensity": "1.480000",
+              "quality": "150.000000",
+              "strength": "0.790000",
+              "threshold": "0.600000",
+              "thresholdColor": "#ff000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.005000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.950000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffccdc62",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.510000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "spinblur2",
+            "p": {
+              "angle": "0.900000"
+            }
+          },
+          {
+            "id": "lensblur2",
+            "p": {
+              "radius": "0.310000",
+              "strength": "0.050000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.599609,
+        "blend": "lighten",
+        "color": "#ff4a4dd6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.605469,
+        "blend": "lighten",
+        "color": "#ff4a4dd6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.151000",
+              "feather": "100.000000",
+              "start": "0.106000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          },
+          {
+            "id": "feather",
+            "p": {
+              "iter": "1.000000",
+              "strength": "0.005000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-10",
+    "about": "Rajj Editz premium cc #10, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "blend": "subtract",
+        "color": "#ff72d092",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.070000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.930000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.400000",
+              "strength": "0.120000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffca9750",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.260000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffca9750",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colortune2",
+            "p": {
+              "gamma": "-151.084610,0.077892,0.000000",
+              "lift": "10.619750,0.073995,0.010065"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.250000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.050000",
+              "contrast": "0.210000"
+            }
+          },
+          {
+            "id": "hueshift",
+            "p": {
+              "hue": "357.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.120000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.613281,
+        "blend": "screen",
+        "color": "#ffc97bb2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lumakey3",
+            "p": {
+              "feather": "0.050000",
+              "highThreshold": "1.000000",
+              "invert": "false",
+              "lowThreshold": "0.743000",
+              "weighted": "true"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.485000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.361328,
+        "blend": "screen",
+        "color": "#ffc97bb2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lumakey3",
+            "p": {
+              "feather": "0.050000",
+              "highThreshold": "1.000000",
+              "invert": "false",
+              "lowThreshold": "0.745000",
+              "weighted": "true"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.150000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.642578,
+        "blend": "lighten",
+        "color": "#ffc97bb2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lumakey3",
+            "p": {
+              "feather": "0.050000",
+              "highThreshold": "1.000000",
+              "invert": "false",
+              "lowThreshold": "0.615000",
+              "weighted": "true"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.485000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff000000",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "0.963000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "1.500000",
+              "scale": "1.186000",
+              "strength": "0.360000",
+              "tint": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.677734,
+        "color": "#000000",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.300000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.740234,
+        "color": "#ffcea785",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.400000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.000000",
+              "contrast": "-0.100000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.230000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "replacecolor",
+            "p": {
+              "alpha": "1.000000",
+              "feather": "0.250000",
+              "lockLuminance": "false",
+              "newcolor": "#ff00ff00",
+              "oldcolor": "#ff38ff00",
+              "threshold": "1.760000"
+            }
+          },
+          {
+            "id": "replacecolor",
+            "p": {
+              "alpha": "1.000000",
+              "feather": "0.290000",
+              "lockLuminance": "false",
+              "newcolor": "#ff36ffff",
+              "oldcolor": "#ff00deff",
+              "threshold": "1.890000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-11",
+    "about": "Rajj Editz premium cc #11, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#fffb75b8",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.718000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "0",
+              "offset": "0.000000,242.000000",
+              "scale": "0.990000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd3d7ba",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.030000",
+              "contrast": "0.300000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffbb9df8",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "6.000000",
+              "strength": "0.180000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.540000",
+              "brightness": "0.750000",
+              "color": "#ffff4444",
+              "contrast": "0.250000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff5a6abf",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "unsharpmask",
+            "p": {
+              "amount": "0.420000",
+              "showMask": "false",
+              "strength": "2.000000",
+              "threshold": "-0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.2,
+        "blend": "lighten",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          },
+          {
+            "id": "transform",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "fill": "0.000000",
+              "maskToLayer": "false",
+              "sample": "0",
+              "scale": "1.010000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-12",
+    "about": "Rajj Editz premium cc #12, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 0.298828,
+        "blend": "subtract",
+        "color": "#ffb9d86c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.130000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#ff55f388",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "0",
+              "green": "4",
+              "red": "0"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ffbebebe",
+        "fx": [
+          {
+            "id": "displacemaprad",
+            "p": {
+              "edges": "3",
+              "fromctr": "true",
+              "invert": "true",
+              "offsAngle": "0.000000",
+              "offsRadius": "0.000000",
+              "typex": "0",
+              "typey": "2"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.800000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.510000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "scale": "1.500000"
+            }
+          },
+          {
+            "id": "rays",
+            "p": {
+              "blend": "0.000000",
+              "fillColor": "#ff2d1ef6",
+              "intensity": "1.480000",
+              "quality": "150.000000",
+              "strength": "0.790000",
+              "threshold": "0.600000",
+              "thresholdColor": "#ff000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.005000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.950000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.000000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.222656,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "34.380520,0.023492,0.307653",
+              "tint": "-76.442940,0.008707,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.615000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.3,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.5,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff6695d4",
+        "fx": [
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          },
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.800000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-13",
+    "about": "Rajj Editz premium cc #13, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.050000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.222656,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "34.380520,0.023492,0.307653",
+              "tint": "-76.442940,0.008707,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.615000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.3,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.5,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd3644d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.320000",
+              "shadows": "0.930000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.040000",
+              "contrast": "0.070000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          },
+          {
+            "id": "transform",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "fill": "0.000000",
+              "maskToLayer": "false",
+              "sample": "1",
+              "scale": "1.010000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffa4658c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "unsharpmask",
+            "p": {
+              "amount": "0.250000",
+              "showMask": "false",
+              "strength": "0.350000",
+              "threshold": "0.500000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "1.100000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.701172,
+        "color": "#fff8b76b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lightglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.000000",
+              "color": "#ff00ffff",
+              "halo": "0.000000",
+              "intensity": "0.800000",
+              "strength": "0.120000",
+              "threshold": "0.400000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff6348df",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.693359,
+        "blend": "screen",
+        "color": "#ffe6c844",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "1",
+              "feather": "0.400000",
+              "invert": "false",
+              "threshold": "0.700000"
+            }
+          },
+          {
+            "id": "spectralmap",
+            "p": {
+              "alpha": "1.000000",
+              "blueColor": "#ff000000",
+              "greenColor": "#ff000000",
+              "phase": "0.000000",
+              "redColor": "#ffffffff",
+              "repeat": "1.000000",
+              "reverse": "false",
+              "saturation": "1.000000",
+              "scaleBrightness": "true",
+              "squeeze": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.500000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-14",
+    "about": "Rajj Editz premium cc #14, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "blend": "subtract",
+        "color": "#ffdd44dd",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.600000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.040000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-overlay",
+        "color": "#ff428890",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.375000",
+              "vib": "1.420000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "41.512753,0.999198,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd5c0fe",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "6",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.030000",
+              "contrast": "0.100000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.050000",
+              "gamma": "0.950000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.100000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.15,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.85,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.599609,
+        "color": "#ff17e1e1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.580000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "tile",
+            "p": {
+              "angle": "0.000000",
+              "mirror": "true",
+              "phase": "0.000000",
+              "scale": "1.000000",
+              "vertoffs": "false"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.110000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.644531,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff17e1e1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.110000",
+              "vib": "1.250000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.060000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "tile",
+            "p": {
+              "angle": "0.000000",
+              "mirror": "true",
+              "phase": "0.000000",
+              "scale": "1.000000",
+              "vertoffs": "false"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.110000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-15",
+    "about": "Rajj Editz premium cc #15, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff7ef3f0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.000000",
+              "shadows": "0.800000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.701172,
+        "blend": "screen",
+        "color": "#ff7a7bf5",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.700000"
+            }
+          },
+          {
+            "id": "spectralmap",
+            "p": {
+              "alpha": "1.000000",
+              "blueColor": "#ff000000",
+              "greenColor": "#ff000000",
+              "phase": "0.000000",
+              "redColor": "#ffffffff",
+              "repeat": "1.000000",
+              "reverse": "false",
+              "saturation": "1.000000",
+              "scaleBrightness": "true",
+              "squeeze": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff6467b8",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colortemperature",
+            "p": {
+              "strength": "1.000000",
+              "temperature": "5.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "hueshift",
+            "p": {
+              "hue": "350.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.500000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.595703,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "2",
+              "green": "1",
+              "red": "1"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.000000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "4",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-163.276993,0.137379,0.000000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-27.352335,0.091705,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff9b53f8",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.300000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-16",
+    "about": "Rajj Editz premium cc #16, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 0.392578,
+        "color": "#ff666c41",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.250000",
+              "gamma": "0.850000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.245000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.600000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.300000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "0",
+              "scale": "1.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.090000",
+              "contrast": "0.050000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.322266,
+        "blend": "soft-light",
+        "color": "#fff4c08e",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-114.427521,0.293631,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "lighten",
+        "color": "#ff54bba0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.470000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.050000",
+              "contrast": "-0.070000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "1",
+              "blue": "2",
+              "green": "4",
+              "red": "1"
+            }
+          },
+          {
+            "id": "darkglow",
+            "p": {
+              "alpha": "0.750000",
+              "blend": "0.250000",
+              "color": "#ffffffff",
+              "strength": "2.000000",
+              "threshold": "0.300000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.416016,
+        "blend": "soft-light",
+        "color": "#ff92a0b1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.513672,
+        "color": "#ff939ce7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.040000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff94a8a2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "6",
+              "blue": "2",
+              "green": "2",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.650391,
+        "blend": "lighten",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "1.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "overlay",
+        "fx": [
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "6.580000",
+              "mag": "1.000000",
+              "seed": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "colortemperature",
+            "p": {
+              "strength": "1.000000",
+              "temperature": "3.010000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-118.779449,0.244405,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.000000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.302734,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "34.380520,0.023492,0.307653",
+              "tint": "-76.442940,0.008707,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.615000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-17",
+    "about": "Rajj Editz premium cc #17, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ff904a9d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-119.417130,0.565948,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.610000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.120000",
+              "shadows": "0.860000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.000000",
+              "gamma": "1.490000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ff904a9d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "294.529846,0.043354,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.150000",
+              "vib": "1.370000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.120000",
+              "shadows": "0.860000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.125541,
+        "color": "#ff904a9d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.250000",
+              "gamma": "1.420000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "colortemperature",
+            "p": {
+              "strength": "1.000000",
+              "temperature": "10.929999"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#ff904a9d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.250000",
+              "brightness": "0.500000",
+              "color": "#ffff5566",
+              "contrast": "0.250000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "0.200000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.810000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "overlay",
+        "fx": [
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "6.580000",
+              "mag": "1.000000",
+              "seed": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "colortemperature",
+            "p": {
+              "strength": "1.000000",
+              "temperature": "3.010000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-118.779449,0.244405,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#ff42fd3b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.700000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "23.000000",
+              "smooth": "0.670000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.151000",
+              "feather": "100.000000",
+              "start": "0.106000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.190000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-18",
+    "about": "Rajj Editz premium cc #18, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ffba94c6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.030000",
+              "contrast": "0.100000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.050000",
+              "gamma": "0.950000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.400000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.6,
+        "color": "#ff476178",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.250000",
+              "brightness": "1.000000",
+              "color": "#ff3d3df5",
+              "contrast": "0.200000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "0.450000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.85,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff68a3e5",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.398438,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff17e1e1",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.110000",
+              "vib": "1.250000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.150000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "subtract",
+        "color": "#ff72d092",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.070000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.930000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.400000",
+              "strength": "0.120000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffca9750",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.260000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffca9750",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colortune2",
+            "p": {
+              "gamma": "-151.084610,0.077892,0.000000",
+              "lift": "10.619750,0.073995,0.010065"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.100000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.050000",
+              "contrast": "0.210000"
+            }
+          },
+          {
+            "id": "hueshift",
+            "p": {
+              "hue": "357.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.120000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.613281,
+        "blend": "screen",
+        "color": "#ffc97bb2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lumakey3",
+            "p": {
+              "feather": "0.050000",
+              "highThreshold": "1.000000",
+              "invert": "false",
+              "lowThreshold": "0.743000",
+              "weighted": "true"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.485000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.361328,
+        "blend": "screen",
+        "color": "#ffc97bb2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lumakey3",
+            "p": {
+              "feather": "0.050000",
+              "highThreshold": "1.000000",
+              "invert": "false",
+              "lowThreshold": "0.745000",
+              "weighted": "true"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.150000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff000000",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "0.963000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "1.500000",
+              "scale": "0.700000",
+              "strength": "0.360000",
+              "tint": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.677734,
+        "color": "#000000",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.300000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-19",
+    "about": "Rajj Editz premium cc #19, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff67d53b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "0.840000",
+              "shadows": "0.700000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.222656,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "34.380520,0.023492,0.307653",
+              "tint": "-76.442940,0.008707,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.615000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.619141,
+        "blend": "subtract",
+        "color": "#ffb9d86c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.130000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.800000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.7,
+        "color": "#ff55f388",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "4",
+              "blue": "2",
+              "green": "2",
+              "red": "2"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "linear-dodge",
+        "color": "#ffd57ce0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ffbebebe",
+        "fx": [
+          {
+            "id": "displacemaprad",
+            "p": {
+              "edges": "3",
+              "fromctr": "true",
+              "invert": "true",
+              "offsAngle": "0.000000",
+              "offsRadius": "0.000000",
+              "typex": "0",
+              "typey": "2"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.300000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.510000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "scale": "1.500000"
+            }
+          },
+          {
+            "id": "rays",
+            "p": {
+              "blend": "0.000000",
+              "fillColor": "#ff2d1ef6",
+              "intensity": "1.480000",
+              "quality": "150.000000",
+              "strength": "0.790000",
+              "threshold": "0.600000",
+              "thresholdColor": "#ff000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.005000",
+              "vib": "1.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "2.000000",
+              "shadows": "0.950000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.606218,
+        "blend": "lighten",
+        "color": "#ff71475a",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.300000",
+              "shadows": "0.220000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.642578,
+        "color": "#ffe4b877",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "offset": "0.000000,-82.000000",
+              "scale": "2.170000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.340000",
+              "gamma": "1.050000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.200000",
+              "strength": "0.300000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.697266,
+        "color": "#fff663a6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.040000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "10.000000",
+              "mag": "0.160000",
+              "seed": "0.400000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "0.691000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "1.190000",
+              "scale": "0.859000",
+              "strength": "0.615000",
+              "tint": "0.320000"
+            }
+          },
+          {
+            "id": "gradientoverlay",
+            "p": {
+              "alpha": "0.708000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "offset": "-14.000000,0.000000",
+              "scale": "0.690000"
+            }
+          },
+          {
+            "id": "hueshift",
+            "p": {
+              "hue": "367.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.400000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rajjcc-20",
+    "about": "Rajj Editz premium cc #20, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 0.606218,
+        "blend": "lighten",
+        "color": "#ff71475a",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.300000",
+              "shadows": "0.220000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.642578,
+        "color": "#ffe4b877",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "offset": "0.000000,-82.000000",
+              "scale": "2.170000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.340000",
+              "gamma": "1.050000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.200000",
+              "strength": "0.300000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.697266,
+        "color": "#fff663a6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.130000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.040000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "0.790000",
+              "shadows": "0.530000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.460000",
+              "shadows": "1.020000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "10.000000",
+              "mag": "0.160000",
+              "seed": "0.400000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "0.691000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "1.190000",
+              "scale": "0.859000",
+              "strength": "0.615000",
+              "tint": "0.320000"
+            }
+          },
+          {
+            "id": "gradientoverlay",
+            "p": {
+              "alpha": "0.708000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "offset": "-14.000000,0.000000",
+              "scale": "0.690000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.470000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "hueshift",
+            "p": {
+              "hue": "367.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.400000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffa4658c",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "unsharpmask",
+            "p": {
+              "amount": "0.250000",
+              "showMask": "false",
+              "strength": "0.350000",
+              "threshold": "0.500000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.601563,
+        "color": "#fff8b76b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "lightglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.000000",
+              "color": "#ff00ffff",
+              "halo": "0.000000",
+              "intensity": "0.800000",
+              "strength": "0.250000",
+              "threshold": "0.400000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.200000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.3,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.400391,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffd3644d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.320000",
+              "shadows": "0.930000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.040000",
+              "contrast": "0.070000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#7f7f7f",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "chromaticzoomblur",
+            "p": {
+              "adaptive": "true",
+              "strength": "0.030000"
+            }
+          },
+          {
+            "id": "transform",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "fill": "0.000000",
+              "maskToLayer": "false",
+              "sample": "1",
+              "scale": "1.010000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.693359,
+        "blend": "screen",
+        "color": "#ffe6c844",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "1",
+              "feather": "0.400000",
+              "invert": "false",
+              "threshold": "0.700000"
+            }
+          },
+          {
+            "id": "spectralmap",
+            "p": {
+              "alpha": "1.000000",
+              "blueColor": "#ff000000",
+              "greenColor": "#ff000000",
+              "phase": "0.000000",
+              "redColor": "#ffffffff",
+              "repeat": "1.000000",
+              "reverse": "false",
+              "saturation": "1.000000",
+              "scaleBrightness": "true",
+              "squeeze": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.500000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "furkancc-1",
+    "about": "furkantwd premium cc 1, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff54a6fb",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffec94ab",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.430000",
+              "gamma": "0.555000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.4,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.263672,
+        "blend": "screen",
+        "color": "#ff78da7b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "0",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "0.520000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.695313,
+        "color": "#fffc5587",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.070000",
+              "vib": "1.200000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.030000",
+              "gamma": "0.800000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "vignette",
+            "p": {
+              "feather": "1.000000",
+              "overlaycolor": "#ff000000",
+              "punchout": "false",
+              "roundness": "1.800000",
+              "scale": "1.200000",
+              "strength": "0.800000",
+              "tint": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.777344,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.245000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "furkancc-2",
+    "about": "furkantwd premium cc 2, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ffa954b9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "0.874000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff131313",
+              "gradType": "0",
+              "offset": "0.000000,119.000000",
+              "scale": "1.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.050000",
+              "contrast": "0.030000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.010000",
+              "gamma": "0.965000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.130000",
+              "vib": "1.150000"
+            }
+          },
+          {
+            "id": "colortune2",
+            "p": {
+              "gain": "60.635380,0.193193,0.023461",
+              "lift": "54.634335,0.062322,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff67d53b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "0.840000",
+              "shadows": "0.700000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.35,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "156.793671,0.046074,0.000000",
+              "tint": "-137.369034,0.172964,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.304688,
+        "color": "#ffc9a45b",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "2",
+              "green": "2",
+              "red": "0"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.040000",
+              "contrast": "0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.065000",
+              "vib": "1.020000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.53125,
+        "color": "#ff5f9566",
+        "fx": [
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.550000"
+            }
+          },
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "1.460000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.642578,
+        "color": "#ffe4b877",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gradientoverlay2",
+            "p": {
+              "alpha": "1.000000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "offset": "0.000000,-82.000000",
+              "scale": "2.170000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.340000",
+              "gamma": "1.050000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.300000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.606218,
+        "blend": "lighten",
+        "color": "#ff71475a",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "2.000000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.300000",
+              "shadows": "0.220000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#fff663a6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.130000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.500000",
+              "strength": "0.040000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "0.790000",
+              "shadows": "0.530000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.460000",
+              "shadows": "1.020000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "10.000000",
+              "mag": "0.160000",
+              "seed": "0.400000"
+            }
+          },
+          {
+            "id": "gradientoverlay",
+            "p": {
+              "alpha": "0.708000",
+              "angle": "0.000000",
+              "blendMode": "1",
+              "color1": "#ffffffff",
+              "color2": "#ff000000",
+              "gradType": "1",
+              "offset": "-14.000000,0.000000",
+              "scale": "0.690000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.470000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "hueshift",
+            "p": {
+              "hue": "367.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.400000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "lighten",
+        "color": "#ff4a4dd6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.104000",
+              "feather": "100.000000",
+              "start": "0.151000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.496094,
+        "blend": "lighten",
+        "color": "#ff4a4dd6",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "2",
+              "feather": "0.000000",
+              "invert": "false",
+              "threshold": "1.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "1.000000",
+              "stretch": "900.000000"
+            }
+          },
+          {
+            "id": "wipe2",
+            "p": {
+              "angle": "0.000000",
+              "end": "0.151000",
+              "feather": "100.000000",
+              "start": "0.106000"
+            }
+          },
+          {
+            "id": "innerblur",
+            "p": {
+              "iter": "2.000000",
+              "strength": "0.115000"
+            }
+          },
+          {
+            "id": "feather",
+            "p": {
+              "iter": "1.000000",
+              "strength": "0.005000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "furkancc-3",
+    "about": "furkantwd premium cc 3, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 0.6,
+        "blend": "screen",
+        "color": "#ffcd4d56",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "stretchsegment",
+            "p": {
+              "angle": "0.000000",
+              "offset": "0.000000",
+              "smooth": "0.000000",
+              "stretch": "282.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.190000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "2.460000",
+              "mag": "0.400000",
+              "seed": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#fff962f4",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "0.000000",
+              "contrast": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.404297,
+        "blend": "subtract",
+        "color": "#ff5beb6d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-1.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.665468,
+        "blend": "soft-light",
+        "color": "#ff904a9d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "294.529846,0.043354,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.085000",
+              "vib": "1.370000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.120000",
+              "shadows": "0.860000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "overlay",
+        "fx": [
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "flicker2",
+            "p": {
+              "basis": "0",
+              "freq": "6.580000",
+              "mag": "1.000000",
+              "seed": "0.000000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-2.000000",
+              "gamma": "1.000000",
+              "offset": "0.000000"
+            }
+          },
+          {
+            "id": "colortemperature",
+            "p": {
+              "strength": "1.000000",
+              "temperature": "3.010000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "-118.779449,0.244405,0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "screen",
+        "color": "#ffc0f4d9",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "brightcont2",
+            "p": {
+              "brightness": "-0.640000",
+              "contrast": "3.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff76a0a7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "1",
+              "red": "0"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "0.000000",
+              "gamma": "0.580000",
+              "offset": "0.040000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.222656,
+        "blend": "lighten",
+        "color": "#ffebf4e0",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorhot",
+            "p": {
+              "color": "34.380520,0.023492,0.307653",
+              "tint": "-76.442940,0.008707,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "1.000000",
+              "vib": "2.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.615000"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "furkancc-4",
+    "about": "furkantwd premium cc 4, from Alight Motion",
+    "layers": [
+      {
+        "opacity": 1.0,
+        "color": "#ff91c1e8",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "sharpen",
+            "p": {
+              "radius": "1.000000",
+              "strength": "0.200000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.816406,
+        "color": "#fff2fc99",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "2",
+              "green": "2",
+              "red": "0"
+            }
+          },
+          {
+            "id": "lightglow",
+            "p": {
+              "alpha": "0.750000",
+              "blend": "0.150000",
+              "color": "#ffff0019",
+              "halo": "0.000000",
+              "intensity": "1.300000",
+              "strength": "0.300000",
+              "threshold": "0.500000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.806641,
+        "blend": "screen",
+        "color": "#ff3758b3",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "1",
+              "feather": "0.400000",
+              "invert": "false",
+              "threshold": "0.700000"
+            }
+          },
+          {
+            "id": "spectralmap",
+            "p": {
+              "alpha": "1.000000",
+              "blueColor": "#ff000000",
+              "greenColor": "#ff000000",
+              "phase": "0.000000",
+              "redColor": "#ffffffff",
+              "repeat": "1.000000",
+              "reverse": "false",
+              "saturation": "1.000000",
+              "scaleBrightness": "true",
+              "squeeze": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.195000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.806641,
+        "blend": "screen",
+        "color": "#ff3758b3",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "threshold",
+            "p": {
+              "blendMode": "1",
+              "feather": "0.400000",
+              "invert": "false",
+              "threshold": "0.700000"
+            }
+          },
+          {
+            "id": "spectralmap",
+            "p": {
+              "alpha": "1.000000",
+              "blueColor": "#ff000000",
+              "greenColor": "#ff000000",
+              "phase": "0.000000",
+              "redColor": "#ffffffff",
+              "repeat": "1.000000",
+              "reverse": "false",
+              "saturation": "1.000000",
+              "scaleBrightness": "true",
+              "squeeze": "0.000000"
+            }
+          },
+          {
+            "id": "gaussianblur",
+            "p": {
+              "strength": "1.195000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffc288b2",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "blend": "soft-light",
+        "color": "#ff904a9d",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "colorize",
+            "p": {
+              "tint": "294.529846,0.043354,0.000000"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "-0.085000",
+              "vib": "1.370000"
+            }
+          },
+          {
+            "id": "highlightshadow",
+            "p": {
+              "highlights": "1.120000",
+              "shadows": "0.860000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ff9f47fa",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 1.0,
+        "color": "#ffabc04e",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.300000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.712891,
+        "color": "#ffabc04e",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "channelmap",
+            "p": {
+              "alpha": "3",
+              "blue": "1",
+              "green": "4",
+              "red": "0"
+            }
+          },
+          {
+            "id": "satvib",
+            "p": {
+              "saturation": "0.300000",
+              "vib": "1.000000"
+            }
+          }
+        ]
+      },
+      {
+        "opacity": 0.642578,
+        "color": "#ff433ce7",
+        "fx": [
+          {
+            "id": "lift",
+            "p": {
+              "fill": "0.000000"
+            }
+          },
+          {
+            "id": "softglow",
+            "p": {
+              "alpha": "1.000000",
+              "blend": "0.250000",
+              "brightness": "0.900000",
+              "color": "#ffff5566",
+              "contrast": "0.300000",
+              "highlights": "0.500000",
+              "outsideAlpha": "0.000000",
+              "strength": "0.680000"
+            }
+          },
+          {
+            "id": "exposure",
+            "p": {
+              "exposure": "-0.100000",
+              "gamma": "0.900000",
+              "offset": "0.000000"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

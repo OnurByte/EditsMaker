@@ -27,7 +27,7 @@ pub struct Transcript {
 
 fn is_laugh(marker: &str) -> bool {
     let m = marker.to_lowercase();
-    ["gül", "kahka", "laugh", "alkış", "applau"].iter().any(|k| m.contains(k))
+    crate::lang::get().sound_tags.iter().any(|k| m.contains(k.as_str()))
 }
 
 /// $EDITS_WHISPER_MODEL, else the largest ggml model in the usual folders.
@@ -63,12 +63,17 @@ pub fn transcript(work: &Path, wav: &Path, lang: &str, spoken: &str) -> Result<T
         // measured on 6 cores: one thread per physical core and greedy decoding is ~2x faster than the defaults
         // with the same text; more threads or two runs at once are slower (memory-bound)
         let threads = (std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4) / 2).clamp(2, 8).to_string();
-        run(None, "whisper-cli", &[
-            "-m", &model.to_string_lossy(), "-l", lang, "-ml", "1", "-sow", "-oj", "-np",
-            "-t", &threads, "-bs", "1", "-bo", "1",
-            "--prompt", "Sansürsüz, olduğu gibi yaz: lan, amk, aq, siktir, ulan, hassiktir, mal, gerizekalı.",
-            "-of", &wav.with_extension("").to_string_lossy(), &wav.to_string_lossy(),
-        ])?;
+        let model = model.to_string_lossy();
+        let base = wav.with_extension("");
+        let (base, input) = (base.to_string_lossy(), wav.to_string_lossy());
+        let mut args = vec!["-m", &model, "-l", lang, "-ml", "1", "-sow", "-oj", "-np", "-t", &threads, "-bs", "1", "-bo", "1"];
+        // keeps swearing as said (the words for the language are in lang.json)
+        let keep = &crate::lang::get().whisper_prompt;
+        if !keep.is_empty() {
+            args.extend(["--prompt", keep]);
+        }
+        args.extend(["-of", &base, &input]);
+        run(None, "whisper-cli", &args)?;
     }
     parse_whisper(&std::fs::read_to_string(&json).map_err(|e| format!("{}: {e}", json.display()))?)
 }

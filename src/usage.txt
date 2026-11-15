@@ -8,7 +8,9 @@ USAGE
   edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
   edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects and Premiere presets into presets
   edits looks                  the colour looks
+  edits learn <edit.mp4>...     reverse-engineer an edit you like into a preset (cuts, flashes, zoom, slide, shake)
   edits draw <video> SPEC...   draw arrows, rings, crosses or your own .svg over a finished clip (see --svg)
+  edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
   edits skills [install]       agent skills for every command
   edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
@@ -33,9 +35,9 @@ OPTIONS
       --size WxH      any frame size, like 1080x1350
       --fit           keep the whole frame over a blurred copy instead of cropping around faces
       --look L        colour: none, bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia, bleach,
-                      neon, matrix, sunset, pop (--grade works too)
+                      neon, matrix, sunset, pop
       --lut FILE      a .cube LUT over the picture
-      --lang L        spoken language for captions (default tr)
+      --lang L        spoken language (default: $EDITS_LANG, else the system's); its words are in presets/lang.json
   -o, --out DIR       output folder (default ./edits-out)
       --join          also join all clips into joined.mp4
       --captions S    talking clips' caption style: hormozi (default), mrbeast, karaoke, box, minimal, neon

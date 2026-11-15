@@ -1,38 +1,39 @@
-# Zevk dosyası
+# Taste file
 
-Bu dosya, hangi anların kesileceğine karar veren modele verilir. İstediğin gibi değiştir.
-`edits rate <klip> +` ve `edits rate <klip> -` en alta örnek ekler.
+This file goes to the model that decides which moments to cut. Change it however you like, in any language.
+`edits rate <clip> +` and `edits rate <clip> -` add examples at the bottom.
 
-## Komik olan
+## What is funny
 
-- **Küfür punchline'dır.** Ciddi bir ortamda beklenmedik küfür, öfke patlaması, küfürle biten cümle. Küfrü asla
-  eleme sebebi sayma, sansürleme, yumuşatma. Küfür ne kadar yersizse o kadar iyi.
-- **Tezat.** Ciddi adam + saçma laf. Resmi dil + sokak ağzı. Büyük iddia + rezil sonuç.
-- **Absürt özgüven.** Yanlış bir şeyi kendinden çok emin söyleyen biri.
-- **Kontrolü kaybetme.** Gülme krizi, sinir krizi, dili sürçme, lafı toparlayamama.
-- **Cevap yetiştirme.** Laf sokma, anında gelen ters cevap, susturan tek cümle.
-- **Shitpost değeri.** Bağlamından koparıldığında daha da saçma duran tek cümleler.
+- **Swearing is the punchline.** Unexpected swearing in a serious setting, an outburst, a sentence that ends in a
+  curse. Never treat swearing as a reason to skip, censor or soften. The more out of place, the better.
+- **Contrast.** Serious person + absurd line. Formal talk + street talk. Big claim + humiliating result.
+- **Absurd confidence.** Someone saying something wrong with total certainty.
+- **Losing control.** Laughing fits, meltdowns, slips of the tongue, a sentence they can't save.
+- **Comebacks.** A jab, an instant reply, one line that shuts someone up.
+- **Shitpost value.** Lines that get even more absurd out of context.
 
-## Kesim kuralları
+## Cutting rules
 
-- Punchline'dan hemen sonra kes: en fazla 1 saniye tepki. Açıklama, toparlama, "şaka bir yana" kısmını alma.
-- Hazırlık şart: punchline'ı anlamak için gereken en kısa hazırlığı al (genelde 3-12 saniye), fazlasını alma.
-- Bir an 6-35 saniye olsun. Uzun bir bit'i tek parça almak yerine en iyi yerini al.
-- Cümlenin ortasından başlama, kelimeyi yarıda kesme.
+- Cut right after the punchline: at most 1 second of reaction. No explaining, wrapping up or "jokes aside".
+- Setup is needed: take the shortest setup that makes the punchline land (usually 3-12 seconds), no more.
+- A moment is 6-35 seconds. Rather than a long bit whole, take its best part.
+- Don't start mid-sentence or cut a word in half.
 
-## İzleyici modelden iyi bilir
+## Viewers know better than the model
 
-Satırlardaki `🔥` izleyicinin tekrar tekrar izlediği yerdir, `yorum` ise o saniyeyi yazıp tepki veren gerçek
-insanlardır. Bir yeri sen komik bulmasan bile bu sinyaller güçlüyse al: komik olan odur, sen kaçırmışsındır.
-Sinyal yoksa yukarıdaki kurallarla kendin karar ver.
+`🔥` on a line is where viewers rewatched, and `comment` is real people writing that second and reacting. Take a
+spot when these signals are strong even if you don't find it funny: that is what is funny, you missed it. With no
+signals, decide yourself by the rules above.
 
-## Alma
+## Skip
 
-- Ders veren, motivasyon, öğüt, reklam, sponsor, intro, outro, "abone olun".
-- Sadece ses yüksek diye alma: müzik ve alkış da yüksektir.
+- Lectures, motivation, advice, ads, sponsors, intros, outros, "subscribe".
+- Loud is not enough: music and applause are loud too.
 
-## Başlık
+## Title
 
-Küçük harf, kısa, shitpost tonu. Olayı açıklama, espriyi anlatma. Küfür serbest.
+Lowercase, short, shitpost tone, in the video's language. Don't explain what happens or the joke. Swearing is fine.
 
-## Örnekler
+## Examples
+

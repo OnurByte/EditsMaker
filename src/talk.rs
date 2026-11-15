@@ -2,7 +2,8 @@
 //! every other cut, captions word by word in a chosen style, a hook line on top, a whoosh on each cut and a boom
 //! on the punchline, and an optional music bed that ducks under the voice.
 use crate::pick::Moment;
-use crate::render::{ass_time, grade, shape, upper_tr, Opts};
+use crate::lang::upper;
+use crate::render::{ass_time, grade, shape, Opts};
 use crate::transcribe::Word;
 use crate::util::run;
 use serde::{Deserialize, Serialize};
@@ -41,6 +42,60 @@ pub struct CaptionStyle {
     /// the said word pops up in size
     #[serde(default)]
     pub pop: bool,
+    /// a soft glow in the outline colour, this many pixels wide (0: none)
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub glow: f64,
+    /// room between letters, as a fraction of the text height
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub spacing: f64,
+    /// how lines on screen come in
+    #[serde(default)]
+    pub reveal: Reveal,
+}
+
+/// How a line on screen comes in. Every number lives in captions.json, so a style (or an agent) can retime it.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Reveal {
+    /// "words" (typed word by word), "letters" (letter by letter) or "spread" (fades in as its letters close up)
+    pub by: String,
+    /// seconds per word or letter while typing (the whole line never takes longer than `within`)
+    #[serde(default)]
+    pub step: f64,
+    #[serde(default)]
+    pub within: f64,
+    /// seconds
+    #[serde(default)]
+    pub fade_in: f64,
+    #[serde(default)]
+    pub fade_out: f64,
+    /// spread: extra room between letters at the start, as a fraction of the frame width, and seconds to settle
+    #[serde(default)]
+    pub spread: f64,
+    #[serde(default)]
+    pub settle: f64,
+}
+
+impl Default for Reveal {
+    /// for a style file written before reveals existed: the plain typed line
+    fn default() -> Self {
+        Reveal { by: "words".into(), step: 0.18, within: 0.9, fade_in: 0.0, fade_out: 0.3, spread: 0.0, settle: 0.0 }
+    }
+}
+
+fn is_zero(x: &f64) -> bool {
+    *x == 0.0
+}
+
+impl CaptionStyle {
+    /// Letter spacing in pixels for a text height of `px`.
+    fn fsp(&self, px: f64) -> f64 {
+        (self.spacing * px).round()
+    }
+
+    /// Tags every line of this style starts with.
+    fn tags(&self) -> String {
+        if self.glow > 0.0 { format!("{{\\blur{:.0}}}", self.glow) } else { String::new() }
+    }
 }
 
 fn red() -> String {
@@ -157,9 +212,9 @@ pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], pace: f64, st: 
     );
     if let Some(st) = st {
         s.push_str(&format!(
-            "Style: C,{},{},{},{},{},{},-1,0,0,0,100,100,0,0,{},{},{},2,70,70,{},1\n",
+            "Style: C,{},{},{},{},{},{},-1,0,0,0,100,100,{},0,{},{},{},2,70,70,{},1\n",
             st.font, (w as f64 * st.size) as u32, ass_color(&st.color), ass_color(&st.color), ass_color(&st.outline_color),
-            if st.boxed { ass_color(&st.outline_color) } else { "&H99000000&".into() }, if st.boxed { 3 } else { 1 },
+            if st.boxed { ass_color(&st.outline_color) } else { "&H99000000&".into() }, st.fsp(w as f64 * st.size), if st.boxed { 3 } else { 1 },
             if st.boxed { (w as f64 * st.size * 0.25) as u32 } else { st.outline as u32 }, st.shadow, (h as f64 * st.position) as u32
         ));
     }
@@ -179,7 +234,7 @@ pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], pace: f64, st: 
         let fresh = chunks.last().is_none_or(|c| c.len() >= st.words.max(1) || ws[c[c.len() - 1]].2.ends_with(['.', '?', '!', ',']) || ws[i].0 - ws[c[c.len() - 1]].1 > 0.5);
         if fresh { chunks.push(vec![i]) } else { chunks.last_mut().unwrap().push(i) }
     }
-    let shown = |t: &str| if st.upper { upper_tr(t) } else { t.to_string() };
+    let shown = |t: &str| if st.upper { upper(t) } else { t.to_string() };
     for (ci, c) in chunks.iter().enumerate() {
         // a chunk leaves when the next one comes: two lines never stack
         let next = chunks.get(ci + 1).map_or(f64::MAX, |n| ws[n[0]].0);
@@ -197,7 +252,7 @@ pub fn captions(words: &[Word], m: &Moment, segs: &[(f64, f64)], pace: f64, st: 
                     t
                 }
             }).collect();
-            s.push_str(&format!("Dialogue: 0,{},{},C,,0,0,0,,{}\n", ass_time(a), ass_time(b), line.join(" ")));
+            s.push_str(&format!("Dialogue: 0,{},{},C,,0,0,0,,{}{}\n", ass_time(a), ass_time(b), st.tags(), line.join(" ")));
         }
     }
     s
@@ -220,8 +275,6 @@ pub fn sentences(text: &str) -> Vec<String> {
     out
 }
 
-const FEELING: &[&str] = &["ben", "sen", "hiç", "artık", "asla", "hep", "kimse", "neden", "sadece", "hayat", "yalnız", "zaman", "gerçek",
-    "kalp", "unut", "kaybet", "bitti", "son", "değil", "olmadı", "keşke", "yine", "herkes", "hiçbir", "never", "alone", "life", "nobody", "why", "only"];
 
 /// How much a sentence works as words on screen: short, felt, not technical.
 pub fn line_score(s: &str) -> f64 {
@@ -230,7 +283,7 @@ pub fn line_score(s: &str) -> f64 {
     if !(4..=11).contains(&n) {
         return -10.0;
     }
-    let felt = words.iter().filter(|w| FEELING.iter().any(|f| w.starts_with(f))).count() as f64;
+    let felt = words.iter().filter(|w| crate::lang::get().feeling.iter().any(|f| w.starts_with(f.as_str()))).count() as f64;
     let techy = s.split_whitespace().filter(|w| w.chars().any(|c| c.is_ascii_digit()) || w.chars().filter(|c| c.is_uppercase()).count() >= 2).count() as f64;
     felt * 1.5 - techy * 2.0 + if s.ends_with(['?', '!']) { 0.5 } else { 0.0 } + if (5..=9).contains(&n) { 0.5 } else { 0.0 }
 }
@@ -242,11 +295,12 @@ pub fn best_lines(all: &[String], n: usize, use_llm: bool) -> Vec<String> {
     ranked.dedup();
     let top: Vec<String> = ranked.iter().take(40).map(|s| s.to_string()).collect();
     if use_llm && top.len() > n {
-        let mut p = format!("Bir sad / viral edit'in üstüne yazı olarak konacak en iyi {n} cümleyi seç: kendi başına anlamlı, duygusu güçlü, akılda kalan. Teknik ve bağlam isteyenleri seçme.\n\n");
+        use crate::lang::prompt;
+        let mut p = prompt("lines", "head", &[("n", n.to_string())]);
         for (i, l) in top.iter().enumerate() {
-            p.push_str(&format!("[{i}] {l}\n"));
+            p.push_str(&prompt("lines", "item", &[("i", i.to_string()), ("text", l.clone())]));
         }
-        p.push_str(&format!("\nSadece JSON dizisi yaz, sırayla gösterilecek {n} sayı: [4, 1, 9]\n"));
+        p.push_str(&prompt("lines", "tail", &[("n", n.to_string())]));
         let picked = crate::util::run_stdin(&crate::pick::llm_cmd(), &p).ok().and_then(|r| {
             let (a, b) = (r.find('[')?, r.rfind(']')?);
             serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
@@ -272,24 +326,38 @@ pub fn lines_ass(lines: &[String], total: f64, st: &CaptionStyle, w: u32, h: u32
     let mut s = format!(
         "[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n\
          [V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n\
-         Style: L,{},{},{},{},{},&H99000000&,-1,0,0,0,100,100,0,0,{},{},{},2,90,90,{},1\n\n\
+         Style: L,{},{},{},{},{},&H99000000&,-1,0,0,0,100,100,{},0,{},{},{},2,90,90,{},1\n\n\
          [Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n",
         st.font, (w as f64 * st.size * 0.9) as u32, ass_color(&st.color), ass_color(&st.color), ass_color(&st.outline_color),
-        if st.boxed { 3 } else { 1 }, st.outline, st.shadow, (h as f64 * (st.position + 0.08)) as u32
+        st.fsp(w as f64 * st.size * 0.9), if st.boxed { 3 } else { 1 }, st.outline, st.shadow, (h as f64 * (st.position + 0.08)) as u32
     );
+    let tags = st.tags();
     let clean = |t: &str| t.chars().filter(|c| !matches!(c, '{' | '}' | '\\')).collect::<String>();
     for (line, (a, b)) in lines.iter().zip(line_spans(lines.len(), total)) {
-        let words: Vec<String> = clean(line).split_whitespace().map(|w| if st.upper { upper_tr(w) } else { w.to_string() }).collect();
-        let step = (0.9 / words.len().max(1) as f64).min(0.18);
+        let words: Vec<String> = clean(line).split_whitespace().map(|w| if st.upper { upper(w) } else { w.to_string() }).collect();
+        let rv = &st.reveal;
+        let ms = |x: f64| (x * 1000.0).round() as i64;
+        if rv.by == "spread" {
+            // the whole line fades in while its letters close up from wide apart
+            let fsp = st.fsp(w as f64 * st.size * 0.9);
+            s.push_str(&format!("Dialogue: 0,{},{},L,,0,0,0,,{{\\fad({},{})\\fsp{}\\t(0,{},0.6,\\fsp{fsp})}}{tags}{}\n",
+                ass_time(a), ass_time(b), ms(rv.fade_in), ms(rv.fade_out), fsp + (w as f64 * rv.spread).round(), ms(rv.settle), words.join(" ")));
+            continue;
+        }
+        // letter by letter: every character is a step
+        let letters = rv.by == "letters";
+        let words: Vec<String> = if letters { words.join(" ").chars().map(String::from).collect() } else { words };
+        let sep = if letters { "" } else { " " };
+        let step = (rv.within / words.len().max(1) as f64).min(rv.step);
         for k in 0..words.len() {
             let start = a + k as f64 * step;
             let end = if k + 1 == words.len() { b } else { a + (k + 1) as f64 * step };
             // the words not yet said are there but invisible, so the line never jumps sideways as it grows
-            let shown = words[..=k].join(" ");
-            let hidden = words[k + 1..].join(" ");
-            let fade = if k + 1 == words.len() { "{\\fad(0,300)}" } else { "" };
-            let rest = if hidden.is_empty() { String::new() } else { format!(" {{\\alpha&HFF&}}{hidden}") };
-            s.push_str(&format!("Dialogue: 0,{},{},L,,0,0,0,,{fade}{shown}{rest}\n", ass_time(start), ass_time(end)));
+            let shown = words[..=k].join(sep);
+            let hidden = words[k + 1..].join(sep);
+            let fade = if k + 1 == words.len() { format!("{{\\fad(0,{})}}", ms(rv.fade_out)) } else { String::new() };
+            let rest = if hidden.is_empty() { String::new() } else { format!("{sep}{{\\alpha&HFF&}}{hidden}") };
+            s.push_str(&format!("Dialogue: 0,{},{},L,,0,0,0,,{fade}{tags}{shown}{rest}\n", ass_time(start), ass_time(end)));
         }
     }
     s
@@ -422,7 +490,14 @@ mod tests {
     #[test]
     fn captions_highlight_the_said_word() {
         let st = CaptionStyle { name: "t".into(), about: String::new(), font: "X".into(), size: 0.08, color: "#FFFFFF".into(), highlight: "#FFE600".into(),
-            punch: "#E5332A".into(), outline: 6.0, outline_color: "#000000".into(), shadow: 0.0, boxed: false, upper: true, words: 3, position: 0.2, pop: true };
+            punch: "#E5332A".into(), outline: 6.0, outline_color: "#000000".into(), shadow: 0.0, boxed: false, upper: true, words: 3, position: 0.2, pop: true, glow: 0.0, spacing: 0.0, reveal: Reveal::default() };
+        // glow, spacing and the two title reveals from the text pack
+        let spread = Reveal { by: "spread".into(), fade_in: 0.35, fade_out: 0.3, spread: 0.02, settle: 0.7, ..Reveal::default() };
+        let fancy = CaptionStyle { glow: 10.0, spacing: 0.3, reveal: spread, ..st.clone() };
+        let l = lines_ass(&["Say my name".into()], 6.0, &fancy, 1080, 1920);
+        assert!(l.contains("\\fad(350,300)\\fsp") && l.contains("{\\blur10}SAY MY NAME") && l.contains(",100,100,23,0,"), "{l}");
+        let typed = lines_ass(&["Ok go".into()], 6.0, &CaptionStyle { reveal: Reveal { by: "letters".into(), step: 0.05, ..Reveal::default() }, ..st.clone() }, 1080, 1920);
+        assert!(typed.contains("Dialogue: 0,0:00:00.40,0:00:00.45,L,,0,0,0,,O{\\alpha&HFF&}K GO"), "{typed}");
         let words = [w(10.0, 10.4, "bunu"), w(10.4, 10.8, "biliyor"), w(10.8, 11.2, "musun?"), w(15.0, 15.5, "hayır")];
         let segs = vec![(10.0, 11.5), (14.9, 16.0)];
         let a = captions(&words, &m(), &segs, 1.0, Some(&st), Some("Bunu kimse bilmiyor"), 1080, 1920);

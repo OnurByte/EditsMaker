@@ -21,10 +21,6 @@ pub fn ass_time(t: f64) -> String {
     format!("{}:{:02}:{:02}.{:02}", cs / 360000, cs / 6000 % 60, cs / 100 % 60, cs % 100)
 }
 
-pub fn upper_tr(s: &str) -> String {
-    s.replace('i', "İ").to_uppercase()
-}
-
 /// Caption chunks of at most 3 words / 22 characters: (start, end, text, is_punchline), times relative to the clip.
 pub fn chunks(words: &[Word], m: &Moment) -> Vec<(f64, f64, String, bool)> {
     let mut out: Vec<(f64, f64, String, bool)> = vec![];

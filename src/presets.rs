@@ -25,9 +25,12 @@ fn files() -> Vec<(String, String)> {
     all
 }
 
+/// Files beside the presets that are not presets.
+const DATA: &[&str] = &["moves.json", "captions.json", "grades.json", "lang.json", "prompts.json"];
+
 pub fn all() -> Vec<Preset> {
     let mut out: Vec<Preset> = vec![];
-    for (file, text) in files().into_iter().filter(|(n, _)| n != "moves.json" && n != "captions.json") {
+    for (file, text) in files().into_iter().filter(|(n, _)| !DATA.contains(&n.as_str())) {
         match serde_json::from_str::<Preset>(&text) {
             Ok(p) => {
                 out.retain(|o| o.name != p.name);
@@ -63,6 +66,10 @@ mod tests {
         for (name, text) in super::BUILT_IN {
             if *name == "captions.json" {
                 serde_json::from_str::<Vec<crate::talk::CaptionStyle>>(text).unwrap();
+            } else if *name == "lang.json" || *name == "prompts.json" {
+                serde_json::from_str::<serde_json::Value>(text).unwrap();
+            } else if *name == "grades.json" {
+                serde_json::from_str::<Vec<crate::grades::Grade>>(text).unwrap();
             } else if *name == "moves.json" {
                 serde_json::from_str::<Vec<crate::preset::Motion>>(text).unwrap();
             } else {

@@ -9,15 +9,13 @@ pub struct Hit {
     pub text: String,
 }
 
-const LAUGH: &[&str] = &["😂", "🤣", "😭", "💀", "sjsj", "kdkd", "ahah", "haha", "öldüm", "koptum", "yarıldım", "lol", "lmao"];
-
 /// Comments that carry a timestamp ("1:25 efsane 😂"). Likes and laughter raise the weight.
 pub fn comment_hits(comments: &[(String, u64)], dur: f64) -> Vec<Hit> {
     let re = Regex::new(r"(?:\b(\d{1,2}):)?\b(\d{1,2}):(\d{2})\b").unwrap();
     let mut hits = vec![];
     for (text, likes) in comments {
         let low = text.to_lowercase();
-        let laugh = if LAUGH.iter().any(|w| low.contains(w)) { 2.0 } else { 1.0 };
+        let laugh = if crate::lang::get().laugh.iter().any(|w| low.contains(w.as_str())) { 2.0 } else { 1.0 };
         for c in re.captures_iter(text) {
             let n = |i: usize| c.get(i).and_then(|m| m.as_str().parse::<f64>().ok()).unwrap_or(0.0);
             let t = n(1) * 3600.0 + n(2) * 60.0 + n(3);

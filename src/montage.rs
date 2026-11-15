@@ -2,7 +2,8 @@
 use crate::face::median;
 use crate::fetch::{dims, safe};
 use crate::pick::Moment;
-use crate::render::{ass_time, chunks, grade, shape, upper_tr, Opts};
+use crate::lang::upper;
+use crate::render::{ass_time, chunks, grade, shape, Opts};
 use crate::transcribe::Word;
 use crate::util::{run, run_bytes, yt};
 use std::f64::consts::PI;
@@ -418,7 +419,10 @@ pub fn segment(fs: &[Frame], video: usize) -> Vec<Shot> {
 /// as the hook, the rest in story order. Returns (shot, source start) per piece.
 /// `prefer` (video, from, to): footage shown while the voice was said, so picture and words belong together.
 pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(usize, f64, f64)>) -> Vec<(usize, f64)> {
-    let need = needs.iter().cloned().fold(0.0, f64::max);
+    // long enough for most slots: one long slot must not rule out every short scene (the long ones are matched below)
+    let mut sorted = needs.to_vec();
+    sorted.sort_by(|a, b| a.total_cmp(b));
+    let need = sorted.get(sorted.len() * 3 / 4).copied().unwrap_or(0.0);
     let near = |i: usize| prefer.is_some_and(|(v, a, b)| shots[i].video == v && shots[i].e > a && shots[i].s < b);
     let score = |i: usize| shots[i].score + if near(i) { 3.0 } else { 0.0 };
     let mut order: Vec<usize> = (0..shots.len()).filter(|&i| shots[i].scene_end.max(shots[i].e) - shots[i].s >= need).collect();
@@ -429,16 +433,27 @@ pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(
     // pieces of the same scene back to back read as one long shot: keep picks 12 s apart
     // and spread over every video: each pick from a video costs the next one from it a point
     let free: Vec<usize> = order.into_iter().filter(|&i| !used[i]).collect();
+    // with little footage (one video) the gap gives way rather than leave the edit unmade
     let mut pick: Vec<usize> = vec![];
-    while pick.len() < needs.len() {
-        let from = |v: usize| pick.iter().filter(|&&p| shots[p].video == v).count() as f64;
-        let best = free.iter().copied()
-            .filter(|i| !pick.contains(i) && pick.iter().all(|&p| shots[p].video != shots[*i].video || (shots[p].s - shots[*i].s).abs() >= 12.0))
-            .max_by(|a, b| (score(*a) - from(shots[*a].video)).total_cmp(&(score(*b) - from(shots[*b].video))));
-        match best {
-            Some(i) => pick.push(i),
-            None => break,
+    for gap in [12.0, 6.0, 2.0, 0.0] {
+        while pick.len() < needs.len() {
+            let from = |v: usize| pick.iter().filter(|&&p| shots[p].video == v).count() as f64;
+            let best = free.iter().copied()
+                .filter(|i| !pick.contains(i) && pick.iter().all(|&p| shots[p].video != shots[*i].video || (shots[p].s - shots[*i].s).abs() >= gap))
+                .max_by(|a, b| (score(*a) - from(shots[*a].video)).total_cmp(&(score(*b) - from(shots[*b].video))));
+            match best {
+                Some(i) => pick.push(i),
+                None => break,
+            }
         }
+    }
+    // still short (one short video, a long preset): the best shots again, each time from another part of them
+    let base = pick.clone();
+    for k in 0.. {
+        if pick.len() >= needs.len() || base.is_empty() {
+            break;
+        }
+        pick.push(base[k % base.len()]);
     }
     pick.iter().for_each(|&i| used[i] = true);
     if pick.len() > 1 {
@@ -472,7 +487,29 @@ pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(
         }
     }
     // centred in its piece when it fits, else from the piece's start on into the rest of the scene
-    pick.iter().zip(needs).map(|(&i, n)| (i, if shots[i].e - shots[i].s >= *n { (shots[i].s + shots[i].e - n) / 2.0 } else { shots[i].s })).collect()
+    // a slot longer than its shot swaps with one whose shot is long enough, when that one fits the other way too
+    let avail = |i: usize| shots[i].scene_end.max(shots[i].e) - shots[i].s;
+    for j in 0..pick.len().min(needs.len()) {
+        if avail(pick[j]) < needs[j] {
+            if let Some(k) = (0..pick.len().min(needs.len())).find(|&k| k != j && avail(pick[k]) >= needs[j] && avail(pick[j]) >= needs[k]) {
+                pick.swap(j, k);
+            }
+        }
+    }
+    let mut seen: Vec<usize> = vec![];
+    pick.iter().zip(needs).map(|(&i, n)| {
+        let again = seen.iter().filter(|&&x| x == i).count();
+        seen.push(i);
+        let room = (shots[i].scene_end.max(shots[i].e) - shots[i].s - n).max(0.0);
+        let from = if again > 0 && room > 0.0 {
+            shots[i].s + (again as f64 * n) % room // a shot used again starts elsewhere in its scene
+        } else if shots[i].e - shots[i].s >= *n {
+            (shots[i].s + shots[i].e - n) / 2.0
+        } else {
+            shots[i].s
+        };
+        (i, from)
+    }).collect()
 }
 
 // ---------------------------------------------------------------- the edit
@@ -578,7 +615,7 @@ pub fn captions(words: &[Word], m: Option<&Moment>, offset: f64, text: &str, sad
     );
     let clean = |t: &str| t.chars().filter(|c| !matches!(c, '{' | '}' | '\\')).collect::<String>();
     if !text.trim().is_empty() {
-        s.push_str(&format!("Dialogue: 1,{},{},T,,0,0,0,,{{\\fad(250,400)}}{}\n", ass_time(0.3), ass_time(total - 0.8), upper_tr(&clean(text.trim()))));
+        s.push_str(&format!("Dialogue: 1,{},{},T,,0,0,0,,{{\\fad(250,400)}}{}\n", ass_time(0.3), ass_time(total - 0.8), upper(&clean(text.trim()))));
     }
     if let Some(m) = m {
         if sad {
@@ -591,7 +628,7 @@ pub fn captions(words: &[Word], m: Option<&Moment>, offset: f64, text: &str, sad
                 let a = x.s - m.start + offset;
                 let b = ws.get(i + 1).map_or(x.e - m.start + 0.4, |n| (n.s - m.start).min(x.e - m.start + 0.6)).max(x.s - m.start + 0.12) + offset;
                 let t = clean(x.t.trim_matches(|c: char| ",.;:!?\"'".contains(c)));
-                s.push_str(&format!("Dialogue: 0,{},{},W,,0,0,0,,{{\\fscx125\\fscy125\\t(0,90,\\fscx100\\fscy100)}}{}\n", ass_time(a), ass_time(b), upper_tr(&t)));
+                s.push_str(&format!("Dialogue: 0,{},{},W,,0,0,0,,{{\\fscx125\\fscy125\\t(0,90,\\fscx100\\fscy100)}}{}\n", ass_time(a), ass_time(b), upper(&t)));
             }
         }
     }
@@ -985,6 +1022,37 @@ mod tests {
         // and they alternate after the hook
         let order: Vec<usize> = p.iter().map(|(i, _)| shots[*i].video).collect();
         assert!(order.windows(2).skip(1).all(|w| w[0] != w[1]), "{order:?}");
+    }
+
+    #[test]
+    fn one_long_slot_does_not_rule_out_short_scenes() {
+        // nine 3 s scenes and one 8 s one; nine 1 s slots and one 7 s slot
+        let mut shots: Vec<Shot> = (0..9).map(|k| Shot { video: 0, s: k as f64 * 20.0, e: k as f64 * 20.0 + 3.0, scene_end: k as f64 * 20.0 + 3.0, score: 2.0, focus: None }).collect();
+        shots.push(Shot { video: 0, s: 300.0, e: 308.0, scene_end: 308.0, score: 1.0, focus: None });
+        let mut needs = vec![1.0; 10];
+        needs[4] = 7.0;
+        let p = assign(&shots, &mut [false; 10], &needs, None);
+        assert_eq!(p.len(), 10);
+        assert_eq!(p[4].0, 9, "the long slot gets the long scene: {p:?}");
+    }
+
+    #[test]
+    fn few_shots_are_used_again_from_elsewhere() {
+        let shots: Vec<Shot> = (0..3).map(|k| Shot { video: 0, s: k as f64 * 20.0, e: k as f64 * 20.0 + 10.0, scene_end: k as f64 * 20.0 + 10.0, score: 1.0, focus: None }).collect();
+        let p = assign(&shots, &mut [false; 3], &[2.0; 6], None);
+        assert_eq!(p.len(), 6);
+        // no two picks start at the same second
+        let mut starts: Vec<i64> = p.iter().map(|x| (x.1 * 10.0) as i64).collect();
+        starts.sort();
+        starts.dedup();
+        assert_eq!(starts.len(), 6, "{p:?}");
+    }
+
+    #[test]
+    fn one_short_video_still_fills_the_edit() {
+        // 10 shots 3 s apart in one 30 s video: 12 s apart would allow 3; the gap gives way
+        let shots: Vec<Shot> = (0..10).map(|k| Shot { video: 0, s: k as f64 * 3.0, e: k as f64 * 3.0 + 3.0, scene_end: k as f64 * 3.0 + 3.0, score: 1.0, focus: None }).collect();
+        assert_eq!(assign(&shots, &mut [false; 10], &[1.0; 9], None).len(), 9);
     }
 
     #[test]

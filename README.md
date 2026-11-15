@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 5 agent skills, 30 presets, 36 cut moves, 16 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 5 agent skills, 32 presets, 36 cut moves, 40 looks">
 </picture>
 
 <picture>
@@ -52,6 +52,19 @@ Install EditsMaker from github.com/OnurByte/EditsMaker, run "edits doctor", add 
 edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look tealorange
 ```
 
+### Made with it
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-velocity.mp4"><img src="assets/readme/examples/velocity.gif" width="180" alt="Velocity preset, made with EditsMaker"></a><br><sub>Velocity preset</sub></td>
+    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-preset.mp4"><img src="assets/readme/examples/preset.gif" width="180" alt="Alight Motion preset, made with EditsMaker"></a><br><sub>Alight Motion preset</sub></td>
+    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-sad.mp4"><img src="assets/readme/examples/sad.gif" width="180" alt="Sad edit, made with EditsMaker"></a><br><sub>Sad edit</sub></td>
+    <td align="center"><a href="https://github.com/OnurByte/EditsMaker/releases/download/v0.4.0/example-sad-voice.mp4"><img src="assets/readme/examples/sad-voice.gif" width="180" alt="Sad edit, own voice, made with EditsMaker"></a><br><sub>Sad edit, own voice</sub></td>
+  </tr>
+</table>
+
+<sub>Click one for the full video with sound. Every one is a single `edits` command.</sub>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
   <img src="assets/readme/features-light.svg" width="100%" alt="Presets, trends, looks, agents, reads captions first, every frame size">
@@ -64,7 +77,7 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
-  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 30 Alight Motion edits and 36 Premiere cut moves, every shot and keyframe as editable JSON">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 32 Alight Motion edits, 24 colour looks and 36 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
 <picture>
@@ -128,7 +141,7 @@ edits https://www.youtube.com/watch?v=VIDEO_ID --captions mrbeast
 Hits on the hardest beats, speed ramps and words on screen:
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --velocity --fx shake,rgb,freeze --line "Yok artık kaliteye bak."
+edits https://www.youtube.com/@channel --preset yuraprst --velocity --fx shake,rgb,freeze --line "Nobody saw this coming."
 ```
 
 Slow, faster, hidden faces, a cleaner finish:
@@ -149,10 +162,30 @@ What is trending on TikTok:
 edits trends
 ```
 
-Colour looks:
+Colour looks, caption styles, hits and stickers, including 24 looks from Alight Motion colour packs:
 
 ```sh
 edits looks
+```
+
+Reverse-engineer an edit you like into a preset (its cuts, flashes and every shot's zoom, slide, turn and shake),
+then replay it over your own footage:
+
+```sh
+edits learn liked-edit.mp4
+```
+
+A look as a .cube LUT for Premiere, DaVinci Resolve or CapCut:
+
+```sh
+edits cube rajjcc-4
+```
+
+Speaking another language? Set it once (it also picks the country for `trend:N`); the words for each language live
+in `presets/lang.json`, the model prompts in `presets/prompts.json`:
+
+```sh
+export EDITS_LANG=tr
 ```
 
 Presets:

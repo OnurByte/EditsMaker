@@ -1,12 +1,12 @@
 ---
 name: edits-trends
-description: Find what is trending on TikTok right now and cut an edit to it with `edits`. Use when the user wants a trending/viral song, "akım", or the current TikTok sound for an edit.
+description: Find what is trending on TikTok right now and cut an edit to it with `edits`. Use when the user wants a trending or viral song, a trend, or the current TikTok sound for an edit.
 ---
 
 # Trending songs
 
 ```sh
-edits trends          # TikTok's chart for Türkiye now (kworb.net)
+edits trends          # TikTok's chart for your country now (from the system language; kworb.net)
 edits trends us       # another country
 edits <input> --preset NAME --music trend:3     # cut to the 3rd song
 ```

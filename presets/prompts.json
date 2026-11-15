@@ -1,0 +1,28 @@
+{
+  "moments": {
+    "head": "Pick the {n} funniest moments of a video. Read the taste file first and follow it to the letter.\n\n{taste}\n\n# Video: {title}\n\n# Transcript\nEach line: [start-end seconds] text. 🔥 = viewer interest (high = rewatched a lot).\n\n",
+    "heat": "  🔥{heat}",
+    "comment": "  comment({at}): \"{text}\"",
+    "tail": "\n# Answer\nWrite only a JSON array, nothing else. Best moment first, at most {n}, no overlaps:\n[{\"start\": seconds, \"end\": seconds, \"punch\": second the punchline starts, \"score\": 0-10 how funny, \"title\": \"short title\", \"why\": \"why it is funny, one sentence\"}]\n"
+  },
+  "passages": {
+    "head": "The speaker's voice goes over a music edit (sad edit / viral edit). Pick the best {n} of these passages.\nGood: understandable alone, needs no context, strong feeling or claim, ends on a line that sticks.\nBad: half an idea, mentions the screen/link/subscribing/sponsor, a list of technical steps.\n\n",
+    "item": "[{i}] ({secs} s, {title}) {text}\n",
+    "tail": "\nWrite only a JSON array, best first, at most {n} numbers: [3, 0, 7]\n"
+  },
+  "videos": {
+    "head": "Pick the {n} of these videos that make the best material for a music edit (sad edit / viral edit). Good: strong, memorable, emotional talk and interesting pictures. Skip boring, technical, list-reading videos.\n\n",
+    "item": "[{i}] {title} ({views} views): {text}\n",
+    "tail": "\nWrite only a JSON array, best first, {n} numbers: [2, 0]\n"
+  },
+  "lines": {
+    "head": "Pick the best {n} sentences to show as text over a sad / viral edit: meaningful alone, strong feeling, memorable. Skip technical ones and ones that need context.\n\n",
+    "item": "[{i}] {text}\n",
+    "tail": "\nWrite only a JSON array, the {n} numbers in the order to show them: [4, 1, 9]\n"
+  },
+  "notes": {
+    "laugh": "(laughter or applause in the video)",
+    "liked": "👍 like this",
+    "disliked": "👎 not like this"
+  }
+}

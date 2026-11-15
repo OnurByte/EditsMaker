@@ -19,7 +19,7 @@ edits <link|channel|topic|file> --preset yuraprst --music trend:3 --look tealora
 
 - `--music`: a song link or file, `trend:N` (TikTok's Nth trending song, see the edits-trends skill), or leave it
   out when the preset names its own song.
-- `--look`: colour (`edits looks`). `--aspect 9:16|4:5|1:1|...` or `--size 1080x1350` for the frame.
+- `--look`: colour (`edits looks`; furkancc-N and rajjcc-N are Alight colour packs). `--aspect 9:16|4:5|1:1|...` or `--size 1080x1350` for the frame.
 - `--intensity 0.5` calmer, `2` wilder. `--tag @name` signs it.
 - For a channel: `--videos 12 --use 4` reads every video's captions first and downloads only the best four.
 
