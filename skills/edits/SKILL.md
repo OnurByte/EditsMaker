@@ -142,8 +142,8 @@ Other kinds, when asked for:
 
 ## After rendering
 
-Clips land in `edits-out/` with a `.json` beside each. Look at frames before calling it done:
-`ffmpeg -i edits-out/x.mp4 -vf fps=1.5,scale=100:-2,tile=18x2 -frames:v 1 sheet.jpg`. If a preset does not suit
+Without `--out`, each run gets its own folder: `~/Videos/edits/DAY/HH.MM <video or topic title>/` (or `$EDITS_OUT`), with a `.json` beside each clip; the log's last line names it. Do not pass `out` unless the user wants a folder: the automatic one is where they look. Look at frames before calling it done:
+`ffmpeg -i clip.mp4 -vf fps=1.5,scale=100:-2,tile=18x2 -frames:v 1 sheet.jpg`. If a preset does not suit
 the footage, change the preset (edits-preset-tweak skill) rather than giving up on it.
 
 ## Learned the hard way (küfür/shitpost kanalları)
@@ -162,7 +162,7 @@ the footage, change the preset (edits-preset-tweak skill) rather than giving up 
   `usr/lib/ggml/*.so` dosyalarını `usr/bin/` yanına symlink'le (backend'ler exe klasöründen yükleniyor),
   `LD_LIBRARY_PATH=~/.local/whispervk/usr/lib` ile saran bir `whisper-cli` script'ini PATH'e koy. Sonuç: Radeon 680M (Vulkan cihaz 0), RTX 3050 VRAM'i başka süreçlerce dolu olabilir.
 - Uzun süren işi `nohup ... > log &` ile başlat. Süreci `pkill -f` ile öldürürken kendi shell'ini vurma, PID kullan.
-- Bitince `ls -l edits-out/0*.mp4` ve `.json`'a bak; log "rendered" yazınca bitmiş demektir.
+- Bitince log'un son satırındaki klasörde `.mp4` ve `.json`'a bak; log "rendered" yazınca bitmiş demektir.
 
 ## Never cut a spoken sentence mid-word (voice over a hand-picked moment)
 

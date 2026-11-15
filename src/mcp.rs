@@ -44,7 +44,7 @@ fn tools() -> Value {
             "join": {"type": "boolean", "description": "also join all clips into joined.mp4"},
             "no_jumpcuts": {"type": "boolean"}, "no_sfx": {"type": "boolean", "description": "no made whoosh/boom (use for quiet, emotional edits)"},
             "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
-            "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder"}},
+            "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder; leave it out: every run then gets its own folder in ~/Videos/edits by day and title, where the user looks"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length, frame, song.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure curves ([time 0..1 of the shot, value, easing]) plus flashes. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",

@@ -43,7 +43,7 @@ OPTIONS
                       neon, matrix, sunset, pop
       --lut FILE      a .cube LUT over the picture
       --lang L        spoken language (default: $EDITS_LANG, else the system's); its words are in presets/lang.json
-  -o, --out DIR       output folder (default ./edits-out)
+  -o, --out DIR       output folder (default: a new folder per run in $EDITS_OUT or ~/Videos/edits, by day and title)
       --join          also join all clips into joined.mp4
       --captions S    talking clips' caption style: hormozi (default), mrbeast, karaoke, box, minimal, neon
       --bed SONG      music under talking clips, ducked under the voice (link, file or trend:N)
