@@ -180,10 +180,16 @@ edits <link> --music trend:2 --pip reaction.mp4@2-8:0.75,0.2,0.35 --transition c
   --pop red --bass 6 --pitch -2 --reverb
 ```
 
+Words that land: the caption and the spoken line slam in on the punchline, dark footage brought up first:
+
+```sh
+edits <link> --preset karakter-buyuk --say ID@12.4-15.1 --say-text --caption "bu adam 🗿@0-2.5" --anim slam --fix
+```
+
 Draw on it to point things out: an arrow, a ring, a cross, a burst, or your own .svg (`edits looks` lists them):
 
 ```sh
-edits draw clip.mp4 "arrow@0.5-2.5:0.62,0.3,0.3" "circle@3-5:0.5,0.4,0.6#ffffff" "question@8-10:0.75,0.2,0.2"
+edits draw clip.mp4 "arrow@0.5-2.5:0.62,0.3,0.3~pop" "circle@3-5:0.5,0.4,0.6#ffffff" "question@8-10:0.75,0.2,0.2~slam"
 ```
 
 What is trending on TikTok:
@@ -317,6 +323,9 @@ server and preset JSON; no timeline to drag.
 | Lumetri: creative look, LUTs | `--look` (40 looks), `--lut FILE.cube`, `edits cube` writes one out |
 | Gaussian blur, mosaic | `--blur-faces`, `--blur-box`, per shot `blur`, `pixelate` |
 | Essential Graphics, captions | `--captions` (6 styles), `--caption TEXT@FROM-TO`, `--text`, `--line`, `--svg` shapes |
+| Animated titles (text presets) | `--anim pop`, `slam`, `slide`, `drop`, `blur`, `type`; one drawing its own with `~pop` |
+| Title safe margins | words stay above TikTok's and Reels' caption and buttons |
+| Lumetri: Auto | `--fix` brings dark, flat or dull footage up before the look |
 | Essential Sound: dialogue | `--denoise` (noise reduction, dialogue lift, loudness) |
 | Auto-ducking | music ducks under the voice in every voice edit |
 | Parametric EQ, bass boost | `--bass DB` |

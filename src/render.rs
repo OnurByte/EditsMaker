@@ -63,9 +63,22 @@ pub fn shape(o: &Opts, focus: f64) -> String {
     }
 }
 
+static FIX: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+
+/// --fix: dark, flat or dull footage brought up before the look goes on (every edit kind grades through `grade`).
+pub fn set_fix() {
+    let _ = FIX.set(true);
+}
+
+/// Stretches each shot's darkest and brightest parts to black and white (smoothed so it never flickers, colour
+/// kept linked so nothing tints) and gives back a little of the colour that flat footage lost.
+const FIX_CHAIN: &str = ",normalize=smoothing=24:independence=0:strength=0.8,eq=saturation=1.12";
+
 /// A colour grade by name (see `looks`), or the LUT it names when it starts with "lut3d".
 pub fn grade(name: &str) -> String {
-    if name.starts_with(",lut3d") { name.to_string() } else { crate::looks::chain(name).to_string() }
+    let fix = if FIX.get() == Some(&true) { FIX_CHAIN } else { "" };
+    let look = if name.starts_with(",lut3d") { name.to_string() } else { crate::looks::chain(name).to_string() };
+    format!("{fix}{look}")
 }
 
 

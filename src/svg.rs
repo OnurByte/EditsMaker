@@ -36,22 +36,57 @@ pub struct Sticker {
     /// width as a fraction of the frame's width
     pub size: f64,
     pub color: String,
+    /// how it comes in: one of `ANIMS` (empty = rise)
+    pub anim: String,
+}
+
+/// Entrances for words and drawings, after the named text effects of motion designers (HyperFrames / animate-text):
+/// rise (fade up a little), pop (springs in past its size and settles), slam (lands from twice its size with a
+/// jolt, on a beat), slide (in from the left), drop (falls in from above), blur (comes into focus), type (written
+/// out left to right).
+pub const ANIMS: &[&str] = &["rise", "pop", "slam", "slide", "drop", "blur", "type"];
+
+/// The sticker's own filters and its overlay position for an entrance starting at `a`, as (filters, x, y);
+/// (x, y) is its resting top-left corner, and the expressions use the overlay's own `w`, `h` and `t`.
+fn entrance(anim: &str, a: f64, x: f64, y: f64, hh: f64) -> (String, String, String) {
+    let u = |d: f64| format!("min(1,max(0,(t-{a:.2})/{d}))");
+    // the sticker's centre stays put while it is scaled
+    let centred = |k: &str| (format!(",scale=w='max(2,iw*{k})':h=-1:eval=frame"), format!("'{:.0}+(W0-w)/2'", x), format!("'{:.0}+(H0-h)/2'", y));
+    let (f, px, py) = match anim {
+        // overshoots to 1.18 at 60% of the way and settles: a spring
+        "pop" => centred(&format!("if(lt(t-{a:.2},0.13),0.3+0.88*{},1.18-0.18*min(1,(t-{a:.2}-0.13)/0.22))", u(0.13))),
+        "slam" => {
+            let (f, _, _) = centred(&format!("(2.2-1.2*{})", u(0.09)));
+            (f, format!("'{x:.0}+(W0-w)/2+if(between(t,{a:.2}+0.09,{a:.2}+0.3),14*sin(t*95),0)'"), format!("'{y:.0}+(H0-h)/2'"))
+        }
+        "slide" => (String::new(), format!("'{x:.0}-W0*0.6*pow(1-{},3)'", u(0.25)), format!("{y:.0}")),
+        "drop" => (String::new(), format!("{x:.0}"), format!("'{y:.0}-{:.0}*pow(1-{},3)'", hh * 0.12, u(0.22))),
+        "blur" => (format!(",gblur=sigma=18:enable='lt(t,{a:.2}+0.07)',gblur=sigma=6:enable='between(t,{a:.2}+0.07,{a:.2}+0.16)'"), format!("{x:.0}"), format!("{y:.0}")),
+        // the letters' alpha shown up to a line moving left to right, in 12 steps like keys pressed
+        "type" => (format!(",geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lt(X,W*floor(12*{})/12),alpha(X,Y),0)'", u(0.6).replace('t', "T")), format!("{x:.0}"), format!("{y:.0}")),
+        _ => (String::new(), format!("{x:.0}"), format!("'{y:.0}+{:.0}*max(0,1-(t-{a:.2})/0.18)'", hh * 0.03)),
+    };
+    (f, px, py)
 }
 
 /// `NAME|FILE[@FROM[-TO]][:X,Y[,SIZE]][#COLOUR]`, e.g. `arrow@1.2-2.5:0.6,0.3,0.25#ffd400` or `circle:0.5,0.4`.
 pub fn parse(s: &str) -> Result<Sticker, String> {
-    let re = Regex::new(r"^([^@#]+?)(?:@([\d.]+)(?:-([\d.]+))?)?(?::([\d.]+),([\d.]+)(?:,([\d.]+))?)?(?:#(\w+))?$").unwrap();
-    let c = re.captures(s.trim()).ok_or_else(|| format!("--svg {s}: use NAME[@FROM-TO][:X,Y,SIZE][#COLOUR]"))?;
+    let re = Regex::new(r"^([^@#]+?)(?:@([\d.]+)(?:-([\d.]+))?)?(?::([\d.]+),([\d.]+)(?:,([\d.]+))?)?(?:#(\w+))?(?:~(\w+))?$").unwrap();
+    let c = re.captures(s.trim()).ok_or_else(|| format!("--svg {s}: use NAME[@FROM-TO][:X,Y,SIZE][#COLOUR][~ANIM]"))?;
     let f = |i: usize, d: f64| c.get(i).and_then(|m| m.as_str().parse().ok()).unwrap_or(d);
     let src = c[1].to_string();
     if !STICKERS.iter().any(|t| t.0 == src) && !Path::new(&src).is_file() {
         return Err(format!("--svg {src}: not a sticker ({}) or an .svg file", names().join(", ")));
     }
+    let anim = c.get(8).map_or("", |m| m.as_str()).to_string();
+    if !anim.is_empty() && !ANIMS.contains(&anim.as_str()) {
+        return Err(format!("--svg {s}: ~{anim} is not one of {}", ANIMS.join(", ")));
+    }
     let from = f(2, 0.0);
     let color = c.get(7).map(|m| m.as_str()).unwrap_or("E5332A");
     // a hex colour gets its '#' back; names (white, yellow) stay as they are
     let color = if color.len() == 6 && color.chars().all(|c| c.is_ascii_hexdigit()) { format!("#{color}") } else { color.to_string() };
-    Ok(Sticker { src, from, to: f(3, from + 1.5).max(from + 0.2), x: f(4, 0.5).clamp(0.0, 1.0), y: f(5, 0.4).clamp(0.0, 1.0), size: f(6, 0.3).clamp(0.02, 1.0), color })
+    Ok(Sticker { src, from, to: f(3, from + 1.5).max(from + 0.2), x: f(4, 0.5).clamp(0.0, 1.0), y: f(5, 0.4).clamp(0.0, 1.0), size: f(6, 0.3).clamp(0.02, 1.0), color, anim })
 }
 
 fn source(s: &Sticker) -> Result<String, String> {
@@ -76,7 +111,7 @@ pub fn rasterize(s: &Sticker, px: u32, png: &Path) -> Result<(u32, u32), String>
     Ok((w, h))
 }
 
-/// The overlay graph for stickers already drawn as inputs 1..: each slides up a little and fades in, then fades out.
+/// The overlay graph for stickers already drawn as inputs 1..: each comes in by its entrance, then fades out.
 pub fn graph(st: &[Sticker], sizes: &[(u32, u32)], w: u32, h: u32) -> String {
     let mut g = String::new();
     let mut last = "0:v".to_string();
@@ -84,9 +119,14 @@ pub fn graph(st: &[Sticker], sizes: &[(u32, u32)], w: u32, h: u32) -> String {
         let (a, b) = (s.from, s.to);
         let out = if i + 1 == st.len() { "v".to_string() } else { format!("o{i}") };
         let (x, y) = (s.x * w as f64 - *sw as f64 / 2.0, s.y * h as f64 - *sh as f64 / 2.0);
+        let (f, px, py) = entrance(&s.anim, a, x, y, h as f64);
+        // W0/H0: the sticker's drawn size, so a scaled one keeps its centre
+        let (px, py) = (px.replace("W0", &sw.to_string()).replace("H0", &sh.to_string()), py.replace("W0", &sw.to_string()).replace("H0", &sh.to_string()));
+        // type and slam carry their own entrance; the others fade in under it
+        let fade_in = if matches!(s.anim.as_str(), "type" | "slam") { String::new() } else { format!(",fade=t=in:st={a:.2}:d=0.12:alpha=1") };
         g.push_str(&format!(
-            "[{}:v]format=rgba,fade=t=in:st={a:.2}:d=0.12:alpha=1,fade=t=out:st={:.2}:d=0.15:alpha=1[s{i}];[{last}][s{i}]overlay=x={x:.0}:y='{y:.0}+{:.0}*max(0,1-(t-{a:.2})/0.18)':enable='between(t,{a:.2},{b:.2})':eof_action=pass[{out}];",
-            i + 1, (b - 0.15).max(a), h as f64 * 0.03
+            "[{}:v]format=rgba{f}{fade_in},fade=t=out:st={:.2}:d=0.15:alpha=1[s{i}];[{last}][s{i}]overlay=x={px}:y={py}:enable='between(t,{a:.2},{b:.2})':eof_action=pass[{out}];",
+            i + 1, (b - 0.15).max(a)
         ));
         last = out;
     }
@@ -132,6 +172,8 @@ mod tests {
         assert_eq!((d.from, d.to, d.x, d.color.as_str()), (0.0, 1.5, 0.5, "#E5332A"));
         assert_eq!(parse("burst@3#white").unwrap().color, "white");
         assert!(parse("nosuch").is_err() && parse("arrow@x").is_err());
+        assert_eq!(parse("arrow@1-2:0.5,0.4#ffffff~slam").unwrap().anim, "slam");
+        assert!(parse("arrow~wobble").is_err());
     }
 
     #[test]
@@ -153,5 +195,15 @@ mod tests {
         let st = [parse("arrow@1-2").unwrap(), parse("cross@3:0.2,0.8").unwrap()];
         let g = graph(&st, &[(300, 300), (200, 200)], 1080, 1920);
         assert!(g.starts_with("[1:v]format=rgba,fade=t=in:st=1.00") && g.contains("[0:v][s0]overlay=x=390") && g.contains("[o0][s1]overlay=x=116") && g.ends_with("[v]"), "{g}");
+        // every entrance makes a graph ffmpeg reads; scaled ones keep their centre
+        for a in ANIMS {
+            let s = Sticker { anim: a.to_string(), ..parse("arrow@1-2").unwrap() };
+            let g = graph(&[s], &[(300, 300)], 1080, 1920);
+            assert!(g.ends_with("[v]") && !g.contains("W0") && !g.contains("H0"), "{a}: {g}");
+        }
+        let pop = graph(&[Sticker { anim: "pop".into(), ..parse("arrow@1-2").unwrap() }], &[(300, 300)], 1080, 1920);
+        assert!(pop.contains("scale=w='max(2,iw*") && pop.contains("overlay=x='390+(300-w)/2'"), "{pop}");
+        let ty = graph(&[Sticker { anim: "type".into(), ..parse("arrow@1-2").unwrap() }], &[(300, 300)], 1080, 1920);
+        assert!(ty.contains("geq=") && !ty.contains("fade=t=in"), "{ty}");
     }
 }

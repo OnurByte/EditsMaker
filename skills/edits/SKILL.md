@@ -176,6 +176,9 @@ Other kinds, when asked for:
 - Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
 - Colour and sound over the whole edit: `--curves vintage` (or points `"0/0 0.4/0.3 1/1"`), `--pop red` (only red stays),
   `--bass 6` (phonk low end), `--pitch -2` (semitones, tempo kept), `--reverb` (slowed + reverb, sad edits).
+- `--anim pop|slam|slide|drop|blur|type`: how words and drawings come in (`slam` on a punchline, `type` for a quote);
+  one drawing its own with `~pop` at the end of its `--svg` spec.
+- `--fix`: footage that looks dark, flat or dull is brought up before the look goes on.
 - `--pip FILE[@FROM-TO][:X,Y,SIZE]`: another video small in a white frame (a reaction, a source, a flashback).
 - `--transition circleopen|dissolve|wipeleft|slideup|pixelize|...`: music edits, every soft cut uses it.
 - Shots are spread over every downloaded video; do not settle for an edit cut from one video.
