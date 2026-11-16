@@ -571,7 +571,7 @@ fn make(args: &[String]) -> Result<(), String> {
         Some(b) => Some(montage::song(&fetch::music(b)?, cache)?),
         None => None,
     };
-    let bed_track = bed_song.as_ref().map(|s| (s.file.clone(), montage::windows(&s.beats, &s.loud, 60.0, 1).first().copied().unwrap_or(0.0)));
+    let bed_track = bed_song.as_ref().map(|s| (s.file.clone(), montage::windows(&s.beats, s.stretch(), 60.0, 1).first().copied().unwrap_or(0.0)));
     let bed = bed_track.as_ref();
     // only the best moments overall get their picture downloaded and rendered, four at a time
     let mut best: Vec<(&Analysed, &pick::Moment)> = analysed.iter().flat_map(|a| a.moments.iter().map(move |m| (a, m))).collect();
@@ -696,10 +696,10 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         return Err("no footage to cut".into());
     }
     lap(&format!("song \"{}\"; {} shots from {} video(s)", song.title, shots.len(), videos.len()));
-    // where the song starts: the preset's own offset into its own song, else the loudest stretch
+    // where the song starts: the preset's own offset into its own song, else its most replayed (or loudest) stretch
     let song_from = match (&c.music, &p.song) {
         (None, Some(s)) => s.from,
-        _ => montage::windows(&song.beats, &song.loud, p.total, 1).first().copied().unwrap_or(0.0),
+        _ => montage::windows(&song.beats, song.stretch(), p.total, 1).first().copied().unwrap_or(0.0),
     };
     // the preset bends to the moment: its own intensity (or --intensity), and with another song its cuts on that song's beats
     let mut p = p.clone().with_intensity(c.intensity.unwrap_or(p.intensity));
@@ -1164,7 +1164,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 (0.0, t.cuts.clone(), at)
             }
             (None, None) => {
-                let wins = montage::windows(&song.beats, &song.loud, c.look.length, k + 1);
+                let wins = montage::windows(&song.beats, song.stretch(), c.look.length, k + 1);
                 let start = *wins.get(k).or(wins.last())?;
                 (start, montage::cuts(&song.beats, start, c.look.length, look.shot()), 0.0)
             }
