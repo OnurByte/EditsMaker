@@ -37,7 +37,9 @@ try {
         $env:Path += ";$InstallDir"
     }
     Write-Host "Installed: $(& (Join-Path $InstallDir 'edits.exe') --version)"
-    Write-Host 'Next: edits doctor   (needs ffmpeg and yt-dlp: winget install Gyan.FFmpeg yt-dlp.yt-dlp)'
+    # ffmpeg and yt-dlp, if this machine lacks them: static builds into ~\.config\edits\bin, checksum checked
+    & (Join-Path $InstallDir 'edits.exe') setup
+    if ($LASTEXITCODE -ne 0) { Write-Host 'ffmpeg/yt-dlp download failed; edits tries again on first use.' }
 } finally {
     Remove-Item -Recurse -Force $Temp -ErrorAction SilentlyContinue
 }

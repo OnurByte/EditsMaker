@@ -7,6 +7,13 @@
   <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><b>Download</b></a> ⁜ under 4 MB ⁜ Linux, macOS and Windows
 </p>
 
+<a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sites-dark.svg">
+    <img src="assets/readme/sites-light.svg" width="100%" alt="Works with links from YouTube, TikTok, Instagram, X, Facebook, Twitch, Kick, Dailymotion and 1,700+ more sites">
+  </picture>
+</a>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
   <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 50 presets, under 4 MB, 40 looks">
@@ -36,11 +43,7 @@ curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh
 irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 ```
 
-Then check what is missing. You also need [ffmpeg](https://ffmpeg.org) and [yt-dlp](https://github.com/yt-dlp/yt-dlp).
-
-```sh
-edits doctor
-```
+No ffmpeg or yt-dlp? The installer downloads them. Nothing else to install.
 
 It keeps itself up to date: once a day it installs a newer release from GitHub (checksum checked).
 `edits update` updates now, `edits update off` turns it off, `edits info` shows the version and where to find me
@@ -49,7 +52,7 @@ It keeps itself up to date: once a day it installs a newer release from GitHub (
 ### Or ask your agent
 
 ```text
-Install EditsMaker from github.com/OnurByte/EditsMaker, run "edits doctor", add it as an MCP server with "edits mcp" and install its skills with "edits skills install".
+Install EditsMaker from github.com/OnurByte/EditsMaker, add it as an MCP server with "edits mcp" and install its skills with "edits skills install".
 ```
 
 <picture>
@@ -101,7 +104,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/why-dark.svg">
-  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command, trend-aware, reads first, under 4 MB: one MIT binary on your computer">
+  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, under 4 MB: one MIT binary on your computer">
 </picture>
 
 ---
