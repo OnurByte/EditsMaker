@@ -1,16 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="340" viewBox="0 0 960 340" role="img" aria-label="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
-<line x1="0" y1="0.5" x2="960" y2="0.5" stroke="#F4F1EA" stroke-width="1"/>
-<text x="0" y="26" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">Your AI agent</text>
-<text x="0" y="45" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">edits for you</text>
-<text x="320" y="26" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">EditsMaker is an MCP server. Ask in</text>
-<text x="320" y="45" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">plain words; the agent picks the preset,</text>
-<text x="320" y="64" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">the song and the lines.</text>
-<line x1="0" y1="100.5" x2="296" y2="100.5" stroke="#F4F1EA" stroke-width="1"/>
-<text x="0" y="122" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">You</text>
-<line x1="320" y1="100.5" x2="616" y2="100.5" stroke="#F4F1EA" stroke-width="1"/>
-<text x="320" y="122" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">MCP tools</text>
-<line x1="640" y1="100.5" x2="936" y2="100.5" stroke="#F4F1EA" stroke-width="1"/>
-<text x="640" y="122" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="start" letter-spacing="0">Works with</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="380" viewBox="0 0 1040 380" role="img" aria-label="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
+<rect x="0.5" y="0.5" width="1039" height="379" rx="20" fill="#161B22" stroke="#30363D"/>
+<g transform="translate(40,40)">
+<text x="0" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">Your AI agent</text>
+<text x="0" y="47" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">edits for you</text>
+<text x="320" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">EditsMaker is an MCP server. Ask in plain</text>
+<text x="320" y="46" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">words; the agent picks the preset, the</text>
+<text x="320" y="68" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">song and the lines.</text>
+<line x1="0" y1="100.5" x2="296" y2="100.5" stroke="#30363D" stroke-width="1"/>
+<text x="0" y="122" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#9A958A" text-anchor="start" letter-spacing="0">You</text>
+<line x1="320" y1="100.5" x2="616" y2="100.5" stroke="#30363D" stroke-width="1"/>
+<text x="320" y="122" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#9A958A" text-anchor="start" letter-spacing="0">MCP tools</text>
+<line x1="640" y1="100.5" x2="936" y2="100.5" stroke="#30363D" stroke-width="1"/>
+<text x="640" y="122" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#9A958A" text-anchor="start" letter-spacing="0">Works with</text>
 <text x="0" y="152" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">“Make 3 sad edits from</text>
 <text x="0" y="176" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">@channel with a trending</text>
 <text x="0" y="200" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">song and words from</text>
@@ -31,5 +32,5 @@
 <path transform="translate(640,237) scale(1.0000)" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81" fill="#F4F1EA" fill-rule="evenodd"/>
 <text x="676" y="256" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">Gemini CLI</text>
 <text x="640" y="290" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">any MCP client</text>
-<text x="960" y="336" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="11" fill="#8C877C" text-anchor="end" letter-spacing="0">1.2</text>
+</g>
 </svg>
