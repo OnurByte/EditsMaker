@@ -1,0 +1,160 @@
+//! ffmpeg, ffprobe and yt-dlp, fetched without asking when the machine lacks them: the installers download them
+//! with edits, and a run that finds one missing fetches it first. A static build goes into ~/.config/edits/bin,
+//! checked against the publisher's SHA-256 list, and that folder is on PATH after the user's own: a machine that
+//! already has ffmpeg or yt-dlp keeps using its own. `edits setup` does it by hand.
+use crate::util::{have, home, run};
+use std::path::{Path, PathBuf};
+
+pub fn dir() -> PathBuf {
+    home().join(".config/edits/bin")
+}
+
+fn exe(name: &str) -> String {
+    if cfg!(windows) { format!("{name}.exe") } else { name.to_string() }
+}
+
+/// edits' own tools come after the user's: an installed ffmpeg or yt-dlp wins.
+pub fn add_to_path() {
+    let mut paths: Vec<PathBuf> = std::env::var_os("PATH").map(|p| std::env::split_paths(&p).collect()).unwrap_or_default();
+    if !paths.contains(&dir()) {
+        paths.push(dir());
+        if let Ok(p) = std::env::join_paths(paths) {
+            // set once at start, before any thread runs
+            std::env::set_var("PATH", p);
+        }
+    }
+}
+
+/// Downloads `url` to `to`; curl is on Linux, macOS and Windows 10+.
+fn get(url: &str, to: &Path) -> Result<(), String> {
+    run(None, "curl", &["-fsSL", "--retry", "2", "--max-time", "900", "-o", &to.to_string_lossy(), url]).map(|_| ())
+}
+
+/// The hash a checksum list gives for `name` ("HASH  name" or "HASH *name" per line).
+fn listed(list: &str, name: &str) -> Option<String> {
+    list.lines().find_map(|l| {
+        let (h, f) = l.split_once(char::is_whitespace)?;
+        (f.trim().trim_start_matches('*') == name).then(|| h.trim().to_lowercase())
+    })
+}
+
+fn check(file: &Path, want: Option<String>) -> Result<(), String> {
+    let got = crate::update::sha256(file)?;
+    if want.as_deref() == Some(got.as_str()) { Ok(()) } else { Err(format!("checksum mismatch for {}, nothing installed", file.display())) }
+}
+
+fn install(from: &Path, name: &str) -> Result<(), String> {
+    std::fs::create_dir_all(dir()).map_err(|e| e.to_string())?;
+    let to = dir().join(exe(name));
+    std::fs::copy(from, &to).map_err(|e| format!("{}: {e}", to.display()))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&to, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+fn yt_dlp(tmp: &Path) -> Result<(), String> {
+    let asset = match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("linux", "x86_64") => "yt-dlp_linux",
+        ("linux", "aarch64") => "yt-dlp_linux_aarch64",
+        ("macos", _) => "yt-dlp_macos",
+        ("windows", _) => "yt-dlp.exe",
+        _ => return Err("no yt-dlp build for this machine: install it with pip or your package manager".into()),
+    };
+    let base = "https://github.com/yt-dlp/yt-dlp/releases/latest/download";
+    let (file, sums) = (tmp.join(asset), tmp.join("SHA2-256SUMS"));
+    get(&format!("{base}/{asset}"), &file)?;
+    get(&format!("{base}/SHA2-256SUMS"), &sums)?;
+    check(&file, listed(&std::fs::read_to_string(&sums).unwrap_or_default(), asset))?;
+    install(&file, "yt-dlp")
+}
+
+/// Linux and Windows: BtbN's static GPL builds (with libass, for captions). macOS: Martin Riedl's release builds.
+fn ffmpeg(tmp: &Path) -> Result<(), String> {
+    if cfg!(target_os = "macos") {
+        return ffmpeg_macos(tmp);
+    }
+    let (asset, folder) = match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("linux", "x86_64") => ("ffmpeg-master-latest-linux64-gpl.tar.xz", "ffmpeg-master-latest-linux64-gpl"),
+        ("linux", "aarch64") => ("ffmpeg-master-latest-linuxarm64-gpl.tar.xz", "ffmpeg-master-latest-linuxarm64-gpl"),
+        ("windows", "x86_64") => ("ffmpeg-master-latest-win64-gpl.zip", "ffmpeg-master-latest-win64-gpl"),
+        _ => return Err("no ffmpeg build for this machine: install ffmpeg with your package manager".into()),
+    };
+    let base = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest";
+    let (file, sums) = (tmp.join(asset), tmp.join("checksums.sha256"));
+    get(&format!("{base}/{asset}"), &file)?;
+    get(&format!("{base}/checksums.sha256"), &sums)?;
+    check(&file, listed(&std::fs::read_to_string(&sums).unwrap_or_default(), asset))?;
+    // tar reads .tar.xz on Linux and .zip on Windows 10+ (bsdtar)
+    run(None, "tar", &["-xf", &file.to_string_lossy(), "-C", &tmp.to_string_lossy()])?;
+    for name in ["ffmpeg", "ffprobe"] {
+        install(&tmp.join(folder).join("bin").join(exe(name)), name)?;
+    }
+    Ok(())
+}
+
+fn ffmpeg_macos(tmp: &Path) -> Result<(), String> {
+    let arch = if std::env::consts::ARCH == "aarch64" { "arm64" } else { "amd64" };
+    let site = "https://ffmpeg.martin-riedl.de";
+    let page = tmp.join("index.html");
+    get(site, &page)?;
+    let html = std::fs::read_to_string(&page).unwrap_or_default();
+    // the newest release build (a version number, not a nightly "N-..."), listed newest first
+    let re = regex::Regex::new(&format!(r#"/download/macos/{arch}/\d+_\d+\.\d+(?:\.\d+)?/"#)).unwrap();
+    let dir_url = re.find(&html).map(|m| m.as_str().to_string()).ok_or("no macOS ffmpeg build found: brew install ffmpeg")?;
+    for name in ["ffmpeg", "ffprobe"] {
+        let (zip, sum) = (tmp.join(format!("{name}.zip")), tmp.join(format!("{name}.zip.sha256")));
+        get(&format!("{site}{dir_url}{name}.zip"), &zip)?;
+        get(&format!("{site}{dir_url}{name}.zip.sha256"), &sum)?;
+        let want = std::fs::read_to_string(&sum).unwrap_or_default().split_whitespace().next().map(str::to_lowercase);
+        check(&zip, want)?;
+        run(None, "tar", &["-xf", &zip.to_string_lossy(), "-C", &tmp.to_string_lossy()])?;
+        install(&tmp.join(name), name)?;
+    }
+    Ok(())
+}
+
+/// Downloads whichever of ffmpeg/ffprobe and yt-dlp this machine does not have; one it has is left alone.
+pub fn ensure() -> Result<(), String> {
+    let need_ff = !have("ffmpeg") || !have("ffprobe");
+    let need_yt = !have("yt-dlp");
+    if !need_ff && !need_yt {
+        return Ok(());
+    }
+    let tmp = std::env::temp_dir().join(format!("edits-tools-{}", std::process::id()));
+    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+    let res = (|| {
+        if need_yt {
+            eprintln!("edits: downloading yt-dlp (~40 MB)...");
+            yt_dlp(&tmp)?;
+        }
+        if need_ff {
+            eprintln!("edits: downloading ffmpeg (once, a minute or two)...");
+            ffmpeg(&tmp)?;
+        }
+        Ok(())
+    })();
+    let _ = std::fs::remove_dir_all(&tmp);
+    res
+}
+
+/// Keeps edits' own yt-dlp current (YouTube changes break old ones); only the copy edits installed.
+pub fn update_yt_dlp() {
+    let own = dir().join(exe("yt-dlp"));
+    if own.exists() {
+        let _ = run(None, &own.to_string_lossy(), &["-U"]);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn checksum_lists_are_read_both_ways() {
+        let list = "aaa  yt-dlp_linux\nBBB *ffmpeg-master-latest-win64-gpl.zip\n";
+        assert_eq!(super::listed(list, "yt-dlp_linux").as_deref(), Some("aaa"));
+        assert_eq!(super::listed(list, "ffmpeg-master-latest-win64-gpl.zip").as_deref(), Some("bbb"));
+        assert_eq!(super::listed(list, "yt-dlp"), None, "a prefix is not a match");
+    }
+}

@@ -3,6 +3,7 @@ edits - give it a link, a topic or a file; get finished edits.
 USAGE
   edits <youtube-link | topic | video-file> [options]
   edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
+  edits setup                  fetch ffmpeg and yt-dlp if missing (also done on first use)
   edits info                   version, updates, the author's GitHub and X
   edits update [check|on|off]  install the newest release now; on by default once a day (EDITS_AUTO_UPDATE=0 stops it)
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked

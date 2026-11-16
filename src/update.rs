@@ -46,7 +46,7 @@ fn asset() -> Option<String> {
     Some(if cfg!(windows) { format!("edits-{t}.zip") } else { format!("edits-{t}.tar.gz") })
 }
 
-fn sha256(f: &Path) -> Result<String, String> {
+pub fn sha256(f: &Path) -> Result<String, String> {
     let p = f.to_string_lossy().into_owned();
     let out = if cfg!(windows) {
         run(None, "certutil", &["-hashfile", &p, "SHA256"]).map(|o| o.lines().nth(1).unwrap_or("").replace(' ', ""))
@@ -157,6 +157,7 @@ pub fn auto() {
     }
     let _ = std::fs::create_dir_all(dir());
     let _ = std::fs::write(&stamp, now().to_string());
+    crate::tools::update_yt_dlp();
     if let Ok(tag) = latest() {
         if newer(&tag) {
             eprintln!("edits: updating {} -> {tag} (turn off: edits update off)", env!("CARGO_PKG_VERSION"));

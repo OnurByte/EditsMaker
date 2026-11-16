@@ -23,6 +23,7 @@ mod study;
 mod svg;
 mod talk;
 mod timeline;
+mod tools;
 mod transcribe;
 mod update;
 mod util;
@@ -37,6 +38,15 @@ fn main() -> ExitCode {
     if !matches!(args.first().map(String::as_str), Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help") | None) {
         update::auto();
     }
+    tools::add_to_path();
+    // anything that cuts, measures or downloads gets ffmpeg and yt-dlp first, fetched if missing
+    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "setup" | "mcp" | "skills" | "looks" | "rate" | "trends"))
+        || (args.first().map(String::as_str) == Some("preset") && args.get(1).map(String::as_str) != Some("create"));
+    if !light {
+        if let Err(e) = tools::ensure() {
+            eprintln!("edits: could not download ffmpeg/yt-dlp ({e}); trying the ones this machine has");
+        }
+    }
     let res = match args.first().map(String::as_str) {
         None | Some("-h" | "--help" | "help") => {
             print!("{USAGE}");
@@ -47,6 +57,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
+        Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
         Some("info") => update::info(),
         Some("trends") => fetch::trends(&args.get(1).cloned().unwrap_or_else(|| lang::system().1)).map(|list| {
@@ -1301,10 +1312,10 @@ fn doctor() -> Result<(), String> {
             missing += 1;
         }
     };
-    check(util::have("ffmpeg") && util::have("ffprobe"), "ffmpeg + ffprobe", "install ffmpeg", true);
+    check(util::have("ffmpeg") && util::have("ffprobe"), "ffmpeg + ffprobe", "run `edits setup` (it downloads a static build)", true);
     let libass = util::run(None, "ffmpeg", &["-hide_banner", "-filters"]).is_ok_and(|f| f.contains(" ass "));
     check(libass, "ffmpeg has libass (captions)", "install a full ffmpeg build", true);
-    check(util::have("yt-dlp"), "yt-dlp (links and topics)", "install yt-dlp; local files work without it", false);
+    check(util::have("yt-dlp"), "yt-dlp (links and topics)", "run `edits setup`; local files work without it", false);
     check(util::have("whisper-cli"), "whisper-cli (captions, transcript)", "install whisper.cpp", false);
     let model = transcribe::model();
     check(model.is_some(), &format!("whisper model{}", model.map(|m| format!(": {}", m.display())).unwrap_or_default()),

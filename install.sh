@@ -1,6 +1,6 @@
 #!/bin/sh
 # EditsMaker installer: downloads the prebuilt `edits` binary from GitHub Releases, verifies its SHA-256, installs it.
-# No Rust, no compiler. ffmpeg, yt-dlp and whisper-cli are separate: run `edits doctor` afterwards.
+# No Rust, no compiler. ffmpeg and yt-dlp come along: `edits setup` downloads them at the end (whisper-cli is optional).
 #   EDITS_VERSION=v0.1.0   pick a release (default: latest)
 #   EDITS_BIN=~/bin        install directory (default: ~/.local/bin)
 set -eu
@@ -35,4 +35,5 @@ mkdir -p "$BIN"
 install -m 755 "$TMP/edits" "$BIN/edits"
 echo "edits: installed $("$BIN/edits" --version) to $BIN/edits"
 case ":$PATH:" in *":$BIN:"*) ;; *) echo "edits: add $BIN to your PATH" ;; esac
-echo "edits: next -> edits doctor"
+# ffmpeg and yt-dlp, if this machine lacks them: static builds into ~/.config/edits/bin, checksum checked
+"$BIN/edits" setup || echo "edits: ffmpeg/yt-dlp download failed; edits tries again on first use"
