@@ -31,6 +31,9 @@ edits preset list
 - Premiere Lumetri colour presets are opaque binary inside `.prfpset`: export the look from Lumetri as a `.cube`
   and use it with `--lut` instead. DaVinci Resolve `.setting` packs are not read.
 - Premiere `.prfpset` / `.prfpset.xml` files become cut moves (spins, whips, slides, zooms) that music edits put on the hardest beats.
+- Alight's Transform effect adds its zoom and tilt to the shot, a wipe becomes a slide in, fade a dip from or to
+  black, jaws (ccjaws) a close and open in its colour, a noise layer grain, a drop shadow a vignette. Title styling
+  (letter spacing, bevels, gradient plates) is counted apart: give it a caption style (`heisty` is one).
 - Alight adjustment layers ("copy background" shapes with effects on them) become hits on the shots under them:
   blur pulses, brightening (exposure, contrast, glow passes), shakes, RGB splits, inversions, saturation pops.
 - The import says which effects it could not carry over (`effects not carried over: wipe2 x7, ...`): those are

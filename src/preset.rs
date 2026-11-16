@@ -469,6 +469,17 @@ fn rest_scale(scale: &Curve) -> f64 {
     if framed == f64::MAX { 1.0 } else { framed }
 }
 
+/// Two curves into one, `f(a, b)` at every key of either; an empty `a` counts as `id`. Each key keeps the easing of
+/// the curve it came from.
+fn combine(a: &Curve, b: Option<&Curve>, id: f64, f: impl Fn(f64, f64) -> f64) -> Curve {
+    let Some(b) = b.filter(|b| !b.is_empty()) else { return a.clone() };
+    let a = if a.is_empty() { Curve::constant(id) } else { a.clone() };
+    let mut keys: Vec<(f64, f64, Ease)> = a.keys.iter().chain(&b.keys).map(|k| (k.0, f(a.at(k.0), b.at(k.0)), k.2)).collect();
+    keys.sort_by(|p, q| p.0.total_cmp(&q.0));
+    keys.dedup_by(|p, q| (p.0 - q.0).abs() < 1e-6);
+    Curve { keys }
+}
+
 fn transform(n: Node, prop: &str, comp: usize) -> Option<Curve> {
     curve(n.children().find(|c| c.has_tag_name("transform"))?.children().find(|c| c.has_tag_name(prop))?, comp)
 }
@@ -528,14 +539,33 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         .or_else(|| effect_prop(x, "lensblurobs", "progressa").map(|c| c.map(|v| v / 0.3)))
         .or_else(|| effect_prop(x, "zoomblur3", "strength"))).unwrap_or_default();
     let saturation = both(&|x| effect_prop(x, "satvib", "saturation")).map_or(1.0, |c| (1.0 + c.max()).clamp(0.0, 2.0));
+    // Alight's Transform effect: a zoom (posz, a factor), a turn (angle, degrees) and an offset on top of the layer's own
+    let t2 = |p: &str| both(&|x| effect_prop(x, "transform2", p)).or_else(|| parent(n).and_then(|q| effect_prop(q, "transform2", p)));
+    let zoom = combine(&scale.map(|v| (v.abs() / lo).max(0.05)), t2("posz").as_ref(), 1.0, |a, b| a * b.abs().max(0.05));
+    // shortcut: posx/posy read as pixels; every pack seen so far leaves them at 0
+    let mut x = combine(&moved(tf("location", 0), w), t2("posx").map(|c| c.map(|v| v / w)).as_ref(), 0.0, |a, b| a + b);
+    let mut y = combine(&moved(tf("location", 1), h), t2("posy").map(|c| c.map(|v| v / h)).as_ref(), 0.0, |a, b| a + b);
+    let rot = combine(&tf("rotation", 0).filter(Curve::is_moving).unwrap_or_default(), t2("angle").as_ref(), 0.0, |a, b| a + b);
+    // a wipe revealing the shot: it slides in from the side the wipe opens from, over the wipe's own keys
+    if let Some((c, from_end)) = both(&|x| effect_prop(x, "wipe2", "end")).filter(Curve::is_moving).map(|c| (c, true))
+        .or_else(|| both(&|x| effect_prop(x, "wipe2", "start")).filter(Curve::is_moving).map(|c| (c, false))) {
+        let shown = |v: f64| if from_end { v } else { 1.0 - v }.clamp(0.0, 1.0);
+        let slide = c.map(|v| (shown(v) - 1.0) * 0.5);
+        let angle = both(&|x| effect_prop(x, "wipe2", "angle")).map_or(90.0, |c| c.at(0.0));
+        let side = if (angle.rem_euclid(180.0) - 90.0).abs() < 45.0 { &mut x } else { &mut y };
+        if !side.is_moving() {
+            *side = slide;
+        }
+    }
+    let shadow = has_effect(n, "dropshadow") || has_effect(m, "dropshadow");
     Some(Slot {
         start,
         end,
         speed: (speed(n) * if m != n { speed(m) } else { 1.0 }).clamp(0.1, 8.0),
-        zoom: Some(scale.map(|v| (v.abs() / lo).max(0.05))).filter(|z| z.is_moving() || z.max() > 1.001).unwrap_or_default(),
-        x: moved(tf("location", 0), w),
-        y: moved(tf("location", 1), h),
-        rot: tf("rotation", 0).filter(Curve::is_moving).unwrap_or_default(),
+        zoom: Some(zoom).filter(|z| z.is_moving() || z.max() > 1.001).unwrap_or_default(),
+        x: Some(x).filter(Curve::is_moving).unwrap_or_default(),
+        y: Some(y).filter(Curve::is_moving).unwrap_or_default(),
+        rot: Some(rot).filter(Curve::is_moving).unwrap_or_default(),
         shake,
         shake_hz: hz,
         blur,
@@ -544,9 +574,10 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         hue: Curve::default(),
         contrast: 1.0,
         kelvin: 0.0,
-        vignette: 0.0,
+        // a drop shadow on footage darkens what is around it
+        vignette: if shadow { 0.25 } else { 0.0 },
         grain: 0.0,
-        glow: 0.0,
+        glow: if has_effect(n, "edgeglow") || has_effect(m, "edgeglow") { 0.3 } else { 0.0 },
         sharpen: 0.0,
         pixelate: 0.0,
         lens: 0.0,
@@ -562,7 +593,12 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
 /// Effects every importer path understands (on a footage layer or an adjustment layer); the rest are reported.
 const READ: &[&str] = &["lift", "tile", "mirror", "oscillate3", "shake2", "randomdisplace", "jitter", "gaussianblur", "innerblur", "fastboxblur", "lensblurobs",
     "zoomblur3", "spinblur2", "motionblur", "motionblur2", "motionblur4", "moblurplus", "exposure", "brightcont2", "highlightshadow", "threshold",
-    "deepglow", "deepglow2", "softglow", "edgeglow", "satvib", "rgbsepnew", "chromabbr", "chromaticzoomblur", "invert", "blink2"];
+    "deepglow", "deepglow2", "softglow", "edgeglow", "satvib", "rgbsepnew", "chromabbr", "chromaticzoomblur", "invert", "blink2",
+    "transform2", "wipe2", "fade", "ccjaws", "turbulence2", "dropshadow"];
+
+/// Effects that only dress titles and logos (letter spacing, bevels, a gradient plate, a line drawing itself): they
+/// belong to a caption style (captions.json: `spacing`, `glow`, `outline`, `shadow`), not to a shot.
+const TITLE: &[&str] = &["textspacing", "smoothbevel", "smoothbevelnew", "gradientoverlay2", "progress"];
 
 /// An adjustment layer ("copy background" on a shape: Alight's way of putting an effect over everything under it
 /// for a moment) as hits on the shots it covers: a blur pulse, a brightening (exposure, contrast, glow passes),
@@ -605,15 +641,68 @@ fn adjust(n: Node, slots: &mut [Slot], w: f64) {
     }
 }
 
+/// Where a layer sits on the project's timeline: its own start plus the starts of the groups around it.
+fn abs_span(n: Node) -> Option<(f64, f64)> {
+    let at: f64 = n.ancestors().skip(1).filter(|a| a.has_tag_name("embedScene")).filter_map(|a| ms(a, "startTime")).sum();
+    Some((at + ms(n, "startTime")?, at + ms(n, "endTime")?))
+}
+
+/// A colour property of an effect, "#AARRGGBB" in the project, as "rrggbb".
+fn effect_color(n: Node, effect: &str, prop: &str) -> Option<String> {
+    let e = n.children().find(|c| c.has_tag_name("effect") && c.attribute("id").is_some_and(|i| i.ends_with(effect)))?;
+    let v = e.children().find(|p| p.has_tag_name("property") && p.attribute("name") == Some(prop))?.attribute("value")?.trim_start_matches('#');
+    Some(if v.len() == 8 { &v[2..] } else { v }.to_string())
+}
+
+/// Effects that join shots rather than sit on one: fades from and to black (fade), jaws closing over the picture
+/// and opening again (ccjaws) as flashes in their colour, and a noise texture over the frame (turbulence2) as grain.
+fn transitions(doc: &Document, slots: &mut [Slot], flashes: &mut Vec<Flash>) {
+    for n in doc.descendants().filter(|d| d.is_element()) {
+        let Some((a, b)) = abs_span(n) else { continue };
+        if has_effect(n, "fade") && media(n).is_some() {
+            let secs = |p: &str| effect_prop(n, "fade", p).map_or(0.0, |c| c.at(0.0)).clamp(0.0, (b - a) / 2.0);
+            let (fin, fout) = (secs("inTime"), secs("outTime"));
+            let dip = |start: f64, end: f64, keys: [(f64, f64); 2]| Flash { start, end, color: "000000".into(), blink: false,
+                opacity: Curve { keys: keys.iter().map(|k| (k.0, k.1, Ease::Linear)).collect() } };
+            if fin > 0.01 {
+                flashes.push(dip(a, a + fin, [(0.0, 1.0), (1.0, 0.0)]));
+            }
+            if fout > 0.01 {
+                flashes.push(dip(b - fout, b, [(0.0, 0.0), (1.0, 1.0)]));
+            }
+        }
+        if has_effect(n, "ccjaws") {
+            // PROGRESS runs between open and closed: its own range, as 0 (open) .. 1 (closed)
+            if let Some(c) = effect_prop(n, "ccjaws", "PROGRESS").filter(Curve::is_moving) {
+                let (lo, hi) = (c.min(), c.max());
+                flashes.push(Flash { start: a, end: b, color: effect_color(n, "ccjaws", "color1").unwrap_or("000000".into()), blink: false,
+                    opacity: c.map(|v| (v - lo) / (hi - lo)) });
+            }
+        }
+        if has_effect(n, "turbulence2") && n.has_tag_name("shape") && n.attribute("fillType") == Some("color") {
+            let k = effect_prop(n, "turbulence2", "intensity").map_or(1.0, |c| c.max()) * effect_prop(n, "turbulence2", "alpha").map_or(1.0, |c| c.max());
+            for s in slots.iter_mut().filter(|s| s.start < b && s.end > a) {
+                s.grain = s.grain.max((k * 0.35).clamp(0.0, 1.0));
+            }
+        }
+    }
+}
+
 /// Says which effects a project uses that no preset can carry yet, so the gaps are known instead of silent.
 fn report_unread(doc: &Document, name: &str) {
     let mut unread: std::collections::BTreeMap<&str, usize> = Default::default();
+    let mut titles = 0;
     for e in doc.descendants().filter(|d| d.has_tag_name("effect")) {
         if let Some(id) = e.attribute("id").and_then(|i| i.rsplit('.').next()) {
-            if !READ.contains(&id) {
+            if TITLE.contains(&id) {
+                titles += 1;
+            } else if !READ.contains(&id) {
                 *unread.entry(id).or_default() += 1;
             }
         }
+    }
+    if titles > 0 {
+        eprintln!("edits: {name}: {titles} title/logo styling effects (spacing, bevels, gradient plates) left to caption styles");
     }
     if !unread.is_empty() {
         let mut v: Vec<_> = unread.into_iter().collect();
@@ -678,10 +767,12 @@ pub fn parse(xml: &str, name: &str) -> Result<Preset, String> {
         collect(*n, 0.0, w, h, &mut slots);
     }
     slots.sort_by(|a, b| a.start.total_cmp(&b.start));
-    let flashes = top.iter().filter_map(|n| flash(*n, w, h)).collect();
+    let mut flashes: Vec<Flash> = top.iter().filter_map(|n| flash(*n, w, h)).collect();
     for n in &top {
         adjust(*n, &mut slots, w);
     }
+    transitions(&doc, &mut slots, &mut flashes);
+    flashes.sort_by(|a, b| a.start.total_cmp(&b.start));
     report_unread(&doc, name);
     // the song is the longest sound in the project
     let song = root.descendants().filter(|d| d.has_tag_name("audio"))
@@ -1025,6 +1116,30 @@ mod tests {
         assert_eq!((p.flashes[0].color.as_str(), p.flashes[0].blink), ("ffffff", false));
         assert_eq!(p.song, Some(Song { title: "Montagem Royal - Slowed & Reverb".into(), from: 6.484 }));
         assert!(parse("<nope/>", "x").is_err() && parse("garbage", "x").is_err());
+    }
+
+    #[test]
+    fn transform_fade_and_jaws_carry_over() {
+        let xml = r##"<scene width="1000" height="1000" totalTime="3000">
+<embedScene startTime="1000" endTime="3000"><scene width="1000" height="1000">
+ <shape startTime="0" endTime="2000" fillType="media" fillVideo="a.mp4">
+  <effect id="com.alightcreative.effects.transform2"><property name="posz"><kf t="0" v="1"/><kf t="1" v="1.5"/></property>
+   <property name="angle"><kf t="0" v="0"/><kf t="1" v="20"/></property><property name="posx" value="0"/></effect>
+  <effect id="com.alightcreative.effects.fade"><property name="inTime" value="0"/><property name="outTime" value="0.2"/></effect>
+ </shape></scene></embedScene>
+<shape startTime="0" endTime="1000" fillType="media" fillVideo="b.mp4"/>
+<shape startTime="500" endTime="1000" fillType="color"><effect id="com.alightcreative.effects.lift"/>
+ <effect id="com.alightcreative.effects.ccjaws"><property name="PROGRESS"><kf t="0" v="-6"/><kf t="1" v="-4"/></property><property name="color1" value="#ffffffff"/></effect></shape>
+</scene>"##;
+        let p = parse(xml, "t").unwrap();
+        let a = p.slots.iter().find(|s| s.start == 0.0).unwrap();
+        assert!(a.zoom.is_empty() && a.x.is_empty());
+        let b = p.slots.iter().find(|s| s.start == 1.0).unwrap();
+        assert_eq!((b.zoom.at(0.0), b.zoom.at(1.0), b.rot.at(1.0)), (1.0, 1.5, 20.0));
+        assert!(b.x.is_empty()); // a still posx of 0 is no move
+        // the group's fade-out ends on the timeline at 3 s, the jaws close white over 0.5..1 s
+        let f: Vec<_> = p.flashes.iter().map(|f| (f.start, f.end, f.color.as_str(), f.opacity.at(1.0))).collect();
+        assert!(f.contains(&(0.5, 1.0, "ffffff", 1.0)) && f.iter().any(|x| (x.0 - 2.8).abs() < 1e-9 && x.1 == 3.0 && x.2 == "000000"), "{f:?}");
     }
 
     #[test]
