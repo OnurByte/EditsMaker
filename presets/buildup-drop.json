@@ -1,0 +1,371 @@
+{
+  "name": "buildup-drop",
+  "about": "made for edits: 5.6 s of slow push-ins (reactions, the walk-in, his face), a held beat leaning in, a white flash on the drop, 24 punch cuts with shakes and RGB hits, one held shot to land. Put the voice line on the held beat (--say) and pick the shots by hand (--shot)",
+  "w": 1080,
+  "h": 1920,
+  "total": 18.0,
+  "song": null,
+  "look": null,
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 1.6,
+      "speed": 0.85,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 1.08, "inout 2"]
+      ]
+    },
+    {
+      "start": 1.6,
+      "end": 3.0,
+      "speed": 0.85,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 1.08, "inout 2"]
+      ]
+    },
+    {
+      "start": 3.0,
+      "end": 4.4,
+      "speed": 0.85,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 1.08, "inout 2"]
+      ]
+    },
+    {
+      "start": 4.4,
+      "end": 5.6,
+      "speed": 0.85,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 1.18, "inout 2"]
+      ]
+    },
+    {
+      "start": 5.6,
+      "end": 6.2,
+      "speed": 0.6,
+      "zoom": [
+        [0.0, 1.18, "linear"],
+        [1.0, 1.3, "in 3"]
+      ],
+      "exposure": [
+        [0.0, 0.0, "linear"],
+        [0.7, 0.0, "linear"],
+        [1.0, 0.6, "in 3"]
+      ]
+    },
+    {
+      "start": 6.2,
+      "end": 6.6,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 6.6,
+      "end": 7.0,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ]
+    },
+    {
+      "start": 7.0,
+      "end": 7.4,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 7.4,
+      "end": 7.8,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "rgb": true
+    },
+    {
+      "start": 7.8,
+      "end": 8.2,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 8.2,
+      "end": 8.6,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ]
+    },
+    {
+      "start": 8.6,
+      "end": 9.0,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 9.0,
+      "end": 9.4,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "rgb": true
+    },
+    {
+      "start": 9.4,
+      "end": 9.8,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 9.8,
+      "end": 10.2,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ]
+    },
+    {
+      "start": 10.2,
+      "end": 10.6,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 10.6,
+      "end": 11.0,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "rgb": true
+    },
+    {
+      "start": 11.0,
+      "end": 11.4,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 11.4,
+      "end": 11.8,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ]
+    },
+    {
+      "start": 11.8,
+      "end": 12.2,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 12.2,
+      "end": 12.6,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "rgb": true
+    },
+    {
+      "start": 12.6,
+      "end": 13.0,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 13.0,
+      "end": 13.4,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ]
+    },
+    {
+      "start": 13.4,
+      "end": 13.8,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 13.8,
+      "end": 14.2,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "rgb": true
+    },
+    {
+      "start": 14.2,
+      "end": 14.6,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 14.6,
+      "end": 15.0,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ]
+    },
+    {
+      "start": 15.0,
+      "end": 15.4,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "shake": [
+        [0.0, 0.035, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 15.4,
+      "end": 15.8,
+      "zoom": [
+        [0.0, 1.28, "linear"],
+        [0.45, 1.0, "out 4"]
+      ],
+      "rgb": true
+    },
+    {
+      "start": 15.8,
+      "end": 18.0,
+      "speed": 0.8,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [1.0, 1.0, "out 2"]
+      ]
+    }
+  ],
+  "flashes": [
+    {
+      "start": 6.2,
+      "end": 6.45,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 1.0, "linear"],
+        [1.0, 0.0, "out 3"]
+      ]
+    },
+    {
+      "start": 9.35,
+      "end": 9.55,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.8, "linear"],
+        [1.0, 0.0, "out 3"]
+      ]
+    },
+    {
+      "start": 12.55,
+      "end": 12.75,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.8, "linear"],
+        [1.0, 0.0, "out 3"]
+      ]
+    }
+  ]
+}

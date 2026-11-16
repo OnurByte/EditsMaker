@@ -913,14 +913,15 @@ pub fn video_file(id: &str, url: &str, cache: &Path) -> Result<PathBuf, String> 
     let work = cache.join(safe(id));
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
     let cached = std::fs::read_dir(&work).into_iter().flatten().flatten().map(|e| e.path())
-        .find(|p| p.file_stem().is_some_and(|s| s == "v") && p.extension().is_some_and(|e| e != "part"));
+        .find(|p| p.file_stem().is_some_and(|s| s == "hd") && p.extension().is_some_and(|e| e != "part"));
     let v = match cached {
         Some(v) => v,
         None => {
-            // picture only: the song replaces the sound
+            // picture only: the song replaces the sound. 1080p, not 720: a 9:16 crop of a 720p video is 405 pixels
+            // wide and came out 2.7x upscaled before any zoom, the main reason edits looked soft
             let out = yt(&[
-                "--no-warnings", "--no-progress", "--no-playlist", "-f", "bv*[height<=720][ext=mp4]/bv*[height<=720]/b[height<=720]",
-                "--print", "after_move:filepath", "-o", &work.join("v.%(ext)s").to_string_lossy(), "--", url,
+                "--no-warnings", "--no-progress", "--no-playlist", "-f", "bv*[height<=1080][ext=mp4]/bv*[height<=1080]/b[height<=1080]/b",
+                "--print", "after_move:filepath", "-o", &work.join("hd.%(ext)s").to_string_lossy(), "--", url,
             ])?;
             out.lines().map(str::trim).rfind(|l| !l.is_empty()).map(PathBuf::from).ok_or("yt-dlp reported no file")?
         }

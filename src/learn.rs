@@ -80,8 +80,11 @@ fn median(v: &mut [f64]) -> f64 {
 }
 
 /// Frame numbers where a new shot starts, and frames that flash (bright for a moment, then back).
-pub fn cuts_and_flashes(g: &[Vec<u8>]) -> (Vec<usize>, Vec<usize>) {
+/// `fps`: shots shorter than 0.1 s are not cuts (at 60 fps three frames were 0.05 s, and a learned preset filled
+/// those 1.5-frame slots with random footage: a flicker).
+pub fn cuts_and_flashes(g: &[Vec<u8>], fps: f64) -> (Vec<usize>, Vec<usize>) {
     let n = g.len();
+    let gap = ((0.1 * fps).round() as usize).max(3);
     let d: Vec<f64> = (0..n).map(|i| if i == 0 { 0.0 } else { change(&g[i - 1], &g[i]) }).collect();
     let l: Vec<f64> = g.iter().map(|f| luma(f)).collect();
     let mut flashes = vec![];
@@ -93,7 +96,7 @@ pub fn cuts_and_flashes(g: &[Vec<u8>]) -> (Vec<usize>, Vec<usize>) {
         if flash {
             flashes.push(i);
             // a flash can hide a cut: compare what came before with what came after
-            if change(&g[i - 1], &g[back]) > CUT_MIN * 1.5 && back - cuts[cuts.len() - 1] >= 3 {
+            if change(&g[i - 1], &g[back]) > CUT_MIN * 1.5 && back - cuts[cuts.len() - 1] >= gap {
                 cuts.push(back);
             }
             i = back + 1;
@@ -101,7 +104,7 @@ pub fn cuts_and_flashes(g: &[Vec<u8>]) -> (Vec<usize>, Vec<usize>) {
         }
         let mut local: Vec<f64> = d[i.saturating_sub(15)..(i + 16).min(n)].to_vec();
         let typical = median(&mut local);
-        if d[i] > CUT_MIN.max(CUT_K * typical) && i - cuts[cuts.len() - 1] >= 3 {
+        if d[i] > CUT_MIN.max(CUT_K * typical) && i - cuts[cuts.len() - 1] >= gap {
             cuts.push(i);
         }
         i += 1;
@@ -254,7 +257,7 @@ fn shot(g: &[Vec<u8>], w: usize, h: usize, start: f64, end: f64) -> Slot {
 /// The whole edit as a preset named `name`.
 pub fn learn(video: &Path, name: &str) -> Result<Preset, String> {
     let f = frames(video)?;
-    let (cuts, flashes) = cuts_and_flashes(&f.gray);
+    let (cuts, flashes) = cuts_and_flashes(&f.gray, f.fps);
     let n = f.gray.len();
     let t = |i: usize| i as f64 / f.fps;
     let slots: Vec<Slot> = cuts.iter().enumerate().map(|(k, &a)| {
@@ -303,8 +306,13 @@ mod tests {
         // a white flash in the second shot that is gone two frames later
         g[14] = vec![250; w * h];
         g.extend((0..10).map(|_| frame(w, h, 0.0, 0.0, 1.0, 13)));
-        let (cuts, flashes) = cuts_and_flashes(&g);
+        let (cuts, flashes) = cuts_and_flashes(&g, 30.0);
         assert_eq!(cuts, vec![0, 10, 20], "{flashes:?}");
         assert_eq!(flashes, vec![14]);
+        // at 60 fps, 3 frames is 0.05 s: too short to be a shot
+        let mut g60: Vec<Vec<u8>> = (0..10).map(|_| frame(w, h, 0.0, 0.0, 1.0, 1)).collect();
+        g60.extend((0..3).map(|_| frame(w, h, 0.0, 0.0, 1.0, 7).iter().map(|v| v / 3).collect::<Vec<u8>>()));
+        g60.extend((0..10).map(|_| frame(w, h, 0.0, 0.0, 1.0, 13)));
+        assert_eq!(cuts_and_flashes(&g60, 60.0).0, vec![0, 10], "a 3-frame shot at 60 fps is not its own shot");
     }
 }
