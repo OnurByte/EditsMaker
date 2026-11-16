@@ -565,7 +565,16 @@ pub fn slug(name: &str) -> String {
     if s.is_empty() { "preset".into() } else { s }
 }
 
-/// Every Alight Motion project (.xml) in a zip, folder or file.
+/// A CapCut draft's timeline: draft_content.json, or draft_info.json when there is no draft_content.json beside it.
+fn is_capcut(p: &Path) -> bool {
+    match p.file_name().and_then(|n| n.to_str()) {
+        Some("draft_content.json") => true,
+        Some("draft_info.json") => !p.with_file_name("draft_content.json").exists(),
+        _ => false,
+    }
+}
+
+/// Every Alight Motion project (.xml) and CapCut draft in a zip, folder or file.
 pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
     let tmp = std::env::temp_dir().join(format!("edits-preset-{}", std::process::id()));
     let root = if src.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip")) {
@@ -575,17 +584,32 @@ pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
     } else {
         src.to_path_buf()
     };
-    let mut files = vec![];
+    let (mut files, mut drafts) = (vec![], vec![]);
     let mut stack = vec![root.clone()];
     while let Some(p) = stack.pop() {
         if p.is_dir() {
             stack.extend(std::fs::read_dir(&p).map_err(|e| e.to_string())?.flatten().map(|e| e.path()));
         } else if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("xml")) && !p.to_string_lossy().to_lowercase().contains(".prfpset") {
             files.push(p); // Premiere's .prfpset.xml are cut moves, read elsewhere
+        } else if is_capcut(&p) {
+            drafts.push(p);
         }
     }
     files.sort();
+    drafts.sort();
     let mut out = vec![];
+    for f in drafts {
+        // the draft's name as CapCut shows it; its folder is often only an id
+        let dir = f.parent().unwrap_or(Path::new("."));
+        let shown = std::fs::read_to_string(dir.join("draft_meta_info.json")).ok().and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+            .and_then(|v| v["draft_name"].as_str().map(String::from)).filter(|n| !n.trim().is_empty())
+            .unwrap_or_else(|| dir.file_name().unwrap_or_default().to_string_lossy().into_owned());
+        let text = std::fs::read_to_string(&f).unwrap_or_else(|_| String::from_utf8_lossy(&std::fs::read(&f).unwrap_or_default()).into_owned());
+        match crate::capcut::parse(&text, shown.trim()) {
+            Ok(p) => out.push(p),
+            Err(e) => eprintln!("edits: skipped {}: {e}", f.display()),
+        }
+    }
     for f in files {
         let xml = std::fs::read_to_string(&f).map_err(|e| e.to_string())?;
         match parse(&xml, f.file_stem().unwrap_or_default().to_string_lossy().trim()) {
