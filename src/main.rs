@@ -989,27 +989,40 @@ fn said(a: &Analysed, m: &pick::Moment) -> String {
 }
 
 /// --say VIDEO@A-B+C-D: stretches of one video said as one line (an offer, then the answer to it), joined into one
-/// sound with their words moved onto its clock. None when the line is a single stretch.
+/// sound with their words moved onto its clock; a bare number between them is that many seconds of silence. None when the line is a single stretch.
 fn joined_say(want: &str, spoken: &[Analysed], cache: &Path) -> Option<Result<(Analysed, pick::Moment), String>> {
     let (id, ranges) = want.rsplit_once('@')?;
     if !ranges.contains('+') {
         return None;
     }
     let join = || -> Result<(Analysed, pick::Moment), String> {
-        let parts: Vec<(usize, pick::Moment)> = ranges.split('+')
-            .map(|r| by_hand(&format!("{id}@{r}"), spoken).ok_or(format!("--say {want}: nothing said in {r}"))).collect::<Result<_, _>>()?;
-        let a = &spoken[parts[0].0];
+        // each stretch is FROM-TO in the video, or bare seconds of silence between two (a cut to someone else)
+        let parts: Vec<Option<(usize, pick::Moment)>> = ranges.split('+').map(|r| {
+            if r.contains('-') { by_hand(&format!("{id}@{r}"), spoken).map(Some).ok_or(format!("--say {want}: nothing said in {r}")) }
+            else { r.parse::<f64>().ok().filter(|g| *g > 0.0).map(|g| None.filter(|_: &(usize, pick::Moment)| g < 0.0)).ok_or(format!("--say {want}: {r} is not seconds of silence")) }
+        }).collect::<Result<_, _>>()?;
+        let gaps: Vec<f64> = ranges.split('+').map(|r| if r.contains('-') { 0.0 } else { r.parse().unwrap_or(0.0) }).collect();
+        let first = parts.iter().flatten().next().ok_or(format!("--say {want}: no words"))?;
+        let a = &spoken[first.0];
         let out = cache.join(format!("say-{}.wav", fetch::safe(&format!("{id}-{ranges}"))));
         let audio = a.src.audio.to_string_lossy().into_owned();
         let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into()];
-        for (_, m) in &parts {
-            args.extend(["-ss".into(), format!("{:.3}", m.start), "-t".into(), format!("{:.3}", m.end - m.start), "-i".into(), audio.clone()]);
+        for (p, g) in parts.iter().zip(&gaps) {
+            match p {
+                Some((_, m)) => args.extend(["-ss".into(), format!("{:.3}", m.start), "-t".into(), format!("{:.3}", m.end - m.start), "-i".into(), audio.clone()]),
+                None => args.extend(["-f".into(), "lavfi".into(), "-t".into(), format!("{g:.3}"), "-i".into(), "anullsrc=r=48000:cl=stereo".into()]),
+            }
         }
-        let ins: String = (0..parts.len()).map(|k| format!("[{k}:a]")).collect();
-        args.extend(["-filter_complex".into(), format!("{ins}concat=n={}:v=0:a=1[a]", parts.len()), "-map".into(), "[a]".into(), "-ar".into(), "48000".into(), out.to_string_lossy().into_owned()]);
+        let same: String = (0..parts.len()).map(|k| format!("[{k}:a]aformat=sample_rates=48000:channel_layouts=stereo[a{k}];")).collect();
+        let ins: String = (0..parts.len()).map(|k| format!("[a{k}]")).collect();
+        args.extend(["-filter_complex".into(), format!("{same}{ins}concat=n={}:v=0:a=1[a]", parts.len()), "-map".into(), "[a]".into(), out.to_string_lossy().into_owned()]);
         util::run(None, "ffmpeg", &args.iter().map(String::as_str).collect::<Vec<_>>())?;
         let (mut words, mut at, mut punch) = (vec![], 0.0, 0.0);
-        for (_, m) in &parts {
+        for (p, g) in parts.iter().zip(&gaps) {
+            let Some((_, m)) = p else {
+                at += g;
+                continue;
+            };
             words.extend(a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).map(|w| transcribe::Word { s: w.s - m.start + at, e: w.e - m.start + at, t: w.t.clone() }));
             punch = m.punch - m.start + at;
             at += m.end - m.start;
@@ -1522,6 +1535,10 @@ mod tests {
 
     #[test]
     fn an_offer_and_its_answer_join_into_one_line() {
+        // shortcut: needs ffmpeg, which the CI runner lacks; it runs wherever edits renders
+        if crate::util::run(None, "ffmpeg", &["-version"]).is_err() {
+            return;
+        }
         let dir = std::env::temp_dir().join(format!("edits-say-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let audio = dir.join("x.wav");
@@ -1530,10 +1547,10 @@ mod tests {
         let src = crate::fetch::Source { local: None, url: String::new(), work: dir.clone(), wav: audio.clone(), audio, id: "x".into(), title: String::new(),
             duration: 10.0, language: String::new(), heat: vec![], comments: vec![] };
         let spoken = vec![super::Analysed { src, words: vec![w(1.0, 2.0, "seç."), w(2.0, 3.0, "oturma"), w(6.0, 7.0, "memnunum.")], lines: vec![], moments: vec![], curve: vec![] }];
-        let (a, m) = super::joined_say("x@0.9-1.9+5.9-6.9", &spoken, &dir).unwrap().unwrap();
+        let (a, m) = super::joined_say("x@0.9-1.9+1.5+5.9-6.9", &spoken, &dir).unwrap().unwrap();
         let said: Vec<&str> = a.words.iter().map(|w| w.t.as_str()).collect();
         assert_eq!(said, ["seç.", "memnunum."], "the words between the two stretches are left out");
-        assert!((a.words[1].s - (m.end - 1.0 - 0.25 + 0.0)).abs() < 0.3, "the answer follows the offer on the joined clock: {:?} {m:?}", a.words);
+        assert!((a.words[1].s - a.words[0].s - (1.98 - 0.95) - 1.5).abs() < 0.05, "the answer comes after the offer and the 1.5 s pause: {:?} {m:?}", a.words);
         let len = crate::fetch::duration(&a.src.audio).unwrap();
         assert!((len - m.end).abs() < 0.1, "the joined sound is as long as the line: {len} vs {}", m.end);
         assert!(super::joined_say("x@0.9-1.9", &spoken, &dir).is_none(), "one stretch is an ordinary --say");
