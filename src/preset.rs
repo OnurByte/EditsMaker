@@ -579,7 +579,7 @@ pub fn read_all(src: &Path) -> Result<Vec<Preset>, String> {
     let tmp = std::env::temp_dir().join(format!("edits-preset-{}", std::process::id()));
     let root = if src.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip")) {
         let _ = std::fs::remove_dir_all(&tmp);
-        crate::util::run(None, "unzip", &["-q", "-o", &src.to_string_lossy(), "-d", &tmp.to_string_lossy()])?;
+        crate::util::unzip(src, &tmp)?;
         tmp.clone()
     } else {
         src.to_path_buf()

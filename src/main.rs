@@ -439,8 +439,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
 /// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then "HH.MM what it was made from".
 fn auto_out(input: &str) -> PathBuf {
     let base = std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"));
-    let now = util::run(None, "date", &["+%F %H.%M"]).unwrap_or_default();
-    let (day, time) = now.trim().split_once(' ').unwrap_or(("undated", "00.00"));
+    let (day, time) = util::now().unwrap_or(("undated".into(), "00.00".into()));
     let dir = base.join(day).join(format!("{time} {}", folder_name(&subject(input))));
     // a second run in the same minute on the same footage gets its own folder, never overwrites
     (1..).map(|k| if k == 1 { dir.clone() } else { PathBuf::from(format!("{} ({k})", dir.display())) }).find(|d| !d.exists()).unwrap()

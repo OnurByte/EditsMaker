@@ -83,12 +83,19 @@ fn install(tag: &str) -> Result<(), String> {
             std::fs::set_permissions(&next, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
         }
         // a running exe can be renamed but not replaced on Windows; on unix the rename alone is atomic
+        let old = exe.with_extension("old");
         if cfg!(windows) {
-            let old = exe.with_extension("old");
             let _ = std::fs::remove_file(&old);
             std::fs::rename(&exe, &old).map_err(|e| e.to_string())?;
         }
-        std::fs::rename(&next, &exe).map_err(|e| e.to_string())
+        std::fs::rename(&next, &exe).map_err(|e| {
+            // put the old one back, so a failed update never leaves no edits at all
+            if cfg!(windows) {
+                let _ = std::fs::rename(&old, &exe);
+            }
+            let _ = std::fs::remove_file(&next);
+            e.to_string()
+        })
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     res
