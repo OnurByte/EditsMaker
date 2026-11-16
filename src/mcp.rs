@@ -44,7 +44,7 @@ fn tools() -> Value {
             "join": {"type": "boolean", "description": "also join all clips into joined.mp4"},
             "no_jumpcuts": {"type": "boolean"}, "no_sfx": {"type": "boolean", "description": "no made whoosh/boom (use for quiet, emotional edits)"},
             "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
-            "tag": {"type": "string"}, "out": {"type": "string", "description": "output folder; leave it out: every run then gets its own folder in ~/Videos/edits by day and title, where the user looks"}},
+            "tag": {"type": "string"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length, frame, song.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure curves ([time 0..1 of the shot, value, easing]) plus flashes. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
@@ -98,7 +98,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_trends" => v.extend(["trends".into(), s("country").unwrap_or_else(|| crate::lang::system().1)]),
         "edits_make" => {
             v.push(s("input").ok_or("input is needed")?);
-            for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"), ("out", "--out"),
+            for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
                 ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("encoder", "--encoder"), ("export", "--export"),
                 ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut")] {
                 if let Some(x) = s(key) {
@@ -221,7 +221,7 @@ mod tests {
 
     #[test]
     fn tool_calls_become_command_lines() {
-        let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3});
+        let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3, "out": "work/x"});
         assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
         assert_eq!(args_for("edits_check", &json!({"clip": "a.mp4"})).unwrap(), ["check", "a.mp4"]);
         assert_eq!(args_for("edits_preset_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["preset", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
