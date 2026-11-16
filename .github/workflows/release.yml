@@ -40,6 +40,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # every release gets what changed and how to install, never an empty page
+      - run: sh .github/notes.sh "$GITHUB_REF_NAME" > notes.md
       - uses: actions/download-artifact@v4
         with:
           path: out
@@ -47,4 +52,5 @@ jobs:
       - run: cd out && sha256sum * > SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
+          body_path: notes.md
           files: out/*
