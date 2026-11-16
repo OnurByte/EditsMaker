@@ -21,30 +21,68 @@ fn extras<'a>(m: &'a Value, list: &str, seg: &Value) -> Vec<&'a Value> {
     seg["extra_material_refs"].as_array().into_iter().flatten().filter_map(|r| material(m, list, r.as_str()?)).collect()
 }
 
-fn ease(curve: &str) -> Ease {
+/// A key's easing: its curve type, or for a drawn curve the preset it was picked from ("Cubic Out", "Ease In").
+fn ease(curve: &str, graph: &str) -> Ease {
     match curve {
-        "Line" | "" => Ease::Linear,
-        "EaseIn" => Ease::In(2.0),
-        "EaseOut" => Ease::Out(2.0),
-        _ => Ease::InOut(2.0),
+        "Line" | "" => return Ease::Linear,
+        "EaseIn" => return Ease::In(2.0),
+        "EaseOut" => return Ease::Out(2.0),
+        _ => {}
+    }
+    let g = graph.to_lowercase();
+    let k = [("sine", 1.6), ("quad", 2.0), ("cubic", 3.0), ("quart", 4.0), ("quint", 5.0), ("expo", 6.0), ("circ", 4.0)]
+        .iter().find(|(w, _)| g.contains(w)).map_or(2.0, |x| x.1);
+    // whole words: "sine out" has the letters "in" but is not an in
+    let ws: Vec<&str> = g.split(|c: char| !c.is_alphanumeric()).collect();
+    match (ws.contains(&"in"), ws.contains(&"out")) {
+        (true, false) => Ease::In(k),
+        (false, true) => Ease::Out(k),
+        _ => Ease::InOut(k),
     }
 }
 
-/// One keyframed property of a segment as a curve over the shot (0..1), each value through `f`.
-fn keyed(seg: &Value, kind: &str, len_us: f64, f: impl Fn(f64) -> f64) -> Curve {
+/// A built-in look for an effect or filter that colours the whole edit, from its name.
+fn look_for(name: &str) -> Option<&'static str> {
+    let n = name.to_lowercase();
+    [(&["vhs", "retro", "vintage", "film", "90s", "old"][..], "vintage"), (&["noir", "b&w", "black", "mono", "grey", "gray"][..], "noir"),
+     (&["teal", "orange", "cinema"][..], "tealorange"), (&["cold", "blue", "ice", "winter"][..], "cold")]
+        .iter().find(|(ws, _)| ws.iter().any(|w| n.contains(w))).map(|x| x.1)
+}
+
+/// One keyframed property of a segment as a curve over the shot (0..1), each value through `f`. The easing into a
+/// key comes from the bezier handles around it (the leaving key's right one, the arriving key's left one), else
+/// from the named curve the arriving key was given.
+fn keyed(seg: &Value, graphs: &Value, kind: &str, len_us: f64, f: impl Fn(f64) -> f64) -> Curve {
     let list = seg["common_keyframes"].as_array().into_iter().flatten().find(|k| k["property_type"].as_str() == Some(kind));
-    let mut keys: Vec<(f64, f64, Ease)> = list.and_then(|k| k["keyframe_list"].as_array()).into_iter().flatten().filter_map(|k| {
-        let t = (num(&k["time_offset"])? / len_us.max(1.0)).clamp(0.0, 1.0);
-        Some((t, f(num(k["values"].get(0)?)?), ease(k["curveType"].as_str().unwrap_or(""))))
-    }).collect();
-    keys.sort_by(|a, b| a.0.total_cmp(&b.0));
-    // the easing of a key is how it is left; ours is how the next one is reached
-    let eases: Vec<Ease> = keys.iter().map(|k| k.2).collect();
-    for i in (1..keys.len()).rev() {
-        keys[i].2 = eases[i - 1];
+    let mut raw: Vec<(f64, f64, &Value)> = list.and_then(|k| k["keyframe_list"].as_array()).into_iter().flatten()
+        .filter_map(|k| Some((num(&k["time_offset"])?, num(k["values"].get(0)?)?, k))).collect();
+    raw.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let graph = |k: &Value| k["graphID"].as_str().and_then(|id| graphs.as_array()?.iter().find(|g| g["id"].as_str() == Some(id))).and_then(|g| g["resource_name"].as_str()).unwrap_or("").to_string();
+    let mut keys: Vec<(f64, f64, Ease)> = vec![];
+    for (i, &(t, v, k)) in raw.iter().enumerate() {
+        let e = match i.checked_sub(1).map(|p| raw[p]) {
+            None => Ease::Linear,
+            Some((ta, va, a)) => {
+                let (dt, dv) = (t - ta, v - va);
+                let h = |side: &str, c: &str, of: &Value| num(&of[side][c]).unwrap_or(0.0);
+                let handles = [h("right_control", "x", a), h("right_control", "y", a), h("left_control", "x", k), h("left_control", "y", k)];
+                let curve = k["curveType"].as_str().unwrap_or("");
+                if dv.abs() < 1e-9 || curve == "Line" {
+                    Ease::Linear
+                } else if dt > 0.0 && handles.iter().any(|x| x.abs() > 1e-9) {
+                    let (x1, y1, x2, y2) = (handles[0] / dt, handles[1] / dv, 1.0 + handles[2] / dt, 1.0 + handles[3] / dv);
+                    crate::preset::ease(Some(&format!("cubicBezier {x1} {y1} {x2} {y2}")))
+                } else {
+                    ease(curve, &graph(k))
+                }
+            }
+        };
+        keys.push(((t / len_us.max(1.0)).clamp(0.0, 1.0), f(v), e));
     }
-    if let Some(k) = keys.first_mut() {
-        k.2 = Ease::Linear;
+    // keys that never move away from rest are no move at all
+    let rest = f(if kind == "KFTypeScaleX" { 1.0 } else { 0.0 });
+    if keys.iter().all(|k| (k.1 - rest).abs() < 1e-6) {
+        keys.clear();
     }
     Curve { keys }
 }
@@ -55,12 +93,12 @@ fn still(v: f64, rest: f64) -> Curve {
 }
 
 /// A shot from a video segment.
-fn shot(seg: &Value, m: &Value) -> Option<Slot> {
+fn shot(seg: &Value, m: &Value, graphs: &Value) -> Option<Slot> {
     let (start, len) = (num(&seg["target_timerange"]["start"])?, num(&seg["target_timerange"]["duration"])?);
     let clip = &seg["clip"];
     let (sx, tx, ty, rot) = (num(&clip["scale"]["x"]).unwrap_or(1.0), num(&clip["transform"]["x"]).unwrap_or(0.0), num(&clip["transform"]["y"]).unwrap_or(0.0), num(&clip["rotation"]).unwrap_or(0.0));
     let pick = |kind: &str, f: fn(f64) -> f64, rest: f64, v: f64| {
-        let c = keyed(seg, kind, len, f);
+        let c = keyed(seg, graphs, kind, len, f);
         if c.is_empty() { still(f(v), rest) } else { c }
     };
     // a speed curve: points at 0..1 of the clip, each a multiple of normal speed
@@ -116,18 +154,23 @@ pub fn parse(text: &str, name: &str) -> Result<Preset, String> {
     let segs = |t: &Value| t["segments"].as_array().cloned().unwrap_or_default();
     // the main track: the video track with the most clips (overlays sit on the others)
     let main = tracks.iter().filter(|t| t["type"].as_str() == Some("video")).max_by_key(|t| segs(t).len()).ok_or(format!("{name}: no video track"))?;
-    let mut slots: Vec<Slot> = segs(main).iter().filter_map(|s| shot(s, m)).collect();
+    let mut slots: Vec<Slot> = segs(main).iter().filter_map(|s| shot(s, m, &d["keyframe_graph_list"])).collect();
     slots.sort_by(|a, b| a.start.total_cmp(&b.start));
     if slots.is_empty() {
         return Err(format!("{name}: no video clips to fill"));
     }
     let mut flashes = vec![];
-    for t in tracks.iter().filter(|t| t["type"].as_str() == Some("effect")) {
+    let total_us = num(&d["duration"]).unwrap_or(0.0);
+    let mut look = None;
+    for t in tracks.iter().filter(|t| matches!(t["type"].as_str(), Some("effect" | "filter"))) {
         for s in segs(t) {
             let (Some(a), Some(l)) = (num(&s["target_timerange"]["start"]), num(&s["target_timerange"]["duration"])) else { continue };
-            if let Some(name) = s["material_id"].as_str().and_then(|id| material(m, "video_effects", id)).and_then(|e| e["name"].as_str()) {
-                effect(name, a / US, (a + l) / US, &mut slots, &mut flashes);
+            let Some(name) = s["material_id"].as_str().and_then(|id| material(m, "video_effects", id).or(material(m, "effects", id))).and_then(|e| e["name"].as_str()) else { continue };
+            // one over most of the edit is its colour
+            if l >= 0.6 * total_us {
+                look = look.or(look_for(name).map(String::from));
             }
+            effect(name, a / US, (a + l) / US, &mut slots, &mut flashes);
         }
     }
     // transitions named like a flash become one on the cut
@@ -157,7 +200,7 @@ pub fn parse(text: &str, name: &str) -> Result<Preset, String> {
         h: num_u(&d["canvas_config"]["height"], 1920.0),
         total: num(&d["duration"]).map_or(slots.iter().map(|s| s.end).fold(0.0, f64::max), |t| t / US),
         song,
-        look: None,
+        look,
         intensity: 1.0,
         fit_beats: true,
         slots,
@@ -184,7 +227,8 @@ mod tests {
                     {"target_timerange": {"start": 0, "duration": 1_000_000}, "speed": 2.0, "extra_material_refs": ["tr1"],
                      "clip": {"scale": {"x": 1.2, "y": 1.2}, "transform": {"x": 0.5, "y": 0.2}, "rotation": 0.0},
                      "common_keyframes": [{"property_type": "KFTypeScaleX", "keyframe_list": [
-                        {"time_offset": 0, "values": [1.5], "curveType": "EaseOut"}, {"time_offset": 500_000, "values": [1.0], "curveType": "Line"}]}]},
+                        {"time_offset": 0, "values": [1.5], "curveType": "FreeCurveInOut", "right_control": {"x": 160_000.0, "y": -0.47}},
+                        {"time_offset": 500_000, "values": [1.0], "curveType": "FreeCurveInOut", "left_control": {"x": -200_000.0, "y": 0.0}}]}]},
                     {"target_timerange": {"start": 1_000_000, "duration": 2_000_000}, "speed": 1.0, "extra_material_refs": ["sp2"]}
                 ]},
                 {"type": "effect", "segments": [{"material_id": "fx1", "target_timerange": {"start": 1_200_000, "duration": 300_000}}]},
@@ -195,7 +239,7 @@ mod tests {
         assert_eq!((p.name.as_str(), p.w, p.h, p.total, p.slots.len()), ("velo", 1080, 1920, 3.0, 2));
         let a = &p.slots[0];
         assert_eq!(a.speed, 2.0);
-        // keyframes win over the still scale; the first key's easing carries to the second
+        // keyframes win over the still scale; the handles (as saved by CapCut's "Cubic Out") ease out
         assert_eq!(a.zoom.keys.len(), 2);
         assert_eq!((a.zoom.keys[0].1, a.zoom.keys[1].0, a.zoom.keys[1].1), (1.5, 0.5, 1.0));
         assert!(matches!(a.zoom.keys[1].2, crate::preset::Ease::Out(_)));
@@ -205,6 +249,18 @@ mod tests {
         assert!(b.shake.is_moving() && a.shake.is_empty(), "the shake effect sits over the second shot only");
         assert_eq!(p.flashes.len(), 1, "the white flash transition on the cut");
         assert_eq!(p.song.as_ref().map(|s| (s.title.as_str(), s.from)), Some(("Metro Boomin Superhero", 42.0)));
+    }
+
+    #[test]
+    fn named_curves_and_whole_edit_looks() {
+        use crate::preset::Ease;
+        assert!(matches!(super::ease("FreeCurveInOut", "Cubic Out"), Ease::Out(k) if k == 3.0));
+        assert!(matches!(super::ease("FreeCurveInOut", "Ease In"), Ease::In(k) if k == 2.0));
+        assert!(matches!(super::ease("Line", "Cubic Out"), Ease::Linear));
+        assert!(matches!(super::ease("FreeCurveInOut", "Sine Out"), Ease::Out(_)));
+        assert!(matches!(super::ease("FreeCurveInOut", "Quad In-Out"), Ease::InOut(k) if k == 2.0));
+        assert_eq!(super::look_for("VHS Horror"), Some("vintage"));
+        assert_eq!(super::look_for("Sparkle"), None);
     }
 
     #[test]
