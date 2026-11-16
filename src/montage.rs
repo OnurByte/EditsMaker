@@ -56,6 +56,26 @@ pub struct Song {
     pub strength: Vec<f64>,
     /// loudness per analysis frame
     pub loud: Vec<f64>,
+    /// YouTube "most replayed" per analysis frame, empty when the song has none
+    pub heat: Vec<f64>,
+}
+
+impl Song {
+    /// What a song's stretch is chosen by: where people replay it most, else where it is loudest.
+    pub fn stretch(&self) -> &[f64] {
+        if self.heat.is_empty() { &self.loud } else { &self.heat }
+    }
+}
+
+/// Replay heat bins (start, end, value) spread over `n` analysis frames.
+fn heat_frames(heat: &[(f64, f64, f64)], n: usize) -> Vec<f64> {
+    if heat.is_empty() {
+        return vec![];
+    }
+    (0..n).map(|i| {
+        let t = i as f64 * hop_s();
+        heat.iter().find(|h| t >= h.0 && t < h.1).map_or(0.0, |h| h.2)
+    }).collect()
 }
 
 fn fft(re: &mut [f64], im: &mut [f64]) {
@@ -184,21 +204,25 @@ pub fn track(env: &[f64], lag: usize) -> Vec<usize> {
 
 /// Downloads (or takes) the song and finds its beats.
 pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
-    let (file, title) = if Path::new(src).is_file() {
+    let (file, title, heat) = if Path::new(src).is_file() {
         let title = Path::new(src).file_stem().unwrap_or_default().to_string_lossy().into_owned();
         // an edit (it has a picture) brings its own dialogue: keep only its music
         let file = if dims(Path::new(src)).0 > 0 { music_only(Path::new(src), cache)? } else { PathBuf::from(src) };
-        (file, title)
+        (file, title, vec![])
     } else {
         let dir = cache.join("music");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let out = yt(&[
             "--no-warnings", "--no-progress", "--no-playlist", "-f", "ba[ext=m4a]/ba",
-            "--print", "after_move:%(title)s\t%(filepath)s", "-o", &dir.join("%(id)s.%(ext)s").to_string_lossy(), "--", src,
+            "--print", "after_move:%(title)s\t%(filepath)s\t%(heatmap)j", "-o", &dir.join("%(id)s.%(ext)s").to_string_lossy(), "--", src,
         ])?;
         let line = out.lines().rfind(|l| l.contains('\t')).ok_or("yt-dlp gave no song file")?;
-        let (t, f) = line.split_once('\t').unwrap_or_default();
-        (PathBuf::from(f.trim()), t.trim().to_string())
+        let mut parts = line.splitn(3, '\t');
+        let (t, f) = (parts.next().unwrap_or_default(), parts.next().unwrap_or_default());
+        let heat: Vec<(f64, f64, f64)> = serde_json::from_str::<serde_json::Value>(parts.next().unwrap_or("null")).ok()
+            .and_then(|v| v.as_array().map(|a| a.iter().filter_map(|h| Some((h["start_time"].as_f64()?, h["end_time"].as_f64()?, h["value"].as_f64()?))).collect()))
+            .unwrap_or_default();
+        (PathBuf::from(f.trim()), t.trim().to_string(), heat)
     };
     let raw = run_bytes("ffmpeg", &["-v", "error", "-i", &file.to_string_lossy(), "-ac", "1", "-ar", &SR.to_string(), "-f", "f32le", "-"])?;
     let x: Vec<f32> = raw.as_chunks::<4>().0.iter().map(|b| f32::from_le_bytes(*b)).collect();
@@ -211,7 +235,8 @@ pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
     let peak = |e: &[f64], f: usize| e[f.saturating_sub(2)..(f + 3).min(e.len())].iter().cloned().fold(0.0, f64::max);
     let strength = frames.iter().map(|&f| 0.5 * peak(&env, f) + 0.5 * peak(&bass, f)).collect();
     let beats = frames.into_iter().map(|f| f as f64 * hop_s()).collect();
-    Ok(Song { file, title, beats, strength, loud })
+    let heat = heat_frames(&heat, loud.len());
+    Ok(Song { file, title, beats, strength, loud, heat })
 }
 
 /// Strength of the beat nearest to `t` seconds.
@@ -942,6 +967,15 @@ pub fn video_file(id: &str, url: &str, cache: &Path) -> Result<PathBuf, String> 
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_most_replayed_stretch_wins_over_the_loudest() {
+        let n = (100.0 / super::hop_s()) as usize;
+        let heat = super::heat_frames(&[(0.0, 50.0, 0.1), (60.0, 70.0, 1.0), (70.0, 100.0, 0.2)], n);
+        let beats: Vec<f64> = (0..100).map(|b| b as f64).collect();
+        assert_eq!(super::windows(&beats, &heat, 10.0, 1), vec![60.0]);
+        assert!(super::heat_frames(&[], n).is_empty(), "no heatmap: the loudness decides");
+    }
+
     #[test]
     fn the_side_mix_survives_a_mono_mix() {
         let side = super::SIDE.trim_start_matches("pan=stereo|");
