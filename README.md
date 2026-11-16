@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-dark.svg">
-  <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. Link in. Edits out. Under 4 MB to download.">
+  <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. Link in. Edits out.">
 </picture>
 
 <a href="#install">

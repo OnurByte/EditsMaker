@@ -99,17 +99,11 @@ def page(name, h, aria, folio=None):
     return deco
 
 
-@page("hero", 290, "EditsMaker. Link in. Edits out. Under 4 MB to download.")
+@page("hero", 210, "EditsMaker. Link in. Edits out.")
 def hero():
-    return [
-        t(C2, 18, "EditsMaker", 13, 400), t(C2, 36, "Video editor for AI agents", 13, 400),
-        t(C2, 54, "and the command line", 13, 400),
-        t(W, 18, f"v{VERSION}", 13, 400, anchor="end"), t(W, 36, "MIT", 13, 400, anchor="end"),
-        mark(C2 - 14, 92, 1.05, "h"),
-        t(C2 + 92, 176, "EditsMaker", 76, 700, ls=-3.5),
-        t(C2 + 94, 214, "Link in.", 24, 300), t(C2 + 94, 242, "Edits out.", 24, 300),
-        t(C2 + 94, 280, "Under 4 MB to download. Linux, macOS, Windows. No cloud.", 13, 400, "GRAY"),
-    ]
+    x = 246  # the lockup (mark + name, about 496 wide) centred on the page
+    return [mark(x - 14, 34, 1.05, "h"), t(x + 92, 118, "EditsMaker", 76, 700, ls=-3.5),
+            t(W / 2, 176, "Link in. Edits out.", 26, 300, anchor="middle")]
 
 
 @page("download", 80, "Download: under 4 MB, one file for Linux, macOS and Windows")
