@@ -3,6 +3,7 @@ use crate::util::{run, yt};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
+#[derive(Clone)]
 pub struct Source {
     /// a file the user gave; None for something online
     pub local: Option<PathBuf>,
