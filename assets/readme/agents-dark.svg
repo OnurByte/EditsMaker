@@ -16,7 +16,7 @@
 <text x="0" y="176" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">@channel with a trending</text>
 <text x="0" y="200" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">song and words from</text>
 <text x="0" y="224" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">his own videos.”</text>
-<text x="320" y="150" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#E5332A" text-anchor="start" letter-spacing="0">edits_make</text>
+<text x="320" y="150" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#F25247" text-anchor="start" letter-spacing="0">edits_make</text>
 <text x="320" y="172" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">edits_check</text>
 <text x="320" y="194" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">edits_preset_get</text>
 <text x="320" y="216" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">edits_preset_save</text>

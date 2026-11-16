@@ -12,7 +12,7 @@
 <text x="0" y="216" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">face tracking</text>
 <text x="0" y="237" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">reframe 9:16</text>
 <line x1="192" y1="80.5" x2="368" y2="80.5" stroke="#E4E0D7" stroke-width="1"/>
-<text x="192" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#E5332A" text-anchor="start" letter-spacing="0">Hits</text>
+<text x="192" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#C8261E" text-anchor="start" letter-spacing="0">Hits</text>
 <text x="192" y="132" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">shake</text>
 <text x="192" y="153" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">flash</text>
 <text x="192" y="174" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">RGB split</text>

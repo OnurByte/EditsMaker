@@ -24,6 +24,6 @@
 <text x="800" y="142" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="20" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.4">fix</text>
 <text x="800" y="164" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="13" fill="#0B0B0C" text-anchor="start" letter-spacing="0">preset, lines, song</text>
 <path d="M802,178 V194 H482 V182" fill="none" stroke="#E5332A" stroke-width="1.5"/><path d="M477,184 L482,176 L487,184 Z" fill="#E5332A"/>
-<text x="642" y="210" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#E5332A" text-anchor="middle" letter-spacing="0">until it is good</text>
+<text x="642" y="210" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#C8261E" text-anchor="middle" letter-spacing="0">until it is good</text>
 </g>
 </svg>

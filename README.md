@@ -407,6 +407,15 @@ November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/
 </details>
 
 <details>
+<summary><b>Brand</b></summary>
+
+The mark, colours, type, layout and words, and the research behind each rule: [BRAND.md](BRAND.md).
+Colours and sizes as code: [design/tokens.css](design/tokens.css). Every README picture is drawn by
+`python3 design/readme.py`.
+
+</details>
+
+<details>
 <summary><b>Build from source</b></summary>
 
 ```sh
