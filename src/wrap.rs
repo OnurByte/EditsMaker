@@ -135,8 +135,14 @@ pub fn bursts(cuts: &[f64], total: f64) -> Vec<f64> {
     t.extend((0..(total / 1.37) as usize).map(|i| 0.9 + i as f64 * 1.37));
     t.retain(|x| *x >= 0.0 && *x < total - 0.2);
     t.sort_by(f64::total_cmp);
-    t.dedup_by(|a, b| (*a - *b).abs() < 0.1);
-    t
+    // at least 0.6 s apart, else fast presets (a cut every 0.4 s) keep the math on screen
+    let mut kept: Vec<f64> = vec![];
+    for x in t {
+        if kept.last().is_none_or(|l| x - l >= 0.6) {
+            kept.push(x);
+        }
+    }
+    kept
 }
 
 /// The math layer and the subliminal flashes over `clip`, in place.
@@ -392,8 +398,10 @@ mod tests {
     fn wrapping_and_bursts() {
         assert_eq!(wrap("Ya hiçbir şey umurumda değil", 14), vec!["Ya hiçbir şey", "umurumda değil"]);
         let b = bursts(&[2.0, 4.0], 6.0);
-        assert!(b.contains(&2.0) && b.contains(&3.0) && b.contains(&4.0));
-        assert!(b.windows(2).all(|w| w[1] - w[0] >= 0.1), "{b:?}");
+        assert!(b.contains(&2.0) && b.contains(&3.0), "{b:?}");
+        assert!(b.windows(2).all(|w| w[1] - w[0] >= 0.6), "{b:?}");
+        let fast: Vec<f64> = (1..30).map(|i| i as f64 * 0.43).collect();
+        assert!(bursts(&fast, 13.0).len() <= 22, "a cut every 0.43 s still leaves dark gaps");
         assert!(b.iter().all(|t| *t < 5.8));
     }
 

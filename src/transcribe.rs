@@ -110,7 +110,8 @@ pub fn parse_json3(json: &str) -> Option<Transcript> {
         let (Some(start), Some(segs)) = (ev["tStartMs"].as_f64(), ev["segs"].as_array()) else { continue };
         let end = (start + ev["dDurationMs"].as_f64().unwrap_or(2000.0)) / 1000.0;
         for seg in segs {
-            let text = seg["utf8"].as_str().unwrap_or("").trim();
+            // ">>" marks a change of speaker, it is not said
+            let text = seg["utf8"].as_str().unwrap_or("").trim().trim_start_matches(">>").trim();
             let s = (start + seg["tOffsetMs"].as_f64().unwrap_or(0.0)) / 1000.0;
             if text.contains("__") {
                 return None;
@@ -190,6 +191,8 @@ mod tests {
         assert!(parse_json3(r#"{"events":[{"tStartMs":0,"segs":[{"utf8":"ne diyon"},{"utf8":" [ __ ]","tOffsetMs":400}]}]}"#).is_none());
         assert!(parse_json3(r#"{"events":[{"tStartMs":0,"segs":[{"utf8":"[Müzik]"}]}]}"#).is_none());
         assert!(parse_json3("not json").is_none());
+        let t = parse_json3(r#"{"events":[{"tStartMs":0,"segs":[{"utf8":">> Ya"},{"utf8":" hiçbir","tOffsetMs":200},{"utf8":">>","tOffsetMs":400}]}]}"#).unwrap();
+        assert_eq!(t.words.iter().map(|w| w.t.as_str()).collect::<Vec<_>>(), ["Ya", "hiçbir"]);
     }
 
     #[test]
