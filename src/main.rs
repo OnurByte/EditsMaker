@@ -787,7 +787,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             if len > p.total - 0.9 {
                 eprintln!("edits: the --say line ({len:.1}s) is longer than the preset ({:.1}s); it is cut off", p.total);
             }
-            (&spoken[*i], m, montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &lift, len, p.total) })
+            (&spoken[*i], m, montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &lift, len, p.total, p.slots.iter().find(|s| s.drop).map(|s| s.start)) })
         });
         let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
         let lens: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (s.end - s.start).max(b - a)).collect();
@@ -1054,8 +1054,11 @@ fn widen(words: &[transcribe::Word], a: f64, b: f64) -> Option<pick::Moment> {
 }
 
 /// Where a voice of `len` s goes in a preset edit: ending just before the hardest cut it fits ahead of, so that
-/// cut's hit lands on the last word; at 0.3 s when it fits ahead of none.
-fn voice_at(cuts: &[f64], strength: &[f64], len: f64, total: f64) -> f64 {
+/// cut's hit lands on the last word; at 0.3 s when it fits ahead of none. A preset that marks its drop decides.
+fn voice_at(cuts: &[f64], strength: &[f64], len: f64, total: f64, drop: Option<f64>) -> f64 {
+    if let Some(d) = drop {
+        return (d - len).max(0.0);
+    }
     cuts.iter().zip(strength).filter(|(a, _)| **a - len >= 0.3 && **a <= total - 0.6)
         .max_by(|x, y| x.1.total_cmp(y.1)).map_or(0.3, |(a, _)| a - len)
 }
@@ -1558,11 +1561,16 @@ mod tests {
     }
 
     #[test]
+    fn a_preset_that_marks_its_drop_puts_the_voice_before_it() {
+        assert_eq!(super::voice_at(&[0.0, 4.0, 12.4, 19.4], &[0.1, 0.2, 0.3, 0.9], 7.9, 26.0, Some(12.4)), 12.4 - 7.9, "the marked drop, not the hardest cut");
+    }
+
+    #[test]
     fn a_preset_voice_ends_on_the_hardest_cut_it_fits_before() {
         let cuts = [0.0, 1.0, 2.0, 4.0, 6.0];
         let strength = [0.0, 0.9, 0.5, 0.8, 0.2];
-        assert_eq!(super::voice_at(&cuts, &strength, 1.5, 8.0), 2.5, "cut 1.0 is too early for 1.5 s, so 4.0 (0.8) wins");
-        assert_eq!(super::voice_at(&cuts, &strength, 9.0, 8.0), 0.3, "fits before no cut");
+        assert_eq!(super::voice_at(&cuts, &strength, 1.5, 8.0, None), 2.5, "cut 1.0 is too early for 1.5 s, so 4.0 (0.8) wins");
+        assert_eq!(super::voice_at(&cuts, &strength, 9.0, 8.0, None), 0.3, "fits before no cut");
     }
 
     #[test]
