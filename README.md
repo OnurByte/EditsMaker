@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 50 presets, under 4 MB, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 7 agent skills, 50 presets, 40 looks, TikTok trends, 1,700+ sites">
 </picture>
 
 ## Made with it
@@ -26,7 +26,7 @@
   </tr>
 </table>
 
-<sub>Every one is a single `edits` command. GitHub starts videos muted: click 🔊 on each.</sub>
+<sub>Every one is a single `edits` command. 🔊 for sound.</sub>
 
 ## How it works
 
@@ -92,7 +92,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/why-dark.svg">
-  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, under 4 MB: one MIT binary on your computer">
+  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, under 4 MB: one file on your computer">
 </picture>
 
 ## Install
