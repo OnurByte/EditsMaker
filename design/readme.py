@@ -17,8 +17,8 @@ OUT = ROOT / "assets/readme"
 VERSION = re.search(r'^version = "(.+)"', (ROOT / "Cargo.toml").read_text(), re.M)[1]
 
 THEMES = {  # transparent background: the picture sits on GitHub's page like print on paper
-    "light": {"INK": "#0B0B0C", "RED": "#E5332A", "GRAY": "#8C877C", "HAIR": "#D8D3C8"},
-    "dark": {"INK": "#F4F1EA", "RED": "#E5332A", "GRAY": "#8C877C", "HAIR": "#2A2A2D"},
+    "light": {"INK": "#0B0B0C", "RED": "#E5332A", "GRAY": "#8C877C", "HAIR": "#D8D3C8", "PAPER": "#F4F1EA"},
+    "dark": {"INK": "#F4F1EA", "RED": "#E5332A", "GRAY": "#8C877C", "HAIR": "#2A2A2D", "PAPER": "#F4F1EA"},
 }
 SANS = "Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif"
 MONO = "ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace"
@@ -112,6 +112,15 @@ def hero():
     ]
 
 
+@page("download", 80, "Download: under 4 MB, one file for Linux, macOS and Windows")
+def download():
+    """The one call to action: white type on NASA red, the only way the manual lets red carry text."""
+    out = [rect(0, 0, W, 80, "RED"), t(28, 52, "Download", 32, 700, "PAPER", ls=-1),
+           t(C2, 36, "Under 4 MB", 18, 700, "PAPER"), t(C2, 59, "One file for Linux, macOS and Windows", 15, 300, "PAPER")]
+    out += [logo(n, 780 + i * 40, 28, 24, "PAPER") for i, n in enumerate(["Apple", "Linux", "Windows"])]
+    return out + ['<path d="M904,40 H936 M926,30 L936,40 L926,50" fill="none" stroke="%PAPER%" stroke-width="3"/>']
+
+
 @page("sites", 130, "Works with links from YouTube, TikTok, Instagram, X, Facebook, Twitch, Kick, "
       "Dailymotion and 1,700+ more sites", "1.1")
 def sites():
@@ -182,7 +191,7 @@ def dot(cx, cy, v, c):
     return ring + (f'<path d="M{cx},{cy - r} A{r},{r} 0 0 0 {cx},{cy + r} Z" fill="%{c}%"/>' if v == 1 else "")
 
 
-@page("size", 540, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
+@page("size", 530, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
       "about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci "
       "Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that "
       "is free, open source, built for AI agents and reads TikTok's trending songs.", "1.3")
@@ -205,12 +214,10 @@ def size():
         out += [dot(x, y + 10, v, c) for (_, x), v in zip(cols, marks)]
         out.append(rule(0, W, y + 26.5, "HAIR"))
     out += [dot(5, 478, 2, "INK"), t(16, 482, "yes", 11, 400, "GRAY"), dot(49, 478, 1, "INK"),
-            t(60, 482, "partly: a free tier or trial; CapCut's TikTok sounds", 11, 400, "GRAY"), dot(292, 478, 0, "INK"),
-            t(303, 482, "no.  November 2026. ~ as listed by a download site or the Mac App Store.", 11, 400, "GRAY")]
-    note = ["Premiere Pro and After Effects: the disk space Adobe asks for "
-            "(it publishes no download size); their MCP is a preview. HyperFrames: its npm package and its Chrome, installed.",
-            "edits fetches ffmpeg and yt-dlp on first run; auto-editor bundles ffmpeg."]
-    return out + [t(0, 500 + 15 * k, n, 11, 400, "GRAY") for k, n in enumerate(note)]
+            t(60, 482, "partly", 11, 400, "GRAY"), dot(112, 478, 0, "INK"),
+            t(123, 482, "no", 11, 400, "GRAY")]
+    return out + [t(0, 504, "November 2026. Premiere Pro and After Effects: the space Adobe asks for to install. "
+                  "Sources at the bottom of this page.", 11, 400, "GRAY")]
 
 
 @page("sounds", 340, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "

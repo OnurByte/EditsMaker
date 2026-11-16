@@ -3,15 +3,11 @@
   <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. Link in. Edits out. Under 4 MB to download.">
 </picture>
 
-<p align="center">
-  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><b>Download</b></a> ⁜ under 4 MB ⁜ Linux, macOS and Windows
-</p>
-
-<a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sites-dark.svg">
-    <img src="assets/readme/sites-light.svg" width="100%" alt="Works with links from YouTube, TikTok, Instagram, X, Facebook, Twitch, Kick, Dailymotion and 1,700+ more sites">
-  </picture>
+<a href="#install">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/download-dark.svg">
+  <img src="assets/readme/download-light.svg" width="100%" alt="Download: under 4 MB, one file for Linux, macOS and Windows">
+</picture>
 </a>
 
 <picture>
@@ -19,64 +15,7 @@
   <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 50 presets, under 4 MB, 40 looks">
 </picture>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/agents-dark.svg">
-  <img src="assets/readme/agents-light.svg" width="100%" alt="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
-  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents and reads TikTok's trending songs.">
-</picture>
-
-<sub>November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.</sub>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sounds-dark.svg">
-  <img src="assets/readme/sounds-light.svg" width="100%" alt="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, or ask for TikTok's trending songs in any country with --music trend:3">
-</picture>
-
-## Install
-
-### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-apple-dark.svg"><img src="assets/readme/os-apple-light.svg" height="20" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-linux-dark.svg"><img src="assets/readme/os-linux-light.svg" height="20" alt=""></picture> macOS and Linux
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh | sh
-```
-
-### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-windows-dark.svg"><img src="assets/readme/os-windows-light.svg" height="20" alt=""></picture> Windows
-
-```powershell
-irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
-```
-
-No ffmpeg or yt-dlp? The installer downloads them. Nothing else to install.
-
-It keeps itself up to date: once a day it installs a newer release from GitHub (checksum checked).
-`edits update` updates now, `edits update off` turns it off, `edits info` shows the version and where to find me
-([GitHub](https://github.com/OnurByte), [X](https://x.com/onurbinary)).
-
-### Or ask your agent
-
-```text
-Install EditsMaker from github.com/OnurByte/EditsMaker, add it as an MCP server with "edits mcp" and install its skills with "edits skills install".
-```
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/loop-dark.svg">
-  <img src="assets/readme/loop-light.svg" width="100%" alt="How an agent makes an edit good: idea, footage, lines, render, check, fix">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/steps-dark.svg">
-  <img src="assets/readme/steps-light.svg" width="100%" alt="Link or topic, pick a preset, pick a song, your edit">
-</picture>
-
-```sh
-edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3 --look tealorange
-```
-
-### Made with it
+## Made with it
 
 <table>
   <tr>
@@ -88,6 +27,48 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 </table>
 
 <sub>Every one is a single `edits` command. GitHub starts videos muted: click 🔊 on each.</sub>
+
+## How it works
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/steps-dark.svg">
+  <img src="assets/readme/steps-light.svg" width="100%" alt="Link or topic, pick a preset, pick a song, your edit">
+</picture>
+
+```sh
+edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3 --look tealorange
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/agents-dark.svg">
+  <img src="assets/readme/agents-light.svg" width="100%" alt="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/loop-dark.svg">
+  <img src="assets/readme/loop-light.svg" width="100%" alt="How an agent makes an edit good: idea, footage, lines, render, check, fix">
+</picture>
+
+## Why it wins
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sounds-dark.svg">
+  <img src="assets/readme/sounds-light.svg" width="100%" alt="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, or ask for TikTok's trending songs in any country with --music trend:3">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
+  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents and reads TikTok's trending songs.">
+</picture>
+
+<a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sites-dark.svg">
+    <img src="assets/readme/sites-light.svg" width="100%" alt="Works with links from YouTube, TikTok, Instagram, X, Facebook, Twitch, Kick, Dailymotion and 1,700+ more sites">
+  </picture>
+</a>
+
+## Everything it does
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
@@ -113,6 +94,26 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/why-dark.svg">
   <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, under 4 MB: one MIT binary on your computer">
 </picture>
+
+## Install
+
+### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-apple-dark.svg"><img src="assets/readme/os-apple-light.svg" height="20" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-linux-dark.svg"><img src="assets/readme/os-linux-light.svg" height="20" alt=""></picture> macOS and Linux
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh | sh
+```
+
+### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-windows-dark.svg"><img src="assets/readme/os-windows-light.svg" height="20" alt=""></picture> Windows
+
+```powershell
+irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
+```
+
+### Or ask your agent
+
+```text
+Install EditsMaker from github.com/OnurByte/EditsMaker, add it as an MCP server with "edits mcp" and install its skills with "edits skills install".
+```
 
 ---
 
@@ -389,6 +390,24 @@ edits skills install
 Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_create`, `edits_learn`,
 `edits_check`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
 the footage, renders with it and measures the result; the output folder is always edits' own choice.
+
+</details>
+
+<details>
+<summary><b>Install notes and updates</b></summary>
+
+No ffmpeg or yt-dlp? The installer downloads them. Nothing else to install.
+
+It keeps itself up to date: once a day it installs a newer release from GitHub (checksum checked).
+`edits update` updates now, `edits update off` turns it off, `edits info` shows the version and where to find me
+([GitHub](https://github.com/OnurByte), [X](https://x.com/onurbinary)).
+
+</details>
+
+<details>
+<summary><b>Sizes, sources</b></summary>
+
+November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
 
 </details>
 
