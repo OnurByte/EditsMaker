@@ -45,6 +45,7 @@ pub fn dims(video: &Path) -> (u32, u32) {
 
 fn wav(input: &Path, out: &Path) -> Result<(), String> {
     run(None, "ffmpeg", &["-v", "error", "-y", "-i", &input.to_string_lossy(), "-vn", "-ar", "16000", "-ac", "1", &out.to_string_lossy()]).map(|_| ())
+        .map_err(|e| if e.contains("does not contain any stream") { format!("{} has no sound", input.display()) } else { e })
 }
 
 /// A bare channel link lists tabs, not videos; point it at the uploads.
