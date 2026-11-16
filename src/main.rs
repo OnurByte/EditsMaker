@@ -23,6 +23,7 @@ mod svg;
 mod talk;
 mod timeline;
 mod transcribe;
+mod update;
 mod util;
 
 use std::path::{Path, PathBuf};
@@ -32,6 +33,9 @@ const USAGE: &str = include_str!("usage.txt");
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if !matches!(args.first().map(String::as_str), Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help") | None) {
+        update::auto();
+    }
     let res = match args.first().map(String::as_str) {
         None | Some("-h" | "--help" | "help") => {
             print!("{USAGE}");
@@ -42,6 +46,8 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
+        Some("update") => update::cmd(&args[1..]),
+        Some("info") => update::info(),
         Some("trends") => fetch::trends(&args.get(1).cloned().unwrap_or_else(|| lang::system().1)).map(|list| {
             list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
             println!("\nuse one: --music trend:N  (another country: --music trend:us:N)");

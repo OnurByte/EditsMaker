@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 39 presets, 178 cut moves, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 46 presets, 178 cut moves, 40 looks">
 </picture>
 
 <picture>
@@ -36,6 +36,10 @@ Then check what is missing. You also need [ffmpeg](https://ffmpeg.org) and [yt-d
 ```sh
 edits doctor
 ```
+
+It keeps itself up to date: once a day it installs a newer release from GitHub (checksum checked).
+`edits update` updates now, `edits update off` turns it off, `edits info` shows the version and where to find me
+([GitHub](https://github.com/OnurByte), [X](https://x.com/onurbinary)).
 
 ### Or ask your agent
 

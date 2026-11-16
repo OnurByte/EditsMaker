@@ -3,6 +3,8 @@ edits - give it a link, a topic or a file; get finished edits.
 USAGE
   edits <youtube-link | topic | video-file> [options]
   edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
+  edits info                   version, updates, the author's GitHub and X
+  edits update [check|on|off]  install the newest release now; on by default once a day (EDITS_AUTO_UPDATE=0 stops it)
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
   edits preset list | show NAME           presets are JSON: read one in full
   edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
