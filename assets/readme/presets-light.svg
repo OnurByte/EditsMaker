@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-label="Real edits as data: 30 Alight Motion edits and 178 Premiere cut moves, every shot and keyframe as editable JSON">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-label="Real edits as data: 49 Alight Motion and CapCut edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 <rect x="0.5" y="0.5" width="959" height="329" rx="12" fill="#F4F1EA" stroke="#D8D3C8"/>
 <text x="40" y="62" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="34" fill="#0B0B0C" text-anchor="start" letter-spacing="-1">Real edits, as data</text>
-<text x="40" y="94" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="17" fill="#8C877C" text-anchor="start" letter-spacing="0">32 edits, 24 colour looks, 178 cut moves. Every shot, ramp, keyframe and layer is JSON you can change.</text>
+<text x="40" y="94" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="17" fill="#8C877C" text-anchor="start" letter-spacing="0">49 edits, 40 looks, 178 cut moves. Every shot, ramp, keyframe and layer is JSON you can change.</text>
 <text x="40" y="150" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">shots</text>
 <rect x="120" y="134" width="40" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
 <rect x="164" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.95"/>

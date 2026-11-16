@@ -1,20 +1,25 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-dark.svg">
-  <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. Link in. Edits out.">
+  <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. Link in. Edits out. Under 4 MB to download.">
 </picture>
 
 <p align="center">
-  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><b>Download</b></a> ⁜ Linux, macOS and Windows
+  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><b>Download</b></a> ⁜ under 4 MB ⁜ Linux, macOS and Windows
 </p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 49 presets, 178 cut moves, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 49 presets, under 4 MB, 40 looks">
 </picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/agents-dark.svg">
   <img src="assets/readme/agents-light.svg" width="100%" alt="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
+  <img src="assets/readme/size-light.svg" width="100%" alt="Tiny on purpose: the whole editor is under 4 MB to download, smaller than five seconds of the edits it makes. One 7 MB file on disk, no Python, no Node, no Electron, no cloud.">
 </picture>
 
 ## Install
@@ -91,12 +96,12 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
-  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 32 Alight Motion edits, 24 colour looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 49 Alight Motion and CapCut edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/why-dark.svg">
-  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command, trend-aware, reads first, MIT and runs on your computer">
+  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command, trend-aware, reads first, under 4 MB: one MIT binary on your computer">
 </picture>
 
 ---
@@ -268,8 +273,8 @@ edits doctor
 <details>
 <summary><b>Presets</b></summary>
 
-30 edits (anime and 9:16 community edits made in Alight Motion) and 178 cut moves (Premiere transitions), kept as
-JSON in [`presets/`](presets). Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
+49 edits (anime and 9:16 community edits made in Alight Motion and CapCut, and ones learned from real edits) and 178
+cut moves (Premiere transitions), kept as JSON in [`presets/`](presets) and built into the binary. Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
 look or song, then use the file for one edit or save it. With another song, cuts move onto its beats.
 
 ```sh
@@ -301,8 +306,9 @@ Install the skills:
 edits skills install
 ```
 
-Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_looks`, `edits_trends`,
-`edits_doctor`. An agent reads a preset, changes it for the footage and renders with it.
+Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_create`, `edits_learn`,
+`edits_check`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
+the footage, renders with it and measures the result; the output folder is always edits' own choice.
 
 </details>
 
@@ -312,6 +318,9 @@ Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `
 ```sh
 cargo install --git https://github.com/OnurByte/EditsMaker
 ```
+
+The release profile is tuned for size (`opt-level = "s"`, LTO, one codegen unit, stripped): the rendering is
+ffmpeg's, so a small binary costs almost nothing in speed.
 
 Only cut what you have the rights to: songs, footage and presets belong to their makers.
 
