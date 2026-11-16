@@ -229,6 +229,9 @@ pub struct Slot {
     pub invert: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub motion_blur: bool,
+    /// the drop: a --say line ends as this shot starts, wherever the song hits hardest
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub drop: bool,
     /// a speed ramp over the shot, multiplying `speed` (2.5 = rushing, 0.5 = slow motion)
     #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub ramp: Curve,
@@ -587,6 +590,7 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         invert: has_effect(n, "invert") || has_effect(m, "invert"),
         ramp: Curve::default(),
         motion_blur: ["motionblur4", "motionblur2", "motionblur", "moblurplus", "zoomblur3", "spinblur2"].iter().any(|e| has_effect(n, e) || has_effect(m, e)),
+        drop: false,
     })
 }
 
