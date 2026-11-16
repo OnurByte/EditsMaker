@@ -1,103 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-label="Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
-<rect x="0.5" y="0.5" width="959" height="329" rx="12" fill="#F4F1EA" stroke="#D8D3C8"/>
-<text x="40" y="62" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="34" fill="#0B0B0C" text-anchor="start" letter-spacing="-1">Real edits, as data</text>
-<text x="40" y="94" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="17" fill="#8C877C" text-anchor="start" letter-spacing="0">50 edits, 40 looks, 178 cut moves. Every shot, ramp, keyframe and layer is JSON you can change.</text>
-<text x="40" y="150" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">shots</text>
-<rect x="120" y="134" width="40" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="164" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
-<rect x="224" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="252" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="332" y="134" width="40" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
-<rect x="376" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
-<rect x="404" y="134" width="32" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="440" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.75"/>
-<rect x="468" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="528" y="134" width="32" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="564" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.75"/>
-<rect x="644" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
-<rect x="672" y="134" width="24" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="700" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<rect x="780" y="134" width="76" height="22" rx="4" fill="#E5332A" opacity="0.95"/>
-<rect x="860" y="134" width="56" height="22" rx="4" fill="#E5332A" opacity="0.55"/>
-<text x="40" y="188" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">zoom</text>
-<line x1="120" y1="183" x2="144" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="123" y="178" width="10" height="10" transform="rotate(45 128 183)" fill="#0B0B0C"/>
-<line x1="148" y1="183" x2="188" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="154" y="178" width="10" height="10" transform="rotate(45 159 183)" fill="#0B0B0C"/>
-<line x1="192" y1="183" x2="268" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="214" y="178" width="10" height="10" transform="rotate(45 219 183)" fill="#0B0B0C"/>
-<line x1="272" y1="183" x2="296" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="277" y="178" width="10" height="10" transform="rotate(45 282 183)" fill="#0B0B0C"/>
-<line x1="300" y1="183" x2="340" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="303" y="178" width="10" height="10" transform="rotate(45 308 183)" fill="#0B0B0C"/>
-<line x1="344" y1="183" x2="420" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="369" y="178" width="10" height="10" transform="rotate(45 374 183)" fill="#0B0B0C"/>
-<line x1="424" y1="183" x2="480" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="484" y1="183" x2="540" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="544" y1="183" x2="600" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="572" y="178" width="10" height="10" transform="rotate(45 577 183)" fill="#0B0B0C"/>
-<line x1="604" y1="183" x2="644" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="614" y="178" width="10" height="10" transform="rotate(45 619 183)" fill="#0B0B0C"/>
-<line x1="648" y1="183" x2="680" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="656" y="178" width="10" height="10" transform="rotate(45 661 183)" fill="#0B0B0C"/>
-<line x1="684" y1="183" x2="760" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="726" y="178" width="10" height="10" transform="rotate(45 731 183)" fill="#0B0B0C"/>
-<line x1="764" y1="183" x2="820" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="767" y="178" width="10" height="10" transform="rotate(45 772 183)" fill="#0B0B0C"/>
-<line x1="824" y1="183" x2="848" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="828" y="178" width="10" height="10" transform="rotate(45 833 183)" fill="#0B0B0C"/>
-<line x1="852" y1="183" x2="892" y2="183" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="882" y="178" width="10" height="10" transform="rotate(45 887 183)" fill="#0B0B0C"/>
-<text x="40" y="226" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">shake</text>
-<line x1="120" y1="221" x2="144" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="148" y1="221" x2="172" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="176" y1="221" x2="252" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="256" y1="221" x2="296" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="277" y="216" width="10" height="10" transform="rotate(45 282 221)" fill="#8C877C"/>
-<line x1="300" y1="221" x2="376" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="357" y="216" width="10" height="10" transform="rotate(45 362 221)" fill="#8C877C"/>
-<line x1="380" y1="221" x2="404" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="408" y1="221" x2="448" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="411" y="216" width="10" height="10" transform="rotate(45 416 221)" fill="#8C877C"/>
-<line x1="452" y1="221" x2="476" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="480" y1="221" x2="520" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="524" y1="221" x2="580" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="547" y="216" width="10" height="10" transform="rotate(45 552 221)" fill="#8C877C"/>
-<line x1="584" y1="221" x2="624" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="612" y="216" width="10" height="10" transform="rotate(45 617 221)" fill="#8C877C"/>
-<line x1="628" y1="221" x2="668" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="634" y="216" width="10" height="10" transform="rotate(45 639 221)" fill="#8C877C"/>
-<line x1="672" y1="221" x2="728" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="689" y="216" width="10" height="10" transform="rotate(45 694 221)" fill="#8C877C"/>
-<line x1="732" y1="221" x2="764" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="768" y1="221" x2="824" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="798" y="216" width="10" height="10" transform="rotate(45 803 221)" fill="#8C877C"/>
-<line x1="828" y1="221" x2="852" y2="221" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="839" y="216" width="10" height="10" transform="rotate(45 844 221)" fill="#8C877C"/>
-<text x="40" y="264" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="600" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">speed</text>
-<line x1="120" y1="259" x2="160" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="164" y1="259" x2="220" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="224" y1="259" x2="264" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="268" y1="259" x2="308" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="312" y1="259" x2="368" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="372" y1="259" x2="404" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="375" y="254" width="10" height="10" transform="rotate(45 380 259)" fill="#0B0B0C"/>
-<line x1="408" y1="259" x2="440" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="444" y1="259" x2="468" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="448" y="254" width="10" height="10" transform="rotate(45 453 259)" fill="#0B0B0C"/>
-<line x1="472" y1="259" x2="512" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="480" y="254" width="10" height="10" transform="rotate(45 485 259)" fill="#0B0B0C"/>
-<line x1="516" y1="259" x2="572" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="554" y="254" width="10" height="10" transform="rotate(45 559 259)" fill="#0B0B0C"/>
-<line x1="576" y1="259" x2="652" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="591" y="254" width="10" height="10" transform="rotate(45 596 259)" fill="#0B0B0C"/>
-<line x1="656" y1="259" x2="732" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="736" y1="259" x2="760" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="747" y="254" width="10" height="10" transform="rotate(45 752 259)" fill="#0B0B0C"/>
-<line x1="764" y1="259" x2="820" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="769" y="254" width="10" height="10" transform="rotate(45 774 259)" fill="#0B0B0C"/>
-<line x1="824" y1="259" x2="880" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<line x1="884" y1="259" x2="908" y2="259" stroke="#D8D3C8" stroke-width="2"/>
-<rect x="889" y="254" width="10" height="10" transform="rotate(45 894 259)" fill="#0B0B0C"/>
-<text x="40" y="302" font-family="ui-monospace, JetBrains Mono, Menlo, monospace" font-weight="400" font-size="14" fill="#8C877C" text-anchor="start" letter-spacing="0">{"start": 3.9, "end": 4.73, "speed": 1.02, "zoom": [[0, 1.09, "linear"], [0.51, 1.9, "out 2.9"]]}</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300" role="img" aria-label="Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
+<line x1="0" y1="0.5" x2="960" y2="0.5" stroke="#0B0B0C" stroke-width="1"/>
+<text x="0" y="26" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">Real edits, as data</text>
+<text x="320" y="26" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">50 edits, 40 looks, 178 cut moves. Every</text>
+<text x="320" y="45" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">shot, ramp, keyframe and layer is JSON</text>
+<text x="320" y="64" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#0B0B0C" text-anchor="start" letter-spacing="0">you can change.</text>
+<rect x="320.5" y="100.5" width="639" height="132" fill="none" stroke="#0B0B0C"/>
+<text x="304" y="126" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="end" letter-spacing="0">shots</text>
+<text x="304" y="156" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="end" letter-spacing="0">zoom</text>
+<text x="304" y="186" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="end" letter-spacing="0">shake</text>
+<text x="304" y="216" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#8C877C" text-anchor="end" letter-spacing="0">speed</text>
+<rect x="330" y="112" width="76" height="20" fill="#8C877C"/>
+<rect x="410" y="112" width="46" height="20" fill="#8C877C"/>
+<rect x="460" y="112" width="116" height="20" fill="#E5332A"/>
+<rect x="580" y="112" width="56" height="20" fill="#8C877C"/>
+<rect x="640" y="112" width="86" height="20" fill="#8C877C"/>
+<rect x="730" y="112" width="66" height="20" fill="#8C877C"/>
+<rect x="800" y="112" width="96" height="20" fill="#8C877C"/>
+<rect x="900" y="112" width="46" height="20" fill="#8C877C"/>
+<polyline points="330,168 378,148 406,150 410,168 440,148 456,150 460,168 532,148 576,150 580,168 616,148 636,150 640,168 694,148 726,150 730,168 772,148 796,150 800,168 860,148 896,150 900,168 930,148 946,150" fill="none" stroke="#E5332A" stroke-width="1.5"/>
+<polyline points="330,189 334,189 338,189 342,189 346,189 350,189 354,189 358,189 362,189 366,189 370,189 374,189 378,189 382,189 386,189 390,189 394,189 398,189 402,189 410,189 414,189 418,189 422,189 426,189 430,189 434,189 438,189 442,189 446,189 450,189 454,189 460,194 464,184 468,194 472,184 476,194 480,184 484,194 488,184 492,194 496,184 500,194 504,184 508,194 512,184 516,194 520,184 524,194 528,184 532,194 536,184 540,194 544,184 548,194 552,184 556,194 560,184 564,194 568,184 572,194 580,189 584,189 588,189 592,189 596,189 600,189 604,189 608,189 612,189 616,189 620,189 624,189 628,189 632,189 640,189 644,189 648,189 652,189 656,189 660,189 664,189 668,189 672,189 676,189 680,189 684,189 688,189 692,189 696,189 700,189 704,189 708,189 712,189 716,189 720,189 724,189 730,194 734,184 738,194 742,184 746,194 750,184 754,194 758,184 762,194 766,184 770,194 774,184 778,194 782,184 786,194 790,184 794,194 800,189 804,189 808,189 812,189 816,189 820,189 824,189 828,189 832,189 836,189 840,189 844,189 848,189 852,189 856,189 860,189 864,189 868,189 872,189 876,189 880,189 884,189 888,189 892,189 900,189 904,189 908,189 912,189 916,189 920,189 924,189 928,189 932,189 936,189 940,189 944,189" fill="none" stroke="#0B0B0C" stroke-width="1.5"/>
+<polyline points="330,210 406,210 410,226 456,226 460,226 576,226 580,210 636,210 640,226 726,226 730,226 796,226 800,210 896,210 900,226 946,226" fill="none" stroke="#0B0B0C" stroke-width="1.5"/>
+<text x="0" y="268" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="12" fill="#0B0B0C" text-anchor="start" letter-spacing="0">{"start": 3.9, "end": 4.73, "speed": 1.02, <tspan fill="#E5332A">"zoom"</tspan>: [[0, 1.09, "linear"], [0.51, 1.9, "out 2.9"]]}</text>
+<text x="960" y="296" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="11" fill="#8C877C" text-anchor="end" letter-spacing="0">3.4</text>
 </svg>
