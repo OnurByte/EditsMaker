@@ -806,6 +806,10 @@ pub fn tone(fs: &[RefFrame]) -> &'static str {
 
 /// The music of an edit without its dialogue: speech sits in the middle of the stereo field, music around it,
 /// so the sides are kept when they carry enough. A mono or music-only file comes back as it is.
+/// The side of a stereo mix (left minus right) in both channels: the centred voice cancels, the wide music stays,
+/// and it survives the mono mix the beat analysis reads (opposite signs in the two channels would sum to nothing).
+const SIDE: &str = "pan=stereo|c0=c0-c1|c1=c0-c1";
+
 pub fn music_only(edit: &Path, cache: &Path) -> Result<PathBuf, String> {
     let e = edit.to_string_lossy();
     let level = |af: &str| {
@@ -818,9 +822,10 @@ pub fn music_only(edit: &Path, cache: &Path) -> Result<PathBuf, String> {
     }
     let dir = cache.join("music");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let out = dir.join(format!("{}-music.wav", safe(&edit.file_stem().unwrap_or_default().to_string_lossy())));
+    // -side.wav, not the old -music.wav: those were made with c1=c1-c0, which a mono mix cancels to silence
+    let out = dir.join(format!("{}-side.wav", safe(&edit.file_stem().unwrap_or_default().to_string_lossy())));
     if !out.is_file() {
-        run(None, "ffmpeg", &["-v", "error", "-y", "-i", e.as_ref(), "-vn", "-af", "pan=stereo|c0=c0-c1|c1=c1-c0", "-ar", "48000", &out.to_string_lossy()])?;
+        run(None, "ffmpeg", &["-v", "error", "-y", "-i", e.as_ref(), "-vn", "-af", SIDE, "-ar", "48000", &out.to_string_lossy()])?;
     }
     Ok(out)
 }
@@ -937,6 +942,13 @@ pub fn video_file(id: &str, url: &str, cache: &Path) -> Result<PathBuf, String> 
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_side_mix_survives_a_mono_mix() {
+        let side = super::SIDE.trim_start_matches("pan=stereo|");
+        let (c0, c1) = side.split_once('|').unwrap();
+        assert_eq!(c0.trim_start_matches("c0="), c1.trim_start_matches("c1="), "both channels carry the same side, so mono keeps it");
+    }
+
     use super::*;
 
     #[test]
