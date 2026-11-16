@@ -843,6 +843,10 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         match util::run(Some(&work), "ffmpeg", &args) {
             Ok(_) => {
                 tl.captions = talk::lines_srt(&quotes, p.total);
+                if let Some((a, m, v)) = &voice {
+                    tl.captions.extend(voice_cues(&a.words, m, v.at));
+                    tl.captions.sort_by(|x, y| x.0.total_cmp(&y.0));
+                }
                 let fin = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({ "clip": fin, "preset": p.name, "song": song.title, "song_from": song_from, "seconds": p.total, "lines": quotes,
                     "voice": voice.as_ref().map(|(a, m, v)| serde_json::json!({ "video": a.src.id, "moment": m, "at": v.at, "text": said(a, m) })),
@@ -866,8 +870,13 @@ fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, Stri
     svg::apply(out, &c.svgs)?;
     library::apply(out, &c.overlays)?;
     let fin = finish::apply(out, &c.finish)?;
-    if !c.export.is_empty() {
-        for p in tl.write(&fin, &c.export)? {
+    // words in the edit (a voice line, lines on screen) always get an .srt beside the clip
+    let mut kinds = c.export.clone();
+    if !tl.captions.is_empty() && !kinds.iter().any(|k| k == "srt") {
+        kinds.push("srt".into());
+    }
+    if !kinds.is_empty() {
+        for p in tl.write(&fin, &kinds)? {
             eprintln!("edits: wrote {}", p.display());
         }
     }
@@ -910,6 +919,23 @@ struct Plan<'a> {
 }
 
 /// What the speaker says in a moment, as text.
+/// A voice line as subtitle cues on the edit's clock (it plays from `at`): one per phrase, broken after
+/// punctuation or every five words.
+fn voice_cues(words: &[transcribe::Word], m: &pick::Moment, at: f64) -> Vec<(f64, f64, String)> {
+    let said: Vec<&transcribe::Word> = words.iter().filter(|w| w.s >= m.start && w.e <= m.end).collect();
+    let mut cues: Vec<(f64, f64, String)> = vec![];
+    let mut run: Vec<&transcribe::Word> = vec![];
+    for (k, w) in said.iter().enumerate() {
+        run.push(w);
+        if w.t.ends_with(['.', ',', '?', '!']) || run.len() == 5 || k + 1 == said.len() {
+            let end = if k + 1 == said.len() { m.end } else { w.e };
+            cues.push((run[0].s - m.start + at, end - m.start + at, run.iter().map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")));
+            run.clear();
+        }
+    }
+    cues
+}
+
 fn said(a: &Analysed, m: &pick::Moment) -> String {
     a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")
 }
@@ -1364,6 +1390,18 @@ mod tests {
 
     fn args(s: &str) -> Vec<String> {
         s.split_whitespace().map(String::from).collect()
+    }
+
+    #[test]
+    fn a_voice_line_becomes_subtitles_on_the_edit_clock() {
+        let w = |t: &str, s: f64, e: f64| crate::transcribe::Word { t: t.into(), s, e };
+        let words = vec![w("önce", 9.0, 9.4), w("Herkes", 10.0, 10.4), w("soruyor,", 10.5, 11.0), w("yanlış", 11.2, 11.6), w("bu.", 11.7, 12.0), w("sonra", 12.1, 12.5)];
+        let m = crate::pick::Moment { start: 10.0, end: 12.05, punch: 11.8, score: 0.0, title: String::new(), why: String::new() };
+        let cues = super::voice_cues(&words, &m, 2.0);
+        assert_eq!(cues.len(), 2);
+        assert_eq!(cues[0].2, "Herkes soruyor,");
+        assert_eq!(cues[1].2, "yanlış bu.");
+        assert!((cues[0].0 - 2.0).abs() < 1e-9 && (cues[1].1 - 4.05).abs() < 1e-9);
     }
 
     #[test]
