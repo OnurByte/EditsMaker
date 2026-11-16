@@ -47,6 +47,11 @@ fn files() -> Vec<(String, PathBuf)> {
     walk(&root).into_iter().filter_map(|f| Some((f.strip_prefix(&root).ok()?.to_string_lossy().into_owned(), f))).collect()
 }
 
+/// Every media file in the library as (kind, relative path, full path).
+pub fn inventory() -> Vec<(&'static str, String, PathBuf)> {
+    files().into_iter().filter_map(|(rel, f)| Some((kind(&rel)?, rel, f))).collect()
+}
+
 /// The closest of `names` to a query: every word of the query is in it; the shortest such name wins.
 fn closest<'a>(names: impl Iterator<Item = &'a str>, query: &str) -> Option<&'a str> {
     let words: Vec<String> = query.to_lowercase().split_whitespace().map(String::from).collect();

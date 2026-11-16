@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "ui"]
+default-members = ["."]
+
 [package]
 name = "edits"
 version = "0.20.0"

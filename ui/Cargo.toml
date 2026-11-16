@@ -1,0 +1,13 @@
+[package]
+name = "edits-ui"
+version = "0.20.0"
+edition = "2021"
+description = "Desktop GUI for EditsMaker built with egui/eframe"
+license = "MIT"
+
+[dependencies]
+edits = { path = ".." }
+eframe = "0.31"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+rfd = "0.15"
+serde_json = "1"

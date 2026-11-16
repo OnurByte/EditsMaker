@@ -1,33 +1,9 @@
 #![recursion_limit = "256"]
-mod capcut;
-mod check;
-mod create;
-mod face;
-mod fetch;
-mod finish;
-mod fx;
-mod grades;
-mod lang;
-mod learn;
-mod library;
-mod looks;
-mod mcp;
-mod montage;
-mod pick;
-mod premiere;
-mod preset;
-mod presets;
-mod render;
-mod signals;
-mod study;
-mod svg;
-mod talk;
-mod timeline;
-mod tools;
-mod transcribe;
-mod update;
-mod util;
-mod wrap;
+use edits::{
+    check, create, face, fetch, finish, fx, grades, lang, learn, library, looks, mcp, montage,
+    pick, premiere, preset, presets, render, signals, study, svg, talk, timeline, tools,
+    transcribe, update, util, wrap,
+};
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
