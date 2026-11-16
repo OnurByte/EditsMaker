@@ -142,7 +142,7 @@ Other kinds, when asked for:
 
 ## After rendering
 
-Without `--out`, each run gets its own folder: `~/Videos/edits/DAY/HH.MM <video or topic title>/` (or `$EDITS_OUT`), with a `.json` beside each clip; the log's last line names it. Do not pass `out` unless the user wants a folder: the automatic one is where they look. Look at frames before calling it done:
+edits picks the output folder itself, one per run: `~/Videos/edits/DAY/HH.MM <video or topic title>/` (or `$EDITS_OUT`), with a `.json` beside each clip; the log's last line names it. Never choose a folder yourself (no `--out`, no `work/`): the automatic one is where the user looks. Look at frames before calling it done:
 `ffmpeg -i clip.mp4 -vf fps=1.5,scale=100:-2,tile=18x2 -frames:v 1 sheet.jpg`. If a preset does not suit
 the footage, change the preset (edits-preset-tweak skill) rather than giving up on it.
 
