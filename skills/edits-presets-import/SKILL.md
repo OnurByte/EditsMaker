@@ -28,6 +28,8 @@ edits preset list
   `~/Movies/CapCut/User Data/Projects/com.lveditor.draft/` (macOS). A CapCut *template link* has no draft to read:
   use it in CapCut, export the video and `edits learn` it. Newer CapCut and JianYing 6+ encrypt drafts; those are
   skipped with a message, so `edits learn` the exported video instead. Filters and stickers are not read.
+- Premiere Lumetri colour presets are opaque binary inside `.prfpset`: export the look from Lumetri as a `.cube`
+  and use it with `--lut` instead. DaVinci Resolve `.setting` packs are not read.
 - Premiere `.prfpset` / `.prfpset.xml` files become cut moves (spins, whips, slides, zooms) that music edits put on the hardest beats.
 - Alight adjustment layers ("copy background" shapes with effects on them) become hits on the shots under them:
   blur pulses, brightening (exposure, contrast, glow passes), shakes, RGB splits, inversions, saturation pops.
