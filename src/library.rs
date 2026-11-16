@@ -167,7 +167,7 @@ pub fn parse(spec: &str) -> Result<Overlay, String> {
 /// Green screens are keyed, clips with transparency laid on top, everything else screened (black disappears).
 /// `alpha`: the file has transparency. `len`: its length, None for a still.
 #[allow(clippy::too_many_arguments)]
-fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bool, len: Option<f64>) -> (Vec<String>, String) {
+fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bool, len: Option<f64>, grey: bool) -> (Vec<String>, String) {
     let rel = o.file.to_string_lossy().to_lowercase();
     let k = kind(&rel).unwrap_or("video");
     // textures and backgrounds run under the whole edit; a transition, a meme or a green screen plays once
@@ -190,13 +190,23 @@ fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bo
     input.extend(["-i".into(), o.file.to_string_lossy().into_owned()]);
     let n = i + 1;
     let shift = format!("setpts=PTS+{:.3}/TB", o.from);
+    // over a black-and-white edit a coloured burn or light leak would tint it: the clip goes grey too
+    let grey = if grey { "hue=s=0," } else { "" };
     let g = if k == "greenscreen" || alpha {
         let key = if k == "greenscreen" && !alpha { "chromakey=0x00FF00:0.18:0.08," } else { "" };
-        format!("[{n}:v]{key}scale={w}:{h}:force_original_aspect_ratio=decrease,format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=(W-w)/2:(H-h)/2:eof_action=pass{when}[{out}];", o.opacity)
+        format!("[{n}:v]{key}{grey}scale={w}:{h}:force_original_aspect_ratio=decrease,format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=(W-w)/2:(H-h)/2:eof_action=pass{when}[{out}];", o.opacity)
     } else {
-        format!("[{n}:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,fps=30,format=gbrp,{shift}[l{i}];[{base}]format=gbrp[b{i}];[b{i}][l{i}]blend=all_mode=screen:all_opacity={:.2}:eof_action=pass{when}[{out}];", o.opacity)
+        format!("[{n}:v]{grey}scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,fps=30,format=gbrp,{shift}[l{i}];[{base}]format=gbrp[b{i}];[b{i}][l{i}]blend=all_mode=screen:all_opacity={:.2}:eof_action=pass{when}[{out}];", o.opacity)
     };
     (input, g)
+}
+
+/// The clip has no colour to speak of (a black-and-white look): average saturation of a few frames under 3.
+fn is_grey(clip: &Path, total: f64) -> bool {
+    let c = clip.to_string_lossy();
+    let out = run(None, "ffmpeg", &["-v", "error", "-ss", &format!("{:.2}", total / 3.0), "-i", c.as_ref(), "-vf", "fps=2,signalstats,metadata=print:key=lavfi.signalstats.SATAVG:file=-", "-frames:v", "6", "-f", "null", "-"]).unwrap_or_default();
+    let v: Vec<f64> = out.lines().filter_map(|l| l.split_once("SATAVG=")?.1.trim().parse().ok()).collect();
+    !v.is_empty() && v.iter().sum::<f64>() / (v.len() as f64) < 3.0
 }
 
 /// Lays the overlays over `clip` in place.
@@ -206,6 +216,7 @@ pub fn apply(clip: &Path, ov: &[Overlay]) -> Result<(), String> {
     }
     let (w, h) = crate::fetch::dims(clip);
     let total = crate::fetch::duration(clip)?;
+    let grey = is_grey(clip, total);
     let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into(), "-i".into(), clip.to_string_lossy().into()];
     let mut g = String::new();
     for (i, o) in ov.iter().enumerate() {
@@ -216,7 +227,7 @@ pub fn apply(clip: &Path, ov: &[Overlay]) -> Result<(), String> {
         let still = matches!(kind(&f.to_lowercase()), Some("image")) || [".png", ".jpg", ".jpeg", ".jfif", ".webp"].iter().any(|e| f.to_lowercase().ends_with(e));
         let len = if still { None } else { Some(crate::fetch::duration(&o.file)?) };
         let base = if i == 0 { "0:v".to_string() } else { format!("x{}", i - 1) };
-        let (input, chain) = layer(o, i, &base, &format!("x{i}"), w, h, alpha, len);
+        let (input, chain) = layer(o, i, &base, &format!("x{i}"), w, h, alpha, len, grey);
         args.extend(input);
         g.push_str(&chain);
     }
@@ -260,20 +271,23 @@ mod tests {
     fn overlay_graphs() {
         let o = |f: &str, from: f64, to: Option<f64>| Overlay { file: PathBuf::from(f), from, to, opacity: 0.5 };
         // a texture loops under the whole edit, screened
-        let (i, g) = layer(&o("Overlays/VHS Texture.mp4", 0.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(20.0));
+        let (i, g) = layer(&o("Overlays/VHS Texture.mp4", 0.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(20.0), false);
         assert_eq!(i, ["-stream_loop", "-1", "-i", "Overlays/VHS Texture.mp4"]);
         assert!(g.contains("blend=all_mode=screen:all_opacity=0.50:eof_action=pass[x0]") && !g.contains("enable"), "{g}");
         // a transition plays once where it is put
-        let (i, g) = layer(&o("Transitions/Burn 3.mp4", 4.0, None), 1, "x0", "x1", 1080, 1920, false, Some(0.5));
+        let (i, g) = layer(&o("Transitions/Burn 3.mp4", 4.0, None), 1, "x0", "x1", 1080, 1920, false, Some(0.5), false);
         assert_eq!(i, ["-i", "Transitions/Burn 3.mp4"]);
         assert!(g.contains("setpts=PTS+4.000/TB[l1];[x0]format=gbrp[b1]") && g.contains("enable='between(t,4.000,4.500)'"), "{g}");
         // green is keyed out; a webm with alpha needs libvpx; a still is looped
-        let (_, g) = layer(&o("Green Screens/a.mp4", 0.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(3.0));
+        let (_, g) = layer(&o("Green Screens/a.mp4", 0.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(3.0), false);
         assert!(g.contains("chromakey=0x00FF00") && g.contains("overlay=(W-w)/2:(H-h)/2:eof_action=pass"), "{g}");
-        let (i, g) = layer(&o("Transitions/wipe.webm", 0.0, None), 0, "0:v", "x0", 1080, 1920, true, Some(2.0));
+        let (i, g) = layer(&o("Transitions/wipe.webm", 0.0, None), 0, "0:v", "x0", 1080, 1920, true, Some(2.0), false);
         assert!(i.contains(&"libvpx".to_string()) && !g.contains("chromakey"), "{g}");
-        let (i, _) = layer(&o("Overlays/Dirt Texture.png", 0.0, Some(2.0)), 0, "0:v", "x0", 1080, 1920, true, None);
+        let (i, _) = layer(&o("Overlays/Dirt Texture.png", 0.0, Some(2.0)), 0, "0:v", "x0", 1080, 1920, true, None, false);
         assert_eq!(&i[..2], ["-loop", "1"]);
+        // over a black-and-white edit the burn goes grey instead of tinting it
+        let (_, g) = layer(&o("Transitions/Burn 3.mp4", 4.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(0.5), true);
+        assert!(g.starts_with("[1:v]hue=s=0,scale="), "{g}");
     }
 
     #[test]

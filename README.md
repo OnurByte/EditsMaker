@@ -262,6 +262,15 @@ edits <link> --music "montagem rave" --overlay "vhs texture:0.5" --overlay "burn
 edits <link> --whoosh "main swoosh" --boom "bass drop"
 ```
 
+Meme edits in one command: words with emoji, the spoken line on screen, math flashing in on the cuts, subliminal
+frames, an intro from another video and the EditsMaker card at the end:
+
+```sh
+edits <link> --preset karakter-buyuk --say ID@1500.4-1504.7 --say-text --math --caption "sayın barış özbay 🗿@0-3.5" \
+  --flash-text "5.2:dışarısı bir simülasyon" --intro "OTHERID@3351.5-3354.9" --intro-bed "fluffing a duck" \
+  --intro-caption "avenox 🤡" --outro edits
+```
+
 The files stay on your machine in `~/.config/edits/library`. Textures run screened under the whole edit, a
 transition or meme plays once where you put it, green screens are keyed.
 

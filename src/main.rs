@@ -27,6 +27,7 @@ mod tools;
 mod transcribe;
 mod update;
 mod util;
+mod wrap;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -213,6 +214,16 @@ struct Cli {
     sfx: bool,
     hook: bool,
     bed: Option<String>,
+    /// words on screen at given times (--caption TEXT@FROM-TO), emoji drawn in colour
+    captions_at: Vec<(String, f64, f64)>,
+    /// the spoken line drawn on the picture as it is said
+    say_text: bool,
+    /// math flashing in on the cuts
+    math: bool,
+    /// one-frame lines on black (--flash-text SECONDS:TEXT)
+    flash_texts: Vec<(f64, String)>,
+    /// an intro before the edit and an outro after it
+    around: wrap::Around,
 }
 
 fn size(aspect: &str) -> Option<(u32, u32)> {
@@ -227,7 +238,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -334,6 +345,14 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--sfx" => c.sfx = true,
             "--hook" => c.hook = true,
             "--bed" => c.bed = Some(val("--bed")?),
+            "--caption" => c.captions_at.push(wrap::parse_caption(&val("--caption")?)?),
+            "--say-text" => c.say_text = true,
+            "--math" => c.math = true,
+            "--flash-text" => c.flash_texts.push(wrap::parse_flash(&val("--flash-text")?)?),
+            "--intro" => c.around.intro = Some(wrap::parse_intro(&val("--intro")?)?),
+            "--intro-bed" => c.around.intro_bed = Some(val("--intro-bed")?),
+            "--intro-caption" => c.around.intro_caption = Some(val("--intro-caption")?),
+            "--outro" => c.around.outro = Some(val("--outro")?),
             "--no-captions" => c.opts.captions = false,
             "--no-llm" => c.llm = false,
             "--join" => c.join = true,
@@ -442,6 +461,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
         music: bed.cloned(),
         captions: transcribe::lines(&a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).cloned().collect::<Vec<_>>()).iter()
             .filter_map(|l| Some((talk::remap(l.s, &segs)? / c.speed, talk::remap(l.e, &segs).unwrap_or(talk::remap(l.s, &segs)? + 1.0) / c.speed, l.text.clone()))).collect(),
+        said: vec![],
     };
     let out = &deliver(c, out, &tl)?;
     let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
@@ -844,7 +864,8 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             Ok(_) => {
                 tl.captions = talk::lines_srt(&quotes, p.total);
                 if let Some((a, m, v)) = &voice {
-                    tl.captions.extend(voice_cues(&a.words, m, v.at));
+                    tl.said = voice_cues(&a.words, m, v.at);
+                    tl.captions.extend(tl.said.clone());
                     tl.captions.sort_by(|x, y| x.0.total_cmp(&y.0));
                 }
                 let fin = deliver(c, &out, &tl)?;
@@ -867,9 +888,24 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
 
 /// The last pass (stabilise, clean the voice, frame rate, codec) and the timelines for other editors.
 fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, String> {
-    svg::apply(out, &c.svgs)?;
+    // words drawn as stickers: --caption at the top, the spoken line at the bottom
+    let mut words = wrap::text_stickers(out, &c.captions_at, 0.11, 0.09, "cap")?;
+    if c.say_text {
+        let said: Vec<(String, f64, f64)> = tl.said.iter().map(|(a, b, t)| (t.clone(), *a, *b)).collect();
+        words.extend(wrap::text_stickers(out, &said, 0.86, 0.06, "said")?);
+    }
+    let mut st = c.svgs.clone();
+    st.extend(words.iter().map(|w| w.0.clone()));
+    let drawn = svg::apply(out, &st);
+    words.iter().for_each(|w| { let _ = std::fs::remove_file(&w.1); });
+    drawn?;
     library::apply(out, &c.overlays)?;
+    let cuts: Vec<f64> = tl.clips.iter().scan(0.0, |t, cl| { *t += cl.2; Some(*t) }).collect();
+    wrap::math(out, &cuts[..cuts.len().saturating_sub(1)], c.math, &c.flash_texts, &c.lang)?;
     let fin = finish::apply(out, &c.finish)?;
+    let shift = wrap::around(&fin, &c.around, &c.lang, c.opts.lufs, &util::home().join(".cache/edits"))?;
+    let mut tl = tl.clone();
+    tl.captions.iter_mut().for_each(|x| { x.0 += shift; x.1 += shift; });
     // words in the edit (a voice line, lines on screen) always get an .srt beside the clip
     let mut kinds = c.export.clone();
     if !tl.captions.is_empty() && !kinds.iter().any(|k| k == "srt") {
@@ -922,7 +958,8 @@ struct Plan<'a> {
 /// A voice line as subtitle cues on the edit's clock (it plays from `at`): one per phrase, broken after
 /// punctuation or every five words.
 fn voice_cues(words: &[transcribe::Word], m: &pick::Moment, at: f64) -> Vec<(f64, f64, String)> {
-    let said: Vec<&transcribe::Word> = words.iter().filter(|w| w.s >= m.start && w.e <= m.end).collect();
+    // ">>" marks a change of speaker in YouTube's captions, it is not said
+    let said: Vec<&transcribe::Word> = words.iter().filter(|w| w.s >= m.start && w.e <= m.end && w.t.trim() != ">>").collect();
     let mut cues: Vec<(f64, f64, String)> = vec![];
     let mut run: Vec<&transcribe::Word> = vec![];
     for (k, w) in said.iter().enumerate() {
@@ -1181,6 +1218,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                     clips: p.files.iter().zip(p.cuts.windows(2)).map(|((f, from, _), w)| (f.clone(), *from, w[1] - w[0])).collect(),
                     music: Some((song.file.clone(), p.start)),
                     captions: p.voice.map(|(a, m)| voice_cues(&a.words, m, p.at)).unwrap_or_default(),
+                    said: p.voice.map(|(a, m)| voice_cues(&a.words, m, p.at)).unwrap_or_default(),
                 };
                 let out = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({
@@ -1422,6 +1460,9 @@ mod tests {
         assert_eq!(cues[0].2, "Herkes soruyor,");
         assert_eq!(cues[1].2, "yanlış bu.");
         assert!((cues[0].0 - 2.0).abs() < 1e-9 && (cues[1].1 - 4.05).abs() < 1e-9);
+        // YouTube's speaker mark is not a word
+        let words = vec![w(">>", 10.0, 10.1), w("Yok", 10.2, 10.5), w("güzel.", 10.6, 11.0)];
+        assert_eq!(super::voice_cues(&words, &m, 0.0)[0].2, "Yok güzel.");
     }
 
     #[test]
