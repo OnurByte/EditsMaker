@@ -34,6 +34,7 @@ OPTIONS
       --voice         the speaker's best whole passage over their own footage, music under it, the drop as it ends, captions
       --shot ID@S[:X] preset edits: the footage for each shot by hand, in order (repeat), X = where the frame looks (0..1)
       --say ID@A-B    use what that video says from A to B seconds (repeat for more edits), whole words; also over --preset edits; implies --voice
+                      ID@A-B+C-D (preset edits): those stretches joined into one line, an offer and its answer
       --length S      seconds per music edit (default 18, sad 24)
       --tag TEXT      small signature at the bottom, like @yourname
       --text TEXT     a line over the whole music edit, in heavy capitals ("THE PROBLEM")
