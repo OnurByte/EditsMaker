@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 49 presets, under 4 MB, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 48 presets, under 4 MB, 40 looks">
 </picture>
 
 <picture>
@@ -96,7 +96,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
-  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 49 Alight Motion and CapCut edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 48 Alight Motion and CapCut edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
 <picture>
@@ -273,7 +273,7 @@ edits doctor
 <details>
 <summary><b>Presets</b></summary>
 
-49 edits (anime and 9:16 community edits made in Alight Motion and CapCut, and ones learned from real edits) and 178
+48 edits (anime and 9:16 community edits made in Alight Motion and CapCut, and ones learned from real edits) and 178
 cut moves (Premiere transitions), kept as JSON in [`presets/`](presets) and built into the binary. Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
 look or song, then use the file for one edit or save it. With another song, cuts move onto its beats.
 Each is named for what it does (`shake-zoom-rush`, `punch-zoom-60s`, `slow-reveal-anime`), and `edits preset list`

@@ -511,6 +511,69 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
     })
 }
 
+/// Effects every importer path understands (on a footage layer or an adjustment layer); the rest are reported.
+const READ: &[&str] = &["lift", "tile", "mirror", "oscillate3", "shake2", "randomdisplace", "jitter", "gaussianblur", "innerblur", "fastboxblur", "lensblurobs",
+    "zoomblur3", "spinblur2", "motionblur", "motionblur2", "motionblur4", "moblurplus", "exposure", "brightcont2", "highlightshadow", "threshold",
+    "deepglow", "deepglow2", "softglow", "edgeglow", "satvib", "rgbsepnew", "chromabbr", "chromaticzoomblur", "invert", "blink2"];
+
+/// An adjustment layer ("copy background" on a shape: Alight's way of putting an effect over everything under it
+/// for a moment) as hits on the shots it covers: a blur pulse, a brightening (exposure, contrast, glow passes),
+/// a shake, an RGB split, an inversion, a saturation pop.
+fn adjust(n: Node, slots: &mut [Slot], w: f64) {
+    if !has_effect(n, "lift") || media(n).is_some() {
+        return;
+    }
+    let (Some(a), Some(b)) = (ms(n, "startTime"), ms(n, "endTime")) else { return };
+    let any = |ids: &[&str]| ids.iter().any(|e| has_effect(n, e));
+    let peak = |e: &str, p: &str, scale: f64, dflt: f64| effect_prop(n, e, p).map_or(dflt, |c| (c.max().abs() * scale).clamp(0.0, 1.0));
+    let blur = any(&["gaussianblur", "innerblur", "fastboxblur", "lensblurobs", "zoomblur3", "chromaticzoomblur"]).then(|| peak("gaussianblur", "strength", 10.0, 0.6));
+    let bright = any(&["exposure", "brightcont2", "highlightshadow", "threshold", "deepglow", "deepglow2", "softglow", "edgeglow"]).then(|| peak("exposure", "exposure", 1.0, 0.35));
+    let shake = any(&["oscillate3", "shake2", "randomdisplace", "jitter"]).then(|| effect_prop(n, "oscillate3", "mag").or_else(|| effect_prop(n, "shake2", "mag")).map_or(0.03, |c| (c.max() / w).clamp(0.005, 0.1)));
+    let sat = effect_prop(n, "satvib", "saturation").map(|c| (1.0 + c.max()).clamp(0.0, 2.0));
+    for s in slots.iter_mut().filter(|s| s.start < b && s.end > a) {
+        let len = (s.end - s.start).max(1e-3);
+        let (ua, ub) = (((a - s.start) / len).clamp(0.0, 1.0), ((b - s.start) / len).clamp(0.0, 1.0));
+        // a pulse: on at the layer's start, gone by its end
+        let pulse = |v: f64| {
+            let mut keys = if ua > 1e-3 { vec![(0.0, 0.0, Ease::Linear), (ua - 1e-3, 0.0, Ease::Linear)] } else { vec![] };
+            keys.extend([(ua, v, Ease::Linear), (ub.max(ua + 2e-3).min(1.0), 0.0, Ease::Out(2.0))]);
+            Curve { keys }
+        };
+        if let (Some(v), true) = (blur, s.blur.is_empty()) {
+            s.blur = pulse(v);
+        }
+        if let (Some(v), true) = (bright, s.exposure.is_empty()) {
+            s.exposure = pulse(v);
+        }
+        if let (Some(v), true) = (shake, s.shake.is_empty()) {
+            s.shake = pulse(v);
+            s.shake_hz = 12.0;
+        }
+        s.rgb |= any(&["rgbsepnew", "chromabbr", "chromaticzoomblur"]);
+        s.invert |= any(&["invert"]);
+        if let (Some(v), true) = (sat, ub - ua >= 0.5) {
+            s.saturation = v;
+        }
+    }
+}
+
+/// Says which effects a project uses that no preset can carry yet, so the gaps are known instead of silent.
+fn report_unread(doc: &Document, name: &str) {
+    let mut unread: std::collections::BTreeMap<&str, usize> = Default::default();
+    for e in doc.descendants().filter(|d| d.has_tag_name("effect")) {
+        if let Some(id) = e.attribute("id").and_then(|i| i.rsplit('.').next()) {
+            if !READ.contains(&id) {
+                *unread.entry(id).or_default() += 1;
+            }
+        }
+    }
+    if !unread.is_empty() {
+        let mut v: Vec<_> = unread.into_iter().collect();
+        v.sort_by_key(|a| std::cmp::Reverse(a.1));
+        eprintln!("edits: {name}: effects not carried over: {}", v.iter().map(|(k, n)| format!("{k} x{n}")).collect::<Vec<_>>().join(", "));
+    }
+}
+
 /// A layer's slots: itself, or for a group that cuts between several videos inside it, each of those, moved to
 /// the outer timeline (`at` is where the group's own time starts).
 fn collect(n: Node, at: f64, w: f64, h: f64, out: &mut Vec<Slot>) {
@@ -532,7 +595,8 @@ fn collect(n: Node, at: f64, w: f64, h: f64, out: &mut Vec<Slot>) {
 }
 
 fn flash(n: Node, w: f64, h: f64) -> Option<Flash> {
-    if n.attribute("fillType") != Some("color") {
+    // a "copy background" layer shows the picture with its effects, not a solid colour: see `adjust`
+    if n.attribute("fillType") != Some("color") || has_effect(n, "lift") {
         return None;
     }
     // only layers that cover the frame: a rectangle scaled up past the canvas
@@ -567,6 +631,10 @@ pub fn parse(xml: &str, name: &str) -> Result<Preset, String> {
     }
     slots.sort_by(|a, b| a.start.total_cmp(&b.start));
     let flashes = top.iter().filter_map(|n| flash(*n, w, h)).collect();
+    for n in &top {
+        adjust(*n, &mut slots, w);
+    }
+    report_unread(&doc, name);
     // the song is the longest sound in the project
     let song = root.descendants().filter(|d| d.has_tag_name("audio"))
         .max_by(|a, b| (ms(*a, "endTime").unwrap_or(0.0) - ms(*a, "startTime").unwrap_or(0.0)).total_cmp(&(ms(*b, "endTime").unwrap_or(0.0) - ms(*b, "startTime").unwrap_or(0.0))))
@@ -914,5 +982,17 @@ mod tests {
     fn keys_outside_a_layer_do_not_stack() {
         let k = clamp_keys(vec![(-0.4, 9.0, Ease::Linear), (-0.1, 1.5, Ease::Linear), (0.5, 1.2, Ease::Linear), (1.2, 1.0, Ease::Linear), (1.6, 7.0, Ease::Linear)]);
         assert_eq!(k.iter().map(|x| (x.0, x.1)).collect::<Vec<_>>(), vec![(0.0, 1.5), (0.5, 1.2), (1.0, 1.0)]);
+    }
+
+    #[test]
+    fn a_real_shaped_alight_project_keeps_its_moves_sane() {
+        let p = parse(include_str!("../tests/fixtures/alight/regressions.xml"), "regressions").unwrap();
+        assert_eq!(p.slots.len(), 3);
+        let zoom: Vec<(f64, f64)> = p.slots[0].zoom.keys.iter().map(|k| (k.0, k.1)).collect();
+        assert_eq!(zoom, vec![(0.0, 0.05), (0.3, 1.2), (1.0, 1.0)], "pop-in from 0, keys outside the layer dropped");
+        assert_eq!(p.slots[1].zoom.keys.iter().map(|k| k.1).collect::<Vec<_>>(), vec![1.0, 1.3], "mirrored, not -1000");
+        assert!(p.flashes.is_empty(), "a copy-background layer is not a white flash");
+        let blur = &p.slots[2].blur;
+        assert!((blur.at(0.2) - 0.6).abs() < 1e-6 && blur.at(0.1) == 0.0 && blur.at(0.9) == 0.0, "a blur pulse where the adjustment layer sits: {blur:?}");
     }
 }
