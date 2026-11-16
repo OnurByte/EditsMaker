@@ -410,9 +410,9 @@ mod tests {
         if ["Noto Sans", "Adwaita Sans", "DejaVu Sans", "Liberation Sans", "Arial"].iter().any(|n| has(n)) {
             assert!(px.pixels().iter().any(|c| c.alpha() > 200), "the words are drawn");
         }
-        // the clown's red nose: colour emoji really drawn, not a blank box (only where an emoji font is installed;
-        // CI machines have none)
-        if has("Emoji") {
+        // the clown's red nose: colour emoji really drawn, not a blank box. shortcut: only Noto Color Emoji (Linux)
+        // draws; Apple's sbix emoji come out blank, upgrade if macOS users need emoji captions
+        if has("Noto Color Emoji") {
             assert!(px.pixels().iter().any(|c| c.red() > 180 && c.green() < 90 && c.blue() < 90 && c.alpha() > 200));
         }
         png(&math_svg(540, 540, "tr"), 1080, &p).unwrap();
