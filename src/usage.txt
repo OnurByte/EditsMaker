@@ -73,6 +73,15 @@ OPTIONS
       --overlay NAME[@FROM[-TO]][:OPACITY]   a library clip (or file) over the edit: textures screened under all of
                       it, a transition or meme once at FROM, green screens keyed (repeatable)
       --whoosh NAME   --boom NAME   talking clips: library sounds for the cuts and the punchline
+      --pip FILE[@FROM-TO][:X,Y,SIZE]  another video (or library clip) small in a white frame over the edit,
+                      centre X,Y and width SIZE as fractions (default top right); --overlay takes :X,Y,SIZE too
+      --transition T  music edits: this transition on every soft cut (fade, dissolve, wipeleft, slideup, circleopen,
+                      pixelize, radial, squeezeh, coverleft, revealup, hblur and every other ffmpeg xfade)
+      --curves C      a tone curve over the edit: vintage, strong_contrast, cross_process, darker, lighter, ...
+                      or your own points "0/0 0.4/0.3 1/1"
+      --pop COLOUR    colour pop: only red, yellow, green, cyan, blue or magenta stays, the rest goes grey
+      --bass DB       low end boost (6 = phonk)   --pitch N  semitones up or down, tempo kept
+      --reverb        a room behind the sound (slowed + reverb)
       --stabilize  --denoise  --smooth  --fps N  --codec h264|h265|prores|av1  --quality draft|high|master
       --export LIST   timelines beside each clip for other editors: fcpxml, edl, srt, vtt
       --no-jumpcuts   keep the pauses   --no-sfx  no whoosh/boom   --no-hook  no title on top

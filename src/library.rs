@@ -136,17 +136,29 @@ pub fn add(src: &Path) -> Result<PathBuf, String> {
     Ok(root)
 }
 
-/// A library clip laid over the finished edit: `NAME[@FROM[-TO]][:OPACITY]`.
+/// A library clip laid over the finished edit: `NAME[@FROM[-TO]][:OPACITY][:X,Y,SIZE]`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Overlay {
     pub file: PathBuf,
     pub from: f64,
     pub to: Option<f64>,
     pub opacity: f64,
+    /// picture in picture: centre x, y and width as fractions of the frame, laid on top with a white frame
+    pub place: Option<(f64, f64, f64)>,
 }
 
 pub fn parse(spec: &str) -> Result<Overlay, String> {
-    let bad = || format!("--overlay {spec}: use NAME[@FROM[-TO]][:OPACITY], like \"vhs texture:0.5\" or \"burn 3@4.2\"");
+    let bad = || format!("--overlay {spec}: use NAME[@FROM[-TO]][:OPACITY][:X,Y,SIZE], like \"vhs texture:0.5\", \"burn 3@4.2\" or \"cam.mp4@0-5:0.75,0.2,0.35\"");
+    let (spec, place) = match spec.rsplit_once(':') {
+        Some((r, p)) if p.contains(',') => {
+            let v: Vec<f64> = p.split(',').map(|x| x.trim().parse::<f64>().map_err(|_| bad())).collect::<Result<_, _>>()?;
+            match v[..] {
+                [x, y, w] if (0.0..=1.0).contains(&x) && (0.0..=1.0).contains(&y) && (0.05..=1.0).contains(&w) => (r, Some((x, y, w))),
+                _ => return Err(bad()),
+            }
+        }
+        _ => (spec, None),
+    };
     let (rest, opacity) = match spec.rsplit_once(':') {
         Some((r, o)) if o.parse::<f64>().is_ok() => (r, o.parse::<f64>().unwrap().clamp(0.0, 1.0)),
         _ => (spec, 1.0),
@@ -160,7 +172,7 @@ pub fn parse(spec: &str) -> Result<Overlay, String> {
     };
     let file = find(&["overlay", "transition", "greenscreen", "background", "meme", "video", "image"], name)
         .ok_or(format!("--overlay {name}: no such file or library clip (edits library overlay)"))?;
-    Ok(Overlay { file, from, to, opacity })
+    Ok(Overlay { file, from, to, opacity, place })
 }
 
 /// How a clip goes over the picture: (input options, filter chain for it, joining filter).
@@ -192,7 +204,12 @@ fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bo
     let shift = format!("setpts=PTS+{:.3}/TB", o.from);
     // over a black-and-white edit a coloured burn or light leak would tint it: the clip goes grey too
     let grey = if grey { "hue=s=0," } else { "" };
-    let g = if k == "greenscreen" || alpha {
+    let g = if let Some((x, y, size)) = o.place {
+        // picture in picture: scaled to `size` of the width, a thin white frame, centred on x, y and kept inside
+        let pw = ((w as f64 * size) as u32 / 2 * 2).max(32);
+        let b = (w / 270).max(2);
+        format!("[{n}:v]{grey}scale={pw}:-2,setsar=1,fps=30,pad=iw+{b2}:ih+{b2}:{b}:{b}:white,format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=x='clip(W*{x:.3}-w/2,0,W-w)':y='clip(H*{y:.3}-h/2,0,H-h)':eof_action=pass{when}[{out}];", o.opacity, b2 = b * 2)
+    } else if k == "greenscreen" || alpha {
         let key = if k == "greenscreen" && !alpha { "chromakey=0x00FF00:0.18:0.08," } else { "" };
         format!("[{n}:v]{key}{grey}scale={w}:{h}:force_original_aspect_ratio=decrease,format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=(W-w)/2:(H-h)/2:eof_action=pass{when}[{out}];", o.opacity)
     } else {
@@ -269,7 +286,7 @@ mod tests {
 
     #[test]
     fn overlay_graphs() {
-        let o = |f: &str, from: f64, to: Option<f64>| Overlay { file: PathBuf::from(f), from, to, opacity: 0.5 };
+        let o = |f: &str, from: f64, to: Option<f64>| Overlay { file: PathBuf::from(f), from, to, opacity: 0.5, place: None };
         // a texture loops under the whole edit, screened
         let (i, g) = layer(&o("Overlays/VHS Texture.mp4", 0.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(20.0), false);
         assert_eq!(i, ["-stream_loop", "-1", "-i", "Overlays/VHS Texture.mp4"]);
@@ -288,6 +305,10 @@ mod tests {
         // over a black-and-white edit the burn goes grey instead of tinting it
         let (_, g) = layer(&o("Transitions/Burn 3.mp4", 4.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(0.5), true);
         assert!(g.starts_with("[1:v]hue=s=0,scale="), "{g}");
+        // picture in picture: small, framed, placed, plays once
+        let pip = Overlay { place: Some((0.75, 0.2, 0.35)), ..o("cam.mp4", 1.0, Some(4.0)) };
+        let (_, g) = layer(&pip, 0, "0:v", "x0", 1080, 1920, false, Some(10.0), false);
+        assert!(g.contains("scale=378:-2") && g.contains("pad=iw+8:ih+8:4:4:white") && g.contains("overlay=x='clip(W*0.750-w/2,0,W-w)'") && g.contains("between(t,1.000,4.000)"), "{g}");
     }
 
     #[test]
@@ -295,8 +316,11 @@ mod tests {
         let f = std::env::temp_dir().join("edits-overlay-spec.mp4");
         std::fs::write(&f, "").unwrap();
         let s = f.to_string_lossy();
-        assert_eq!(parse(&format!("{s}@1.5-3:0.4")).unwrap(), Overlay { file: f.clone(), from: 1.5, to: Some(3.0), opacity: 0.4 });
-        assert_eq!(parse(&s).unwrap(), Overlay { file: f.clone(), from: 0.0, to: None, opacity: 1.0 });
+        assert_eq!(parse(&format!("{s}@1.5-3:0.4")).unwrap(), Overlay { file: f.clone(), from: 1.5, to: Some(3.0), opacity: 0.4, place: None });
+        assert_eq!(parse(&format!("{s}@0-5:0.75,0.2,0.35")).unwrap(), Overlay { file: f.clone(), from: 0.0, to: Some(5.0), opacity: 1.0, place: Some((0.75, 0.2, 0.35)) });
+        assert_eq!(parse(&format!("{s}:0.8:0.5,0.5,0.4")).unwrap().opacity, 0.8);
+        assert!(parse(&format!("{s}:2,0.5,0.4")).is_err());
+        assert_eq!(parse(&s).unwrap(), Overlay { file: f.clone(), from: 0.0, to: None, opacity: 1.0, place: None });
         assert!(parse(&format!("{s}@x")).is_err());
         let _ = std::fs::remove_file(f);
     }

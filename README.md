@@ -172,6 +172,14 @@ Slow, faster, hidden faces, a cleaner finish:
 edits https://www.youtube.com/watch?v=VIDEO_ID --speed 1.2 --blur-faces --stabilize --denoise --codec h265
 ```
 
+Premiere's finishing moves as flags: a picture in picture, a transition on every soft cut, a tone curve, a colour
+pop, phonk bass, the song a step lower and a room behind it:
+
+```sh
+edits <link> --music trend:2 --pip reaction.mp4@2-8:0.75,0.2,0.35 --transition circleopen --curves vintage \
+  --pop red --bass 6 --pitch -2 --reverb
+```
+
 Draw on it to point things out: an arrow, a ring, a cross, a burst, or your own .svg (`edits looks` lists them):
 
 ```sh
@@ -279,6 +287,48 @@ Check the tools:
 ```sh
 edits doctor
 ```
+
+</details>
+
+<details>
+<summary><b>Premiere, flag by flag</b></summary>
+
+What a Premiere Pro editor reaches for, and where it is in edits. Every row runs from the command line, the MCP
+server and preset JSON; no timeline to drag.
+
+| Premiere | edits |
+|---|---|
+| Razor and ripple delete, jump cuts | automatic; `--no-jumpcuts` keeps the pauses |
+| Text-based editing (cut by the transcript) | `--say ID@A-B` picks whole words; `+G+` joins lines with a gap |
+| Speed / Duration, Time Remapping | `--speed`, `--velocity`, a preset shot's `speed` and `ramp` curve |
+| Reverse speed | a preset shot's `"reverse": true` |
+| Frame hold | `--fx freeze` on the hardest beats |
+| Optical flow | `--smooth` (motion-interpolated frames), `--fps` |
+| Motion: scale, position, rotation keyframes | a preset shot's `zoom`, `x`, `y`, `rot` curves with easing; 178 Premiere cut moves built in |
+| Video transitions | `--transition` with every ffmpeg xfade: dissolve, wipes, slides, push, iris, pixelize, squeeze |
+| Picture in picture, nested video track | `--pip FILE[@FROM-TO][:X,Y,SIZE]` |
+| Blend modes, overlays, light leaks | `--overlay NAME[@FROM-TO][:OPACITY]`, screened; alpha clips laid on top |
+| Ultra Key (green screen) | green screens from the library are keyed automatically |
+| Auto Reframe | faces followed into any `--aspect` or `--size`; `--fit` keeps the whole frame |
+| Warp Stabilizer | `--stabilize` |
+| Lumetri: basic correction | a preset shot's `exposure`, `contrast`, `saturation`, `kelvin` |
+| Lumetri: curves | `--curves vintage` or your own points `"0/0 0.4/0.3 1/1"`; per shot `"curves"` |
+| Lumetri: HSL secondary | `--pop red` keeps one colour, the rest grey; per shot `"pop"` |
+| Lumetri: creative look, LUTs | `--look` (40 looks), `--lut FILE.cube`, `edits cube` writes one out |
+| Gaussian blur, mosaic | `--blur-faces`, `--blur-box`, per shot `blur`, `pixelate` |
+| Essential Graphics, captions | `--captions` (6 styles), `--caption TEXT@FROM-TO`, `--text`, `--line`, `--svg` shapes |
+| Essential Sound: dialogue | `--denoise` (noise reduction, dialogue lift, loudness) |
+| Auto-ducking | music ducks under the voice in every voice edit |
+| Parametric EQ, bass boost | `--bass DB` |
+| Pitch shifter | `--pitch N` semitones, tempo kept so cuts stay on the beat |
+| Reverb | `--reverb` |
+| Loudness normalisation | every edit lands at -14 LUFS; `edits study` learns yours |
+| Scene edit detection | `edits learn edit.mp4` finds every cut and flash and makes a preset of them |
+| Export: H.264, HEVC, ProRes, AV1 | `--codec`, `--quality`, `--encoder nvenc` |
+| Export to other editors | `--export fcpxml,edl,srt,vtt` |
+
+Not there yet: free masks and rotoscoping, tracking a point other than a face, multicam sync, proxies, and
+opening a `.prproj`.
 
 </details>
 

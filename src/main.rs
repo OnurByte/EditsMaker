@@ -155,6 +155,8 @@ fn main() -> ExitCode {
 }
 
 struct Cli {
+    /// music edits: this xfade transition on every cut that is not a hard cut
+    transition: Option<&'static str>,
     input: String,
     n: usize,
     videos: usize,
@@ -236,6 +238,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let (w, h) = size(&style.aspect).unwrap_or((1080, 1920));
     let grade = if looks::names().contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
     let mut c = Cli {
+        transition: None,
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
         llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
@@ -322,6 +325,26 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                     return Err(format!("--export: {bad} is not fcpxml, edl, srt or vtt"));
                 }
             }
+            "--pip" => {
+                let mut o = library::parse(&val("--pip")?)?;
+                o.place = o.place.or(Some((0.74, 0.22, 0.4)));
+                c.overlays.push(o);
+            }
+            "--transition" => {
+                let t = val("--transition")?;
+                c.transition = Some(montage::XFADES.iter().find(|x| **x == t).copied().ok_or(format!("--transition must be one of {}", montage::XFADES.join(", ")))?);
+            }
+            "--curves" => {
+                c.finish.curves = val("--curves")?;
+                fx::curves(&c.finish.curves).ok_or(format!("--curves must be one of {} or points like \"0/0 0.4/0.3 1/1\"", fx::CURVES.join(", ")))?;
+            }
+            "--pop" => {
+                c.finish.pop = val("--pop")?.to_lowercase();
+                fx::pop(&c.finish.pop).ok_or(format!("--pop must be one of {}", fx::POP.iter().map(|p| p.0).collect::<Vec<_>>().join(", ")))?;
+            }
+            "--bass" => c.finish.bass = val("--bass")?.parse().ok().filter(|d| (-12.0..=15.0).contains(d)).ok_or("--bass must be -12 to 15 dB")?,
+            "--pitch" => c.finish.pitch = val("--pitch")?.parse().ok().filter(|d| (-12.0..=12.0).contains(d)).ok_or("--pitch must be -12 to 12 semitones")?,
+            "--reverb" => c.finish.reverb = true,
             "--stabilize" => c.finish.stabilize = true,
             "--denoise" => c.finish.denoise = true,
             "--smooth" => c.finish.smooth = true,
@@ -1247,6 +1270,10 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         }
         if template.is_none() && !c.look.sad {
             montage::add_moves(&mut joins, k);
+        }
+        if let Some(t) = c.transition {
+            // every real transition becomes the one asked for; hard cuts stay hard cuts
+            joins.iter_mut().filter(|j| j.dur > montage::CUT.dur).for_each(|j| j.kind = t);
         }
         let spans = montage::pieces(&cuts, &joins);
         let needs: Vec<f64> = spans.iter().skip(files.len()).map(|(_, l)| l * look.speed() + 0.25).collect();

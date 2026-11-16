@@ -563,6 +563,13 @@ pub struct Join {
     pub motion: Option<usize>,
 }
 
+/// Every transition ffmpeg's xfade draws (Premiere's video transitions).
+pub const XFADES: &[&str] = &["fade", "fadeblack", "fadewhite", "fadegrays", "dissolve", "pixelize", "radial", "circleopen", "circleclose", "circlecrop",
+    "rectcrop", "distance", "wipeleft", "wiperight", "wipeup", "wipedown", "wipetl", "wipetr", "wipebl", "wipebr", "slideleft", "slideright", "slideup",
+    "slidedown", "smoothleft", "smoothright", "smoothup", "smoothdown", "horzopen", "horzclose", "vertopen", "vertclose", "diagtl", "diagtr", "diagbl",
+    "diagbr", "hlslice", "hrslice", "vuslice", "vdslice", "hblur", "squeezeh", "squeezev", "zoomin", "coverleft", "coverright", "coverup", "coverdown",
+    "revealleft", "revealright", "revealup", "revealdown"];
+
 pub const CUT: Join = Join { kind: "fade", dur: 0.034, motion: None };
 
 /// One join per cut point, from how hard the music hits there (`hits`, same length as `cuts`).

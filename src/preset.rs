@@ -235,6 +235,15 @@ pub struct Slot {
     /// a speed ramp over the shot, multiplying `speed` (2.5 = rushing, 0.5 = slow motion)
     #[serde(default, skip_serializing_if = "Curve::is_empty")]
     pub ramp: Curve,
+    /// played backwards (rewind)
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub reverse: bool,
+    /// tone curve: a name from `fx::CURVES` or master points "0/0 0.4/0.3 1/1"
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub curves: String,
+    /// colour pop: only this colour stays (red, yellow, green, cyan, blue, magenta), the rest goes grey
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub pop: String,
 }
 
 impl Slot {
@@ -589,6 +598,9 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         rgb: [n, m].iter().any(|x| has_effect(*x, "rgbsepnew") || has_effect(*x, "chromabbr")),
         invert: has_effect(n, "invert") || has_effect(m, "invert"),
         ramp: Curve::default(),
+        reverse: false,
+        curves: String::new(),
+        pop: String::new(),
         motion_blur: ["motionblur4", "motionblur2", "motionblur", "moblurplus", "zoomblur3", "spinblur2"].iter().any(|e| has_effect(n, e) || has_effect(m, e)),
         drop: false,
     })
@@ -905,6 +917,10 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
         g.push_str(&format!("{}concat=n={}:v=1:a=0,fps=30", (0..parts.len()).map(|k| format!("[r{i}y{k}]")).collect::<String>(), parts.len()));
         g
     };
+    if s.reverse {
+        // only the shot's own footage is buffered and turned round, so its first frame is the one it would end on
+        f.push_str(&format!(",trim=end={len:.3},setpts=PTS-STARTPTS,reverse"));
+    }
     f.push_str(&x.pre);
     if let Some(secs) = x.freeze {
         f.push_str(&crate::fx::freeze(secs));
@@ -949,6 +965,8 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
     if !s.hue.is_empty() && (s.hue.max().abs() > 0.5 || s.hue.is_moving()) {
         f.push_str(&format!(",hue=h='{}'", s.hue.expr("t", len)));
     }
+    f.push_str(&crate::fx::curves(&s.curves).unwrap_or_default());
+    f.push_str(&crate::fx::pop(&s.pop).unwrap_or_default());
     if s.trails > 0.0 {
         f.push_str(&format!(",lagfun=decay={:.3}", 0.8 + 0.18 * s.trails.min(1.0)));
     }
@@ -1165,10 +1183,11 @@ mod tests {
         assert!(chain(&tinted, 1, 1080, 1200, &Extra::default(), 1.0).contains(",hue=h='"));
         let plain = chain(&p.slots[1], 1, 1080, 1200, &Extra::default(), 1.0);
         let all: Slot = serde_json::from_value(serde_json::json!({"start": 0.0, "end": 1.0, "contrast": 1.4, "kelvin": 3000.0, "vignette": 0.5, "grain": 0.3,
-            "glow": 0.6, "sharpen": 0.5, "pixelate": 12.0, "lens": 0.6, "trails": 0.5, "flip": true})).unwrap();
+            "glow": 0.6, "sharpen": 0.5, "pixelate": 12.0, "lens": 0.6, "trails": 0.5, "flip": true, "reverse": true, "curves": "vintage", "pop": "red"})).unwrap();
         let c = chain(&all, 1, 1080, 1200, &Extra::default(), 1.0);
         for want in ["contrast=1.40", "colortemperature=temperature=3000", "vignette=angle=", "noise=alls=18", "blend=all_mode=screen:all_opacity=0.60",
-            "unsharp=5:5:1.00", "pixelize=w=12:h=12", "lenscorrection=k1=-0.300", "lagfun=decay=0.890", "hflip"] {
+            "unsharp=5:5:1.00", "pixelize=w=12:h=12", "lenscorrection=k1=-0.300", "lagfun=decay=0.890", "hflip", "trim=end=1.000,setpts=PTS-STARTPTS,reverse",
+            "curves=preset=vintage", "huesaturation=colors=y+g+c+b+m"] {
             assert!(c.contains(want) && !plain.contains(want), "{want}: {c}");
         }
         assert!(b.contains("gblur=sigma=14:enable=") && b.contains("crop=1080:1200:x='1080-(") && !b.contains("zoompan"), "{b}");

@@ -15,11 +15,21 @@ pub struct Finish {
     pub codec: String,
     /// draft, high (default), master
     pub quality: String,
+    /// a tone curve over the whole edit (`fx::curves`)
+    pub curves: String,
+    /// colour pop: only this colour stays
+    pub pop: String,
+    /// low end boost in dB (phonk bass), 0 = off
+    pub bass: f64,
+    /// semitones up or down, tempo kept (so the cuts stay on the beat)
+    pub pitch: f64,
+    /// a room behind the sound (slowed + reverb, sad edits)
+    pub reverb: bool,
 }
 
 impl Finish {
     pub fn wanted(&self) -> bool {
-        self.stabilize || self.denoise || self.smooth || self.fps.is_some() || !matches!(self.codec.as_str(), "" | "h264") || !matches!(self.quality.as_str(), "" | "high")
+        self.stabilize || self.denoise || self.smooth || self.fps.is_some() || !self.curves.is_empty() || !self.pop.is_empty() || self.bass != 0.0 || self.pitch != 0.0 || self.reverb || !matches!(self.codec.as_str(), "" | "h264") || !matches!(self.quality.as_str(), "" | "high")
     }
 }
 
@@ -58,6 +68,11 @@ pub fn video_chain(f: &Finish, trf: Option<&str>) -> String {
     if let Some(t) = trf {
         v.push(format!("vidstabtransform=input={t}:smoothing=12:zoom=3:optzoom=0,unsharp=5:5:0.6"));
     }
+    // colour after stabilising, before new frames are made from it
+    let colour = format!("{}{}", crate::fx::curves(&f.curves).unwrap_or_default(), crate::fx::pop(&f.pop).unwrap_or_default());
+    if !colour.is_empty() {
+        v.push(colour[1..].to_string());
+    }
     match (f.smooth, f.fps) {
         (true, fps) => v.push(format!("minterpolate=fps={}:mi_mode=mci:mc_mode=aobmc:vsbmc=1", fps.unwrap_or(60))),
         (false, Some(fps)) => v.push(format!("fps={fps}")),
@@ -67,7 +82,26 @@ pub fn video_chain(f: &Finish, trf: Option<&str>) -> String {
 }
 
 pub fn audio_chain(f: &Finish) -> String {
-    if f.denoise { "afftdn=nf=-25,dialoguenhance,loudnorm=I=-14:TP=-1.5".into() } else { String::new() }
+    let mut a: Vec<String> = vec![];
+    if f.denoise {
+        a.push("afftdn=nf=-25,dialoguenhance".into());
+    }
+    if f.bass != 0.0 {
+        a.push(format!("bass=g={:.1}:f=110:w=0.6", f.bass.clamp(-12.0, 15.0)));
+    }
+    if f.pitch != 0.0 {
+        // faster sample rate = higher voice and song, atempo takes the speed back out
+        let r = 2f64.powf(f.pitch.clamp(-12.0, 12.0) / 12.0);
+        a.push(format!("aresample=48000,asetrate={:.0},aresample=48000,atempo={:.5}", 48000.0 * r, 1.0 / r));
+    }
+    if f.reverb {
+        a.push("aecho=0.8:0.88:60|120|200:0.3|0.22|0.15".into());
+    }
+    if !a.is_empty() {
+        // a boost or a room changes loudness: back to the platforms' level, never clipping
+        a.push("loudnorm=I=-14:TP=-1.5".into());
+    }
+    a.join(",")
 }
 
 /// Runs the pass over `clip` in place (a ProRes delivery becomes a .mov beside it). Returns the final file.
@@ -122,7 +156,12 @@ mod tests {
         let f = Finish { stabilize: true, smooth: true, fps: Some(60), denoise: true, ..Default::default() };
         assert_eq!(video_chain(&f, Some("x.trf")), "vidstabtransform=input=x.trf:smoothing=12:zoom=3:optzoom=0,unsharp=5:5:0.6,minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:vsbmc=1");
         assert_eq!(video_chain(&Finish { fps: Some(24), ..Default::default() }, None), "fps=24");
-        assert!(audio_chain(&f).starts_with("afftdn"));
+        assert!(audio_chain(&f).starts_with("afftdn") && audio_chain(&f).ends_with("loudnorm=I=-14:TP=-1.5"));
+        assert_eq!(audio_chain(&Finish::default()), "");
+        let fx = Finish { bass: 6.0, pitch: -2.0, reverb: true, curves: "darker".into(), pop: "red".into(), ..Default::default() };
+        assert!(fx.wanted());
+        assert_eq!(audio_chain(&fx), "bass=g=6.0:f=110:w=0.6,aresample=48000,asetrate=42763,aresample=48000,atempo=1.12246,aecho=0.8:0.88:60|120|200:0.3|0.22|0.15,loudnorm=I=-14:TP=-1.5");
+        assert_eq!(video_chain(&fx, None), "curves=preset=darker,huesaturation=colors=y+g+c+b+m:saturation=-1:strength=100");
         let (a, ext) = encoder("prores", "master");
         assert_eq!((a.join(" "), ext), ("-c:v prores_ks -profile:v 3".to_string(), "mov"));
         assert_eq!(encoder("h264", "draft").0.join(" "), "-c:v libx264 -preset medium -crf 28 -pix_fmt yuv420p");
