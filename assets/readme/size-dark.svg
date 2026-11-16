@@ -15,9 +15,9 @@
 <text x="840" y="120" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#9A958A" text-anchor="middle" letter-spacing="0">For agents</text>
 <text x="920" y="120" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="12" fill="#9A958A" text-anchor="middle" letter-spacing="0">TikTok trends</text>
 <g transform="translate(-3.8,136.6) scale(0.27708333333333335)"><defs><clipPath id="lm0140"><polygon points="0,0 56,0 44,96 0,96"/></clipPath><clipPath id="rm0140"><polygon points="61,0 96,0 96,96 49,96"/></clipPath></defs><g clip-path="url(#lm0140)"><path d="M32,18 H74 V32 H32 V41 H74 V55 H32 V64 H74 V78 H32 A14,14 0 0 1 18,64 V32 A14,14 0 0 1 32,18 Z" fill="#F4F1EA"/></g><g clip-path="url(#rm0140)"><path d="M32,18 H74 V32 H32 V41 H74 V55 H32 V64 H74 V78 H32 A14,14 0 0 1 18,64 V32 A14,14 0 0 1 32,18 Z" fill="#E5332A" transform="translate(0,7)"/></g></g>
-<text x="30" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#E5332A" text-anchor="start" letter-spacing="0">EditsMaker</text>
+<text x="30" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F25247" text-anchor="start" letter-spacing="0">EditsMaker</text>
 <rect x="190" y="143" width="2" height="14" rx="1" fill="#E5332A"/>
-<text x="200" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#E5332A" text-anchor="start" letter-spacing="0">3.7 MB</text>
+<text x="200" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="13" fill="#F25247" text-anchor="start" letter-spacing="0">3.7 MB</text>
 <text x="249.6" y="155" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="400" font-size="11" fill="#9A958A" text-anchor="start" letter-spacing="0">download</text>
 <circle cx="680" cy="150" r="6" fill="#E5332A"/>
 <circle cx="760" cy="150" r="6" fill="#E5332A"/>

@@ -17,8 +17,10 @@ OUT = ROOT / "assets/readme"
 VERSION = re.search(r'^version = "(.+)"', (ROOT / "Cargo.toml").read_text(), re.M)[1]
 
 THEMES = {  # CARD sits one step off GitHub's own page colour; GRAY is dark enough to read comfortably
-    "light": {"INK": "#0B0B0C", "RED": "#E5332A", "GRAY": "#6F6A60", "HAIR": "#E4E0D7", "PAPER": "#F4F1EA", "CARD": "#F6F4EF"},
-    "dark": {"INK": "#F4F1EA", "RED": "#E5332A", "GRAY": "#9A958A", "HAIR": "#30363D", "PAPER": "#F4F1EA", "CARD": "#161B22"},
+    "light": {"INK": "#0B0B0C", "RED": "#E5332A", "GRAY": "#6F6A60", "HAIR": "#E4E0D7", "PAPER": "#F4F1EA", "CARD": "#F6F4EF",
+              "TRED": "#C8261E", "DEEP": "#C8261E"},
+    "dark": {"INK": "#F4F1EA", "RED": "#E5332A", "GRAY": "#9A958A", "HAIR": "#30363D", "PAPER": "#F4F1EA", "CARD": "#161B22",
+             "TRED": "#F25247", "DEEP": "#C8261E"},
 }
 PAD, RADIUS = 40, 20  # the card around each section
 SANS = "Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif"
@@ -28,6 +30,9 @@ W, C2, C3 = 960, 320, 640  # page width and the manual's three columns
 
 def t(x, y, s, size=14, w=300, fill="INK", anchor="start", ls=0, font=SANS, raw=False):
     body = s if raw else escape(s)
+    if fill == "RED" and not (size >= 24 or (w >= 700 and size >= 18.66)):
+        fill = "TRED"  # WCAG 1.4.3: small red text needs 4.5:1, which the brand red only reaches when large
+    body = body.replace("%RED%", "%TRED%") if size < 24 else body
     return (f'<text x="{x}" y="{y}" font-family="{font}" font-weight="{w}" font-size="{size}" '
             f'fill="%{fill}%" text-anchor="{anchor}" letter-spacing="{ls}">{body}</text>')
 
@@ -111,7 +116,7 @@ def hero():
 @page("download", 80, "Download: under 4 MB, one file for Linux, macOS and Windows")
 def download():
     """The one call to action: white type on NASA red, the only way the manual lets red carry text."""
-    out = [rect(0, 0, W, 80, "RED", rx=16), t(32, 52, "Download", 32, 700, "PAPER", ls=-1),
+    out = [rect(0, 0, W, 80, "DEEP", rx=16), t(32, 52, "Download", 32, 700, "PAPER", ls=-1),
            t(C2, 36, "Under 4 MB", 18, 700, "PAPER"), t(C2, 59, "One file for Linux, macOS and Windows", 15, 300, "PAPER")]
     out += [logo(n, 780 + i * 40, 28, 24, "PAPER") for i, n in enumerate(["Apple", "Linux", "Windows"])]
     return out + ['<path d="M904,40 H936 M926,30 L936,40 L926,50" fill="none" stroke="%PAPER%" stroke-width="3"/>']
@@ -135,7 +140,7 @@ def badges():
     x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
         red = "TikTok" in c
-        out += [rect(x, 2, w, 40, "RED" if red else "CARD", rx=20),
+        out += [rect(x, 2, w, 40, "DEEP" if red else "CARD", rx=20),
                 t(x + w / 2, 27, c, 14, 700, "PAPER" if red else "INK", "middle")]
         x += w + 12
     return out

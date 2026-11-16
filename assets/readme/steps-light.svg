@@ -8,6 +8,6 @@
 <text x="480" y="70" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="60" fill="#0B0B0C" text-anchor="start" letter-spacing="-3">3</text>
 <text x="480" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.3">Pick a song</text>
 <text x="720" y="70" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="60" fill="#E5332A" text-anchor="start" letter-spacing="-3">4</text>
-<text x="720" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#E5332A" text-anchor="start" letter-spacing="-0.3">Your edit</text>
+<text x="720" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="18" fill="#C8261E" text-anchor="start" letter-spacing="-0.3">Your edit</text>
 </g>
 </svg>
