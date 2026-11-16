@@ -251,8 +251,9 @@ pub fn hit_at(beats: &[f64], strength: &[f64], t: f64) -> f64 {
 }
 
 /// The beat where the music should hit as the voice ends: the one after which it gets loudest relative to before,
-/// with `before` s of song ahead of it (under the voice) and `after` s behind it (the montage).
-pub fn drop_at(beats: &[f64], strength: &[f64], loud: &[f64], before: f64, after: f64) -> Option<f64> {
+/// with `before` s of song ahead of it (under the voice) and `after` s behind it (the montage). With a replay
+/// `heat` (per analysis frame, empty for none) the drop people come back for wins over a louder one they skip.
+pub fn drop_at(beats: &[f64], strength: &[f64], loud: &[f64], heat: &[f64], before: f64, after: f64) -> Option<f64> {
     let end = loud.len() as f64 * hop_s();
     let mean = |a: f64, b: f64| {
         let (i, j) = ((a / hop_s()).max(0.0) as usize, ((b / hop_s()) as usize).min(loud.len()));
@@ -260,7 +261,8 @@ pub fn drop_at(beats: &[f64], strength: &[f64], loud: &[f64], before: f64, after
     };
     beats.iter().enumerate().filter(|(_, b)| **b >= before && **b + after <= end).map(|(i, &b)| {
         let lift = mean(b, b + after.min(6.0)) / (mean(b - before.min(6.0), b) + 1e-3);
-        (lift + 0.1 * strength.get(i).copied().unwrap_or(0.0), b)
+        let hot = heat.get((b / hop_s()) as usize).copied().unwrap_or(0.0);
+        (lift * (1.0 + hot) + 0.1 * strength.get(i).copied().unwrap_or(0.0), b)
     }).max_by(|a, b| a.0.total_cmp(&b.0)).map(|x| x.1)
 }
 
@@ -1161,9 +1163,20 @@ mod tests {
     fn the_drop_is_where_it_gets_loud() {
         let beats: Vec<f64> = (0..40).map(|i| i as f64 * 0.5).collect();
         let loud: Vec<f64> = (0..(20.0 / hop_s()) as usize).map(|f| if f as f64 * hop_s() >= 12.0 { 1.0 } else { 0.2 }).collect();
-        assert_eq!(drop_at(&beats, &vec![0.0; 40], &loud, 5.0, 4.0), Some(12.0));
+        assert_eq!(drop_at(&beats, &vec![0.0; 40], &loud, &[], 5.0, 4.0), Some(12.0));
         // no room before it: nothing
-        assert_eq!(drop_at(&beats, &[], &loud, 19.0, 4.0), None);
+        assert_eq!(drop_at(&beats, &[], &loud, &[], 19.0, 4.0), None);
+    }
+
+    #[test]
+    fn the_drop_people_replay_beats_a_louder_one() {
+        let beats: Vec<f64> = (0..40).map(|i| i as f64 * 0.5).collect();
+        let n = (20.0 / hop_s()) as usize;
+        let t = |f: usize| f as f64 * hop_s();
+        let loud: Vec<f64> = (0..n).map(|f| if (8.0..10.5).contains(&t(f)) || t(f) >= 14.0 { 1.0 } else { 0.2 }).collect();
+        assert_eq!(drop_at(&beats, &vec![0.0; 40], &loud, &[], 5.0, 4.0), Some(8.0), "loudness alone: the first drop");
+        let heat: Vec<f64> = (0..n).map(|f| if (13.0..14.25).contains(&t(f)) { 1.0 } else { 0.1 }).collect();
+        assert_eq!(drop_at(&beats, &vec![0.0; 40], &loud, &heat, 5.0, 4.0), Some(14.0), "the replayed one");
     }
 
     #[test]

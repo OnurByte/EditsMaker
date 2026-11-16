@@ -696,10 +696,13 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         return Err("no footage to cut".into());
     }
     lap(&format!("song \"{}\"; {} shots from {} video(s)", song.title, shots.len(), videos.len()));
-    // where the song starts: the preset's own offset into its own song, else its most replayed (or loudest) stretch
+    // where the song starts: the preset's own offset into its own song; else, when the preset marks its drop, so that
+    // the song's own drop lands on it; else its most replayed (or loudest) stretch
+    let marked = p.slots.iter().find(|s| s.drop).map(|s| s.start);
     let song_from = match (&c.music, &p.song) {
         (None, Some(s)) => s.from,
-        _ => montage::windows(&song.beats, song.stretch(), p.total, 1).first().copied().unwrap_or(0.0),
+        _ => marked.and_then(|d| montage::drop_at(&song.beats, &song.strength, &song.loud, &song.heat, d, p.total - d).map(|b| b - d))
+            .unwrap_or_else(|| montage::windows(&song.beats, song.stretch(), p.total, 1).first().copied().unwrap_or(0.0)),
     };
     // the preset bends to the moment: its own intensity (or --intensity), and with another song its cuts on that song's beats
     let mut p = p.clone().with_intensity(c.intensity.unwrap_or(p.intensity));
@@ -1195,8 +1198,8 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 // the drop needs 2.5 s of song after it; a short song gets a shorter montage
                 let end = song.loud.len() as f64 * montage::hop_s();
                 let want = (c.look.length * 0.45).clamp(4.0, 9.0).min(end - lead - vlen - 0.2).max(2.5);
-                let Some(drop) = montage::drop_at(&song.beats, &song.strength, &song.loud, lead + vlen, want)
-                    .or_else(|| montage::drop_at(&song.beats, &song.strength, &song.loud, lead + vlen, 2.5)) else {
+                let Some(drop) = montage::drop_at(&song.beats, &song.strength, &song.loud, &song.heat, lead + vlen, want)
+                    .or_else(|| montage::drop_at(&song.beats, &song.strength, &song.loud, &song.heat, lead + vlen, 2.5)) else {
                     eprintln!("edits: the song is too short for line {} ({vlen:.0}s)", k + 1);
                     return None;
                 };
