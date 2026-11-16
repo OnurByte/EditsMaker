@@ -1018,7 +1018,19 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     let spoken: Vec<Analysed> = if !c.voice {
         vec![]
     } else if local {
-        vec![analyse(fetch::local(Path::new(&c.input), cache)?, c, false)]
+        // the input file's own words, plus any --say line named by a YouTube id (silent footage, voice from the channel)
+        let stem = Path::new(&c.input).file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+        let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).filter(|id| !id.is_empty() && *id != stem).collect();
+        ids.sort();
+        ids.dedup();
+        let mut out = vec![analyse(fetch::local(Path::new(&c.input), cache)?, c, false)];
+        out.extend(std::thread::scope(|s| {
+            let jobs: Vec<_> = ids.into_iter().map(|id| s.spawn(move || {
+                fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache).map(|src| analyse(src, c, false))
+            })).collect();
+            jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect::<Vec<_>>()
+        }));
+        out
     } else {
         std::thread::scope(|s| {
             let jobs: Vec<_> = videos.iter().map(|(id, _)| s.spawn(move || {
@@ -1160,7 +1172,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                     name: format!("{kind}-{:02}", p.k + 1), w: opts.w, h: opts.h,
                     clips: p.files.iter().zip(p.cuts.windows(2)).map(|((f, from, _), w)| (f.clone(), *from, w[1] - w[0])).collect(),
                     music: Some((song.file.clone(), p.start)),
-                    captions: vec![],
+                    captions: p.voice.map(|(a, m)| voice_cues(&a.words, m, p.at)).unwrap_or_default(),
                 };
                 let out = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({
