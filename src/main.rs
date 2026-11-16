@@ -383,9 +383,7 @@ fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
         let (id, range) = w.split_once('@')?;
         let (a, b) = range.split_once('-')?;
         let (a, b): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
-        let ws: Vec<&transcribe::Word> = t.words.iter().filter(|w| w.s >= a - 0.3 && w.s < b).collect();
-        let (first, last) = (ws.first()?, ws.last()?);
-        (id == src.id).then(|| pick::Moment { start: (first.s - 0.05).max(0.0), end: last.e + 0.25, punch: last.s, score: 0.0, title: String::new(), why: "chosen by hand".into() })
+        (id == src.id).then(|| widen(&t.words, a, b)).flatten()
     }).collect();
     let moments = if !clips { vec![] } else if !by_hand.is_empty() { by_hand } else { pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm) };
     eprintln!("edits: {} ({}): words from {}, {comments} timestamped comments, {} laughs, replay heat {}, {} moments",
@@ -908,9 +906,17 @@ fn by_hand(want: &str, spoken: &[Analysed]) -> Option<(usize, pick::Moment)> {
     let (a, b) = range.split_once('-')?;
     let (a, b): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
     let i = spoken.iter().position(|x| x.src.id == id)?;
-    let ws: Vec<&transcribe::Word> = spoken[i].words.iter().filter(|w| w.s >= a - 0.3 && w.s < b).collect();
-    let (first, last) = (ws.first()?, ws.last()?);
-    Some((i, pick::Moment { start: (first.s - 0.05).max(0.0), end: last.e + 0.25, punch: last.s, score: 0.0, title: String::new(), why: "chosen by hand".into() }))
+    Some((i, widen(&spoken[i].words, a, b)?))
+}
+
+/// The words starting in FROM-TO as a moment: from just before the first to 0.25 s after the last, but never into
+/// the next word (caption words end where the next one starts, so the tail would play it).
+fn widen(words: &[transcribe::Word], a: f64, b: f64) -> Option<pick::Moment> {
+    let i = words.iter().position(|w| w.s >= a - 0.3 && w.s < b)?;
+    let j = words.iter().rposition(|w| w.s >= a - 0.3 && w.s < b)?;
+    let (first, last) = (&words[i], &words[j]);
+    let end = words.get(j + 1).map_or(last.e + 0.25, |n| (last.e + 0.25).min(n.s - 0.02).max(last.e));
+    Some(pick::Moment { start: (first.s - 0.05).max(0.0), end, punch: last.s, score: 0.0, title: String::new(), why: "chosen by hand".into() })
 }
 
 /// Where a voice of `len` s goes in a preset edit: ending just before the hardest cut it fits ahead of, so that
@@ -1332,6 +1338,15 @@ fn doctor() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn say_stops_before_the_next_word() {
+        let w = |s: f64, e: f64| transcribe::Word { s, e, t: String::new() };
+        let caps = [w(443.1, 443.13), w(446.13, 446.5), w(446.5, 446.69)];
+        assert_eq!(widen(&caps, 443.11, 446.2).unwrap().end, 446.5, "caption words: no tail into 'Genel'");
+        let gap = [w(1.0, 1.4), w(2.0, 2.3)];
+        assert_eq!(widen(&gap, 1.0, 1.5).unwrap().end, 1.65, "a real pause keeps the 0.25 s tail");
+    }
 
     fn args(s: &str) -> Vec<String> {
         s.split_whitespace().map(String::from).collect()
