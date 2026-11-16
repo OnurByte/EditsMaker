@@ -77,4 +77,24 @@ mod tests {
             }
         }
     }
+
+    /// The shipped library stays sound: the errors found in it once (zooms near 1000, keys stacked or out of order,
+    /// 1.5-frame shots learned from flash frames, a look that does not exist) never come back.
+    #[test]
+    fn built_in_presets_are_sound() {
+        let looks = crate::looks::names();
+        for (name, text) in super::BUILT_IN.iter().filter(|(n, _)| !super::DATA.contains(n)) {
+            let p: crate::preset::Preset = serde_json::from_str(text).unwrap();
+            assert!(!p.slots.is_empty() && p.total > 0.0, "{name}: empty");
+            assert!(p.look.as_ref().is_none_or(|l| looks.contains(&l.as_str())), "{name}: unknown look {:?}", p.look);
+            for (i, s) in p.slots.iter().enumerate() {
+                assert!(s.end - s.start >= 0.066, "{name} shot {i}: {:.3}s is a flicker, not a shot", s.end - s.start);
+                assert!((0.1..=8.0).contains(&s.speed), "{name} shot {i}: speed {}", s.speed);
+                for (k, c) in [("zoom", &s.zoom), ("x", &s.x), ("y", &s.y), ("rot", &s.rot), ("shake", &s.shake), ("blur", &s.blur), ("exposure", &s.exposure), ("ramp", &s.ramp)] {
+                    assert!(c.keys.windows(2).all(|w| w[0].0 <= w[1].0) && c.keys.iter().all(|k| (0.0..=1.0).contains(&k.0)), "{name} shot {i}: {k} keys out of order or outside the shot");
+                }
+                assert!(s.zoom.keys.iter().all(|k| (0.04..=5.0).contains(&k.1)), "{name} shot {i}: zoom {:?}", s.zoom.keys.iter().map(|k| k.1).collect::<Vec<_>>());
+            }
+        }
+    }
 }

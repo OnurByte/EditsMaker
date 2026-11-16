@@ -19,7 +19,7 @@ fn strength(s: &Slot) -> f64 {
 /// Shot boundaries in frames (first is 0, last is the end), long shots cut again at the biggest change.
 fn bounds(g: &[Vec<u8>], fps: f64) -> Vec<usize> {
     let d: Vec<f64> = (0..g.len()).map(|i| if i == 0 { 0.0 } else { change(&g[i - 1], &g[i]) }).collect();
-    let mut cuts = cuts_and_flashes(g).0;
+    let mut cuts = cuts_and_flashes(g, fps).0;
     cuts.push(g.len());
     let mut out = vec![];
     for w in cuts.windows(2) {

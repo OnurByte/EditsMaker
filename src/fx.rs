@@ -87,7 +87,8 @@ pub fn track(frames: &[Frame], fps: f64, from: f64, src_len: f64) -> Option<Curv
 
 /// A crop across the frame following `x` (an expression in `t`, 0..1 across) to `w` x `h`.
 pub fn follow(w: u32, h: u32, x: &str) -> String {
-    format!("crop=w='min(iw,ih*{w}/{h})':h='min(ih,iw*{h}/{w})':x='max(0,min(iw-ow,iw*({x})-ow/2))',scale={w}:{h},setsar=1")
+    // lanczos: the crop is usually blown up, and bicubic softens it further
+    format!("crop=w='min(iw,ih*{w}/{h})':h='min(ih,iw*{h}/{w})':x='max(0,min(iw-ow,iw*({x})-ow/2))',scale={w}:{h}:flags=lanczos,setsar=1")
 }
 
 /// Blurs a box of the source frame (fractions x, y, w, h), before any crop. `p` keeps labels unique.

@@ -19,6 +19,8 @@ The numbers come from creator and vendor guides, not a standard: treat them as a
 | `retro-vhs` | handheld wobble, colour split, faded `vintage`, warm light leaks |
 | `loop-push` | one push-in across all cuts that returns to the opening framing: the end replays into the start |
 | `beat-bounce` | clean 10% punch on every cut, no grade: dance, sport, colourful footage |
+| `buildup-drop` | 5.6 s of slow push-ins, a held beat leaning in, white flash on the drop, 24 punch cuts with shakes and RGB, one held shot to land: character and hype edits |
+| `sad-holds` | seven ~3 s shots drifting and breathing, three dips to black, `bw`: emotional and sad edits |
 
 ```sh
 edits <input> --music SONG --preset phonk-drift

@@ -96,6 +96,25 @@ Study results, not taste guesses. Match these before adding anything fancy:
 - Before rendering, compare with a reference by running `edits learn ref.mp4` or `--like ref.mp4`; the loudness and
   cut-length numbers above are what to hit.
 
+## Why edits come out bad, and the fix
+
+Each of these was a real complaint or a measured fault; check them before and after rendering.
+
+- **Soft picture.** A 9:16 crop of a landscape video keeps a third of its width: from 720p it was blown up 2.7x
+  before any zoom. edits now downloads 1080p (1.8x); with landscape footage prefer `aspect` 1:1 or 4:5 (the
+  user's default is 1:1), and keep zoom-heavy presets for sharp sources.
+- **Wrong people, wrong scenes.** The automatic pick does not know who the character is. Look at the footage
+  sheets and list the shots with `shots` (in order, one per preset shot).
+- **The preset fights the footage.** Anime presets carry big, decaying impact shakes and 2-3x zooms; on live-action
+  dizi footage they look chaotic: use `intensity` 0.5-0.7, or a medium/slow preset by its tags.
+- **No shape.** Same pace from start to end feels flat. Build up, then land: `buildup-drop` (voice line on the held
+  beat before the drop with `say`), `sad-holds` for sad edits.
+- **The song is wrong or starts in its intro.** With `music`, edits starts at the song's loudest stretch; check the
+  log's song line, and pick a song that fits the person and the mood (not a soft piano bed).
+- **Text and boom the user hates.** No captions or boom on dizi edits (style.json has them off).
+- After rendering, `edits_check` the clip: a cut average far from the preset's pace, black or frozen frames on the
+  sheet, or a face cut off means re-pick the shots, not re-render the same plan.
+
 ## Pick the kind of edit
 
 Preset edits look best: a real edit's timing, speed ramps, zooms, shakes and flashes replayed over the footage.
