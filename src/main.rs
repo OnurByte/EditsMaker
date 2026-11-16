@@ -1023,7 +1023,15 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).filter(|id| !id.is_empty() && *id != stem).collect();
         ids.sort();
         ids.dedup();
-        let mut out = vec![analyse(fetch::local(Path::new(&c.input), cache)?, c, false)];
+        // silent footage has no words of its own: then the voice must come from a named video
+        let mut out = match fetch::local(Path::new(&c.input), cache) {
+            Ok(src) => vec![analyse(src, c, false)],
+            Err(e) if !ids.is_empty() => {
+                eprintln!("edits: no voice in {}: {e}", c.input);
+                vec![]
+            }
+            Err(e) => return Err(e),
+        };
         out.extend(std::thread::scope(|s| {
             let jobs: Vec<_> = ids.into_iter().map(|id| s.spawn(move || {
                 fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache).map(|src| analyse(src, c, false))
