@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Draws every README picture in assets/readme/, light and dark, from one place.
 
-The rules are the 1976 NASA Graphics Standards Manual's, as in tokens.css: free-standing on the page
-(no cards, no rounded boxes), a hairline over each section, a bold label in the left column and
-light text in the two right ones, one red accent per view, a folio bottom right.
+Type, colour and grid come from the 1976 NASA Graphics Standards Manual, as in tokens.css: a bold label in
+the left column and light text in the two right ones, one red accent per view. Made comfortable to read: each
+section on its own soft card with round corners, room around it, soft hairlines, round ends on bars and chips.
 
     python3 design/readme.py      # rewrites assets/readme/*-light.svg and *-dark.svg
 """
@@ -16,10 +16,11 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets/readme"
 VERSION = re.search(r'^version = "(.+)"', (ROOT / "Cargo.toml").read_text(), re.M)[1]
 
-THEMES = {  # transparent background: the picture sits on GitHub's page like print on paper
-    "light": {"INK": "#0B0B0C", "RED": "#E5332A", "GRAY": "#8C877C", "HAIR": "#D8D3C8", "PAPER": "#F4F1EA"},
-    "dark": {"INK": "#F4F1EA", "RED": "#E5332A", "GRAY": "#8C877C", "HAIR": "#2A2A2D", "PAPER": "#F4F1EA"},
+THEMES = {  # CARD sits one step off GitHub's own page colour; GRAY is dark enough to read comfortably
+    "light": {"INK": "#0B0B0C", "RED": "#E5332A", "GRAY": "#6F6A60", "HAIR": "#E4E0D7", "PAPER": "#F4F1EA", "CARD": "#F6F4EF"},
+    "dark": {"INK": "#F4F1EA", "RED": "#E5332A", "GRAY": "#9A958A", "HAIR": "#30363D", "PAPER": "#F4F1EA", "CARD": "#161B22"},
 }
+PAD, RADIUS = 40, 20  # the card around each section
 SANS = "Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif"
 MONO = "ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace"
 W, C2, C3 = 960, 320, 640  # page width and the manual's three columns
@@ -31,14 +32,15 @@ def t(x, y, s, size=14, w=300, fill="INK", anchor="start", ls=0, font=SANS, raw=
             f'fill="%{fill}%" text-anchor="{anchor}" letter-spacing="{ls}">{body}</text>')
 
 
-def rule(x1, x2, y, c="INK", w=1):
+def rule(x1, x2, y, c="HAIR", w=1):
     return f'<line x1="{x1}" y1="{y}" x2="{x2}" y2="{y}" stroke="%{c}%" stroke-width="{w}"/>'
 
 
-def rect(x, y, w, h, fill="none", stroke=None):
+def rect(x, y, w, h, fill="none", stroke=None, rx=None):
     s = f' stroke="%{stroke}%"' if stroke else ""
     f = f"%{fill}%" if fill != "none" else "none"
-    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{f}"{s}/>'
+    rx = min(6, h / 2, w / 2) if rx is None else rx  # nothing square-cornered
+    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx:g}" fill="{f}"{s}/>'
 
 
 def wrap(s, n):
@@ -53,13 +55,13 @@ def wrap(s, n):
 
 
 def head(label, body, per_col=4):
-    """Hairline, bold label left, light body flowing from the middle column into the right one."""
-    parts = [rule(0, W, 0.5)]
+    """Bold label left, light body flowing from the middle column into the right one."""
+    parts = []
     for i, line in enumerate(label.split("\n")):
-        parts.append(t(0, 26 + i * 19, line, 15, 700))
-    for i, line in enumerate(wrap(body, 40)):
+        parts.append(t(0, 24 + i * 23, line, 19, 700, ls=-0.3))
+    for i, line in enumerate(wrap(body, 42)):
         col, row = divmod(i, per_col)
-        parts.append(t(C2 + col * 320, 26 + row * 19, line))
+        parts.append(t(C2 + col * 320, 24 + row * 22, line, 15))
     return parts
 
 
@@ -109,38 +111,37 @@ def hero():
 @page("download", 80, "Download: under 4 MB, one file for Linux, macOS and Windows")
 def download():
     """The one call to action: white type on NASA red, the only way the manual lets red carry text."""
-    out = [rect(0, 0, W, 80, "RED"), t(28, 52, "Download", 32, 700, "PAPER", ls=-1),
+    out = [rect(0, 0, W, 80, "RED", rx=16), t(32, 52, "Download", 32, 700, "PAPER", ls=-1),
            t(C2, 36, "Under 4 MB", 18, 700, "PAPER"), t(C2, 59, "One file for Linux, macOS and Windows", 15, 300, "PAPER")]
     out += [logo(n, 780 + i * 40, 28, 24, "PAPER") for i, n in enumerate(["Apple", "Linux", "Windows"])]
     return out + ['<path d="M904,40 H936 M926,30 L936,40 L926,50" fill="none" stroke="%PAPER%" stroke-width="3"/>']
 
 
-@page("sites", 130, "Works with links from YouTube, TikTok, Instagram, X, Facebook, Twitch, Kick, "
+@page("sites", 100, "Works with links from YouTube, TikTok, Instagram, X, Facebook, Twitch, Kick, "
       "Dailymotion and 1,700+ more sites", "1.1")
 def sites():
     names = ["YouTube", "TikTok", "Instagram", "X", "Facebook", "Twitch", "Kick", "Dailymotion"]
-    out = [rule(0, W, 0.5), t(0, 26, "Works with", 15, 700), t(0, 45, "links from", 14, 300)]
+    out = [t(0, 24, "Works with", 19, 700, ls=-0.3), t(0, 47, "links from", 15, 300)]
     for i, n in enumerate(names):
         r, c = divmod(i, 4)
         out += [logo(n, C2 + c * 160, 13 + r * 32, 20), t(C2 + c * 160 + 28, 30 + r * 32, n, 20, 700, ls=-0.4)]
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 56, "MCP server, 7 agent skills, 50 presets, 40 looks, TikTok trends, 1,700+ sites")
+@page("badges", 44, "MCP server, 7 agent skills, 50 presets, 40 looks, TikTok trends, 1,700+ sites")
 def badges():
     cells = ["MCP server", "7 agent skills", "50 presets", "40 looks", "TikTok trends", "1,700+ sites"]
-    widths = [len(c) * 7.6 + 30 for c in cells]
-    k = W / sum(widths)
-    out, x = [rule(0, W, 0.5), rule(0, W, 47.5)], 0.0
+    widths = [len(c) * 8 + 36 for c in cells]
+    x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
-        if x:
-            out.append(f'<line x1="{x:.1f}" y1="10" x2="{x:.1f}" y2="38" stroke="%HAIR%"/>')
-        out.append(t(round(x + (12 if x else 0)), 29, c, 13, 700, "RED" if "TikTok" in c else "INK"))
-        x += w * k
+        red = "TikTok" in c
+        out += [rect(x, 2, w, 40, "RED" if red else "CARD", rx=20),
+                t(x + w / 2, 27, c, 14, 700, "PAPER" if red else "INK", "middle")]
+        x += w + 12
     return out
 
 
-@page("agents", 340, "Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, "
+@page("agents", 300, "Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, "
       "Cursor, Gemini CLI and any MCP client", "1.2")
 def agents():
     out = head("Your AI agent\nedits for you", "EditsMaker is an MCP server. Ask in plain words; the "
@@ -184,7 +185,7 @@ def dot(cx, cy, v, c):
     return ring + (f'<path d="M{cx},{cy - r} A{r},{r} 0 0 0 {cx},{cy + r} Z" fill="%{c}%"/>' if v == 1 else "")
 
 
-@page("size", 500, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
+@page("size", 490, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
       "about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci "
       "Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that "
       "is free, open source, built for AI agents and reads TikTok's trending songs.", "1.3")
@@ -212,12 +213,11 @@ def size():
     return out
 
 
-@page("sounds", 340, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
+@page("sounds", 324, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
       "takes its sound, or ask for TikTok's trending songs in any country with --music trend:3", "1.4")
 def sounds():
     out = head("Any sound,\nany trend", "Paste a TikTok, Reel, Short or SoundCloud link and edits takes its sound. "
-               "Or ask for trend:3, the 3rd song on TikTok's chart in your country this week, found on YouTube "
-               "with the part people replay most.", 3)
+               "Or ask for trend:3: TikTok's 3rd song this week, cut on the part people replay most.", 2)
     plats = ["TikTok", "Instagram", "YouTube Shorts", "YouTube", "YouTube Music", "SoundCloud", "X", "Twitch"]
     out.append(rule(0, W, 100.5))
     for i, n in enumerate(plats):
@@ -233,7 +233,7 @@ def sounds():
     return out
 
 
-@page("loop", 220, "How an agent makes an edit good: idea, footage, lines, render, check, fix", "2.1")
+@page("loop", 215, "How an agent makes an edit good: idea, footage, lines, render, check, fix", "2.1")
 def loop():
     out = head("Render, look, fix", "A first render is a draft. The agent measures it and looks at it "
                "before you do.")
@@ -249,16 +249,16 @@ def loop():
     return out + [t(642, 210, "until it is good", 12, 400, "RED", anchor="middle")]
 
 
-@page("steps", 130, "Link or topic, pick a preset, pick a song, your edit", "2.2")
+@page("steps", 108, "Link or topic, pick a preset, pick a song, your edit", "2.2")
 def steps():
-    out = [rule(0, W, 0.5)]
+    out = []
     for i, s in enumerate(["Link or topic", "Pick a preset", "Pick a song", "Your edit"]):
         c = "RED" if i == 3 else "INK"
         out += [t(i * 240, 70, str(i + 1), 60, 700, c, ls=-3), t(i * 240, 104, s, 18, 700, c, ls=-0.3)]
     return out
 
 
-@page("features", 230, "Presets, trends, looks, agents, reads captions first, every frame size", "3.1")
+@page("features", 190, "Presets, trends, looks, agents, reads captions first, every frame size", "3.1")
 def features():
     cells = [("Presets", "50 real edits, as JSON", "an agent can change"), ("Trends", "TikTok's chart,", "one flag: trend:3"),
              ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server", "and 7 skills"),
@@ -267,11 +267,12 @@ def features():
     for i, (h, a, b) in enumerate(cells):
         r, c = divmod(i, 3)
         x, y = c * 320, r * 110
-        out += [rule(x, x + 296, y + 0.5), t(x, y + 30, h, 18, 700, ls=-0.3), t(x, y + 54, a), t(x, y + 73, b)]
+        out += [rule(x, x + 296, y - 14.5)] if r else []
+        out += [t(x, y + 24, h, 19, 700, ls=-0.3), t(x, y + 50, a, 15), t(x, y + 71, b, 15)]
     return out
 
 
-@page("fx", 290, "Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, "
+@page("fx", 250, "Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, "
       "music ducking, stabilize, ProRes", "3.2")
 def fx():
     out = head("Everything an edit needs", "From the editors you know, in one command.")
@@ -287,7 +288,7 @@ def fx():
     return out
 
 
-@page("basics", 580, "The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked "
+@page("basics", 562, "The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked "
       "under the voice, cuts on the beat, faces followed into 9:16", "3.3")
 def basics():
     out = head("The basics, done for you", "Every talking clip gets these before you ask for anything.")
@@ -301,7 +302,7 @@ def basics():
         y = 84 + i * 80
         x, y0 = C3, y + 16
         out += [rule(0, W, y + 0.5, "HAIR"), t(0, y + 30, h, 16, 700)]
-        out += [t(C2, y + 30 + j * 19, s) for j, s in enumerate(wrap(d, 40))]
+        out += [t(C2, y + 30 + j * 19, s, 15) for j, s in enumerate(wrap(d, 42))]
         if i == 0:  # speech with pauses, then tight
             for a, b in ((0, 60), (100, 170), (200, 260)):
                 out.append(rect(x + a, y0 + 4, b - a, 10, "INK"))
@@ -331,7 +332,7 @@ def basics():
     return out
 
 
-@page("presets", 300, "Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 "
+@page("presets", 278, "Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 "
       "Premiere cut moves, every shot and keyframe as editable JSON", "3.4")
 def presets():
     out = head("Real edits, as data", "50 edits, 40 looks, 178 cut moves. Every shot, ramp, keyframe and layer "
@@ -354,27 +355,14 @@ def presets():
     return out + [t(0, 268, js, 12, 400, font=MONO, raw=True)]
 
 
-@page("why", 150, "Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, "
-      "under 4 MB: one file on your computer", "3.5")
-def why():
-    cols = [("One command", "A link from 1,700+ sites, a channel or a topic in; finished edits out."),
-            ("Trend-aware", "Reads TikTok's chart and cuts to the song people are using this week."),
-            ("Reads first", "Skims every video's captions and only downloads the good ones."),
-            ("Under 4 MB", "One file, no installer, runs on your own computer.")]
-    out = []
-    for i, (h, d) in enumerate(cols):
-        x = i * 240
-        out += [rule(x, x + 220, 0.5), t(x, 30, h, 18, 700, "RED" if i == 3 else "INK", ls=-0.3)]
-        out += [t(x, 56 + j * 19, s) for j, s in enumerate(wrap(d, 28))]
-    return out
-
-
 def main():
     for name, (h, aria, folio, fn) in PAGES.items():
-        body = fn()
-        if folio:
-            body.append(t(W, h - 4, folio, 11, 400, "GRAY", anchor="end"))
-        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{h}" viewBox="0 0 {W} {h}" '
+        body, w = fn(), W
+        if name not in ("hero", "download", "badges"):  # every section on its own card
+            w, h = W + 2 * PAD, h + 2 * PAD
+            body = [rect(0.5, 0.5, w - 1, h - 1, "CARD", "HAIR", RADIUS), f'<g transform="translate({PAD},{PAD})">',
+                    *body, "</g>"]
+        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
                f'role="img" aria-label="{escape(aria, {chr(34): "&quot;"})}">\n' + "\n".join(body) + "\n</svg>\n")
         for theme, colors in THEMES.items():
             out = svg

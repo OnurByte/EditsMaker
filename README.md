@@ -90,11 +90,6 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
   <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/why-dark.svg">
-  <img src="assets/readme/why-light.svg" width="100%" alt="Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, under 4 MB: one file on your computer">
-</picture>
-
 ## Install
 
 ### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-apple-dark.svg"><img src="assets/readme/os-apple-light.svg" height="20" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-linux-dark.svg"><img src="assets/readme/os-linux-light.svg" height="20" alt=""></picture> macOS and Linux
