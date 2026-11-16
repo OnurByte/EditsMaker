@@ -16,7 +16,10 @@ sees or hears the footage) and replays a preset. What makes an edit land is your
 2. **Decide the idea before any command**: one sentence on what the viewer feels (laughs at X, aches at Y) and the
    one line or moment it hangs on. No idea, no render.
 3. **Know the footage.** Every downloaded video gets a contact sheet; the log names it (`footage ID: sheet PATH`),
-   Read it along with the captions/`.json` instead of running ffmpeg yourself. Choose the moment
+   Read it along with the captions/`.json` instead of running ffmpeg yourself. For a preset edit, choose the shots
+   yourself too: `shots: ["ID@98.6", "ID@58.3-61", ...]` (CLI `--shot`), one per preset shot in order, each playing
+   on from where it stopped the time before; never leave a character edit or a single scene to the automatic pick,
+   and never hand-cut footage with ffmpeg for it. Choose the moment
    yourself and force it with `--say ID@A-B` (MCP: `say: ["ID@A-B"]`, plus `lang`) instead of trusting the automatic pick.
 4. **Write the words yourself** (`line_texts` / `--line`): short, felt, in the viewer's language, none copied raw
    from the transcript unless it IS the punchline. A line on screen is where an edit becomes funny or moving.
@@ -25,6 +28,11 @@ sees or hears the footage) and replays a preset. What makes an edit land is your
 6. **Render one, measure it, look at its frames, judge honestly, fix, render again.** `edits_check` (CLI `edits check clip.mp4`) gives length, LUFS, cut rhythm and a contact sheet jpg to Read. First render is a draft. Check: does the
    first second hook? does the line land on the beat? is any face/text cut off? Only then show it, with the clip's
    absolute path. Rate good ones with `edits rate clip.mp4 +` so taste.md learns.
+
+Taste that holds for every run lives in `~/.config/edits/style.json`: `"sfx": false` (no made whoosh/boom) and
+`"hook": false` (no hook line on top) turn them off for good; `--sfx` / `--hook` bring them back once.
+Presets are named for what they do and `edits_presets` tags each (fast/medium/slow, frame, zoom slide spin shake
+blur rgb velocity flash); pick by the tags, not by the name of the anime it came from.
 
 Gotchas: `trend:N` uses the chart of `lang` (`--lang tr` gives Turkey's), else the system's. `--say` makes a talking clip
 (captions, `--bed`) when there is no `--music`. Whisper mishears Turkish ("mecburum" became "meşgul"): read the
@@ -58,7 +66,7 @@ Check the tools once: `edits doctor` (needs ffmpeg; yt-dlp for links; whisper on
 The idea is to praise a character, not to tell a story. The viewer should leave thinking "he is the one".
 
 - One character, the whole edit. Every shot is him or someone reacting to him (fear, respect, silence); cut shots
-  of anyone else that do not feed that.
+  of anyone else that do not feed that. List his shots with `shots` (the automatic pick mixes in other people).
 - Build up, then land: start on reactions and the walk-in, hold his face when it matters, and put the hardest hit
   (flash, shake, zoom, the bass) on his best line or look. Do not spend the hits early.
 - Low angle, slow push-in, slow-mo (`speed` 0.8) on his big moment; fast cuts for everyone else's reaction.
@@ -95,7 +103,7 @@ Start there unless the user asks for something else.
 
 ```sh
 edits preset list                                   # what exists
-edits <link|channel|topic|file> --preset yuraprst --music trend:3 --look tealorange -n 3
+edits <link|channel|topic|file> --preset spin-slide-shake --music trend:3 --look tealorange -n 3
 ```
 
 - `--music`: a song link or file, `trend:N` (TikTok's Nth trending song, see the edits-trends skill), or leave it

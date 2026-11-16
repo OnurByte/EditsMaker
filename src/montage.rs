@@ -91,27 +91,8 @@ fn fft(re: &mut [f64], im: &mut [f64]) {
     }
 }
 
-/// Spectral flux (where notes start, normalised) and RMS per frame of `HOP` samples.
-pub fn onset(x: &[f32]) -> (Vec<f64>, Vec<f64>) {
-    let win: Vec<f64> = (0..N).map(|i| 0.5 - 0.5 * (2.0 * PI * i as f64 / N as f64).cos()).collect();
-    let frames = if x.len() >= N { (x.len() - N) / HOP + 1 } else { 0 };
-    let (mut env, mut rms) = (Vec::with_capacity(frames), Vec::with_capacity(frames));
-    let mut prev = vec![0.0; N / 2];
-    for f in 0..frames {
-        let seg = &x[f * HOP..f * HOP + N];
-        rms.push((seg.iter().map(|v| (*v as f64).powi(2)).sum::<f64>() / N as f64).sqrt());
-        let mut re: Vec<f64> = seg.iter().zip(&win).map(|(a, w)| *a as f64 * w).collect();
-        let mut im = vec![0.0; N];
-        fft(&mut re, &mut im);
-        let mut flux = 0.0;
-        for k in 0..N / 2 {
-            let m = (1.0 + 100.0 * re[k].hypot(im[k])).ln();
-            flux += (m - prev[k]).max(0.0);
-            prev[k] = m;
-        }
-        env.push(if f == 0 { 0.0 } else { flux });
-    }
-    // keep the attacks, drop the slow swell
+/// Keeps a flux's attacks and drops the slow swell, in units of its own spread.
+fn attacks(env: &[f64]) -> Vec<f64> {
     let w = (0.4 / hop_s()) as usize;
     let mut out = vec![0.0; env.len()];
     for i in 0..env.len() {
@@ -123,7 +104,37 @@ pub fn onset(x: &[f32]) -> (Vec<f64>, Vec<f64>) {
     if sd > 0.0 {
         out.iter_mut().for_each(|v| *v /= sd);
     }
-    (out, rms)
+    out
+}
+
+/// Spectral flux (where notes start, normalised), RMS per frame of `HOP` samples, and the flux under 150 Hz alone: kicks and 808s, where edits hit (hi-hats and cymbals
+/// make the full band jump just as much).
+pub fn onsets(x: &[f32]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+    let low = (150.0 * N as f64 / SR as f64).ceil() as usize;
+    let win: Vec<f64> = (0..N).map(|i| 0.5 - 0.5 * (2.0 * PI * i as f64 / N as f64).cos()).collect();
+    let frames = if x.len() >= N { (x.len() - N) / HOP + 1 } else { 0 };
+    let (mut env, mut rms, mut bass) = (Vec::with_capacity(frames), Vec::with_capacity(frames), Vec::with_capacity(frames));
+    let mut prev = vec![0.0; N / 2];
+    for f in 0..frames {
+        let seg = &x[f * HOP..f * HOP + N];
+        rms.push((seg.iter().map(|v| (*v as f64).powi(2)).sum::<f64>() / N as f64).sqrt());
+        let mut re: Vec<f64> = seg.iter().zip(&win).map(|(a, w)| *a as f64 * w).collect();
+        let mut im = vec![0.0; N];
+        fft(&mut re, &mut im);
+        let (mut flux, mut low_flux) = (0.0, 0.0);
+        for k in 0..N / 2 {
+            let m = (1.0 + 100.0 * re[k].hypot(im[k])).ln();
+            let rise = (m - prev[k]).max(0.0);
+            flux += rise;
+            if k < low {
+                low_flux += rise;
+            }
+            prev[k] = m;
+        }
+        env.push(if f == 0 { 0.0 } else { flux });
+        bass.push(if f == 0 { 0.0 } else { low_flux });
+    }
+    (attacks(&env), rms, attacks(&bass))
 }
 
 /// Beat period in frames: the strongest self-similarity between 50 and 180 BPM, leaning towards ~110.
@@ -191,12 +202,14 @@ pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
     };
     let raw = run_bytes("ffmpeg", &["-v", "error", "-i", &file.to_string_lossy(), "-ac", "1", "-ar", &SR.to_string(), "-f", "f32le", "-"])?;
     let x: Vec<f32> = raw.as_chunks::<4>().0.iter().map(|b| f32::from_le_bytes(*b)).collect();
-    let (env, loud) = onset(&x);
+    let (env, loud, bass) = onsets(&x);
     let frames = track(&env, tempo(&env));
     if frames.len() < 4 {
         return Err(format!("could not find a beat in {title}"));
     }
-    let strength = frames.iter().map(|&f| env[f.saturating_sub(2)..(f + 3).min(env.len())].iter().cloned().fold(0.0, f64::max)).collect();
+    // how hard each beat hits: half its attack, half its kick (so the fx land on the bass, not on a cymbal)
+    let peak = |e: &[f64], f: usize| e[f.saturating_sub(2)..(f + 3).min(e.len())].iter().cloned().fold(0.0, f64::max);
+    let strength = frames.iter().map(|&f| 0.5 * peak(&env, f) + 0.5 * peak(&bass, f)).collect();
     let beats = frames.into_iter().map(|f| f as f64 * hop_s()).collect();
     Ok(Song { file, title, beats, strength, loud })
 }
@@ -944,7 +957,7 @@ mod tests {
                 x[b * SR / 2 + i] = ((i as f32) * 0.9).sin() * (1.0 - i as f32 / 200.0);
             }
         }
-        let (env, rms) = onset(&x);
+        let (env, rms, _) = onsets(&x);
         assert_eq!(rms.len(), env.len());
         let lag = tempo(&env);
         assert!((lag as f64 * hop_s() - 0.5).abs() < 0.03, "{lag}");
@@ -1167,5 +1180,28 @@ mod tests {
         let sad = captions(&words, Some(&m), 1.0, "", true, 8.0, &o);
         assert!(sad.contains("Dialogue: 0,0:00:01.00,") && sad.contains("{\\fad(140,140)}bunu bilmiyordum.") && !sad.contains(",T,,"), "{sad}");
         assert!(!captions(&[], None, 0.0, "", true, 8.0, &o).contains("Dialogue:"));
+    }
+
+    #[test]
+    fn kicks_outweigh_hi_hats_in_the_bass_band() {
+        // a 55 Hz kick every second, a hi-hat (a fast sign-flipping click train) half a second after each
+        let n = SR * 4;
+        let mut x = vec![0.0f32; n];
+        for b in 0..4 {
+            let k = b * SR + SR / 10;
+            for i in 0..SR / 10 {
+                x[k + i] += (0.8 * (-(i as f64) / 600.0).exp() * (2.0 * PI * 55.0 * i as f64 / SR as f64).sin()) as f32;
+            }
+            let h = k + SR / 2;
+            for i in 0..SR / 50 {
+                x[h + i] += (0.8 * (-(i as f64) / 60.0).exp() * if i % 2 == 0 { 1.0 } else { -1.0 }) as f32;
+            }
+        }
+        let (env, _, bass) = onsets(&x);
+        let at = |sec: f64, e: &[f64]| { let f = (sec / hop_s()) as usize; e[f.saturating_sub(3)..(f + 4).min(e.len())].iter().cloned().fold(0.0, f64::max) };
+        // the full band hears both about as loud; the bass band clearly favours the kick
+        let full = at(1.1, &env) / at(1.6, &env).max(1e-3);
+        let low = at(1.1, &bass) / at(1.6, &bass).max(1e-3);
+        assert!(low > 1.5 * full && low > 1.5, "kick/hat: bass band {low:.2}, full band {full:.2}");
     }
 }

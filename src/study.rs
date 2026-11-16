@@ -10,6 +10,20 @@ pub struct Style {
     pub aspect: String,
     pub grade: String,
     pub lufs: f64,
+    /// talking clips: the made whoosh and boom (false: never, unless --sfx)
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub sfx: bool,
+    /// talking clips: the hook line on top (false: never, unless --hook)
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub hook: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
+fn is_true(v: &bool) -> bool {
+    *v
 }
 
 pub struct Stat {
@@ -43,7 +57,7 @@ pub fn summarize(stats: &[Stat]) -> Option<Style> {
     let lufs = median(&mut stats.iter().map(|s| s.lufs).filter(|l| l.is_finite() && *l > -40.0).collect::<Vec<_>>()).unwrap_or(-14.0);
     // signalstats SATAVG: under ~4 is black and white, the desaturated teal look measures 5-20, a normal camera picture 60 and up
     let grade = if sat < 4.5 { "bw" } else if sat < 45.0 { "dark" } else { "none" };
-    Some(Style { aspect: aspect.into(), grade: grade.into(), lufs: (lufs * 10.0).round() / 10.0 })
+    Some(Style { aspect: aspect.into(), grade: grade.into(), lufs: (lufs * 10.0).round() / 10.0, sfx: true, hook: true })
 }
 
 fn values(out: &str, key: &str) -> Vec<f64> {
@@ -82,7 +96,11 @@ pub fn study(dir: &Path) -> Result<(), String> {
             Err(e) => eprintln!("edits: skipped {}: {e}", f.display()),
         }
     }
-    let style = summarize(&stats).ok_or("no videos to study in that folder")?;
+    let mut style = summarize(&stats).ok_or("no videos to study in that folder")?;
+    // what was turned off by hand stays off: studying measures the look, not taste
+    if let Some(old) = load() {
+        (style.sfx, style.hook) = (old.sfx, old.hook);
+    }
     if let Some(d) = path().parent() {
         std::fs::create_dir_all(d).map_err(|e| e.to_string())?;
     }
@@ -109,7 +127,7 @@ mod tests {
     fn summary() {
         let s = |w, h, sat, lufs| Stat { w, h, dur: 10.0, cuts: 3, sat, lufs };
         let st = summarize(&[s(720, 720, 30.0, -9.0), s(576, 576, 6.0, -12.0), s(1080, 1920, 35.0, f64::NAN), s(960, 720, 70.0, -11.0)]).unwrap();
-        assert_eq!(st, Style { aspect: "1:1".into(), grade: "dark".into(), lufs: -11.0 });
+        assert_eq!(st, Style { aspect: "1:1".into(), grade: "dark".into(), lufs: -11.0, sfx: true, hook: true });
         assert!(summarize(&[]).is_none());
     }
 }

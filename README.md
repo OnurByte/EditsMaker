@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 49 presets, under 4 MB, 40 looks">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 48 presets, under 4 MB, 40 looks">
 </picture>
 
 <picture>
@@ -63,7 +63,7 @@ Install EditsMaker from github.com/OnurByte/EditsMaker, run "edits doctor", add 
 </picture>
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look tealorange
+edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3 --look tealorange
 ```
 
 ### Made with it
@@ -96,7 +96,7 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
-  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 49 Alight Motion and CapCut edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 48 Alight Motion and CapCut edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
 <picture>
@@ -112,31 +112,31 @@ edits https://www.youtube.com/@channel --preset yuraprst --music trend:3 --look 
 Replay a preset over a channel's videos:
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst
+edits https://www.youtube.com/@channel --preset spin-slide-shake
 ```
 
 Cut it to TikTok's 3rd trending song:
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --music trend:3
+edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 ```
 
 Colour and frame:
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --look tealorange --aspect 4:5
+edits https://www.youtube.com/@channel --preset spin-slide-shake --look tealorange --aspect 4:5
 ```
 
 Read 12 videos' captions, download only the best 4:
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --videos 12 --use 4
+edits https://www.youtube.com/@channel --preset spin-slide-shake --videos 12 --use 4
 ```
 
 Calmer moves (2 is wilder):
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --intensity 0.6
+edits https://www.youtube.com/@channel --preset spin-slide-shake --intensity 0.6
 ```
 
 A sad music montage without a preset:
@@ -160,7 +160,7 @@ edits https://www.youtube.com/watch?v=VIDEO_ID --captions mrbeast
 Hits on the hardest beats, speed ramps and words on screen:
 
 ```sh
-edits https://www.youtube.com/@channel --preset yuraprst --velocity --fx shake,rgb,freeze --line "Nobody saw this coming."
+edits https://www.youtube.com/@channel --preset spin-slide-shake --velocity --fx shake,rgb,freeze --line "Nobody saw this coming."
 ```
 
 Slow, faster, hidden faces, a cleaner finish:
@@ -197,7 +197,7 @@ edits learn liked-edit.mp4
 Or make a preset from scratch for your footage: the video sets the rhythm, other presets lend the moves.
 
 ```sh
-edits preset create footage.mp4 --name mine --like yuraprst,madara
+edits preset create footage.mp4 --name mine --like spin-slide-shake,flash-velocity-square
 ```
 
 Measure a finished clip: length, loudness, cut rhythm and a contact sheet to look at (the same as the `edits_check` tool):
@@ -234,7 +234,7 @@ edits preset list
 One preset in full:
 
 ```sh
-edits preset show yuraprst
+edits preset show spin-slide-shake
 ```
 
 Save a changed preset:
@@ -273,12 +273,14 @@ edits doctor
 <details>
 <summary><b>Presets</b></summary>
 
-49 edits (anime and 9:16 community edits made in Alight Motion and CapCut, and ones learned from real edits) and 178
+48 edits (anime and 9:16 community edits made in Alight Motion and CapCut, and ones learned from real edits) and 178
 cut moves (Premiere transitions), kept as JSON in [`presets/`](presets) and built into the binary. Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
 look or song, then use the file for one edit or save it. With another song, cuts move onto its beats.
+Each is named for what it does (`shake-zoom-rush`, `punch-zoom-60s`, `slow-reveal-anime`), and `edits preset list`
+tags it by pace, frame and moves; the name of the project it came from still works with `--preset`.
 
 ```sh
-edits preset show yuraprst > my-preset.json
+edits preset show spin-slide-shake > my-preset.json
 ```
 
 ```sh

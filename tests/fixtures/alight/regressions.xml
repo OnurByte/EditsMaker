@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!-- Made for edits' tests, shaped like real Alight Motion exports: a shot that pops in from scale 0 with keys
+     before and after the layer, a mirrored (negative scale) shot, and a "copy background" adjustment layer with a
+     blur, screen-blended and fading, that once came in as a solid white flash. -->
+<scene title="regressions" width="1080" height="1920" totalTime="3000" fps="30">
+  <shape id="1" label="pop" startTime="0" endTime="1000" fillType="media" fillVideo="a.mp4">
+    <transform>
+      <scale><kf t="-0.4" v="9,9" e="linear"/><kf t="0" v="0,0" e="linear"/><kf t="0.3" v="1.2,1.2" e="cubicBezier 0.2 0.8 0.3 1"/><kf t="1" v="1,1" e="linear"/><kf t="1.6" v="7,7" e="linear"/></scale>
+    </transform>
+  </shape>
+  <shape id="2" label="flipped" startTime="1000" endTime="2000" fillType="media" fillVideo="b.mp4">
+    <transform>
+      <scale><kf t="0" v="-1,1" e="linear"/><kf t="1" v="-1.3,1.3" e="linear"/></scale>
+    </transform>
+  </shape>
+  <shape id="3" label="plain" startTime="2000" endTime="3000" fillType="media" fillVideo="c.mp4"/>
+  <shape id="4" label="adjust" startTime="2200" endTime="2500" fillType="color" blending="screen">
+    <property name="size" value="1200,2000"/>
+    <fillColor value="#ffffffff"/>
+    <transform>
+      <opacity><kf t="0" v="1" e="linear"/><kf t="1" v="0" e="linear"/></opacity>
+    </transform>
+    <effect id="com.alightcreative.effects.lift"/>
+    <effect id="com.alightcreative.effects.gaussianblur"><property name="strength" value="0.06"/></effect>
+    <effect id="com.alightcreative.effects.wipe2"/>
+  </shape>
+</scene>

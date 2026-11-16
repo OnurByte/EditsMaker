@@ -1,0 +1,742 @@
+{
+  "name": "flash-velocity-square",
+  "about": "Alight Motion project \"MADARA \"",
+  "w": 1080,
+  "h": 1080,
+  "total": 14.965,
+  "song": null,
+  "look": null,
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 4.649
+    },
+    {
+      "start": 4.65,
+      "end": 5.082,
+      "speed": 4.5509,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 3.8667, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 4.65,
+      "end": 5.082,
+      "speed": 1.1088,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 5.083,
+      "end": 5.515,
+      "speed": 3.9074,
+      "zoom": [
+        [0.0, 4.0, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "x": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.0259, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 5.083,
+      "end": 5.532,
+      "speed": 1.0668,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 5.516,
+      "end": 5.815,
+      "speed": 4.853,
+      "zoom": [
+        [0.0, 4.0, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 5.516,
+      "end": 5.849,
+      "speed": 1.4384,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 5.816,
+      "end": 6.915,
+      "speed": 1.8842,
+      "motion_blur": true
+    },
+    {
+      "start": 5.816,
+      "end": 6.915,
+      "speed": 1.5005,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.1592, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 5.816,
+      "end": 6.915,
+      "speed": 1.8929,
+      "motion_blur": true
+    },
+    {
+      "start": 5.982,
+      "end": 6.915,
+      "speed": 2.5713,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.224, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 6.182,
+      "end": 6.915,
+      "speed": 1.794,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.2851, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 6.382,
+      "end": 6.915,
+      "speed": 3.4962,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.3921, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 6.582,
+      "end": 6.915,
+      "speed": 4.952,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [1.0, 1.0, "inout 1.3"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 6.916,
+      "end": 7.365,
+      "speed": 4.8441,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 2.48, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 6.916,
+      "end": 7.382,
+      "speed": 1.0279,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 7.366,
+      "end": 7.782,
+      "speed": 4.7812,
+      "zoom": [
+        [0.0, 3.96, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 7.366,
+      "end": 7.815,
+      "speed": 1.0668,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 7.783,
+      "end": 8.082,
+      "speed": 8.0,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 2.2857, "out 6"]
+      ],
+      "y": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.0296, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 7.783,
+      "end": 8.099,
+      "speed": 1.5158,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.083,
+      "end": 9.232,
+      "zoom": [
+        [0.0, 4.06, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "x": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.1072, "out 6"]
+      ],
+      "y": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.5449, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 9.233,
+      "end": 9.665,
+      "speed": 4.5509,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 3.8667, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 9.234,
+      "end": 9.666,
+      "speed": 1.1088,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 9.666,
+      "end": 10.098,
+      "speed": 3.9074,
+      "zoom": [
+        [0.0, 4.0, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "x": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.0259, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 9.667,
+      "end": 10.116,
+      "speed": 1.0668,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 10.099,
+      "end": 10.398,
+      "speed": 4.853,
+      "zoom": [
+        [0.0, 4.0, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 10.1,
+      "end": 10.433,
+      "speed": 1.4384,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 10.399,
+      "end": 11.498,
+      "speed": 1.8842,
+      "motion_blur": true
+    },
+    {
+      "start": 10.399,
+      "end": 11.498,
+      "speed": 1.5005,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.1592, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 10.399,
+      "end": 11.498,
+      "speed": 1.8929,
+      "motion_blur": true
+    },
+    {
+      "start": 10.565,
+      "end": 11.498,
+      "speed": 2.5713,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.224, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 10.765,
+      "end": 11.498,
+      "speed": 1.794,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.2851, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 10.965,
+      "end": 11.498,
+      "speed": 3.4962,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [0.3921, 1.0, "out 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 11.165,
+      "end": 11.498,
+      "speed": 4.952,
+      "zoom": [
+        [0.0, 0.05, "linear"],
+        [1.0, 1.0, "inout 1.3"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 11.499,
+      "end": 11.948,
+      "speed": 4.8441,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 2.48, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 11.5,
+      "end": 11.966,
+      "speed": 1.0279,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 11.949,
+      "end": 12.365,
+      "speed": 4.7812,
+      "zoom": [
+        [0.0, 3.96, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 11.95,
+      "end": 12.399,
+      "speed": 1.0668,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 12.366,
+      "end": 12.665,
+      "speed": 8.0,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [1.0, 2.2857, "out 6"]
+      ],
+      "y": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.0296, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 12.367,
+      "end": 12.683,
+      "speed": 1.5158,
+      "exposure": [
+        [0.0, 0.0, "linear"]
+      ]
+    },
+    {
+      "start": 12.666,
+      "end": 13.815,
+      "zoom": [
+        [0.0, 4.06, "linear"],
+        [1.0, 1.0, "out 6"]
+      ],
+      "x": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.1072, "out 6"]
+      ],
+      "y": [
+        [0.0, 0.0, "linear"],
+        [1.0, -0.5449, "out 6"]
+      ],
+      "shake": [
+        [0.4663, 0.0, "out 2"],
+        [1.0, 0.1907, "in 2.3"]
+      ],
+      "shake_hz": 16.0,
+      "exposure": [
+        [0.0, 0.53, "linear"],
+        [0.459, 0.0, "out 6"]
+      ],
+      "rgb": true,
+      "motion_blur": true
+    }
+  ],
+  "flashes": [
+    {
+      "start": 6.008,
+      "end": 6.04,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 6.141,
+      "end": 6.173,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 6.358,
+      "end": 6.39,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 6.583,
+      "end": 6.615,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 6.683,
+      "end": 6.715,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 6.893,
+      "end": 6.925,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 4.616,
+      "end": 4.648,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.25,
+      "end": 8.282,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.45,
+      "end": 8.482,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.666,
+      "end": 8.698,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.833,
+      "end": 8.865,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 8.966,
+      "end": 8.998,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 10.592,
+      "end": 10.624,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 10.725,
+      "end": 10.757,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 10.942,
+      "end": 10.974,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 11.167,
+      "end": 11.199,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 11.267,
+      "end": 11.299,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 11.493,
+      "end": 11.525,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 9.209,
+      "end": 9.241,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 12.834,
+      "end": 12.866,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 13.034,
+      "end": 13.066,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 13.25,
+      "end": 13.282,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 13.417,
+      "end": 13.449,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    },
+    {
+      "start": 13.55,
+      "end": 13.582,
+      "color": "b3af8a",
+      "opacity": [
+        [0.0, 1.0, "linear"]
+      ]
+    }
+  ],
+  "aka": ["MADARA", "madara"]
+}

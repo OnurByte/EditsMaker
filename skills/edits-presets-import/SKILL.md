@@ -29,7 +29,12 @@ edits preset list
   use it in CapCut, export the video and `edits learn` it. Newer CapCut and JianYing 6+ encrypt drafts; those are
   skipped with a message, so `edits learn` the exported video instead. Filters and stickers are not read.
 - Premiere `.prfpset` / `.prfpset.xml` files become cut moves (spins, whips, slides, zooms) that music edits put on the hardest beats.
-- After importing, open one with `edits preset show NAME` and check it reads sensibly.
+- Alight adjustment layers ("copy background" shapes with effects on them) become hits on the shots under them:
+  blur pulses, brightening (exposure, contrast, glow passes), shakes, RGB splits, inversions, saturation pops.
+- The import says which effects it could not carry over (`effects not carried over: wipe2 x7, ...`): those are
+  the gaps; mention them instead of promising the preset looks exactly like the original.
+- After importing, rename the preset for what it does (`edits preset show NAME`, change `name`, keep the old one in
+  `aka`), open it and check it reads sensibly.
 
 Reference edits (mp4s of edits the user likes):
 - `edits learn edit.mp4` reverse-engineers one into a preset: cuts (adaptive threshold, flashes kept apart), flashes,

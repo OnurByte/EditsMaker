@@ -8,7 +8,7 @@ description: Read an `edits` preset as JSON and change it to suit the footage, s
 Presets are plain JSON. Nothing is fixed: read one, change what this edit needs, use it.
 
 ```sh
-edits preset show yuraprst > p.json      # the whole preset
+edits preset show spin-slide-shake > p.json      # the whole preset
 # edit p.json
 edits <input> --preset p.json            # use it for this edit only
 edits preset save p.json                 # or keep it (same name replaces the built-in one)

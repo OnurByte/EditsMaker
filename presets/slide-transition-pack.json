@@ -1,0 +1,110 @@
+{
+  "name": "slide-transition-pack",
+  "about": "Alight Motion project \"Transition Pack © AzeenEditz01 \"",
+  "w": 1080,
+  "h": 1080,
+  "total": 13.865,
+  "song": null,
+  "look": null,
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 0.999,
+      "speed": 0.9961,
+      "motion_blur": true
+    },
+    {
+      "start": 0.984,
+      "end": 1.983,
+      "speed": 1.002,
+      "motion_blur": true
+    },
+    {
+      "start": 3.183,
+      "end": 4.648,
+      "x": [
+        [0.1024, 0.0, "linear"],
+        [0.83, -1.0222, "inout 2.4"]
+      ],
+      "y": [
+        [0.1024, 0.0, "linear"],
+        [0.83, 0.001, "inout 2.4"]
+      ]
+    },
+    {
+      "start": 3.183,
+      "end": 4.648,
+      "x": [
+        [0.1024, 0.0, "linear"],
+        [0.83, -1.0222, "inout 2.4"]
+      ],
+      "y": [
+        [0.1024, 0.0, "linear"],
+        [0.83, 0.001, "inout 2.4"]
+      ]
+    },
+    {
+      "start": 5.416,
+      "end": 6.431
+    },
+    {
+      "start": 5.782,
+      "end": 6.842
+    },
+    {
+      "start": 6.416,
+      "end": 7.431
+    },
+    {
+      "start": 8.666,
+      "end": 9.681,
+      "motion_blur": true
+    },
+    {
+      "start": 9.666,
+      "end": 10.681,
+      "motion_blur": true
+    },
+    {
+      "start": 11.9,
+      "end": 12.899,
+      "speed": 0.9961,
+      "motion_blur": true
+    },
+    {
+      "start": 12.883,
+      "end": 13.865,
+      "speed": 0.983,
+      "zoom": [
+        [0.0, 1.0, "linear"],
+        [0.5346, 1.8258, "out 4.1"],
+        [1.0, 1.3595, "in 4.1"]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 12.884,
+      "end": 13.865,
+      "speed": 0.9
+    },
+    {
+      "start": 12.884,
+      "end": 13.865,
+      "speed": 0.9
+    }
+  ],
+  "flashes": [
+    {
+      "start": 9.182,
+      "end": 10.148,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.0, "linear"],
+        [0.147, 0.7637, "linear"]
+      ]
+    }
+  ],
+  "aka": ["Transition Pack © AzeenEditz01", "transition-pack-azeeneditz01"]
+}

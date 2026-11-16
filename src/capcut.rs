@@ -205,6 +205,7 @@ pub fn parse(text: &str, name: &str) -> Result<Preset, String> {
         fit_beats: true,
         slots,
         flashes,
+        aka: vec![],
     }.tidy())
 }
 
@@ -266,5 +267,16 @@ mod tests {
     #[test]
     fn an_encrypted_draft_says_so() {
         assert!(super::parse("\u{1}\u{2}binary", "x").unwrap_err().contains("encrypted"));
+    }
+
+    #[test]
+    fn real_capcut_drafts_import() {
+        let kb = super::parse(include_str!("../tests/fixtures/capcut/ken-burns/draft_content.json"), "ken-burns").unwrap();
+        assert_eq!(kb.slots.len(), 5);
+        // CapCut's own "Cubic Out" handles, read from the draft
+        assert!(kb.slots.iter().all(|s| matches!(s.zoom.keys.last().unwrap().2, crate::preset::Ease::Out(k) if (k - 3.0).abs() < 0.11)), "{:?}", kb.slots[0].zoom);
+        let tr = super::parse(include_str!("../tests/fixtures/capcut/transitions/draft_content.json"), "transitions").unwrap();
+        assert_eq!(tr.slots.len(), 2);
+        assert!(tr.flashes.is_empty(), "a dissolve is not a flash");
     }
 }

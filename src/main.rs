@@ -172,6 +172,8 @@ struct Cli {
     voice: bool,
     /// VIDEO@SECONDS: the passages to use, by hand
     say: Vec<String>,
+    /// VIDEO@FROM: the footage for each shot of a preset edit, in order, by hand (only the character, the right scene)
+    shots: Vec<String>,
     /// talking clips: caption style, jump cuts, sound effects, hook line, music bed
     caption_style: String,
     captions_given: bool,
@@ -208,13 +210,13 @@ fn size(aspect: &str) -> Option<(u32, u32)> {
 
 /// Defaults come from `edits study` when it has been run; flags override them.
 fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
-    let style = style.unwrap_or(study::Style { aspect: "9:16".into(), grade: "bw".into(), lufs: -14.0 });
+    let style = style.unwrap_or(study::Style { aspect: "9:16".into(), grade: "bw".into(), lufs: -14.0, sfx: true, hook: true });
     let (w, h) = size(&style.aspect).unwrap_or((1080, 1920));
     let grade = if looks::names().contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
     let mut c = Cli {
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: true, hook: true, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -257,6 +259,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--preset" => c.preset = Some(val("--preset")?),
             "--sad" => c.look.sad = true,
             "--voice" => c.voice = true,
+            "--shot" => c.shots.push(val("--shot")?),
             "--say" => {
                 c.say.push(val("--say")?);
                 c.voice = true;
@@ -316,6 +319,9 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--no-jumpcuts" => c.jumpcuts = false,
             "--no-sfx" => c.sfx = false,
             "--no-hook" => c.hook = false,
+            // style.json can turn these off for good; the flags bring them back for one run
+            "--sfx" => c.sfx = true,
+            "--hook" => c.hook = true,
             "--bed" => c.bed = Some(val("--bed")?),
             "--no-captions" => c.opts.captions = false,
             "--no-llm" => c.llm = false,
@@ -587,6 +593,27 @@ fn make(args: &[String]) -> Result<(), String> {
 /// (id, file) per video, every shot, and each video's measured frames.
 type Footage = (Vec<(String, PathBuf)>, Vec<montage::Shot>, Vec<Vec<montage::Frame>>);
 
+/// The video ids named in --shot and --say (VIDEO@...), each once.
+fn named_videos(c: &Cli) -> Vec<String> {
+    let mut ids: Vec<String> = c.shots.iter().chain(&c.say).filter_map(|w| w.rsplit_once('@').map(|x| x.0.to_string())).filter(|id| !id.is_empty()).collect();
+    ids.sort();
+    ids.dedup();
+    ids
+}
+
+/// --shot VIDEO@FROM[-TO]: which video (by id, or a local file by name; empty for the only one), where it starts
+/// and where the usable stretch ends (TO, else open).
+fn hand_shot(want: &str, videos: &[(String, PathBuf)]) -> Option<(usize, f64, f64)> {
+    let (id, range) = want.rsplit_once('@')?;
+    let mut ends = range.split('-');
+    let from: f64 = ends.next()?.trim().parse().ok()?;
+    let to: f64 = ends.next().and_then(|t| t.trim().parse().ok()).filter(|t| *t > from).unwrap_or(f64::MAX);
+    let v = if id.is_empty() && videos.len() == 1 { 0 } else {
+        videos.iter().position(|(vid, f)| vid == id || f.file_stem().is_some_and(|s| s.to_string_lossy() == id))?
+    };
+    Some((v, from.max(0.0), to))
+}
+
 fn footage(c: &Cli, cache: &Path) -> Footage {
     let videos: Vec<(String, PathBuf)> = if Path::new(&c.input).is_file() {
         vec![(c.input.clone(), PathBuf::from(&c.input))]
@@ -595,7 +622,13 @@ fn footage(c: &Cli, cache: &Path) -> Footage {
             eprintln!("edits: {e}");
             vec![]
         });
-        let found = fetch::screen(found, c.use_videos, cache, &c.lang, c.llm);
+        let mut found = fetch::screen(found, c.use_videos, cache, &c.lang, c.llm);
+        // a video named in --shot or --say is used whatever the screening thinks of it
+        for id in named_videos(c) {
+            if !found.iter().any(|(f, _)| *f == id) {
+                found.push((id.clone(), format!("https://www.youtube.com/watch?v={id}")));
+            }
+        }
         std::thread::scope(|s| {
             let jobs: Vec<_> = found.into_iter().map(|(id, url)| s.spawn(move || montage::video_file(&id, &url, cache).map(|f| (id, f)))).collect();
             jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: skipped a video: {e}")).ok()).collect()
@@ -620,7 +653,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         (None, Some(s)) => fetch::find_song(&s.title)?,
         (None, None) => return Err("this preset names no song: give one with --music".into()),
     };
-    let (song, (videos, shots, frames)) = std::thread::scope(|s| {
+    let (song, (videos, mut shots, frames)) = std::thread::scope(|s| {
         let song = s.spawn(|| montage::song(&music, cache));
         (song.join().unwrap_or_else(|_| Err("song thread crashed".into())), footage(c, cache))
     });
@@ -686,6 +719,12 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         return Err("--say: give VIDEO@FROM-TO with the video's id (or the file's name) and seconds where it speaks".into());
     }
     let cut_starts: Vec<f64> = spans.iter().map(|(a, _)| *a).collect();
+    // --shot: the footage chosen by hand, one per slot in order (cycling when there are fewer), instead of the pick
+    let hand: Vec<(usize, f64, f64)> = c.shots.iter().map(|w| hand_shot(w, &videos).ok_or(format!("--shot {w}: give VIDEO@SECONDS with a video of this run"))).collect::<Result<_, _>>()?;
+    let hand_from = shots.len();
+    shots.extend(hand.iter().map(|&(video, s, _)| montage::Shot { video, s, e: s + 60.0, scene_end: s + 60.0, score: 0.0, focus: None }));
+    // each hand-picked stretch plays on from where it stopped the time before, back to its start past TO
+    let mut cursor: Vec<f64> = hand.iter().map(|h| h.1).collect();
     let mut used = vec![false; shots.len()];
     let mut made = 0;
     for k in 0..c.n {
@@ -700,7 +739,19 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
         let lens: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (s.end - s.start).max(b - a)).collect();
         let needs: Vec<f64> = slots.iter().zip(&lens).map(|(s, l)| s.source_len(*l) + 0.2).collect();
-        let picks = montage::assign(&shots, &mut used, &needs, None);
+        let picks = if hand.is_empty() {
+            montage::assign(&shots[..hand_from], &mut used[..hand_from], &needs, None)
+        } else {
+            (0..needs.len()).map(|i| {
+                let j = (k * needs.len() + i) % hand.len();
+                if cursor[j] + needs[i] > hand[j].2 {
+                    cursor[j] = hand[j].1;
+                }
+                let at = cursor[j];
+                cursor[j] += needs[i];
+                (hand_from + j, at)
+            }).collect()
+        };
         if picks.len() < needs.len() {
             eprintln!("edits: not enough usable shots for edit {}", k + 1);
             break;
@@ -1122,7 +1173,7 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
     match (args.first().map(String::as_str), args.get(1)) {
         (Some("list") | None, _) => {
             for p in presets::all() {
-                println!("{:<40} {:>2} shots {:>5.1}s {}x{}{}", p.name, p.slots.len(), p.total, p.w, p.h, p.song.as_ref().map(|s| format!("  song: {}", s.title)).unwrap_or_default());
+                println!("{:<26} {:>2} shots {:>5.1}s  {:<38}{}", p.name, p.slots.len(), p.total, p.tags().join(" "), p.song.as_ref().map(|s| format!("  song: {}", s.title)).unwrap_or_default());
             }
             println!("\n{} cut moves; your presets: {}", presets::motions().len(), presets::user_dir().display());
             Ok(())
@@ -1276,6 +1327,15 @@ mod tests {
     }
 
     #[test]
+    fn hand_picked_shots_name_a_video_and_a_second() {
+        let videos = vec![("abc123".to_string(), PathBuf::from("/c/abc123/v.mp4")), ("/home/me/clip.mp4".to_string(), PathBuf::from("/home/me/clip.mp4"))];
+        assert_eq!(super::hand_shot("abc123@98.6", &videos), Some((0, 98.6, f64::MAX)));
+        assert_eq!(super::hand_shot("clip@4-6.5", &videos), Some((1, 4.0, 6.5)), "a local file by its name");
+        assert_eq!(super::hand_shot("nope@3", &videos), None);
+        assert_eq!(super::hand_shot("@3", &videos[..1]), Some((0, 3.0, f64::MAX)), "the only video needs no name");
+    }
+
+    #[test]
     fn a_preset_voice_ends_on_the_hardest_cut_it_fits_before() {
         let cuts = [0.0, 1.0, 2.0, 4.0, 6.0];
         let strength = [0.0, 0.9, 0.5, 0.8, 0.2];
@@ -1314,7 +1374,7 @@ mod tests {
 
     #[test]
     fn studied_style_sets_defaults_and_flags_win() {
-        let style = || Some(study::Style { aspect: "4:3".into(), grade: "nonsense".into(), lufs: -99.0 });
+        let style = || Some(study::Style { aspect: "4:3".into(), grade: "nonsense".into(), lufs: -99.0, sfx: true, hook: true });
         let c = parse(&args("x"), style()).unwrap();
         assert_eq!((c.opts.w, c.opts.h, c.opts.grade.as_str(), c.opts.lufs), (1440, 1080, "bw", -30.0));
         assert_eq!(parse(&args("x --aspect 9:16"), style()).unwrap().opts.h, 1920);
