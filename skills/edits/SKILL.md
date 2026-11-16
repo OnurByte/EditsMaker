@@ -174,6 +174,10 @@ Other kinds, when asked for:
   record scratch), `--intro-caption "avenox 🤡"`, `--outro edits` (the EditsMaker card with a bass hit). The .srt
   moves with the intro. MCP: `intro`, `intro_bed`, `intro_caption`, `outro`.
 - Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
+- Colour and sound over the whole edit: `--curves vintage` (or points `"0/0 0.4/0.3 1/1"`), `--pop red` (only red stays),
+  `--bass 6` (phonk low end), `--pitch -2` (semitones, tempo kept), `--reverb` (slowed + reverb, sad edits).
+- `--pip FILE[@FROM-TO][:X,Y,SIZE]`: another video small in a white frame (a reaction, a source, a flashback).
+- `--transition circleopen|dissolve|wipeleft|slideup|pixelize|...`: music edits, every soft cut uses it.
 - Shots are spread over every downloaded video; do not settle for an edit cut from one video.
 
 ## After rendering

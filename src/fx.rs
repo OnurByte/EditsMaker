@@ -6,6 +6,30 @@ use crate::preset::{Curve, Ease};
 
 pub const HITS: &[&str] = &["shake", "flash", "rgb", "glitch", "invert", "blur", "freeze", "zoom"];
 
+/// ffmpeg's built-in tone curves (Lumetri's curve presets).
+pub const CURVES: &[&str] = &["vintage", "strong_contrast", "medium_contrast", "increase_contrast", "lighter", "darker", "cross_process", "linear_contrast", "negative", "color_negative"];
+
+/// A tone curve: a named one or master points "0/0 0.4/0.3 1/1" (input/output 0..1). None when it is neither.
+pub fn curves(spec: &str) -> Option<String> {
+    let s = spec.trim();
+    if CURVES.contains(&s) {
+        return Some(format!(",curves=preset={s}"));
+    }
+    let unit = |x: &str| x.parse::<f64>().is_ok_and(|v| (0.0..=1.0).contains(&v));
+    let ok = s.split_whitespace().count() >= 2 && s.split_whitespace().all(|p| p.split_once('/').is_some_and(|(a, b)| unit(a) && unit(b)));
+    ok.then(|| format!(",curves=master='{s}'"))
+}
+
+/// Colours a colour pop can keep, with ffmpeg's huesaturation letter.
+pub const POP: &[(&str, &str)] = &[("red", "r"), ("yellow", "y"), ("green", "g"), ("cyan", "c"), ("blue", "b"), ("magenta", "m")];
+
+/// Colour pop (Lumetri's HSL secondary, Sin City's red): every colour but `name` drained to grey.
+pub fn pop(name: &str) -> Option<String> {
+    let keep = POP.iter().find(|p| p.0 == name.trim())?.1;
+    let rest: Vec<&str> = POP.iter().map(|p| p.1).filter(|c| *c != keep).collect();
+    Some(format!(",huesaturation=colors={}:saturation=-1:strength=100", rest.join("+")))
+}
+
 /// What a shot gets at its first moments when it lands on a hard beat. Filters in `t` (the shot's own clock),
 /// on a frame of `w` x `h`. "freeze" is handled before the shot is cut (see `freeze`).
 pub fn hit(kinds: &[String], w: u32, h: u32) -> String {
@@ -120,6 +144,15 @@ pub fn face_box(boxes: &mut [(f64, f64, f64, f64)]) -> Option<(f64, f64, f64, f6
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn curves_and_pop() {
+        assert_eq!(curves("vintage").unwrap(), ",curves=preset=vintage");
+        assert_eq!(curves("0/0 0.5/0.62 1/1").unwrap(), ",curves=master='0/0 0.5/0.62 1/1'");
+        assert!(curves("0/0").is_none() && curves("0/0 2/1").is_none() && curves("x'evil").is_none());
+        assert_eq!(pop("red").unwrap(), ",huesaturation=colors=y+g+c+b+m:saturation=-1:strength=100");
+        assert!(pop("pink").is_none());
+    }
 
     #[test]
     fn hits_are_filters() {

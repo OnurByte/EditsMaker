@@ -27,6 +27,13 @@ fn tools() -> Value {
             "captions": {"type": "string", "description": "caption style from edits_looks: hormozi, mrbeast, karaoke, box, minimal, neon, cinematic, glow, redglow, thunder, typewriter"},
             "bed": {"type": "string", "description": "music under talking clips, ducked under the voice"},
             "blur_faces": {"type": "boolean"}, "blur_box": {"type": "string", "description": "x,y,w,h fractions of the frame to blur (a watermark, a plate)"},
+            "pips": {"type": "array", "items": {"type": "string"}, "description": "picture in picture: another video (file or library clip) small in a white frame over the edit, FILE[@FROM-TO][:X,Y,SIZE], centre and width as fractions, default top right"},
+            "transition": {"type": "string", "description": "music edits: one ffmpeg xfade transition on every soft cut, e.g. dissolve, wipeleft, slideup, circleopen, pixelize, radial, squeezeh, coverleft"},
+            "curves": {"type": "string", "description": "tone curve over the edit: vintage, strong_contrast, medium_contrast, increase_contrast, lighter, darker, cross_process, linear_contrast, negative, color_negative, or points \"0/0 0.4/0.3 1/1\""},
+            "pop": {"type": "string", "enum": ["red", "yellow", "green", "cyan", "blue", "magenta"], "description": "colour pop: only this colour stays, the rest goes grey"},
+            "bass": {"type": "number", "description": "low end boost in dB, -12..15 (6 = phonk)"},
+            "pitch": {"type": "number", "description": "semitones up or down, -12..12, tempo kept"},
+            "reverb": {"type": "boolean", "description": "a room behind the sound (slowed + reverb, sad edits)"},
             "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
             "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]}, "encoder": {"type": "string", "enum": ["cpu", "nvenc", "auto"], "description": "nvenc renders on an NVIDIA GPU, auto uses it when it works"},
             "svgs": {"type": "array", "items": {"type": "string"}, "description": "drawn graphics over the edit to point things out: NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], e.g. arrow@1.2-2.5:0.6,0.3,0.25 or circle@4:0.5,0.35#ffffff. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart, sparkle, or an .svg file. X,Y is the centre and SIZE the width, as fractions of the frame; times are seconds of the finished edit"},
@@ -109,14 +116,14 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
                 ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("encoder", "--encoder"), ("export", "--export"),
-                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro")] {
+                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
             }
-            for (key, flag) in [("n", "-n"), ("videos", "--videos"), ("use", "--use"), ("intensity", "--intensity"), ("speed", "--speed"), ("lines", "--lines"), ("fps", "--fps"), ("length", "--length")] {
+            for (key, flag) in [("n", "-n"), ("videos", "--videos"), ("use", "--use"), ("intensity", "--intensity"), ("speed", "--speed"), ("lines", "--lines"), ("fps", "--fps"), ("length", "--length"), ("bass", "--bass"), ("pitch", "--pitch")] {
                 if let Some(x) = a[key].as_f64() {
-                    v.extend([flag.into(), if matches!(key, "intensity" | "speed" | "length") { x.to_string() } else { (x as u64).to_string() }]);
+                    v.extend([flag.into(), if matches!(key, "intensity" | "speed" | "length" | "bass" | "pitch") { x.to_string() } else { (x as u64).to_string() }]);
                 }
             }
             for t in a["line_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
@@ -124,6 +131,9 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             }
             for t in a["overlays"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--overlay".into(), t.into()]);
+            }
+            for t in a["pips"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--pip".into(), t.into()]);
             }
             for t in a["svgs"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--svg".into(), t.into()]);
@@ -141,7 +151,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
                 v.extend(["--flash-text".into(), t.into()]);
             }
             for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
-                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math")] {
+                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math"), ("reverb", "--reverb")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
                 }
