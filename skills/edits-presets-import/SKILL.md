@@ -1,12 +1,12 @@
 ---
 name: edits-presets-import
-description: Add new edit presets to `edits` from Alight Motion projects (.xml, zip, folder) or Premiere Pro presets (.prfpset), and learn a style from reference edits. Use when the user hands over preset files, project exports or example edits to copy.
+description: Add new edit presets to `edits` from Alight Motion projects (.xml, zip, folder), CapCut drafts (draft folder or zip) or Premiere Pro presets (.prfpset), and learn a style from reference edits. Use when the user hands over preset files, project exports or example edits to copy.
 ---
 
 # New presets
 
 ```sh
-edits preset import pack.zip project.xml folder/ transitions.prfpset   # into ~/.config/edits/presets
+edits preset import pack.zip project.xml folder/ capcut-draft/ transitions.prfpset   # into ~/.config/edits/presets
 edits preset import ... --into presets/        # into the repo, to build them into the binary
 edits preset list
 ```
@@ -21,6 +21,13 @@ edits preset list
   a LUT; `edits cube NAME` writes it as a .cube for Premiere, Resolve or CapCut. Glows and streaks are left out.
 - Text packs: their styles are not imported automatically; read the text layers (font, colour, glow, letter
   spacing, how they come in) and add a caption style to captions.json (`glow`, `spacing`, `reveal`).
+- CapCut drafts (a draft folder, its zip, or its `draft_content.json`) become presets: each main-track clip's
+  timing, speed and curve-speed ramp, zoom/slide/turn (keyframed or still), effect clips named like flash, shake,
+  blur, RGB/glitch or invert, white-flash transitions and the song's name. Drafts live in
+  `%LOCALAPPDATA%\CapCut\User Data\Projects\com.lveditor.draft\` (Windows) or
+  `~/Movies/CapCut/User Data/Projects/com.lveditor.draft/` (macOS). A CapCut *template link* has no draft to read:
+  use it in CapCut, export the video and `edits learn` it. Newer CapCut and JianYing 6+ encrypt drafts; those are
+  skipped with a message, so `edits learn` the exported video instead. Filters and stickers are not read.
 - Premiere `.prfpset` / `.prfpset.xml` files become cut moves (spins, whips, slides, zooms) that music edits put on the hardest beats.
 - After importing, open one with `edits preset show NAME` and check it reads sensibly.
 

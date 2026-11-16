@@ -8,7 +8,7 @@ USAGE
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
   edits preset list | show NAME           presets are JSON: read one in full
   edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
-  edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects and Premiere presets into presets
+  edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects, CapCut drafts and Premiere presets into presets
   edits library add <zip|folder>...       a whole editing pack: sounds, music, overlays, transitions, green screens,
                                memes, images into your library, fonts installed, presets imported
   edits library [KIND] [WORDS] what is in it (sfx, music, overlay, transition, greenscreen, background, meme, image)

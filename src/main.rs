@@ -1,4 +1,5 @@
 #![recursion_limit = "256"]
+mod capcut;
 mod check;
 mod create;
 mod face;
@@ -1219,7 +1220,7 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             }
             Ok(())
         }
-        _ => Err("usage: edits preset list | show NAME | save FILE.json|- | import <zip|xml|folder|prfpset>... [--into DIR]".into()),
+        _ => Err("usage: edits preset list | show NAME | save FILE.json|- | import <zip|xml|folder|prfpset|capcut draft>... [--into DIR]".into()),
     }
 }
 

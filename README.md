@@ -238,7 +238,7 @@ Save a changed preset:
 edits preset save my-preset.json
 ```
 
-Import Alight Motion or Premiere presets:
+Import Alight Motion projects, CapCut drafts (the draft folder or its zip) or Premiere presets:
 
 ```sh
 edits preset import presets.zip
