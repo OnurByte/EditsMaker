@@ -11,12 +11,12 @@ The tool alone makes a generic edit: it picks moments from the transcript (a `cl
 sees or hears the footage) and replays a preset. What makes an edit land is your judgment on top. Every edit:
 
 1. **Load the tools first.** If `mcp__edits__*` is listed as deferred, load all of it in one call:
-   `ToolSearch select:mcp__edits__edits_make,mcp__edits__edits_presets,mcp__edits__edits_preset_get,mcp__edits__edits_preset_save,mcp__edits__edits_looks,mcp__edits__edits_trends,mcp__edits__edits_library,mcp__edits__edits_learn,mcp__edits__edits_doctor`.
+   `ToolSearch select:mcp__edits__edits_make,mcp__edits__edits_presets,mcp__edits__edits_preset_get,mcp__edits__edits_preset_save,mcp__edits__edits_looks,mcp__edits__edits_trends,mcp__edits__edits_library,mcp__edits__edits_learn,mcp__edits__edits_check,mcp__edits__edits_preset_create,mcp__edits__edits_doctor`.
    Use them over the CLI: only `edits_make` takes `line_texts`, `preset_json`, `overlays`, `svgs`, `whoosh`/`boom`.
 2. **Decide the idea before any command**: one sentence on what the viewer feels (laughs at X, aches at Y) and the
    one line or moment it hangs on. No idea, no render.
-3. **Know the footage.** Download first, then read the captions/`.json` and look at a contact sheet
-   (`ffmpeg -i v.mp4 -vf fps=0.5,scale=160:-2,tile=8x4 -frames:v 1 sheet.jpg`, then Read it). Choose the moment
+3. **Know the footage.** Every downloaded video gets a contact sheet; the log names it (`footage ID: sheet PATH`),
+   Read it along with the captions/`.json` instead of running ffmpeg yourself. Choose the moment
    yourself and force it with `--say ID@A-B` (MCP: `say: ["ID@A-B"]`, plus `lang`) instead of trusting the automatic pick.
 4. **Write the words yourself** (`line_texts` / `--line`): short, felt, in the viewer's language, none copied raw
    from the transcript unless it IS the punchline. A line on screen is where an edit becomes funny or moving.
@@ -26,7 +26,7 @@ sees or hears the footage) and replays a preset. What makes an edit land is your
    first second hook? does the line land on the beat? is any face/text cut off? Only then show it, with the clip's
    absolute path. Rate good ones with `edits rate clip.mp4 +` so taste.md learns.
 
-Gotchas: `trend:N` uses the system language's chart (often us), so pass `trend:tr:N`. `--say` makes a talking clip
+Gotchas: `trend:N` uses the chart of `lang` (`--lang tr` gives Turkey's), else the system's. `--say` makes a talking clip
 (captions, `--bed`) when there is no `--music`. Whisper mishears Turkish ("mecburum" became "meşgul"): read the
 clip's `.json` `text` against what you chose and fix wrong caption words before showing it.
 
@@ -63,8 +63,8 @@ The idea is to praise a character, not to tell a story. The viewer should leave 
   (flash, shake, zoom, the bass) on his best line or look. Do not spend the hits early.
 - Low angle, slow push-in, slow-mo (`speed` 0.8) on his big moment; fast cuts for everyone else's reaction.
 - Sound: a song with a real drop, cut on its beats; take one short line of his own voice (3-6 s, a threat or a
-  flex) over the drop with the song ducked to ~20% under it. Preset mode ignores `voice`, so mix the line in with
-  ffmpeg: `-ss A -t D -i src.m4a`, `adelay`, `amix`, then `loudnorm=I=-12`.
+  flex) over the drop: give the preset edit `say: ["ID@A-B"]` and edits widens it to whole words, ducks the song
+  under it and ends it on the hardest cut it fits before. (`voice` without `say` is still ignored by presets.)
 - Colour: one grade for the whole thing (teal, or black and white for a colder, bigger look).
 - Optional: a caption of one word about him (his name, "KRAL"), never a sentence that explains the scene.
 - Check: can you say in one sentence why he is the strongest person in it? If not, the shots are wrong.
@@ -75,8 +75,7 @@ Study results, not taste guesses. Match these before adding anything fancy:
 
 - **Loud and bass-heavy.** Fast montages sit at -9 to -12 LUFS; talking-head clips at -16 to -17. A first emotional
   test came out at -16 LUFS with the sub (<120 Hz) 10-15 dB below the references and the user called the sound
-  disgusting. After every render run
-  `ffmpeg -i clip.mp4 -af ebur128 -f null - 2>&1 | grep -A8 Summary` and keep montages near -11 LUFS.
+  disgusting. Renders are loudness-normalised; `edits_check` measures each one, keep montages near -11 LUFS.
 - **A quiet "fon müziği" bed under dialogue is wrong.** Do not use soft stock piano/ambient tracks (trend lists have
   them, e.g. "En Duygusal Fon Müziği"). Use a song with real low end, from the library or the trend chart, and
   say which one you chose.
@@ -142,15 +141,13 @@ Other kinds, when asked for:
 
 ## After rendering
 
-edits picks the output folder itself, one per run: `~/Videos/edits/DAY/HH.MM <video or topic title>/` (or `$EDITS_OUT`), with a `.json` beside each clip; the log's last line names it. Never choose a folder yourself (no `--out`, no `work/`): the automatic one is where the user looks. Look at frames before calling it done:
-`ffmpeg -i clip.mp4 -vf fps=1.5,scale=100:-2,tile=18x2 -frames:v 1 sheet.jpg`. If a preset does not suit
+edits picks the output folder itself, one per run: `~/Videos/edits/DAY/HH.MM <video or topic title>/` (or `$EDITS_OUT`), with a `.json` beside each clip; the log's last line names it. Never choose a folder yourself (no `--out`, no `work/`): the automatic one is where the user looks. Look at frames before calling it done: `edits_check` writes the clip's sheet. If a preset does not suit
 the footage, change the preset (edits-preset-tweak skill) rather than giving up on it.
 
 ## Learned the hard way (küfür/shitpost kanalları)
 
-- **Kanal linki**: `@Kanal` ile başlatınca yanlış kanaldan videolar gelebiliyor. Önce
-  `yt-dlp --flat-playlist --playlist-end 8 --print "%(id)s | %(title)s" https://www.youtube.com/@KANAL/videos`
-  ile doğru kanalı doğrula, sonra `@KANAL/videos` adresini ver. Çıkan klibin `.json`'undaki `source` başlığını kontrol et.
+- **Kanal**: `@Kanal` tek başına verilince edits onu kanalın `/videos` sayfası yapar (aramaya düşmez) ve log'a
+  `videos from "KANAL ADI"` yazar; yanlış kanalsa orada görürsün. Yine de klibin `.json`'undaki `source`'a bak.
 - **Küfür odaklı**: moment seçimini `~/.config/edits/taste.md` yönlendirir ("küfür punchline'dır"). Render sonrası
   `.json` içindeki `text` alanını oku. Küfür yoksa klibi at. `--lang tr` ver.
 - **Düz konuşma klibi sönük kalır**: küfür anına vurgu için `--fx shake,flash,rgb,zoom --intensity 1.5`,
@@ -167,7 +164,8 @@ the footage, change the preset (edits-preset-tweak skill) rather than giving up 
 ## Never cut a spoken sentence mid-word (voice over a hand-picked moment)
 
 Cutting the voice by eye (a guessed `-t`) clipped the last word ("çalışıyorsun" cut at 6.45 s, it ends at 6.76 s).
-Before trimming any voice, get the real word ends and cut after the last word, never before:
+`say` does this itself (whole words, +0.25 s after the last one), in talking, music and preset edits. Only when you
+mix a voice by hand, get the real word ends and cut after the last word, never before:
 
 ```sh
 ffmpeg -i clip.mp4 -ar 16000 -ac 1 v.wav
