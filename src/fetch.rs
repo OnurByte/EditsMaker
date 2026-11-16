@@ -47,6 +47,13 @@ fn wav(input: &Path, out: &Path) -> Result<(), String> {
 }
 
 /// A bare channel link lists tabs, not videos; point it at the uploads.
+/// "@name" alone is a YouTube channel, never a topic to search for.
+fn handle_url(input: &str) -> String {
+    let h = input.trim();
+    let bare = h.len() > 1 && h.starts_with('@') && h[1..].chars().all(|c| c.is_alphanumeric() || "._-".contains(c));
+    if bare { format!("https://www.youtube.com/{h}/videos") } else { input.to_string() }
+}
+
 fn channel_videos(url: &str) -> String {
     let u = url.trim_end_matches('/');
     let is_channel = u.contains("youtube.com/@") || u.contains("youtube.com/channel/") || u.contains("youtube.com/c/");
@@ -72,10 +79,15 @@ fn listed(line: &str, max_secs: Option<f64>) -> Option<(String, String)> {
 
 /// What to work on: (id, url) pairs for a link, a channel, a playlist or a topic search. Downloads nothing.
 pub fn resolve(input: &str, videos: usize) -> Result<Vec<(String, String)>, String> {
+    let input = &handle_url(input);
     let is_url = input.starts_with("http://") || input.starts_with("https://");
     let target = if is_url { channel_videos(input) } else { format!("ytsearch{videos}:{input}") };
     // "--" so a topic starting with "-" can never be read as a yt-dlp option
-    let out = yt(&["--no-warnings", "--flat-playlist", "--playlist-end", &videos.to_string(), "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &target])?;
+    let out = yt(&["--no-warnings", "--flat-playlist", "--playlist-end", &videos.to_string(), "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s\t%(channel,uploader)s", "--", &target])?;
+    // say whose videos these are, so a wrong channel shows in the log instead of in the edit
+    if let Some(ch) = out.lines().find_map(|l| l.split('\t').nth(3)).map(str::trim).filter(|c| !c.is_empty() && *c != "NA") {
+        eprintln!("edits: videos from \"{ch}\" ({target})");
+    }
     // a topic search must not pull a 3-hour stream
     let found: Vec<_> = out.lines().filter_map(|l| listed(l, (!is_url).then_some(1800.0))).collect();
     if found.is_empty() {
@@ -124,6 +136,16 @@ pub fn trends(country: &str) -> Result<Vec<String>, String> {
     Ok(list)
 }
 
+/// The chart to use: --lang's country when it differs from the system's language (tr -> tr, en -> us), else the system's.
+pub fn country() -> String {
+    let (lang, cc) = crate::lang::system();
+    match crate::lang::code() {
+        c if c == lang => cc,
+        "en" => "us".into(),
+        c => c.into(),
+    }
+}
+
 /// `--music trend`, `trend:3` or `trend:us:3`: the song at that place on TikTok's chart, found on YouTube.
 /// A file or link is used as it is; any other text is a song title, found on YouTube.
 pub fn music(spec: &str) -> Result<String, String> {
@@ -147,7 +169,7 @@ pub fn music(spec: &str) -> Result<String, String> {
         };
     };
     let parts: Vec<&str> = rest.split(':').filter(|p| !p.is_empty()).collect();
-    let home = crate::lang::system().1;
+    let home = country();
     let (cc, n) = match parts[..] {
         [] => (home.as_str(), 1),
         [x] => x.parse().map_or((x, 1), |n| (home.as_str(), n)),
@@ -366,5 +388,12 @@ mod tests {
     #[test]
     fn safe_names() {
         assert_eq!(safe("a/b c.mp4"), "a_b_c_mp4");
+    }
+
+    #[test]
+    fn a_bare_handle_is_a_channel() {
+        assert_eq!(super::handle_url("@avenoxai"), "https://www.youtube.com/@avenoxai/videos");
+        assert_eq!(super::handle_url("@ topic words"), "@ topic words");
+        assert_eq!(super::handle_url("sad edits"), "sad edits");
     }
 }

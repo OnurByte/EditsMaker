@@ -669,9 +669,34 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         (_, false) => c.line_texts.clone(),
         (n, true) => quote_lines(&videos, cache, c, n * c.n),
     };
+    // --say over a preset: the speaker's own words, whole, from the video they were said in
+    let local = Path::new(&c.input).is_file();
+    let spoken: Vec<Analysed> = std::thread::scope(|s| {
+        let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).collect();
+        ids.sort();
+        ids.dedup();
+        let jobs: Vec<_> = ids.into_iter().map(|id| s.spawn(move || {
+            let src = if local { fetch::local(Path::new(&c.input), cache) } else { fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache) };
+            src.map(|src| analyse(src, c, false))
+        })).collect();
+        jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect()
+    });
+    let voices: Vec<(usize, pick::Moment)> = c.say.iter().filter_map(|w| by_hand(w, &spoken)).collect();
+    if voices.len() != c.say.len() {
+        return Err("--say: give VIDEO@FROM-TO with the video's id (or the file's name) and seconds where it speaks".into());
+    }
+    let cut_starts: Vec<f64> = spans.iter().map(|(a, _)| *a).collect();
     let mut used = vec![false; shots.len()];
     let mut made = 0;
     for k in 0..c.n {
+        let voice = (!voices.is_empty()).then(|| {
+            let (i, m) = &voices[k % voices.len()];
+            let len = m.end - m.start;
+            if len > p.total - 0.9 {
+                eprintln!("edits: the --say line ({len:.1}s) is longer than the preset ({:.1}s); it is cut off", p.total);
+            }
+            (&spoken[*i], m, montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &strength, len, p.total) })
+        });
         let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
         let lens: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (s.end - s.start).max(b - a)).collect();
         let needs: Vec<f64> = slots.iter().zip(&lens).map(|(s, l)| s.source_len(*l) + 0.2).collect();
@@ -725,8 +750,15 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         if !c.look.tag.is_empty() {
             g.push_str(&format!(",drawtext=text='{}':font=Adwaita Sans:fontsize=h*0.022:fontcolor=white@0.7:x=(w-tw)/2:y=h*0.94", c.look.tag));
         }
-        g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=out:st={:.3}:d=0.6,loudnorm=I={:.1}:TP=-1.5[aout]", (p.total - 0.6).max(0.0), opts.lufs));
+        g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=out:st={:.3}:d=0.6", (p.total - 0.6).max(0.0)));
+        if let Some((_, _, v)) = &voice {
+            g.push_str(&montage::duck(m + 1, v));
+        }
+        g.push_str(&format!(",loudnorm=I={:.1}:TP=-1.5[aout]", opts.lufs));
         args.extend(["-ss".into(), format!("{song_from:.3}"), "-t".into(), format!("{:.3}", p.total), "-i".into(), song.file.to_string_lossy().into_owned()]);
+        if let Some((_, _, v)) = &voice {
+            args.extend(["-ss".into(), format!("{:.3}", v.start), "-t".into(), format!("{:.3}", v.len), "-i".into(), v.file.to_string_lossy().into_owned()]);
+        }
         args.extend(["-filter_complex".into(), g, "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
         args.extend(["-t".into(), format!("{:.3}", p.total), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
         args.extend(util::h264(20));
@@ -739,6 +771,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
                 tl.captions = talk::lines_srt(&quotes, p.total);
                 let fin = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({ "clip": fin, "preset": p.name, "song": song.title, "song_from": song_from, "seconds": p.total, "lines": quotes,
+                    "voice": voice.as_ref().map(|(a, m, v)| serde_json::json!({ "video": a.src.id, "moment": m, "at": v.at, "text": said(a, m) })),
                     "shots": picks.iter().map(|(i, st)| serde_json::json!({ "video": videos[shots[*i].video].0, "from": st })).collect::<Vec<_>>() });
                 std::fs::write(fin.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
                 println!("{side}");
@@ -805,6 +838,24 @@ struct Plan<'a> {
 /// What the speaker says in a moment, as text.
 fn said(a: &Analysed, m: &pick::Moment) -> String {
     a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")
+}
+
+/// --say VIDEO@FROM-TO: which of `spoken` and that stretch, widened to whole words (never cut inside the last one).
+fn by_hand(want: &str, spoken: &[Analysed]) -> Option<(usize, pick::Moment)> {
+    let (id, range) = want.rsplit_once('@')?;
+    let (a, b) = range.split_once('-')?;
+    let (a, b): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
+    let i = spoken.iter().position(|x| x.src.id == id)?;
+    let ws: Vec<&transcribe::Word> = spoken[i].words.iter().filter(|w| w.s >= a - 0.3 && w.s < b).collect();
+    let (first, last) = (ws.first()?, ws.last()?);
+    Some((i, pick::Moment { start: (first.s - 0.05).max(0.0), end: last.e + 0.25, punch: last.s, score: 0.0, title: String::new(), why: "chosen by hand".into() }))
+}
+
+/// Where a voice of `len` s goes in a preset edit: ending just before the hardest cut it fits ahead of, so that
+/// cut's hit lands on the last word; at 0.3 s when it fits ahead of none.
+fn voice_at(cuts: &[f64], strength: &[f64], len: f64, total: f64) -> f64 {
+    cuts.iter().zip(strength).filter(|(a, _)| **a - len >= 0.3 && **a <= total - 0.6)
+        .max_by(|x, y| x.1.total_cmp(y.1)).map_or(0.3, |(a, _)| a - len)
 }
 
 /// Music edits: the song's beats (or a reference edit's cuts), the footage's best shots, and with --voice the
@@ -878,15 +929,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         eprintln!("edits: line {k}: {title} @{:.1} ({:.0}s, interest {:.1}): {text}", m.start, m.end - m.start, m.score);
     }
     // --say VIDEO@FROM-TO: that stretch, widened to whole words
-    let said_by_hand: Vec<(usize, pick::Moment)> = c.say.iter().filter_map(|want| {
-        let (id, range) = want.split_once('@')?;
-        let (a, b) = range.split_once('-')?;
-        let (a, b): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
-        let i = spoken.iter().position(|x| x.src.id == id)?;
-        let ws: Vec<&transcribe::Word> = spoken[i].words.iter().filter(|w| w.s >= a - 0.3 && w.s < b).collect();
-        let (first, last) = (ws.first()?, ws.last()?);
-        Some((i, pick::Moment { start: (first.s - 0.05).max(0.0), end: last.e + 0.25, punch: last.s, score: 0.0, title: String::new(), why: "chosen by hand".into() }))
-    }).collect();
+    let said_by_hand: Vec<(usize, pick::Moment)> = c.say.iter().filter_map(|want| by_hand(want, &spoken)).collect();
     if c.say.len() != said_by_hand.len() {
         return Err("--say: give VIDEO@FROM-TO with a video from this run and seconds where it speaks".into());
     }
@@ -1230,6 +1273,14 @@ mod tests {
 
     fn args(s: &str) -> Vec<String> {
         s.split_whitespace().map(String::from).collect()
+    }
+
+    #[test]
+    fn a_preset_voice_ends_on_the_hardest_cut_it_fits_before() {
+        let cuts = [0.0, 1.0, 2.0, 4.0, 6.0];
+        let strength = [0.0, 0.9, 0.5, 0.8, 0.2];
+        assert_eq!(super::voice_at(&cuts, &strength, 1.5, 8.0), 2.5, "cut 1.0 is too early for 1.5 s, so 4.0 (0.8) wins");
+        assert_eq!(super::voice_at(&cuts, &strength, 9.0, 8.0), 0.3, "fits before no cut");
     }
 
     #[test]

@@ -34,7 +34,7 @@ fn tools() -> Value {
             "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
             "boom": {"type": "string", "description": "talking clips: a library sound on the punchline instead of the made boom"},
             "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt,vtt"},
-            "say": {"type": "array", "items": {"type": "string"}, "description": "choose the moment yourself instead of the automatic pick: VIDEOID@FROM-TO seconds, one edit per entry (the speaker's words from there over their own footage, music under it); implies voice. Look at the captions and frames first"},
+            "say": {"type": "array", "items": {"type": "string"}, "description": "choose the moment yourself instead of the automatic pick: VIDEOID@FROM-TO seconds, one edit per entry, widened to whole words (talking and music edits: over their own footage; with a preset: over the preset edit, the song ducked under it, ending on its hardest cut); implies voice. Look at the captions and the footage sheets in the log first"},
             "lang": {"type": "string", "description": "spoken language, two letters like tr or en (default: the system's)"},
             "like": {"type": "string", "description": "a reference edit (mp4) to copy: its music, cuts, flashes, colour and shape"},
             "text": {"type": "string", "description": "one line over the whole music edit, in heavy capitals"},

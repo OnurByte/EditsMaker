@@ -705,16 +705,21 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
     let m = spans.len();
     g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=in:d=0.3,afade=t=out:st={:.3}:d=1.5", (total - 1.5).max(0.0)));
     if let Some(v) = voice {
-        // the music ducks whenever the voice speaks, and comes back up in the gaps and after the last word
-        g.push_str(&format!(
-            "[mus];[{}:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st={:.3}:d=0.3,adelay=delays={}:all=1,asplit[vo][sc];\
-             [sc]apad[scp];[mus]aresample=48000[mr];[mr][scp]sidechaincompress=threshold=0.012:ratio=12:attack=15:release=450[duck];\
-             [duck][vo]amix=inputs=2:normalize=0:duration=first",
-            m + 1, (v.len - 0.3).max(0.0), (v.at * 1000.0).round() as u64
-        ));
+        g.push_str(&duck(m + 1, v));
     }
     g.push_str(&format!(",loudnorm=I={:.1}:TP=-1.5[aout]", o.lufs));
     g
+}
+
+/// Continues a music chain with the voice (ffmpeg input `input`) laid in at `v.at`: the music ducks whenever the
+/// voice speaks, and comes back up in the gaps and after the last word.
+pub fn duck(input: usize, v: &Voice) -> String {
+    format!(
+        "[mus];[{input}:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st={:.3}:d=0.3,adelay=delays={}:all=1,asplit[vo][sc];\
+         [sc]apad[scp];[mus]aresample=48000[mr];[mr][scp]sidechaincompress=threshold=0.012:ratio=12:attack=15:release=450[duck];\
+         [duck][vo]amix=inputs=2:normalize=0:duration=first",
+        (v.len - 0.3).max(0.0), (v.at * 1000.0).round() as u64
+    )
 }
 
 /// A reference edit read as a recipe: where it cuts, how (flash, dip to black, cut), its colour and shape,
@@ -894,16 +899,25 @@ pub fn clean_tag(t: &str) -> String {
 pub fn video_file(id: &str, url: &str, cache: &Path) -> Result<PathBuf, String> {
     let work = cache.join(safe(id));
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
-    if let Some(v) = std::fs::read_dir(&work).into_iter().flatten().flatten().map(|e| e.path())
-        .find(|p| p.file_stem().is_some_and(|s| s == "v") && p.extension().is_some_and(|e| e != "part")) {
-        return Ok(v);
+    let cached = std::fs::read_dir(&work).into_iter().flatten().flatten().map(|e| e.path())
+        .find(|p| p.file_stem().is_some_and(|s| s == "v") && p.extension().is_some_and(|e| e != "part"));
+    let v = match cached {
+        Some(v) => v,
+        None => {
+            // picture only: the song replaces the sound
+            let out = yt(&[
+                "--no-warnings", "--no-progress", "--no-playlist", "-f", "bv*[height<=720][ext=mp4]/bv*[height<=720]/b[height<=720]",
+                "--print", "after_move:filepath", "-o", &work.join("v.%(ext)s").to_string_lossy(), "--", url,
+            ])?;
+            out.lines().map(str::trim).rfind(|l| !l.is_empty()).map(PathBuf::from).ok_or("yt-dlp reported no file")?
+        }
+    };
+    // a contact sheet of the footage, so whoever picks moments can look at it without running ffmpeg
+    let sheet = work.join("sheet.jpg");
+    if sheet.exists() || crate::fetch::duration(&v).and_then(|d| crate::check::contact_sheet(&v, d, &sheet, 8, 4, 160)).is_ok() {
+        eprintln!("edits: footage {id}: sheet {}", sheet.display());
     }
-    // picture only: the song replaces the sound
-    let out = yt(&[
-        "--no-warnings", "--no-progress", "--no-playlist", "-f", "bv*[height<=720][ext=mp4]/bv*[height<=720]/b[height<=720]",
-        "--print", "after_move:filepath", "-o", &work.join("v.%(ext)s").to_string_lossy(), "--", url,
-    ])?;
-    out.lines().map(str::trim).rfind(|l| !l.is_empty()).map(PathBuf::from).ok_or("yt-dlp reported no file".into())
+    Ok(v)
 }
 
 #[cfg(test)]

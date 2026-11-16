@@ -27,6 +27,13 @@ fn shots(cuts: &[f64], total: f64) -> Vec<f64> {
     at.windows(2).map(|w| w[1] - w[0]).collect()
 }
 
+/// `cols`x`rows` frames spread evenly over `total` seconds, tiled into one jpg.
+pub fn contact_sheet(video: &Path, total: f64, sheet: &Path, cols: u32, rows: u32, width: u32) -> Result<(), String> {
+    let fps = (cols * rows) as f64 / total.max(1.0);
+    log(&["-i", &video.to_string_lossy(), "-vf", &format!("fps={fps:.4},scale={width}:-2,tile={cols}x{rows}"), "-frames:v", "1", &sheet.to_string_lossy()])?;
+    if sheet.exists() { Ok(()) } else { Err(format!("no contact sheet for {}", video.display())) }
+}
+
 pub fn check(clip: &Path) -> Result<String, String> {
     let c = clip.to_string_lossy();
     let probe = crate::util::run(None, "ffprobe", &["-v", "error", "-show_entries", "format=duration:stream=width,height", "-of", "csv=p=0", &c])?;
@@ -36,7 +43,7 @@ pub fn check(clip: &Path) -> Result<String, String> {
     let cuts = cut_times(&log(&["-i", &c, "-an", "-vf", "select='gt(scene,0.3)',showinfo", "-f", "null", "-"])?);
     let sh = shots(&cuts, total);
     let sheet: PathBuf = clip.with_file_name(format!("{}-sheet.jpg", clip.file_stem().unwrap_or_default().to_string_lossy()));
-    log(&["-i", &c, "-vf", &format!("fps={:.4},scale=180:-2,tile=10x2", 20.0 / total), "-frames:v", "1", &sheet.to_string_lossy()])?;
+    contact_sheet(clip, total, &sheet, 10, 2, 180)?;
     let longest = sh.iter().copied().fold(0.0, f64::max);
     Ok(format!(
         "{}: {total:.1}s {size}\nloudness: {} LUFS\ncuts: {} (shots average {:.1}s, longest {longest:.1}s)\nsheet: {}",
