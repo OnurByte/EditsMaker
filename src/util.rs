@@ -19,6 +19,27 @@ pub fn run<S: AsRef<OsStr>>(dir: Option<&Path>, cmd: &str, args: &[S]) -> Result
     Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
+/// Unpacks a zip into `to`: unzip where it is installed, else tar, which is bsdtar on Windows 10+ and macOS and
+/// opens zips too.
+pub fn unzip(zip: &Path, to: &Path) -> Result<(), String> {
+    std::fs::create_dir_all(to).map_err(|e| e.to_string())?;
+    let (z, d) = (zip.to_string_lossy(), to.to_string_lossy());
+    run(None, "unzip", &["-q", "-o", &z, "-d", &d]).or_else(|e| run(None, "tar", &["-xf", &z, "-C", &d]).map_err(|t| format!("{e}; {t}"))).map(|_| ())
+}
+
+/// The local date and time as ("2026-11-16", "21.04"): `date` on unix, PowerShell's Get-Date on Windows, where
+/// `date` is a cmd built-in and not a program.
+pub fn now() -> Option<(String, String)> {
+    let out = if cfg!(windows) {
+        run(None, "powershell", &["-NoProfile", "-Command", "Get-Date -Format 'yyyy-MM-dd HH.mm'"])
+    } else {
+        run(None, "date", &["+%F %H.%M"])
+    };
+    let s = out.ok()?;
+    let (d, t) = s.trim().split_once(' ')?;
+    Some((d.to_string(), t.to_string()))
+}
+
 static NVENC: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
 
 /// The video encoder for this run (from --encoder, else EDITS_ENCODER): cpu (default), nvenc, or auto (nvenc when it works).
@@ -125,4 +146,14 @@ pub fn zscores(v: &[f64]) -> Vec<f64> {
 pub fn mmss(t: f64) -> String {
     let s = t.max(0.0) as u64;
     format!("{}:{:02}", s / 60, s % 60)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn now_is_a_day_and_a_time() {
+        let (d, t) = super::now().expect("date works here");
+        assert!(d.len() == 10 && d.as_bytes()[4] == b'-' && d.as_bytes()[7] == b'-', "{d}");
+        assert!(t.len() == 5 && t.as_bytes()[2] == b'.', "{t}");
+    }
 }

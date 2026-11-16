@@ -88,7 +88,7 @@ pub fn list(args: &[String]) {
 pub fn add(src: &Path) -> Result<PathBuf, String> {
     let unzip = |zip: &Path, to: &Path| -> Result<(), String> {
         let _ = std::fs::remove_dir_all(to);
-        run(None, "unzip", &["-q", "-o", &zip.to_string_lossy(), "-d", &to.to_string_lossy()]).map(|_| ())
+        crate::util::unzip(zip, to)
     };
     let is_zip = |p: &Path| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip"));
     let tmp = std::env::temp_dir().join(format!("edits-pack-{}", std::process::id()));
