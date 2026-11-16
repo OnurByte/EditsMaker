@@ -26,7 +26,14 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
-  <img src="assets/readme/size-light.svg" width="100%" alt="Tiny on purpose: the whole editor is under 4 MB to download, smaller than five seconds of the edits it makes. One 7 MB file on disk, no Python, no Node, no Electron, no cloud.">
+  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents and reads TikTok's trending songs.">
+</picture>
+
+<sub>November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.</sub>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sounds-dark.svg">
+  <img src="assets/readme/sounds-light.svg" width="100%" alt="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, or ask for TikTok's trending songs in any country with --music trend:3">
 </picture>
 
 ## Install
