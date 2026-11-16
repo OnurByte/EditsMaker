@@ -68,7 +68,9 @@ OPTIONS
       --lines N       N sentences from the videos' own words on screen (music and preset edits)
       --line TEXT     a line of your own on screen (repeat for more); replaces the picked ones
       --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)
-      --svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR]   draw an arrow, circle, underline, cross, check, burst,
+      --anim A        how --caption, --say-text and --svg come in: rise (default), pop, slam, slide, drop, blur, type
+      --fix           dark, flat or dull footage brought up before the look (levels stretched, colour back)
+      --svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR][~ANIM]   draw an arrow, circle, underline, cross, check, burst,
                       question, exclaim, heart, sparkle or your own .svg over the edit (repeatable)
       --overlay NAME[@FROM[-TO]][:OPACITY]   a library clip (or file) over the edit: textures screened under all of
                       it, a transition or meme once at FROM, green screens keyed (repeatable)

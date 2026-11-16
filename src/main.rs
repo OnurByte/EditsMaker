@@ -155,6 +155,8 @@ fn main() -> ExitCode {
 }
 
 struct Cli {
+    /// how words and drawings come in (`svg::ANIMS`)
+    anim: String,
     /// music edits: this xfade transition on every cut that is not a hard cut
     transition: Option<&'static str>,
     input: String,
@@ -238,6 +240,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     let (w, h) = size(&style.aspect).unwrap_or((1080, 1920));
     let grade = if looks::names().contains(&style.grade.as_str()) { style.grade } else { "bw".into() };
     let mut c = Cli {
+        anim: String::new(),
         transition: None,
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
@@ -334,6 +337,13 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                 let t = val("--transition")?;
                 c.transition = Some(montage::XFADES.iter().find(|x| **x == t).copied().ok_or(format!("--transition must be one of {}", montage::XFADES.join(", ")))?);
             }
+            "--anim" => {
+                c.anim = val("--anim")?;
+                if !svg::ANIMS.contains(&c.anim.as_str()) {
+                    return Err(format!("--anim must be one of {}", svg::ANIMS.join(", ")));
+                }
+            }
+            "--fix" => render::set_fix(),
             "--curves" => {
                 c.finish.curves = val("--curves")?;
                 fx::curves(&c.finish.curves).ok_or(format!("--curves must be one of {} or points like \"0/0 0.4/0.3 1/1\"", fx::CURVES.join(", ")))?;
@@ -929,10 +939,12 @@ fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, Stri
     let mut words = wrap::text_stickers(out, &c.captions_at, 0.11, 0.09, "cap")?;
     if c.say_text {
         let said: Vec<(String, f64, f64)> = tl.said.iter().map(|(a, b, t)| (t.clone(), *a, *b)).collect();
-        words.extend(wrap::text_stickers(out, &said, 0.86, 0.06, "said")?);
+        // above TikTok's and Reels' caption and buttons (their bottom sixth), never under them
+        words.extend(wrap::text_stickers(out, &said, 0.76, 0.06, "said")?);
     }
     let mut st = c.svgs.clone();
     st.extend(words.iter().map(|w| w.0.clone()));
+    st.iter_mut().filter(|s| s.anim.is_empty()).for_each(|s| s.anim = c.anim.clone());
     let drawn = svg::apply(out, &st);
     words.iter().for_each(|w| { let _ = std::fs::remove_file(&w.1); });
     drawn?;

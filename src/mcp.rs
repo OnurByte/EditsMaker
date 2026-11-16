@@ -27,6 +27,8 @@ fn tools() -> Value {
             "captions": {"type": "string", "description": "caption style from edits_looks: hormozi, mrbeast, karaoke, box, minimal, neon, cinematic, glow, redglow, thunder, typewriter"},
             "bed": {"type": "string", "description": "music under talking clips, ducked under the voice"},
             "blur_faces": {"type": "boolean"}, "blur_box": {"type": "string", "description": "x,y,w,h fractions of the frame to blur (a watermark, a plate)"},
+            "anim": {"type": "string", "enum": ["rise", "pop", "slam", "slide", "drop", "blur", "type"], "description": "how captions_at, say_text and svgs come in: pop springs in, slam lands big on a beat, type writes itself out"},
+            "fix": {"type": "boolean", "description": "dark, flat or dull footage brought up before the look"},
             "pips": {"type": "array", "items": {"type": "string"}, "description": "picture in picture: another video (file or library clip) small in a white frame over the edit, FILE[@FROM-TO][:X,Y,SIZE], centre and width as fractions, default top right"},
             "transition": {"type": "string", "description": "music edits: one ffmpeg xfade transition on every soft cut, e.g. dissolve, wipeleft, slideup, circleopen, pixelize, radial, squeezeh, coverleft"},
             "curves": {"type": "string", "description": "tone curve over the edit: vintage, strong_contrast, medium_contrast, increase_contrast, lighter, darker, cross_process, linear_contrast, negative, color_negative, or points \"0/0 0.4/0.3 1/1\""},
@@ -36,7 +38,7 @@ fn tools() -> Value {
             "reverb": {"type": "boolean", "description": "a room behind the sound (slowed + reverb, sad edits)"},
             "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
             "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]}, "encoder": {"type": "string", "enum": ["cpu", "nvenc", "auto"], "description": "nvenc renders on an NVIDIA GPU, auto uses it when it works"},
-            "svgs": {"type": "array", "items": {"type": "string"}, "description": "drawn graphics over the edit to point things out: NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], e.g. arrow@1.2-2.5:0.6,0.3,0.25 or circle@4:0.5,0.35#ffffff. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart, sparkle, or an .svg file. X,Y is the centre and SIZE the width, as fractions of the frame; times are seconds of the finished edit"},
+            "svgs": {"type": "array", "items": {"type": "string"}, "description": "drawn graphics over the edit to point things out: NAME[@FROM-TO][:X,Y,SIZE][#COLOUR][~ANIM], e.g. arrow@1.2-2.5:0.6,0.3,0.25 or circle@4:0.5,0.35#ffffff~pop. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart, sparkle, or an .svg file. X,Y is the centre and SIZE the width, as fractions of the frame; times are seconds of the finished edit"},
             "overlays": {"type": "array", "items": {"type": "string"}, "description": "library clips over the finished edit, NAME[@FROM[-TO]][:OPACITY] (names from edits_library): textures and backgrounds run under the whole edit screened, a transition or meme plays once at FROM, green screens are keyed. E.g. \"vhs texture:0.5\", \"burn 3@4.2\""},
             "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
             "boom": {"type": "string", "description": "talking clips: a library sound on the punchline instead of the made boom"},
@@ -116,7 +118,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
                 ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("encoder", "--encoder"), ("export", "--export"),
-                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop")] {
+                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop"), ("anim", "--anim")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
@@ -151,7 +153,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
                 v.extend(["--flash-text".into(), t.into()]);
             }
             for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
-                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math"), ("reverb", "--reverb")] {
+                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math"), ("reverb", "--reverb"), ("fix", "--fix")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
                 }

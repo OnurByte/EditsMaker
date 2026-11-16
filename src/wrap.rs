@@ -68,7 +68,7 @@ pub fn text_stickers(clip: &Path, items: &[(String, f64, f64)], y: f64, size_fra
     items.iter().enumerate().map(|(i, (text, a, b))| {
         let file = clip.with_extension(format!("{tag}{i}.svg"));
         std::fs::write(&file, text_svg(text, w, h as f64 * size_frac)).map_err(|e| e.to_string())?;
-        Ok((Sticker { src: file.to_string_lossy().into_owned(), from: *a, to: *b, x: 0.5, y, size: 1.0, color: "white".into() }, file))
+        Ok((Sticker { src: file.to_string_lossy().into_owned(), from: *a, to: *b, x: 0.5, y, size: 1.0, color: "white".into(), anim: String::new() }, file))
     }).collect()
 }
 
@@ -123,7 +123,7 @@ fn flash_svg(text: &str, w: u32, h: u32) -> String {
 fn png(svg_src: &str, w: u32, file: &Path) -> Result<(), String> {
     let s = file.with_extension("svg");
     std::fs::write(&s, svg_src).map_err(|e| e.to_string())?;
-    let r = svg::rasterize(&Sticker { src: s.to_string_lossy().into_owned(), from: 0.0, to: 1.0, x: 0.5, y: 0.5, size: 1.0, color: "white".into() }, w, file);
+    let r = svg::rasterize(&Sticker { src: s.to_string_lossy().into_owned(), from: 0.0, to: 1.0, x: 0.5, y: 0.5, size: 1.0, color: "white".into(), anim: String::new() }, w, file);
     let _ = std::fs::remove_file(&s);
     r.map(|_| ())
 }
