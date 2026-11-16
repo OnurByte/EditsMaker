@@ -25,6 +25,9 @@ Over MCP: `edits_preset_get` → change → `edits_make` with `preset_json`, or 
   - `zoom` (1 = framed), `x` / `y` (fraction of the frame, + = right / down), `rot` (degrees),
     `shake` (fraction of frame width, `shake_hz` its speed), `blur` (0..1, on above 0.25), `exposure` (0..1)
   - `saturation` (1 normal, 0 black and white), `rgb` (colour split), `invert`, `motion_blur`.
+  - `hue` curve in degrees (`[[0,180,"linear"]]` shifts every colour, `[[0,0],[1,360]]` cycles the rainbow across the shot).
+  - Look per shot: `contrast` (1 normal), `kelvin` (3000 orange, 12000 blue, 0 off), `vignette`, `grain`, `glow`, `sharpen` (0..1),
+    `pixelate` (block px), `lens` (-1..1, above 0 fisheye bulge), `trails` (0..1 ghost echo), `flip` (mirror).
 - `flashes`: coloured layers over the picture, `{start, end, color "rrggbb", opacity curve, blink}`.
 
 ## Common changes
