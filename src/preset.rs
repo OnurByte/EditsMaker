@@ -190,6 +190,39 @@ pub struct Slot {
     pub exposure: Curve,
     #[serde(default = "one", skip_serializing_if = "is_one")]
     pub saturation: f64,
+    /// colour turned round the wheel, degrees (a curve from 0 to 360 cycles every colour across the shot)
+    #[serde(default, skip_serializing_if = "Curve::is_empty")]
+    pub hue: Curve,
+    /// 1 = as shot, 1.5 = hard, 0.7 = flat
+    #[serde(default = "one", skip_serializing_if = "is_one")]
+    pub contrast: f64,
+    /// colour temperature in kelvin, 0 = as shot (3000 orange, 6500 neutral, 12000 blue)
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub kelvin: f64,
+    /// 0..1: dark corners
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub vignette: f64,
+    /// 0..1: moving film grain
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub grain: f64,
+    /// 0..1: bright parts bleed light (glow / bloom)
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub glow: f64,
+    /// 0..1: sharper edges
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub sharpen: f64,
+    /// mosaic block size in pixels, 0 = off
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub pixelate: f64,
+    /// -1..1: lens, above 0 bulges the middle out (fisheye), below pinches it in
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub lens: f64,
+    /// 0..1: bright moving parts leave ghost trails (echo)
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub trails: f64,
+    /// mirrored left to right
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub flip: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub rgb: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -253,6 +286,10 @@ fn four() -> f64 {
 
 fn is_one(v: &f64) -> bool {
     *v == 1.0
+}
+
+fn is_zero(v: &f64) -> bool {
+    *v == 0.0
 }
 
 fn is_four(v: &f64) -> bool {
@@ -504,6 +541,17 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         blur,
         exposure: both(&|x| effect_prop(x, "exposure", "exposure")).unwrap_or_default(),
         saturation,
+        hue: Curve::default(),
+        contrast: 1.0,
+        kelvin: 0.0,
+        vignette: 0.0,
+        grain: 0.0,
+        glow: 0.0,
+        sharpen: 0.0,
+        pixelate: 0.0,
+        lens: 0.0,
+        trails: 0.0,
+        flip: false,
         rgb: [n, m].iter().any(|x| has_effect(*x, "rgbsepnew") || has_effect(*x, "chromabbr")),
         invert: has_effect(n, "invert") || has_effect(m, "invert"),
         ramp: Curve::default(),
@@ -768,8 +816,23 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
     }
     f.push(',');
     f.push_str(&fill);
-    if s.saturation != 1.0 || s.exposure.max() > 0.01 {
-        f.push_str(&format!(",eq=saturation={:.2}:brightness='{}':eval=frame", s.saturation, s.exposure.map(|v| v * 0.25).expr("t", len)));
+    if s.saturation != 1.0 || s.contrast != 1.0 || s.exposure.max() > 0.01 {
+        f.push_str(&format!(",eq=saturation={:.2}:contrast={:.2}:brightness='{}':eval=frame", s.saturation, s.contrast, s.exposure.map(|v| v * 0.25).expr("t", len)));
+    }
+    if s.kelvin > 0.0 {
+        f.push_str(&format!(",colortemperature=temperature={:.0}", s.kelvin.clamp(1000.0, 40000.0)));
+    }
+    if s.flip {
+        f.push_str(",hflip");
+    }
+    if s.lens != 0.0 {
+        // ffmpeg's k1 below 0 is barrel: the middle swells toward the viewer; a pinch stays mild, past 0.2 it shows black corners
+        let k = -s.lens.clamp(-1.0, 1.0) * if s.lens > 0.0 { 0.5 } else { 0.2 };
+        f.push_str(&format!(",lenscorrection=k1={k:.3}:k2={:.3}:i=bilinear", k * 0.5));
+        if k > 0.0 {
+            // a pinch pulls the edges in: crop past the black and fill the frame again
+            f.push_str(&format!(",crop=iw*{0:.3}:ih*{0:.3},scale={w}:{h}", 1.0 - k * 0.9));
+        }
     }
     if s.zoom.is_moving() || s.zoom.max() > 1.001 {
         // capped: a preset framed for a tight crop zooms other footage into a blank patch of colour
@@ -788,11 +851,33 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
     if s.motion_blur && (s.speed > 1.3 || s.zoom.is_moving() || s.x.is_moving() || shaking) {
         f.push_str(",tmix=frames=3");
     }
+    if !s.hue.is_empty() && (s.hue.max().abs() > 0.5 || s.hue.is_moving()) {
+        f.push_str(&format!(",hue=h='{}'", s.hue.expr("t", len)));
+    }
+    if s.trails > 0.0 {
+        f.push_str(&format!(",lagfun=decay={:.3}", 0.8 + 0.18 * s.trails.min(1.0)));
+    }
+    if s.glow > 0.0 {
+        // blended in RGB: a screen blend on YUV planes tints the picture purple
+        f.push_str(&format!(",format=gbrp,split[gl{i}a][gl{i}b];[gl{i}b]gblur=sigma=24[gl{i}c];[gl{i}a][gl{i}c]blend=all_mode=screen:all_opacity={:.2},format=yuv420p", s.glow.min(1.0)));
+    }
+    if s.sharpen > 0.0 {
+        f.push_str(&format!(",unsharp=5:5:{:.2}", s.sharpen.min(1.0) * 2.0));
+    }
+    if s.pixelate >= 2.0 {
+        f.push_str(&format!(",pixelize=w={0:.0}:h={0:.0}", s.pixelate.min(200.0)));
+    }
     if s.rgb {
         f.push_str(",rgbashift=rh=-7:bh=7");
     }
     if s.invert {
         f.push_str(",negate");
+    }
+    if s.grain > 0.0 {
+        f.push_str(&format!(",noise=alls={:.0}:allf=t+u", s.grain.min(1.0) * 60.0));
+    }
+    if s.vignette > 0.0 {
+        f.push_str(&format!(",vignette=angle={:.3}", 0.3 + s.vignette.min(1.0) * 0.6));
     }
     f.push_str(&x.post);
     // every shot square-pixelled, or concat refuses to join them
@@ -955,6 +1040,18 @@ mod tests {
         let r = chain(&ramped, 1, 1080, 1200, &Extra::default(), 1.0);
         assert!(r.starts_with("[1:v]fps=30,split=6[r1x0]") && r.contains("concat=n=6:v=1:a=0,fps=30,crop="), "{r}");
         assert!(ramped.source_len(1.0) > 1.0);
+        let mut tinted = p.slots[1].clone();
+        assert!(!chain(&tinted, 1, 1080, 1200, &Extra::default(), 1.0).contains(",hue="));
+        tinted.hue = Curve { keys: vec![(0.0, 0.0, Ease::Linear), (1.0, 360.0, Ease::Linear)] };
+        assert!(chain(&tinted, 1, 1080, 1200, &Extra::default(), 1.0).contains(",hue=h='"));
+        let plain = chain(&p.slots[1], 1, 1080, 1200, &Extra::default(), 1.0);
+        let all: Slot = serde_json::from_value(serde_json::json!({"start": 0.0, "end": 1.0, "contrast": 1.4, "kelvin": 3000.0, "vignette": 0.5, "grain": 0.3,
+            "glow": 0.6, "sharpen": 0.5, "pixelate": 12.0, "lens": 0.6, "trails": 0.5, "flip": true})).unwrap();
+        let c = chain(&all, 1, 1080, 1200, &Extra::default(), 1.0);
+        for want in ["contrast=1.40", "colortemperature=temperature=3000", "vignette=angle=", "noise=alls=18", "blend=all_mode=screen:all_opacity=0.60",
+            "unsharp=5:5:1.00", "pixelize=w=12:h=12", "lenscorrection=k1=-0.300", "lagfun=decay=0.890", "hflip"] {
+            assert!(c.contains(want) && !plain.contains(want), "{want}: {c}");
+        }
         assert!(b.contains("gblur=sigma=14:enable=") && b.contains("crop=1080:1200:x='1080-(") && !b.contains("zoompan"), "{b}");
         // a preset survives being written out as JSON and read back
         let back: Preset = serde_json::from_str(&serde_json::to_string_pretty(&p).unwrap()).unwrap();

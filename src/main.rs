@@ -659,7 +659,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         p.song.as_ref().map(|s| format!(", song \"{}\"", s.title)).unwrap_or_default()));
     let music = match (&c.music, &p.song) {
         (Some(m), _) => fetch::music(m)?,
-        (None, Some(s)) => fetch::find_song(&s.title)?,
+        (None, Some(s)) => fetch::music(&s.title)?,
         (None, None) => return Err("this preset names no song: give one with --music".into()),
     };
     let (song, (videos, mut shots, frames)) = std::thread::scope(|s| {
@@ -728,6 +728,12 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         return Err("--say: give VIDEO@FROM-TO with the video's id (or the file's name) and seconds where it speaks".into());
     }
     let cut_starts: Vec<f64> = spans.iter().map(|(a, _)| *a).collect();
+    // the line ends on the drop: the cut where the song gets loudest relative to the 2 s before, beat strength breaking ties
+    let mean = |a: f64, b: f64| {
+        let (i, j) = ((a / montage::hop_s()).max(0.0) as usize, ((b / montage::hop_s()) as usize).min(song.loud.len()));
+        if j > i { song.loud[i..j].iter().sum::<f64>() / (j - i) as f64 } else { 0.0 }
+    };
+    let lift: Vec<f64> = cut_starts.iter().zip(&strength).map(|(a, s)| { let t = song_from + a; mean(t, t + 2.0) / (mean(t - 2.0, t) + 1e-3) + 0.1 * s }).collect();
     // --shot: the footage chosen by hand, one per slot in order (cycling when there are fewer), instead of the pick
     let hand: Vec<(usize, f64, f64)> = c.shots.iter().map(|w| hand_shot(w, &videos).ok_or(format!("--shot {w}: give VIDEO@SECONDS with a video of this run"))).collect::<Result<_, _>>()?;
     let hand_from = shots.len();
@@ -743,7 +749,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             if len > p.total - 0.9 {
                 eprintln!("edits: the --say line ({len:.1}s) is longer than the preset ({:.1}s); it is cut off", p.total);
             }
-            (&spoken[*i], m, montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &strength, len, p.total) })
+            (&spoken[*i], m, montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &lift, len, p.total) })
         });
         let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
         let lens: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (s.end - s.start).max(b - a)).collect();

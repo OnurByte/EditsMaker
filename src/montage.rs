@@ -728,7 +728,8 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
 /// voice speaks, and comes back up in the gaps and after the last word.
 pub fn duck(input: usize, v: &Voice) -> String {
     format!(
-        "[mus];[{input}:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st={:.3}:d=0.3,adelay=delays={}:all=1,asplit[vo][sc];\
+        // a YouTube voice sits near -24 LUFS against a mastered song near -9: bring it up to the song before mixing
+        "[mus];[{input}:a]loudnorm=I=-9:TP=-1.5:LRA=11,aresample=48000,afade=t=in:d=0.05,afade=t=out:st={:.3}:d=0.3,adelay=delays={}:all=1,asplit[vo][sc];\
          [sc]apad[scp];[mus]aresample=48000[mr];[mr][scp]sidechaincompress=threshold=0.012:ratio=12:attack=15:release=450[duck];\
          [duck][vo]amix=inputs=2:normalize=0:duration=first",
         (v.len - 0.3).max(0.0), (v.at * 1000.0).round() as u64
@@ -1164,7 +1165,7 @@ mod tests {
         // beats kick the picture: piece 1 (from 0.85 s) kicks at 0.15 s and 0.65 s into itself
         assert!(g.contains("[1:v]") && g.contains("+0.08*max(0,1-(it-0.150)*6)*gte(it,0.150)+0.08*max(0,1-(it-0.650)*6)"), "{g}");
         assert!(g.contains("tmix=frames=2") && g.contains("xfade=transition=fadewhite") && g.contains(",ass=cap.ass") && !g.contains("drawtext"), "{g}");
-        assert!(g.contains("[3:a]aresample=48000,afade=t=in:d=0.05,afade=t=out:st=1.200:d=0.3,adelay=delays=500:all=1,asplit[vo][sc];") && g.contains("[sc]apad[scp]") && g.contains("[duck][vo]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-12.0:TP=-1.5[aout]"), "{g}");
+        assert!(g.contains("[3:a]loudnorm=I=-9:TP=-1.5:LRA=11,aresample=48000,afade=t=in:d=0.05,afade=t=out:st=1.200:d=0.3,adelay=delays=500:all=1,asplit[vo][sc];") && g.contains("[sc]apad[scp]") && g.contains("[duck][vo]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-12.0:TP=-1.5[aout]"), "{g}");
         assert_eq!(clean_tag("@x'; rm -rf"), "@x rm -rf");
     }
 

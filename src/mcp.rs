@@ -48,7 +48,7 @@ fn tools() -> Value {
             "tag": {"type": "string"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
-        {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure curves ([time 0..1 of the shot, value, easing]) plus flashes. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
+        {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure/hue curves, contrast, kelvin, vignette, grain, glow, sharpen, pixelate, lens, trails, flip ([time 0..1 of the shot, value, easing]) plus flashes. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
