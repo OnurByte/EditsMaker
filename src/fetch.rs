@@ -37,7 +37,8 @@ pub fn duration(video: &Path) -> Result<f64, String> {
 /// Frame size (0, 0 if ffprobe cannot tell).
 pub fn dims(video: &Path) -> (u32, u32) {
     let v = video.to_string_lossy();
-    let out = run(None, "ffprobe", &["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", v.as_ref()]).unwrap_or_default();
+    // V, not v: a real picture, never an mp3's cover art (that made every library song look like an edit with dialogue)
+    let out = run(None, "ffprobe", &["-v", "error", "-select_streams", "V:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", v.as_ref()]).unwrap_or_default();
     let mut it = out.trim().split(',').filter_map(|x| x.parse().ok());
     (it.next().unwrap_or(0), it.next().unwrap_or(0))
 }

@@ -612,15 +612,20 @@ fn named_videos(c: &Cli) -> Vec<String> {
 
 /// --shot VIDEO@FROM[-TO]: which video (by id, or a local file by name; empty for the only one), where it starts
 /// and where the usable stretch ends (TO, else open).
-fn hand_shot(want: &str, videos: &[(String, PathBuf)]) -> Option<(usize, f64, f64)> {
+fn hand_shot(want: &str, videos: &[(String, PathBuf)]) -> Option<(usize, f64, f64, Option<f64>)> {
     let (id, range) = want.rsplit_once('@')?;
+    // ID@FROM[-TO][:X]: X (0..1 across the source) is where the frame looks, for footage with no face to follow
+    let (range, look) = match range.split_once(':') {
+        Some((r, x)) => (r, Some(x.trim().parse::<f64>().ok().filter(|x| (0.0..=1.0).contains(x))?)),
+        None => (range, None),
+    };
     let mut ends = range.split('-');
     let from: f64 = ends.next()?.trim().parse().ok()?;
     let to: f64 = ends.next().and_then(|t| t.trim().parse().ok()).filter(|t| *t > from).unwrap_or(f64::MAX);
     let v = if id.is_empty() && videos.len() == 1 { 0 } else {
         videos.iter().position(|(vid, f)| vid == id || f.file_stem().is_some_and(|s| s.to_string_lossy() == id))?
     };
-    Some((v, from.max(0.0), to))
+    Some((v, from.max(0.0), to, look))
 }
 
 fn footage(c: &Cli, cache: &Path) -> Footage {
@@ -712,13 +717,15 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         (n, true) => quote_lines(&videos, cache, c, n * c.n),
     };
     // --say over a preset: the speaker's own words, whole, from the video they were said in
-    let local = Path::new(&c.input).is_file();
+    // the input file speaks only when the line is named after it; any other id is a YouTube video (silent footage, voice from the channel)
+    let input = Path::new(&c.input);
+    let local = |id: &str| input.is_file() && input.file_stem().is_some_and(|s| s == id);
     let spoken: Vec<Analysed> = std::thread::scope(|s| {
         let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).collect();
         ids.sort();
         ids.dedup();
         let jobs: Vec<_> = ids.into_iter().map(|id| s.spawn(move || {
-            let src = if local { fetch::local(Path::new(&c.input), cache) } else { fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache) };
+            let src = if local(id) { fetch::local(input, cache) } else { fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache) };
             src.map(|src| analyse(src, c, false))
         })).collect();
         jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect()
@@ -728,16 +735,16 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         return Err("--say: give VIDEO@FROM-TO with the video's id (or the file's name) and seconds where it speaks".into());
     }
     let cut_starts: Vec<f64> = spans.iter().map(|(a, _)| *a).collect();
-    // the line ends on the drop: the cut where the song gets loudest relative to the 2 s before, beat strength breaking ties
+    // the line ends on the drop: the cut where the song gets loudest relative to the 1 s before (a drop comes out of a gap; a stab 2 s back must not hide it), beat strength breaking ties
     let mean = |a: f64, b: f64| {
         let (i, j) = ((a / montage::hop_s()).max(0.0) as usize, ((b / montage::hop_s()) as usize).min(song.loud.len()));
         if j > i { song.loud[i..j].iter().sum::<f64>() / (j - i) as f64 } else { 0.0 }
     };
-    let lift: Vec<f64> = cut_starts.iter().zip(&strength).map(|(a, s)| { let t = song_from + a; mean(t, t + 2.0) / (mean(t - 2.0, t) + 1e-3) + 0.1 * s }).collect();
+    let lift: Vec<f64> = cut_starts.iter().zip(&strength).map(|(a, s)| { let t = song_from + a; mean(t, t + 2.0) / (mean(t - 1.0, t) + 1e-3) + 0.1 * s }).collect();
     // --shot: the footage chosen by hand, one per slot in order (cycling when there are fewer), instead of the pick
-    let hand: Vec<(usize, f64, f64)> = c.shots.iter().map(|w| hand_shot(w, &videos).ok_or(format!("--shot {w}: give VIDEO@SECONDS with a video of this run"))).collect::<Result<_, _>>()?;
+    let hand: Vec<(usize, f64, f64, Option<f64>)> = c.shots.iter().map(|w| hand_shot(w, &videos).ok_or(format!("--shot {w}: give VIDEO@SECONDS with a video of this run"))).collect::<Result<_, _>>()?;
     let hand_from = shots.len();
-    shots.extend(hand.iter().map(|&(video, s, _)| montage::Shot { video, s, e: s + 60.0, scene_end: s + 60.0, score: 0.0, focus: None }));
+    shots.extend(hand.iter().map(|&(video, s, _, focus)| montage::Shot { video, s, e: s + 60.0, scene_end: s + 60.0, score: 0.0, focus }));
     // each hand-picked stretch plays on from where it stopped the time before, back to its start past TO
     let mut cursor: Vec<f64> = hand.iter().map(|h| h.1).collect();
     let mut used = vec![false; shots.len()];
@@ -781,7 +788,8 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             let v = shots[*shot].video;
             args.extend(["-ss".into(), format!("{from:.3}"), "-t".into(), format!("{:.3}", needs[i] + 0.2), "-i".into(), videos[v].1.to_string_lossy().into_owned()]);
             // the frame follows the face through the shot; without one it holds the shot's centre
-            let focus = fx::track(&frames[v], 4.0, *from, needs[i]).map_or(format!("{:.3}", shots[*shot].focus.unwrap_or(0.5)), |cv| cv.expr("t", lens[i]));
+            let aimed = shots[*shot].focus.filter(|_| *shot >= hand_from);
+            let focus = if let Some(x) = aimed { format!("{x:.3}") } else { fx::track(&frames[v], 4.0, *from, needs[i]).map_or(format!("{:.3}", shots[*shot].focus.unwrap_or(0.5)), |cv| cv.expr("t", lens[i])) };
             let mut pre = String::new();
             if let Some(bx) = c.blur_box {
                 pre.push_str(&fx::blur_box(&format!("bb{i}"), bx));
@@ -1361,10 +1369,12 @@ mod tests {
     #[test]
     fn hand_picked_shots_name_a_video_and_a_second() {
         let videos = vec![("abc123".to_string(), PathBuf::from("/c/abc123/v.mp4")), ("/home/me/clip.mp4".to_string(), PathBuf::from("/home/me/clip.mp4"))];
-        assert_eq!(super::hand_shot("abc123@98.6", &videos), Some((0, 98.6, f64::MAX)));
-        assert_eq!(super::hand_shot("clip@4-6.5", &videos), Some((1, 4.0, 6.5)), "a local file by its name");
+        assert_eq!(super::hand_shot("abc123@98.6", &videos), Some((0, 98.6, f64::MAX, None)));
+        assert_eq!(super::hand_shot("clip@4-6.5", &videos), Some((1, 4.0, 6.5, None)), "a local file by its name");
+        assert_eq!(super::hand_shot("clip@4:0.3", &videos), Some((1, 4.0, f64::MAX, Some(0.3))), "aimed at 0.3 across");
+        assert_eq!(super::hand_shot("clip@4:2", &videos), None);
         assert_eq!(super::hand_shot("nope@3", &videos), None);
-        assert_eq!(super::hand_shot("@3", &videos[..1]), Some((0, 3.0, f64::MAX)), "the only video needs no name");
+        assert_eq!(super::hand_shot("@3", &videos[..1]), Some((0, 3.0, f64::MAX, None)), "the only video needs no name");
     }
 
     #[test]
