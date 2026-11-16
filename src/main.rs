@@ -750,7 +750,18 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         })).collect();
         jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect()
     });
-    let voices: Vec<(usize, pick::Moment)> = c.say.iter().filter_map(|w| by_hand(w, &spoken)).collect();
+    let mut spoken = spoken;
+    let mut voices: Vec<(usize, pick::Moment)> = vec![];
+    for w in &c.say {
+        match joined_say(w, &spoken, cache) {
+            Some(joined) => {
+                let (a, m) = joined?;
+                spoken.push(a);
+                voices.push((spoken.len() - 1, m));
+            }
+            None => voices.extend(by_hand(w, &spoken)),
+        }
+    }
     if voices.len() != c.say.len() {
         return Err("--say: give VIDEO@FROM-TO with the video's id (or the file's name) and seconds where it speaks".into());
     }
@@ -975,6 +986,39 @@ fn voice_cues(words: &[transcribe::Word], m: &pick::Moment, at: f64) -> Vec<(f64
 
 fn said(a: &Analysed, m: &pick::Moment) -> String {
     a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")
+}
+
+/// --say VIDEO@A-B+C-D: stretches of one video said as one line (an offer, then the answer to it), joined into one
+/// sound with their words moved onto its clock. None when the line is a single stretch.
+fn joined_say(want: &str, spoken: &[Analysed], cache: &Path) -> Option<Result<(Analysed, pick::Moment), String>> {
+    let (id, ranges) = want.rsplit_once('@')?;
+    if !ranges.contains('+') {
+        return None;
+    }
+    let join = || -> Result<(Analysed, pick::Moment), String> {
+        let parts: Vec<(usize, pick::Moment)> = ranges.split('+')
+            .map(|r| by_hand(&format!("{id}@{r}"), spoken).ok_or(format!("--say {want}: nothing said in {r}"))).collect::<Result<_, _>>()?;
+        let a = &spoken[parts[0].0];
+        let out = cache.join(format!("say-{}.wav", fetch::safe(&format!("{id}-{ranges}"))));
+        let audio = a.src.audio.to_string_lossy().into_owned();
+        let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into()];
+        for (_, m) in &parts {
+            args.extend(["-ss".into(), format!("{:.3}", m.start), "-t".into(), format!("{:.3}", m.end - m.start), "-i".into(), audio.clone()]);
+        }
+        let ins: String = (0..parts.len()).map(|k| format!("[{k}:a]")).collect();
+        args.extend(["-filter_complex".into(), format!("{ins}concat=n={}:v=0:a=1[a]", parts.len()), "-map".into(), "[a]".into(), "-ar".into(), "48000".into(), out.to_string_lossy().into_owned()]);
+        util::run(None, "ffmpeg", &args.iter().map(String::as_str).collect::<Vec<_>>())?;
+        let (mut words, mut at, mut punch) = (vec![], 0.0, 0.0);
+        for (_, m) in &parts {
+            words.extend(a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).map(|w| transcribe::Word { s: w.s - m.start + at, e: w.e - m.start + at, t: w.t.clone() }));
+            punch = m.punch - m.start + at;
+            at += m.end - m.start;
+        }
+        let src = fetch::Source { audio: out, duration: at, ..a.src.clone() };
+        Ok((Analysed { src, words, lines: vec![], moments: vec![], curve: vec![] },
+            pick::Moment { start: 0.0, end: at, punch, score: 0.0, title: String::new(), why: "chosen by hand".into() }))
+    };
+    Some(join())
 }
 
 /// --say VIDEO@FROM-TO: which of `spoken` and that stretch, widened to whole words (never cut inside the last one).
@@ -1474,6 +1518,26 @@ mod tests {
         assert_eq!(super::hand_shot("clip@4:2", &videos), None);
         assert_eq!(super::hand_shot("nope@3", &videos), None);
         assert_eq!(super::hand_shot("@3", &videos[..1]), Some((0, 3.0, f64::MAX, None)), "the only video needs no name");
+    }
+
+    #[test]
+    fn an_offer_and_its_answer_join_into_one_line() {
+        let dir = std::env::temp_dir().join(format!("edits-say-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let audio = dir.join("x.wav");
+        crate::util::run(None, "ffmpeg", &["-v", "error", "-y", "-f", "lavfi", "-i", "sine=d=10", &audio.to_string_lossy()]).unwrap();
+        let w = |s: f64, e: f64, t: &str| crate::transcribe::Word { s, e, t: t.into() };
+        let src = crate::fetch::Source { local: None, url: String::new(), work: dir.clone(), wav: audio.clone(), audio, id: "x".into(), title: String::new(),
+            duration: 10.0, language: String::new(), heat: vec![], comments: vec![] };
+        let spoken = vec![super::Analysed { src, words: vec![w(1.0, 2.0, "seç."), w(2.0, 3.0, "oturma"), w(6.0, 7.0, "memnunum.")], lines: vec![], moments: vec![], curve: vec![] }];
+        let (a, m) = super::joined_say("x@0.9-1.9+5.9-6.9", &spoken, &dir).unwrap().unwrap();
+        let said: Vec<&str> = a.words.iter().map(|w| w.t.as_str()).collect();
+        assert_eq!(said, ["seç.", "memnunum."], "the words between the two stretches are left out");
+        assert!((a.words[1].s - (m.end - 1.0 - 0.25 + 0.0)).abs() < 0.3, "the answer follows the offer on the joined clock: {:?} {m:?}", a.words);
+        let len = crate::fetch::duration(&a.src.audio).unwrap();
+        assert!((len - m.end).abs() < 0.1, "the joined sound is as long as the line: {len} vs {}", m.end);
+        assert!(super::joined_say("x@0.9-1.9", &spoken, &dir).is_none(), "one stretch is an ordinary --say");
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]
