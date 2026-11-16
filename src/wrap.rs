@@ -56,7 +56,7 @@ pub fn text_svg(text: &str, w: u32, size: f64) -> String {
     let spans: String = lines.iter().enumerate()
         .map(|(i, l)| format!(r#"<tspan x="{:.0}" y="{:.0}">{}</tspan>"#, w as f64 / 2.0, size * 1.05 + i as f64 * lh, esc(l))).collect();
     format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h:.0}" viewBox="0 0 {w} {h:.0}"><text text-anchor="middle" font-family="Noto Sans, Adwaita Sans, sans-serif" font-weight="900" font-size="{size:.0}" fill="white" stroke="black" stroke-width="{:.0}" stroke-linejoin="round" paint-order="stroke">{spans}</text></svg>"#,
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h:.0}" viewBox="0 0 {w} {h:.0}"><text text-anchor="middle" font-family="Noto Sans, Adwaita Sans, DejaVu Sans, Liberation Sans, Arial, sans-serif" font-weight="900" font-size="{size:.0}" fill="white" stroke="black" stroke-width="{:.0}" stroke-linejoin="round" paint-order="stroke">{spans}</text></svg>"#,
         size * 0.15
     )
 }
@@ -231,7 +231,7 @@ fn outro_svg(w: u32, h: u32, lang: &str) -> String {
         ("this edit took one command", "link in, edits out.", "free  ·  4 MB  ·  works with AI agents")
     };
     let u = h as f64 / 1080.0;
-    let t = |y: f64, size: f64, weight: u32, fill: &str, s: &str| format!(r#"<text x="{:.0}" y="{:.0}" text-anchor="middle" font-family="Noto Sans, Adwaita Sans, sans-serif" font-weight="{weight}" font-size="{:.0}" fill="{fill}">{}</text>"#, w as f64 / 2.0, h as f64 / 2.0 + y * u, size * u, esc(s));
+    let t = |y: f64, size: f64, weight: u32, fill: &str, s: &str| format!(r#"<text x="{:.0}" y="{:.0}" text-anchor="middle" font-family="Noto Sans, Adwaita Sans, DejaVu Sans, Liberation Sans, Arial, sans-serif" font-weight="{weight}" font-size="{:.0}" fill="{fill}">{}</text>"#, w as f64 / 2.0, h as f64 / 2.0 + y * u, size * u, esc(s));
     format!(
         r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><rect width="{w}" height="{h}" fill="black"/>{}{}{}{}{}</svg>"#,
         t(-170.0, 44.0, 700, "#aaaaaa", top), t(10.0, 150.0, 900, "white", "EditsMaker"), t(110.0, 54.0, 700, "white", sub),
@@ -404,8 +404,17 @@ mod tests {
         let p = dir.join("t.png");
         png(&text_svg("avenox 🤡", 1080, 96.0), 1080, &p).unwrap();
         let px = resvg::tiny_skia::Pixmap::load_png(&p).unwrap();
-        // the clown's red nose: colour emoji really drawn, not a blank box
-        assert!(px.pixels().iter().any(|c| c.red() > 180 && c.green() < 90 && c.blue() < 90 && c.alpha() > 200));
+        let mut db = resvg::usvg::fontdb::Database::new();
+        db.load_system_fonts();
+        let has = |name: &str| db.faces().any(|f| f.families.iter().any(|(n, _)| n.contains(name)));
+        if ["Noto Sans", "Adwaita Sans", "DejaVu Sans", "Liberation Sans", "Arial"].iter().any(|n| has(n)) {
+            assert!(px.pixels().iter().any(|c| c.alpha() > 200), "the words are drawn");
+        }
+        // the clown's red nose: colour emoji really drawn, not a blank box (only where an emoji font is installed;
+        // CI machines have none)
+        if has("Emoji") {
+            assert!(px.pixels().iter().any(|c| c.red() > 180 && c.green() < 90 && c.blue() < 90 && c.alpha() > 200));
+        }
         png(&math_svg(540, 540, "tr"), 1080, &p).unwrap();
         png(&outro_svg(540, 540, "en"), 540, &p).unwrap();
         let _ = std::fs::remove_dir_all(dir);
