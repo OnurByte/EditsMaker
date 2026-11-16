@@ -163,6 +163,16 @@ Other kinds, when asked for:
   over the edit: textures like "vhs texture:0.5" run screened under all of it, a transition or meme plays once at
   FROM, green screens are keyed. `--music NAME` takes a library song; talking clips take `--whoosh NAME` and
   `--boom NAME`. A meme or background's path works as the input footage.
+- Meme words and the spoken line, drawn by edits (emoji in colour): `--caption "sayın barış özbay 🗿@0-3.5"` (top,
+  seconds of the edit, repeatable), `--say-text` (the `--say` line at the bottom as it is said). MCP: `captions_at`,
+  `say_text`.
+- Chaos for "math"/sigma edits: `--math` (formulas, sine waves and the song's waveform flash in for 0.17 s on the
+  cuts, never sitting on screen), `--flash-text "5.2:dışarısı bir simülasyon"` (a subliminal line, two frames on
+  black). Library transitions over a black-and-white edit turn grey by themselves.
+- Before and after, never by hand with ffmpeg: `--intro VIDEOID@FROM-TO[/PICTURE_FROM]` (that video's words, its
+  picture from PICTURE_FROM; only that stretch is downloaded), `--intro-bed SONG` (quiet under it, stopped by a
+  record scratch), `--intro-caption "avenox 🤡"`, `--outro edits` (the EditsMaker card with a bass hit). The .srt
+  moves with the intro. MCP: `intro`, `intro_bed`, `intro_caption`, `outro`.
 - Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
 - Shots are spread over every downloaded video; do not settle for an edit cut from one video.
 

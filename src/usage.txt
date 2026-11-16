@@ -53,6 +53,14 @@ OPTIONS
       --join          also join all clips into joined.mp4
       --captions S    talking clips' caption style: hormozi (default), mrbeast, karaoke, box, minimal, neon
       --bed SONG      music under talking clips, ducked under the voice (link, file or trend:N)
+      --caption TEXT@FROM-TO  words on screen at the top (repeat), emoji in colour: "sayın barış özbay 🗿@0-3.5"
+      --say-text      draw the --say line at the bottom as it is said
+      --math          formulas and waves flash in for a split second on the cuts
+      --flash-text SECONDS:TEXT  a subliminal line, two frames on black (repeat)
+      --intro VIDEOID@FROM-TO[/PIC]  a short piece before the edit (its words, its picture from PIC), or a file
+      --intro-bed SONG   a song under the intro, quiet, stopped by a record scratch
+      --intro-caption TEXT  words over the intro
+      --outro edits|FILE  the EditsMaker card (or a clip) after the edit
       --speed K       footage speed (talking clips: speech speed), 0.5 slow motion, 2 double
       --velocity      speed ramps on every longer shot: slow, rushing, slow onto the beat
       --fx LIST       hits on the hardest beats: shake, flash, rgb, glitch, invert, blur, freeze, zoom

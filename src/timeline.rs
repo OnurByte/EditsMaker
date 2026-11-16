@@ -17,6 +17,8 @@ pub struct Timeline {
     pub music: Option<(PathBuf, f64)>,
     /// (start, end, text) on the timeline
     pub captions: Vec<(f64, f64, String)>,
+    /// the spoken line alone, (start, end, text): drawn on the picture with --say-text
+    pub said: Vec<(f64, f64, String)>,
 }
 
 fn frames(t: f64) -> u64 {
@@ -162,6 +164,7 @@ mod tests {
             clips: vec![("/v/a b.mp4".into(), 10.0, 1.5), ("/v/c.mp4".into(), 3.0, 2.0)],
             music: Some(("/m/song.wav".into(), 30.0)),
             captions: vec![(0.0, 1.2, "Merhaba dünya".into())],
+            said: vec![],
         }
     }
 

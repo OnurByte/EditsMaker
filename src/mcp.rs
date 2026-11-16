@@ -45,7 +45,15 @@ fn tools() -> Value {
             "join": {"type": "boolean", "description": "also join all clips into joined.mp4"},
             "no_jumpcuts": {"type": "boolean"}, "no_sfx": {"type": "boolean", "description": "no made whoosh/boom (use for quiet, emotional edits)"},
             "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
-            "tag": {"type": "string"}},
+            "tag": {"type": "string"},
+            "captions_at": {"type": "array", "items": {"type": "string"}, "description": "words on screen at the top, TEXT@FROM-TO seconds of the edit, emoji drawn in colour: meme labels like \"sayın barış özbay 🗿@0-3.5\""},
+            "say_text": {"type": "boolean", "description": "draw the spoken say line at the bottom as it is said"},
+            "math": {"type": "boolean", "description": "formulas, sine waves and the song's waveform flashing in for a split second on the cuts (chaotic 'math' edits)"},
+            "flash_texts": {"type": "array", "items": {"type": "string"}, "description": "subliminal lines, SECONDS:TEXT, each shown for two frames on black"},
+            "intro": {"type": "string", "description": "a short piece before the edit: VIDEOID@FROM-TO[/PICTURE_FROM] (that video's words from FROM to TO, its picture from PICTURE_FROM), or a video file"},
+            "intro_bed": {"type": "string", "description": "a song under the intro (library name, file), quiet, stopped by a record scratch"},
+            "intro_caption": {"type": "string", "description": "words over the intro, emoji allowed"},
+            "outro": {"type": "string", "description": "after the edit: \"edits\" for the EditsMaker card, or a video file or library clip"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure/hue curves, contrast, kelvin, vignette, grain, glow, sharpen, pixelate, lens, trails, flip ([time 0..1 of the shot, value, easing]) plus flashes. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
@@ -101,7 +109,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
                 ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("encoder", "--encoder"), ("export", "--export"),
-                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut")] {
+                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
@@ -126,8 +134,14 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             for t in a["say"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--say".into(), t.into()]);
             }
+            for t in a["captions_at"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--caption".into(), t.into()]);
+            }
+            for t in a["flash_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--flash-text".into(), t.into()]);
+            }
             for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
-                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth")] {
+                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
                 }
@@ -233,6 +247,8 @@ mod tests {
         assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "whoosh": "main swoosh", "overlays": ["vhs:0.5"]})).unwrap(), ["a.mp4", "--whoosh", "main swoosh", "--overlay", "vhs:0.5"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "say": ["abc@10-40"], "lang": "tr", "length": 20.5, "no_sfx": true, "fit": false})).unwrap(), ["a.mp4", "--lang", "tr", "--length", "20.5", "--say", "abc@10-40", "--no-sfx"]);
+        assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "outro": "edits", "intro": "x@1-3", "captions_at": ["hi 🗿@0-2"], "flash_texts": ["3:yo"], "math": true, "say_text": true})).unwrap(),
+            ["a.mp4", "--intro", "x@1-3", "--outro", "edits", "--caption", "hi 🗿@0-2", "--flash-text", "3:yo", "--say-text", "--math"]);
         assert!(args_for("edits_make", &json!({})).is_err() && args_for("nope", &json!({})).is_err());
     }
 }
