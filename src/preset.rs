@@ -288,6 +288,9 @@ pub struct Preset {
     pub slots: Vec<Slot>,
     #[serde(default)]
     pub flashes: Vec<Flash>,
+    /// earlier names (the project it was imported from): `--preset` still finds it by them
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aka: Vec<String>,
 }
 
 fn yes() -> bool {
@@ -318,6 +321,40 @@ impl Curve {
 }
 
 impl Preset {
+    /// What the edit does, measured from its shots, for picking one: pace, the moves it is made of, its frame and
+    /// where it came from.
+    pub fn tags(&self) -> Vec<&'static str> {
+        let n = self.slots.len().max(1) as f64;
+        let share = |f: &dyn Fn(&Slot) -> bool| self.slots.iter().filter(|s| f(s)).count() as f64 / n;
+        let avg = self.total / n;
+        let mut t = vec![if avg < 0.6 { "fast" } else if avg < 1.1 { "medium" } else { "slow" }];
+        let r = self.w as f64 / self.h.max(1) as f64;
+        t.push(if r < 0.7 { "9:16" } else if r < 0.95 { "4:5" } else if r < 1.15 { "1:1" } else { "wide" });
+        for (tag, f, at) in [
+            ("zoom", &(|s: &Slot| s.zoom.is_moving()) as &dyn Fn(&Slot) -> bool, 0.3),
+            ("slide", &|s: &Slot| s.x.is_moving() || s.y.is_moving(), 0.25),
+            ("spin", &|s: &Slot| s.rot.keys.iter().any(|k| k.1.abs() >= 45.0), 0.05),
+            ("shake", &|s: &Slot| s.shake.is_moving() || s.shake.max() > 0.0, 0.3),
+            ("blur", &|s: &Slot| !s.blur.is_empty(), 0.2),
+            ("rgb", &|s: &Slot| s.rgb, 0.2),
+            ("velocity", &|s: &Slot| !s.ramp.is_empty() || s.speed > 1.4, 0.2),
+        ] {
+            if share(f) >= at {
+                t.push(tag);
+            }
+        }
+        if self.flashes.len() as f64 >= n * 0.1 {
+            t.push("flash");
+        }
+        if self.slots.len() <= 3 {
+            t.push("transition");
+        }
+        if self.song.is_some() {
+            t.push("song");
+        }
+        t
+    }
+
     /// Numbers rounded to 4 decimals: the same edit, a file a third the size.
     pub fn tidy(mut self) -> Self {
         self.total = r4(self.total);
@@ -372,10 +409,27 @@ fn curve(n: Node, comp: usize) -> Option<Curve> {
         return nums(v).get(comp).map(|v| Curve::constant(*v));
     }
     let mut keys: Vec<(f64, f64, Ease)> = n.children().filter(|c| c.has_tag_name("kf")).filter_map(|k| {
-        Some((k.attribute("t")?.parse::<f64>().ok()?.clamp(0.0, 1.0), *nums(k.attribute("v")?).get(comp)?, ease(k.attribute("e"))))
+        Some((k.attribute("t")?.parse::<f64>().ok()?, *nums(k.attribute("v")?).get(comp)?, ease(k.attribute("e"))))
     }).collect();
     keys.sort_by(|a, b| a.0.total_cmp(&b.0));
-    (!keys.is_empty()).then_some(Curve { keys })
+    (!keys.is_empty()).then(|| Curve { keys: clamp_keys(keys) })
+}
+
+/// Keys at times outside the layer (0..1), as the layer shows them: the last one before its start becomes its start,
+/// the first one after its end its end, and the rest are dropped instead of all stacking on 0 and 1.
+fn clamp_keys(keys: Vec<(f64, f64, Ease)>) -> Vec<(f64, f64, Ease)> {
+    let before = keys.iter().rposition(|k| k.0 <= 0.0);
+    let after = keys.iter().position(|k| k.0 >= 1.0);
+    keys.iter().enumerate()
+        .filter(|(i, k)| (k.0 > 0.0 && k.0 < 1.0) || Some(*i) == before || Some(*i) == after)
+        .map(|(_, k)| (k.0.clamp(0.0, 1.0), k.1, k.2)).collect()
+}
+
+/// The scale a layer rests at, which zoom is measured against: its smallest real framing. A layer that pops in from
+/// 0 or is flipped (negative) once divided every value by ~0, and its shots came out as a frozen 2.2x crop.
+fn rest_scale(scale: &Curve) -> f64 {
+    let framed = scale.keys.iter().map(|k| k.1.abs()).filter(|v| *v > 0.05).fold(f64::MAX, f64::min);
+    if framed == f64::MAX { 1.0 } else { framed }
 }
 
 fn transform(n: Node, prop: &str, comp: usize) -> Option<Curve> {
@@ -423,7 +477,7 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
     let tf = |prop: &str, comp: usize| transform(n, prop, comp).filter(Curve::is_moving).or_else(|| parent(n).and_then(|p| transform(p, prop, comp))).or_else(|| transform(n, prop, comp));
     // zoom relative to the layer's own widest framing; position as movement away from where it rests
     let scale = tf("scale", 0).unwrap_or(Curve::constant(1.0));
-    let lo = scale.min().max(1e-3);
+    let lo = rest_scale(&scale);
     let moved = |c: Option<Curve>, size: f64| c.filter(Curve::is_moving).map(|c| {
         let rest = c.keys.iter().map(|k| k.1).min_by(|a, b| (a - size / 2.0).abs().total_cmp(&(b - size / 2.0).abs())).unwrap_or(size / 2.0);
         c.map(|v| (v - rest) / size)
@@ -441,7 +495,7 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         start,
         end,
         speed: (speed(n) * if m != n { speed(m) } else { 1.0 }).clamp(0.1, 8.0),
-        zoom: Some(scale.map(|v| v / lo)).filter(|z| z.is_moving() || z.max() > 1.001).unwrap_or_default(),
+        zoom: Some(scale.map(|v| (v.abs() / lo).max(0.05))).filter(|z| z.is_moving() || z.max() > 1.001).unwrap_or_default(),
         x: moved(tf("location", 0), w),
         y: moved(tf("location", 1), h),
         rot: tf("rotation", 0).filter(Curve::is_moving).unwrap_or_default(),
@@ -540,6 +594,7 @@ pub fn parse(xml: &str, name: &str) -> Result<Preset, String> {
         fit_beats: true,
         slots,
         flashes,
+        aka: vec![],
     }.tidy())
 }
 
@@ -552,8 +607,9 @@ pub fn load(name: &str) -> Result<Preset, String> {
     let want = name.to_lowercase().replace(['-', '_'], " ");
     let all = crate::presets::all();
     let names: Vec<String> = all.iter().map(|p| p.name.clone()).collect();
-    all.iter().find(|p| p.name.to_lowercase() == want.trim())
-        .or_else(|| all.iter().find(|p| p.name.to_lowercase().replace(['-', '_'], " ").contains(want.trim())))
+    let known = |p: &Preset| std::iter::once(p.name.clone()).chain(p.aka.clone()).map(|n| n.to_lowercase().replace(['-', '_'], " ")).collect::<Vec<_>>();
+    all.iter().find(|p| known(p).iter().any(|n| n.trim() == want.trim()))
+        .or_else(|| all.iter().find(|p| known(p).iter().any(|n| n.contains(want.trim()))))
         .cloned()
         .ok_or(format!("no preset matching \"{name}\"; there are: {}", names.join(", ")))
 }
@@ -842,5 +898,21 @@ mod tests {
         assert_eq!(slug("ʟɪᴋᴋ ᴘʀᴇꜱᴇᴛ #33"), "33");
         let fl = flashes(&p);
         assert!(fl.starts_with(",drawbox=x=0:y=0:w=iw:h=ih:t=fill:color=0xffffff@0.80:enable='between(t,1.000,1.100)*gt("), "{fl}");
+    }
+
+    #[test]
+    fn zoom_from_a_pop_in_or_a_flip_is_not_a_thousand() {
+        let c = |v: &[f64]| Curve { keys: v.iter().enumerate().map(|(i, &x)| (i as f64, x, Ease::Linear)).collect() };
+        // a layer popping in from 0 to its framing: zoom is relative to that framing, not to ~0
+        assert_eq!(rest_scale(&c(&[0.0, 0.625, 0.625])), 0.625);
+        // flipped (negative) scale rests at its size
+        assert_eq!(rest_scale(&c(&[-1.0, -1.33])), 1.0);
+        assert_eq!(rest_scale(&c(&[0.0])), 1.0);
+    }
+
+    #[test]
+    fn keys_outside_a_layer_do_not_stack() {
+        let k = clamp_keys(vec![(-0.4, 9.0, Ease::Linear), (-0.1, 1.5, Ease::Linear), (0.5, 1.2, Ease::Linear), (1.2, 1.0, Ease::Linear), (1.6, 7.0, Ease::Linear)]);
+        assert_eq!(k.iter().map(|x| (x.0, x.1)).collect::<Vec<_>>(), vec![(0.0, 1.5), (0.5, 1.2), (1.0, 1.0)]);
     }
 }

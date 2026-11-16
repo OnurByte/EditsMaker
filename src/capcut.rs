@@ -205,6 +205,7 @@ pub fn parse(text: &str, name: &str) -> Result<Preset, String> {
         fit_beats: true,
         slots,
         flashes,
+        aka: vec![],
     }.tidy())
 }
 

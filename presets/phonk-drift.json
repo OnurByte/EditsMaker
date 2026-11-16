@@ -1,971 +1,499 @@
 {
- "name": "phonk-drift",
- "about": "genre: phonk/drift - a cut on every beat, 6% kick zoom snapping back, colour split on snares, white flash and shakes from the drop, cold desaturated grade",
- "w": 1080,
- "h": 1920,
- "total": 16.92,
- "song": null,
- "look": "cold",
- "intensity": 1.0,
- "fit_beats": true,
- "shots": [
-  {
-   "start": 0.0,
-   "end": 0.47,
-   "zoom": [
-    [
-     0,
-     1.35,
-     "linear"
-    ],
-    [
-     0.35,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.12,
-     "linear"
-    ],
-    [
-     0.4,
-     0,
-     "out 4"
-    ]
-   ],
-   "shake_hz": 12.0,
-   "motion_blur": true
-  },
-  {
-   "start": 0.47,
-   "end": 0.94,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 0.94,
-   "end": 1.41,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 1.41,
-   "end": 1.88,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 1.88,
-   "end": 2.35,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 2.35,
-   "end": 2.82,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 2.82,
-   "end": 3.29,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 3.29,
-   "end": 3.76,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 3.76,
-   "end": 4.23,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 4.23,
-   "end": 4.7,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 4.7,
-   "end": 5.17,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 5.17,
-   "end": 5.64,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 5.64,
-   "end": 6.11,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 6.11,
-   "end": 6.58,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 6.58,
-   "end": 7.05,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true
-  },
-  {
-   "start": 7.05,
-   "end": 7.52,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.06,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ]
-  },
-  {
-   "start": 7.52,
-   "end": 7.99,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 7.99,
-   "end": 8.46,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 8.46,
-   "end": 8.93,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 8.93,
-   "end": 9.4,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 9.4,
-   "end": 9.87,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 9.87,
-   "end": 10.34,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 10.34,
-   "end": 10.81,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 10.81,
-   "end": 11.28,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 11.28,
-   "end": 11.75,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 11.75,
-   "end": 12.22,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 12.22,
-   "end": 12.69,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 12.69,
-   "end": 13.16,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 13.16,
-   "end": 13.63,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 13.63,
-   "end": 14.1,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 14.1,
-   "end": 14.57,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 14.57,
-   "end": 15.04,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 15.04,
-   "end": 15.51,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 15.51,
-   "end": 15.98,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 15.98,
-   "end": 16.45,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  },
-  {
-   "start": 16.45,
-   "end": 16.92,
-   "saturation": 0.8,
-   "zoom": [
-    [
-     0,
-     1.12,
-     "linear"
-    ],
-    [
-     0.5,
-     1.0,
-     "out 6"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.05,
-     "linear"
-    ],
-    [
-     0.6,
-     0,
-     "out 3"
-    ]
-   ],
-   "shake_hz": 14.0,
-   "motion_blur": true
-  }
- ],
- "flashes": [
-  {
-   "start": 0.0,
-   "end": 0.1,
-   "color": "ffffff",
-   "opacity": [
-    [
-     0,
-     1.0,
-     "linear"
-    ],
-    [
-     1,
-     0,
-     "out 3"
-    ]
-   ]
-  },
-  {
-   "start": 7.52,
-   "end": 7.64,
-   "color": "ffffff",
-   "opacity": [
-    [
-     0,
-     1.0,
-     "linear"
-    ],
-    [
-     1,
-     0,
-     "out 3"
-    ]
-   ]
-  }
- ]
+  "name": "phonk-drift",
+  "about": "genre: phonk/drift - a cut on every beat, 6% kick zoom snapping back, colour split on snares, white flash and shakes from the drop, cold desaturated grade",
+  "w": 1080,
+  "h": 1920,
+  "total": 16.92,
+  "song": null,
+  "look": "cold",
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 0.47,
+      "zoom": [
+        [0.0, 1.35, "linear"],
+        [0.35, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.12, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 0.47,
+      "end": 0.94,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 0.94,
+      "end": 1.41,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 1.41,
+      "end": 1.88,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 1.88,
+      "end": 2.35,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 2.35,
+      "end": 2.82,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 2.82,
+      "end": 3.29,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 3.29,
+      "end": 3.76,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 3.76,
+      "end": 4.23,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 4.23,
+      "end": 4.7,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 4.7,
+      "end": 5.17,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 5.17,
+      "end": 5.64,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 5.64,
+      "end": 6.11,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 6.11,
+      "end": 6.58,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 6.58,
+      "end": 7.05,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8,
+      "rgb": true
+    },
+    {
+      "start": 7.05,
+      "end": 7.52,
+      "zoom": [
+        [0.0, 1.06, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "saturation": 0.8
+    },
+    {
+      "start": 7.52,
+      "end": 7.99,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 7.99,
+      "end": 8.46,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 8.46,
+      "end": 8.93,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 8.93,
+      "end": 9.4,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 9.4,
+      "end": 9.87,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 9.87,
+      "end": 10.34,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 10.34,
+      "end": 10.81,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 10.81,
+      "end": 11.28,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 11.28,
+      "end": 11.75,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 11.75,
+      "end": 12.22,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 12.22,
+      "end": 12.69,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 12.69,
+      "end": 13.16,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 13.16,
+      "end": 13.63,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 13.63,
+      "end": 14.1,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 14.1,
+      "end": 14.57,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 14.57,
+      "end": 15.04,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 15.04,
+      "end": 15.51,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 15.51,
+      "end": 15.98,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    },
+    {
+      "start": 15.98,
+      "end": 16.45,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "rgb": true,
+      "motion_blur": true
+    },
+    {
+      "start": 16.45,
+      "end": 16.92,
+      "zoom": [
+        [0.0, 1.12, "linear"],
+        [0.5, 1.0, "out 6"]
+      ],
+      "shake": [
+        [0.0, 0.05, "linear"],
+        [0.6, 0.0, "out 3"]
+      ],
+      "shake_hz": 14.0,
+      "saturation": 0.8,
+      "motion_blur": true
+    }
+  ],
+  "flashes": [
+    {
+      "start": 0.0,
+      "end": 0.1,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 1.0, "linear"],
+        [1.0, 0.0, "out 3"]
+      ]
+    },
+    {
+      "start": 7.52,
+      "end": 7.64,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 1.0, "linear"],
+        [1.0, 0.0, "out 3"]
+      ]
+    }
+  ]
 }

@@ -95,7 +95,7 @@ Start there unless the user asks for something else.
 
 ```sh
 edits preset list                                   # what exists
-edits <link|channel|topic|file> --preset yuraprst --music trend:3 --look tealorange -n 3
+edits <link|channel|topic|file> --preset spin-slide-shake --music trend:3 --look tealorange -n 3
 ```
 
 - `--music`: a song link or file, `trend:N` (TikTok's Nth trending song, see the edits-trends skill), or leave it

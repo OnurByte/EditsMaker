@@ -1,0 +1,31 @@
+{
+  "name": "glitch-transition",
+  "about": "Alight Motion project \"Threshold Glitch Transition 💀🔥. Rajj Editz©\"",
+  "w": 1080,
+  "h": 1080,
+  "total": 4.015,
+  "song": null,
+  "look": null,
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 2.015,
+      "shake": [
+        [0.5831, 0.0, "out 6"],
+        [1.0, 0.0093, "linear"]
+      ]
+    },
+    {
+      "start": 1.816,
+      "end": 4.015,
+      "shake": [
+        [0.0, 0.0093, "linear"],
+        [0.5346, 0.0, "out 6"]
+      ]
+    }
+  ],
+  "flashes": [],
+  "aka": ["Threshold Glitch Transition 💀🔥. Rajj Editz©", "threshold-glitch"]
+}

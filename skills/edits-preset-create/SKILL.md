@@ -9,7 +9,7 @@ Not a copy (that is `edits learn`) and not a tweak (that is edits-preset-tweak):
 
 ```sh
 edits preset create footage.mp4 --name mine                    # inspiration: the 3 presets whose shots run closest
-edits preset create footage.mp4 --name mine --like yuraprst,madara --length 12
+edits preset create footage.mp4 --name mine --like spin-slide-shake,flash-velocity-square --length 12
 edits --preset mine https://www.youtube.com/@channel           # replay it
 ```
 

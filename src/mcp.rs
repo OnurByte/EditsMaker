@@ -34,6 +34,7 @@ fn tools() -> Value {
             "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
             "boom": {"type": "string", "description": "talking clips: a library sound on the punchline instead of the made boom"},
             "export": {"type": "string", "description": "timelines beside each clip: fcpxml,edl,srt,vtt"},
+            "shots": {"type": "array", "items": {"type": "string"}, "description": "preset edits: the footage for each shot by hand, in order, VIDEOID@SECONDS (a local file by its name; cycles when shorter than the preset). Use it whenever only some scenes or one character belong in the edit: look at the footage sheets, then list where each shot starts"},
             "say": {"type": "array", "items": {"type": "string"}, "description": "choose the moment yourself instead of the automatic pick: VIDEOID@FROM-TO seconds, one edit per entry, widened to whole words (talking and music edits: over their own footage; with a preset: over the preset edit, the song ducked under it, ending on its hardest cut); implies voice. Look at the captions and the footage sheets in the log first"},
             "lang": {"type": "string", "description": "spoken language, two letters like tr or en (default: the system's)"},
             "like": {"type": "string", "description": "a reference edit (mp4) to copy: its music, cuts, flashes, colour and shape"},
@@ -46,7 +47,7 @@ fn tools() -> Value {
             "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
             "tag": {"type": "string"}},
           "required": ["input"]}},
-        {"name": "edits_presets", "description": "List the presets: name, shots, length, frame, song.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure curves ([time 0..1 of the shot, value, easing]) plus flashes. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
@@ -118,6 +119,9 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             }
             for t in a["svgs"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--svg".into(), t.into()]);
+            }
+            for t in a["shots"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--shot".into(), t.into()]);
             }
             for t in a["say"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--say".into(), t.into()]);

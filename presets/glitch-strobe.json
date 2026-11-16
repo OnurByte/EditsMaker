@@ -1,1335 +1,663 @@
 {
- "name": "glitch-strobe",
- "about": "genre: glitch - 0.35 s cuts, colour split on all, inverted frame every 4th cut, 20 Hz jitter, strobing flashes",
- "w": 1080,
- "h": 1920,
- "total": 14.0,
- "song": null,
- "look": "noir",
- "intensity": 1.0,
- "fit_beats": true,
- "shots": [
-  {
-   "start": 0.0,
-   "end": 0.35,
-   "zoom": [
-    [
-     0,
-     1.35,
-     "linear"
-    ],
-    [
-     0.35,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "shake": [
-    [
-     0,
-     0.12,
-     "linear"
-    ],
-    [
-     0.4,
-     0,
-     "out 4"
-    ]
-   ],
-   "shake_hz": 12.0,
-   "motion_blur": true
-  },
-  {
-   "start": 0.35,
-   "end": 0.7,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 0.7,
-   "end": 1.05,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 1.05,
-   "end": 1.4,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 1.4,
-   "end": 1.75,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 1.75,
-   "end": 2.1,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 2.1,
-   "end": 2.45,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 2.45,
-   "end": 2.8,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 2.8,
-   "end": 3.15,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 3.15,
-   "end": 3.5,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 3.5,
-   "end": 3.85,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 3.85,
-   "end": 4.2,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 4.2,
-   "end": 4.55,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 4.55,
-   "end": 4.9,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 4.9,
-   "end": 5.25,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 5.25,
-   "end": 5.6,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 5.6,
-   "end": 5.95,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 5.95,
-   "end": 6.3,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 6.3,
-   "end": 6.65,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 6.65,
-   "end": 7.0,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 7.0,
-   "end": 7.35,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 7.35,
-   "end": 7.7,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 7.7,
-   "end": 8.05,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 8.05,
-   "end": 8.4,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 8.4,
-   "end": 8.75,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 8.75,
-   "end": 9.1,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 9.1,
-   "end": 9.45,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 9.45,
-   "end": 9.8,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 9.8,
-   "end": 10.15,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 10.15,
-   "end": 10.5,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 10.5,
-   "end": 10.85,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 10.85,
-   "end": 11.2,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 11.2,
-   "end": 11.55,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 11.55,
-   "end": 11.9,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 11.9,
-   "end": 12.25,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 12.25,
-   "end": 12.6,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 12.6,
-   "end": 12.95,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ],
-   "invert": true
-  },
-  {
-   "start": 12.95,
-   "end": 13.3,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 13.3,
-   "end": 13.65,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  },
-  {
-   "start": 13.65,
-   "end": 14.0,
-   "speed": 1.5,
-   "rgb": true,
-   "shake": [
-    [
-     0,
-     0.03,
-     "linear"
-    ],
-    [
-     1,
-     0.0,
-     "out 2"
-    ]
-   ],
-   "shake_hz": 20.0,
-   "zoom": [
-    [
-     0,
-     1.08,
-     "linear"
-    ],
-    [
-     0.4,
-     1.0,
-     "out 5"
-    ]
-   ]
-  }
- ],
- "flashes": [
-  {
-   "start": 2.8,
-   "end": 3.1,
-   "color": "ffffff",
-   "opacity": [
-    [
-     0,
-     0.7,
-     "linear"
-    ],
-    [
-     1,
-     0,
-     "out 3"
-    ]
-   ],
-   "blink": true
-  },
-  {
-   "start": 5.6,
-   "end": 5.9,
-   "color": "ffffff",
-   "opacity": [
-    [
-     0,
-     0.7,
-     "linear"
-    ],
-    [
-     1,
-     0,
-     "out 3"
-    ]
-   ],
-   "blink": true
-  },
-  {
-   "start": 8.4,
-   "end": 8.7,
-   "color": "ffffff",
-   "opacity": [
-    [
-     0,
-     0.7,
-     "linear"
-    ],
-    [
-     1,
-     0,
-     "out 3"
-    ]
-   ],
-   "blink": true
-  },
-  {
-   "start": 11.2,
-   "end": 11.5,
-   "color": "ffffff",
-   "opacity": [
-    [
-     0,
-     0.7,
-     "linear"
-    ],
-    [
-     1,
-     0,
-     "out 3"
-    ]
-   ],
-   "blink": true
-  }
- ]
+  "name": "glitch-strobe",
+  "about": "genre: glitch - 0.35 s cuts, colour split on all, inverted frame every 4th cut, 20 Hz jitter, strobing flashes",
+  "w": 1080,
+  "h": 1920,
+  "total": 14.0,
+  "song": null,
+  "look": "noir",
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 0.35,
+      "zoom": [
+        [0.0, 1.35, "linear"],
+        [0.35, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.12, "linear"],
+        [0.4, 0.0, "out 4"]
+      ],
+      "shake_hz": 12.0,
+      "motion_blur": true
+    },
+    {
+      "start": 0.35,
+      "end": 0.7,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 0.7,
+      "end": 1.05,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 1.05,
+      "end": 1.4,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 1.4,
+      "end": 1.75,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 1.75,
+      "end": 2.1,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 2.1,
+      "end": 2.45,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 2.45,
+      "end": 2.8,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 2.8,
+      "end": 3.15,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 3.15,
+      "end": 3.5,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 3.5,
+      "end": 3.85,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 3.85,
+      "end": 4.2,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 4.2,
+      "end": 4.55,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 4.55,
+      "end": 4.9,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 4.9,
+      "end": 5.25,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 5.25,
+      "end": 5.6,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 5.6,
+      "end": 5.95,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 5.95,
+      "end": 6.3,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 6.3,
+      "end": 6.65,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 6.65,
+      "end": 7.0,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 7.0,
+      "end": 7.35,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 7.35,
+      "end": 7.7,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 7.7,
+      "end": 8.05,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 8.05,
+      "end": 8.4,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 8.4,
+      "end": 8.75,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 8.75,
+      "end": 9.1,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 9.1,
+      "end": 9.45,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 9.45,
+      "end": 9.8,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 9.8,
+      "end": 10.15,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 10.15,
+      "end": 10.5,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 10.5,
+      "end": 10.85,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 10.85,
+      "end": 11.2,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 11.2,
+      "end": 11.55,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 11.55,
+      "end": 11.9,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 11.9,
+      "end": 12.25,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 12.25,
+      "end": 12.6,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 12.6,
+      "end": 12.95,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true,
+      "invert": true
+    },
+    {
+      "start": 12.95,
+      "end": 13.3,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 13.3,
+      "end": 13.65,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    },
+    {
+      "start": 13.65,
+      "end": 14.0,
+      "speed": 1.5,
+      "zoom": [
+        [0.0, 1.08, "linear"],
+        [0.4, 1.0, "out 5"]
+      ],
+      "shake": [
+        [0.0, 0.03, "linear"],
+        [1.0, 0.0, "out 2"]
+      ],
+      "shake_hz": 20.0,
+      "rgb": true
+    }
+  ],
+  "flashes": [
+    {
+      "start": 2.8,
+      "end": 3.1,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.7, "linear"],
+        [1.0, 0.0, "out 3"]
+      ],
+      "blink": true
+    },
+    {
+      "start": 5.6,
+      "end": 5.9,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.7, "linear"],
+        [1.0, 0.0, "out 3"]
+      ],
+      "blink": true
+    },
+    {
+      "start": 8.4,
+      "end": 8.7,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.7, "linear"],
+        [1.0, 0.0, "out 3"]
+      ],
+      "blink": true
+    },
+    {
+      "start": 11.2,
+      "end": 11.5,
+      "color": "ffffff",
+      "opacity": [
+        [0.0, 0.7, "linear"],
+        [1.0, 0.0, "out 3"]
+      ],
+      "blink": true
+    }
+  ]
 }
