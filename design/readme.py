@@ -126,17 +126,16 @@ def sites():
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 56, "MIT, Rust, Linux macOS Windows, MCP server, 7 agent skills, 50 presets, under 4 MB, 40 looks")
+@page("badges", 56, "MCP server, 7 agent skills, 50 presets, 40 looks, TikTok trends, 1,700+ sites")
 def badges():
-    cells = ["MIT", "Rust", "Linux · macOS · Windows", "MCP server", "7 agent skills", "50 presets",
-             "under 4 MB", "40 looks"]
+    cells = ["MCP server", "7 agent skills", "50 presets", "40 looks", "TikTok trends", "1,700+ sites"]
     widths = [len(c) * 7.6 + 30 for c in cells]
     k = W / sum(widths)
     out, x = [rule(0, W, 0.5), rule(0, W, 47.5)], 0.0
     for c, w in zip(cells, widths):
         if x:
             out.append(f'<line x1="{x:.1f}" y1="10" x2="{x:.1f}" y2="38" stroke="%HAIR%"/>')
-        out.append(t(round(x + (12 if x else 0)), 29, c, 13, 700, "RED" if "MB" in c else "INK"))
+        out.append(t(round(x + (12 if x else 0)), 29, c, 13, 700, "RED" if "TikTok" in c else "INK"))
         x += w * k
     return out
 
@@ -185,7 +184,7 @@ def dot(cx, cy, v, c):
     return ring + (f'<path d="M{cx},{cy - r} A{r},{r} 0 0 0 {cx},{cy + r} Z" fill="%{c}%"/>' if v == 1 else "")
 
 
-@page("size", 530, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
+@page("size", 500, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
       "about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci "
       "Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that "
       "is free, open source, built for AI agents and reads TikTok's trending songs.", "1.3")
@@ -210,8 +209,7 @@ def size():
     out += [dot(5, 478, 2, "INK"), t(16, 482, "yes", 11, 400, "GRAY"), dot(49, 478, 1, "INK"),
             t(60, 482, "partly", 11, 400, "GRAY"), dot(112, 478, 0, "INK"),
             t(123, 482, "no", 11, 400, "GRAY")]
-    return out + [t(0, 504, "November 2026. Premiere Pro and After Effects: the space Adobe asks for to install. "
-                  "Sources at the bottom of this page.", 11, 400, "GRAY")]
+    return out
 
 
 @page("sounds", 340, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
@@ -357,12 +355,12 @@ def presets():
 
 
 @page("why", 150, "Why EditsMaker: one command for a link from 1,700+ sites, trend-aware, reads first, "
-      "under 4 MB: one MIT binary on your computer", "3.5")
+      "under 4 MB: one file on your computer", "3.5")
 def why():
     cols = [("One command", "A link from 1,700+ sites, a channel or a topic in; finished edits out."),
             ("Trend-aware", "Reads TikTok's chart and cuts to the song people are using this week."),
             ("Reads first", "Skims every video's captions and only downloads the good ones."),
-            ("Under 4 MB", "One Rust file, MIT, no installer, runs on your own computer.")]
+            ("Under 4 MB", "One file, no installer, runs on your own computer.")]
     out = []
     for i, (h, d) in enumerate(cols):
         x = i * 240
