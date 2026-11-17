@@ -94,11 +94,15 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 ### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-apple-dark.svg"><img src="assets/readme/os-apple-light.svg" height="20" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-linux-dark.svg"><img src="assets/readme/os-linux-light.svg" height="20" alt=""></picture> macOS and Linux
 
+<sub>Terminal</sub>
+
 ```sh
 curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh | sh
 ```
 
 ### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-windows-dark.svg"><img src="assets/readme/os-windows-light.svg" height="20" alt=""></picture> Windows
+
+<sub>PowerShell</sub>
 
 ```powershell
 irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
