@@ -9,6 +9,8 @@ USAGE
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
   edits preset list | show NAME           presets are JSON: read one in full
   edits preset save FILE.json|-           save a changed preset (your folder wins over the built-in one)
+  edits preset set NAME KEY=VALUE... [--as NEW]   change a preset without a script: total=12 shots.0.zoom=1.3
+                               shots.*.speed=2 (lists count from 0, * is every shot)
   edits preset import <zip|xml|dir|prfpset>...   Alight Motion projects, CapCut drafts and Premiere presets into presets
   edits library add <zip|folder>...       a whole editing pack: sounds, music, overlays, transitions, green screens,
                                memes, images into your library, fonts installed, presets imported
@@ -18,6 +20,7 @@ USAGE
   edits draw <video> SPEC...   draw arrows, rings, crosses or your own .svg over a finished clip (see --svg)
                                and --overlay SPEC library clips (see --overlay)
   edits check <clip.mp4>      measure a render: length, loudness, cut rhythm, a contact sheet to look at
+  edits words <link|ID|file> [A-B] [--find TEXT]   what it says, line by line, each as a ready --say ID@A-B
   edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4) in one jpg, to pick --shot
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)

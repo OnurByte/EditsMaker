@@ -236,6 +236,13 @@ Look at moments of the footage before picking shots by hand (`edits_frames`): on
 edits frames VIDEO_ID 5:36 390+4 414
 ```
 
+Find where a line is said, ready for `--say` (`edits_words`), and change a preset without a script (`edits_preset_set`):
+
+```sh
+edits words VIDEO_ID --find "say my name"
+edits preset set sert-bw total=12 shots.*.speed=2 --as sert-fast
+```
+
 Timelines for other editors beside each clip (`fcpxml`, `edl`, captions as `srt` or `vtt`):
 
 ```sh
@@ -395,8 +402,8 @@ Install the skills:
 edits skills install
 ```
 
-Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_create`, `edits_learn`,
-`edits_check`, `edits_frames`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
+Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_set`, `edits_preset_create`, `edits_learn`,
+`edits_check`, `edits_frames`, `edits_words`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
 the footage, renders with it and measures the result; the output folder is always edits' own choice.
 
 </details>

@@ -5,6 +5,11 @@ description: Make short viral edits (TikTok, Reels, Shorts) from a YouTube link,
 
 # Making edits with `edits`
 
+**Use the commands, never your own scripts.** Every step has one: `edits words` finds where a line is said (ready
+`--say ID@A-B`), `edits frames` shows footage, `edits check` measures a render, `edits preset set` changes a preset,
+`edits looks` / `edits library` list what there is. Do not write Python, shell loops, ffmpeg, whisper or yt-dlp
+commands: they are slower and break where these work. If no command does it, tell the user what is missing.
+
 ## Work like an editor, not a command runner
 
 The tool alone makes a generic edit: it picks moments from the transcript (a `claude -p` call that reads text, never
@@ -208,19 +213,8 @@ the footage, change the preset (edits-preset-tweak skill) rather than giving up 
 ## Never cut a spoken sentence mid-word (voice over a hand-picked moment)
 
 Cutting the voice by eye (a guessed `-t`) clipped the last word ("çalışıyorsun" cut at 6.45 s, it ends at 6.76 s).
-`say` does this itself (whole words, +0.25 s after the last one), in talking, music and preset edits. Only when you
-mix a voice by hand, get the real word ends and cut after the last word, never before:
+`say` does this itself (whole words, +0.25 s after the last one), in talking, music and preset edits. Get the times
+from `edits words ID --find "a word of the line"`: each line comes out as a ready `ID@A-B`. Never mix a voice by hand.
 
-```sh
-ffmpeg -i clip.mp4 -ar 16000 -ac 1 v.wav
-whisper-cli -m MODEL.bin -l tr -f v.wav -ml 1 -sow -np     # one word per line with end times
-```
-
-- Cut at the last word's end `+0.03 s`, with a 0.05 s fade out. Judge speed first: at `speed 0.8` every time divides by 0.8.
-- If the visual hit (zoom/flash/cut) must land after the sentence but the picture changes scene earlier, freeze the
-  last frame (`tpad=stop_mode=clone`) instead of shortening the voice.
-- After rendering, check the tail: `ffmpeg -ss END-0.3 -t 0.5 -i out.mp4 -af volumedetect -f null -` should be quiet
-  only after the last word, not inside it. Read the first and last transcribed word of the render against what you chose.
-- Song intros are often silent: measure 10 s windows (`ebur128`) and pick the section with the hook, then time
-  the hook to the visual hit instead of starting the song at 0.
-- Colour: blend overlays (VHS texture) in `format=gray`, a screen blend in YUV tints black-and-white edits purple.
+- After rendering, `edits words out.mp4` reads what the render says: its first and last word must be the ones you chose.
+- Song intros are often silent: a YouTube song already starts at its most replayed part; time the hook to the visual hit.

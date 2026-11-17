@@ -67,6 +67,10 @@ fn tools() -> Value {
         {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure/hue curves, contrast, kelvin, vignette, grain, glow, sharpen, pixelate, lens, trails, flip, letterbox, split, mirror, strobe, comic, scanlines, leak, fade_in, fade_out ([time 0..1 of the shot, value, easing]) plus flashes; mark one shot \"drop\": true and a say line ends as it starts. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_preset_set", "description": "Change a preset field by field, no script: changes are KEY=VALUE like total=12, shots.0.zoom=1.3, shots.*.speed=2 or look=\"bw\" (lists count from 0, * is every shot; a value is JSON, else text). `as` saves it under a new name.",
+         "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "changes": {"type": "array", "items": {"type": "string"}}, "as": {"type": "string"}}, "required": ["name", "changes"]}},
+        {"name": "edits_words", "description": "What a video says, line by line with times, each line as a ready say spec (ID@A-B) for edits_make say. Use it to find a line instead of transcribing yourself. `input`: a link, a YouTube ID or a file; `range` \"60-90\" seconds; `find` keeps the lines with those words.",
+         "inputSchema": {"type": "object", "properties": {"input": {"type": "string"}, "range": {"type": "string"}, "find": {"type": "string"}, "lang": {"type": "string"}}, "required": ["input"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
         {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
@@ -94,6 +98,22 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_presets" => v.extend(["preset".into(), "list".into()]),
         "edits_preset_get" => v.extend(["preset".into(), "show".into(), s("name").ok_or("name is needed")?]),
         "edits_preset_save" => v.extend(["preset".into(), "save".into(), "-".into()]),
+        "edits_preset_set" => {
+            v.extend(["preset".into(), "set".into(), s("name").ok_or("name is needed")?]);
+            v.extend(a["changes"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from)));
+            if let Some(n) = s("as") {
+                v.extend(["--as".into(), n]);
+            }
+        }
+        "edits_words" => {
+            v.extend(["words".into(), s("input").ok_or("input is needed")?]);
+            v.extend(s("range"));
+            for k in ["find", "lang"] {
+                if let Some(x) = s(k) {
+                    v.extend([format!("--{k}"), x]);
+                }
+            }
+        }
         "edits_looks" => v.push("looks".into()),
         "edits_check" => v.extend(["check".into(), s("clip").ok_or("clip is needed")?]),
         "edits_frames" => {
@@ -203,12 +223,15 @@ fn reply(id: &Value, result: Value) -> Value {
     json!({"jsonrpc": "2.0", "id": id, "result": result})
 }
 
+/// Sent to the agent on connect: agents that script around the tools break things the tools already do.
+const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, whisper or yt-dlp yourself: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
+
 pub fn handle(msg: &Value) -> Option<Value> {
     let id = msg.get("id")?.clone(); // notifications get no answer
     let method = msg["method"].as_str().unwrap_or("");
     Some(match method {
         "initialize" => reply(&id, json!({"protocolVersion": msg["params"]["protocolVersion"].as_str().unwrap_or("2025-06-18"),
-            "capabilities": {"tools": {}}, "serverInfo": {"name": "edits", "version": env!("CARGO_PKG_VERSION")}})),
+            "capabilities": {"tools": {}}, "instructions": INSTRUCTIONS, "serverInfo": {"name": "edits", "version": env!("CARGO_PKG_VERSION")}})),
         "ping" => reply(&id, json!({})),
         "tools/list" => reply(&id, json!({"tools": tools()})),
         "tools/call" => {
@@ -249,9 +272,10 @@ mod tests {
     fn protocol() {
         let init = handle(&json!({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}})).unwrap();
         assert_eq!(init["result"]["serverInfo"]["name"], "edits");
+        assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 12);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 14);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 
@@ -260,6 +284,8 @@ mod tests {
         let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3, "out": "work/x"});
         assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
         assert_eq!(args_for("edits_check", &json!({"clip": "a.mp4"})).unwrap(), ["check", "a.mp4"]);
+        assert_eq!(args_for("edits_preset_set", &json!({"name": "yura", "changes": ["total=12", "shots.*.speed=2"], "as": "y2"})).unwrap(), ["preset", "set", "yura", "total=12", "shots.*.speed=2", "--as", "y2"]);
+        assert_eq!(args_for("edits_words", &json!({"input": "abc", "range": "60-90", "find": "borç"})).unwrap(), ["words", "abc", "60-90", "--find", "borç"]);
         assert_eq!(args_for("edits_frames", &json!({"video": "abc", "at": ["5:36", 390]})).unwrap(), ["frames", "abc", "5:36", "390"]);
         assert_eq!(args_for("edits_preset_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["preset", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
