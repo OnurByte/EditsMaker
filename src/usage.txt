@@ -17,10 +17,10 @@ USAGE
                                memes, images into your library, fonts installed, presets imported
   edits library [KIND] [WORDS] what is in it (sfx, music, overlay, transition, greenscreen, background, meme, image)
   edits looks                  the colour looks
-  edits learn <edit.mp4>...     reverse-engineer an edit you like into a preset (cuts, flashes, zoom, slide, shake)
+  edits learn <edit.mp4|link>...  reverse-engineer an edit you like (file, or an X/TikTok/Instagram/YouTube link) into a preset (cuts, flashes, zoom, slide, shake)
   edits draw <video> SPEC...   draw arrows, rings, crosses or your own .svg over a finished clip (see --svg)
                                and --overlay SPEC library clips (see --overlay)
-  edits check <clip.mp4>      measure a render: length, loudness, cut rhythm, a contact sheet to look at
+  edits check <clip.mp4|link> measure a render: length, loudness, cut rhythm, a contact sheet to look at
   edits words <link|ID|file> [A-B] [--find TEXT]   what it says, line by line, each as a ready --say ID@A-B
   edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4) in one jpg, to pick --shot
   edits font NAME...          a Google Fonts family for caption styles ("Bebas Neue", "Montserrat Black");
@@ -39,7 +39,7 @@ OPTIONS
                       trend:N for TikTok's Nth trending song, trend:us:N for another country)
       --preset NAME   replay a preset (name or .json file) over the footage: timing, speed, moves, shakes, flashes, song
       --intensity K   preset moves: 0.5 calmer, 2 wilder (default: the preset's own)
-      --like EDIT     copy a reference edit: its music (dialogue removed), cuts, flashes, colour and shape
+      --like EDIT     copy a reference edit (file or link): its music (dialogue removed), cuts, flashes, colour and shape
       --sad           slow cuts, slow motion, crossfades, black and white
       --voice         the speaker's best whole passage over their own footage, music under it, the drop as it ends, captions
       --shot ID@S[:X] preset edits: the footage for each shot by hand, in order (repeat), X = where the frame looks (0..1)

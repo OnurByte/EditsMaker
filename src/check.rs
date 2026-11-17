@@ -46,7 +46,7 @@ fn secs(s: &str) -> Option<f64> {
 
 /// The footage behind a path or a video ID edits already fetched (~/.cache/edits/ID: hd.mp4, src.mp4 or v.mp4).
 fn footage(v: &str) -> Result<PathBuf, String> {
-    let p = PathBuf::from(v);
+    let p = crate::fetch::reference(v)?;
     if p.is_file() {
         return Ok(p);
     }

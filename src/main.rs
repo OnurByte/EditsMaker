@@ -104,7 +104,7 @@ fn main() -> ExitCode {
             let into = args.iter().position(|a| a == "--into").and_then(|i| args.get(i + 1)).map(PathBuf::from).unwrap_or_else(presets::user_dir);
             std::fs::create_dir_all(&into).map_err(|e| e.to_string())?;
             for v in args[1..].iter().filter(|a| a.as_str() != "--into" && Path::new(a) != into) {
-                let path = Path::new(v);
+                let path = &fetch::reference(v)?;
                 let name = path.file_stem().unwrap_or_default().to_string_lossy().into_owned();
                 let p = learn::learn(path, &name)?;
                 let file = into.join(format!("{}.json", preset::slug(&name)));
@@ -146,7 +146,7 @@ fn main() -> ExitCode {
             _ => Err("usage: edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ... [--overlay NAME[@FROM[-TO]][:OPACITY]] ...".into()),
         },
         Some("check") => match args.get(1) {
-            Some(clip) => check::check(Path::new(clip)).map(|s| println!("{s}")),
+            Some(clip) => fetch::reference(clip).and_then(|p| check::check(&p)).map(|s| println!("{s}")),
             None => Err("usage: edits check <clip.mp4>   length, loudness, cut rhythm and a contact sheet to look at".into()),
         },
         Some("words") if args.len() > 1 => words(&args[1..]),
@@ -300,7 +300,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--use" => c.use_videos = val("--use")?.parse().ok().filter(|n| (1..=20).contains(n)).ok_or("--use must be 1-20")?,
             "--fit" => c.opts.layout = "fit".into(),
             "--music" => c.music = Some(val("--music")?),
-            "--like" => c.like = Some(val("--like")?),
+            "--like" => c.like = Some(fetch::reference(&val("--like")?)?.to_string_lossy().into_owned()),
             "--preset" => c.preset = Some(val("--preset")?),
             "--sad" => c.look.sad = true,
             "--voice" => c.voice = true,

@@ -203,6 +203,23 @@ pub fn local(file: &Path, cache: &Path) -> Result<Source, String> {
     Ok(Source { local: Some(file.to_path_buf()), url: String::new(), audio: file.to_path_buf(), wav: w, work, title: id.clone(), id, duration: duration(file)?, language: String::new(), heat: vec![], comments: vec![] })
 }
 
+/// A finished edit given as a link (X, TikTok, Instagram, YouTube): the whole video, downloaded once into the
+/// cache and named UPLOADER-ID.mp4. A file is returned as it is.
+pub fn reference(v: &str) -> Result<PathBuf, String> {
+    if Path::new(v).is_file() || !(v.starts_with("http://") || v.starts_with("https://")) {
+        return Ok(PathBuf::from(v));
+    }
+    let dir = crate::util::home().join(".cache/edits/refs").join(safe(v.split('?').next().unwrap_or(v).trim_end_matches('/').rsplit("//").next().unwrap_or(v)));
+    let found = |d: &Path| std::fs::read_dir(d).into_iter().flatten().flatten().map(|e| e.path()).find(|p| p.extension().is_some_and(|e| e == "mp4"));
+    if let Some(f) = found(&dir) {
+        return Ok(f);
+    }
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    yt(&["--no-warnings", "--no-progress", "--no-playlist", "-f", VIDEO, "--merge-output-format", "mp4",
+        "-o", &dir.join("%(uploader_id,uploader)s-%(id)s.%(ext)s").to_string_lossy(), "--", v])?;
+    found(&dir).ok_or(format!("yt-dlp downloaded no video from {v}"))
+}
+
 /// Audio, info, comments and the site's own word-timed captions: a few MB instead of the whole video.
 pub fn remote(id: &str, url: &str, cache: &Path) -> Result<Source, String> {
     let work = cache.join(safe(id));
