@@ -190,7 +190,7 @@ def dot(cx, cy, v, c):
     return ring + (f'<path d="M{cx},{cy - r} A{r},{r} 0 0 0 {cx},{cy + r} Z" fill="%{c}%"/>' if v == 1 else "")
 
 
-@page("size", 490, "EditsMaker against other editors. Download: EditsMaker 3.7 MB, auto-editor 46 MB, HyperFrames "
+@page("size", 514, "EditsMaker against other editors. Download: EditsMaker 3.7 MB (Windows 3.7, Linux 3.7, macOS 3.4), auto-editor 46 MB, HyperFrames "
       "about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci "
       "Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that "
       "is free, open source, built for AI agents and reads TikTok's trending songs.", "1.3")
@@ -198,7 +198,11 @@ def size():
     out = head("Size, and what\nyou get for it", "The whole editor, with its presets, looks, MCP server and skills, "
                "is one file. No Python, no Node, no Electron, no cloud.", 4)
     out += [t(C3, 84, "3.7", 64, 700, "RED", ls=-3), t(C3 + 100, 84, "MB", 22, 700, "RED")]
-    top, bar0, span = 132, 190, 300
+    # the big number is the Windows download; the others under it (release assets, Apple silicon for macOS)
+    for i, (os_, mb) in enumerate([("Windows", "3.7"), ("Linux", "3.7"), ("Apple", "3.4")]):
+        x = C3 + 4 + i * 96
+        out += [logo(os_, x, 104, 16, "GRAY"), t(x + 23, 117, f"{mb} MB", 13, 700, "INK")]
+    top, bar0, span = 156, 190, 300
     cols = [("Free", 680), ("Open source", 760), ("For agents", 840), ("TikTok trends", 920)]
     out += [t(0, top - 12, "Size", 12, 400, "GRAY"), rule(0, W, top - 4.5, "HAIR")]
     out += [t(x, top - 12, h, 12, 400, "GRAY", "middle") for h, x in cols]
@@ -212,9 +216,9 @@ def size():
                 t(bar0 + w + 8, y + 15, val, 13, 700, c), t(bar0 + w + 12 + len(val) * 7.6, y + 15, how, 11, 400, "GRAY")]
         out += [dot(x, y + 10, v, c) for (_, x), v in zip(cols, marks)]
         out.append(rule(0, W, y + 26.5, "HAIR"))
-    out += [dot(5, 478, 2, "INK"), t(16, 482, "yes", 11, 400, "GRAY"), dot(49, 478, 1, "INK"),
-            t(60, 482, "partly", 11, 400, "GRAY"), dot(112, 478, 0, "INK"),
-            t(123, 482, "no", 11, 400, "GRAY")]
+    out += [dot(5, 502, 2, "INK"), t(16, 506, "yes", 11, 400, "GRAY"), dot(49, 502, 1, "INK"),
+            t(60, 506, "partly", 11, 400, "GRAY"), dot(112, 502, 0, "INK"),
+            t(123, 506, "no", 11, 400, "GRAY")]
     return out
 
 
