@@ -111,7 +111,7 @@ irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 ### Or ask your agent
 
 ```text
-Install EditsMaker from github.com/OnurByte/EditsMaker, add it as an MCP server with "edits mcp" and install its skills with "edits skills install".
+Install EditsMaker from github.com/OnurByte/EditsMaker, then run "edits mcp install" and "edits skills install".
 ```
 
 ---
@@ -390,17 +390,15 @@ edits preset save my-preset.json
 <details>
 <summary><b>Agents</b></summary>
 
-Add it to Claude Code:
+The installer adds it to every agent it finds: Claude Code, Codex, OpenCode, Cursor, Windsurf, Gemini CLI, Claude
+Desktop and VS Code, with the skills in each one's skill folder. Again after installing a new agent:
 
 ```sh
-claude mcp add edits -s user -- edits mcp
-```
-
-Install the skills:
-
-```sh
+edits mcp install
 edits skills install
 ```
+
+Any other client: command `edits`, args `["mcp"]`.
 
 Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_set`, `edits_preset_create`, `edits_learn`,
 `edits_check`, `edits_frames`, `edits_words`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for

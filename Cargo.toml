@@ -1,6 +1,6 @@
 [package]
 name = "edits"
-version = "0.21.3"
+version = "0.21.4"
 edition = "2021"
 description = "One small binary (under 4 MB to download) that turns any YouTube link, channel or topic into viral TikTok, Reels and Shorts edits: Alight Motion and Premiere presets, trending songs, beat-synced cuts, captions, colour looks, MCP server for AI agents."
 repository = "https://github.com/OnurByte/EditsMaker"
@@ -16,7 +16,7 @@ resvg = { version = "0.45.1", default-features = false, features = ["text", "sys
 roxmltree = "0.21.2"
 rustface = "0.1.7"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
 
 # small on purpose: the download is a selling point, and the heavy lifting is ffmpeg's (opt "s" costs ~5% on learn)
 [profile.release]

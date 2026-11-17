@@ -2,6 +2,7 @@
 //! edits, read a preset, change it for the moment and save it. Each tool runs this same binary.
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
+use std::path::{Path, PathBuf};
 
 fn tools() -> Value {
     json!([
@@ -244,6 +245,73 @@ pub fn handle(msg: &Value) -> Option<Value> {
     })
 }
 
+/// Where each agent keeps its MCP servers, as a JSON file: (client, file, key holding the servers, the entry).
+/// Clients whose config is not plain JSON (Claude Code's ~/.claude.json is live state, Codex is TOML) are added
+/// through their own CLI instead.
+fn json_clients(exe: &str) -> Vec<(&'static str, PathBuf, &'static [&'static str], Value)> {
+    let h = crate::util::home();
+    let roaming = std::env::var("APPDATA").map(PathBuf::from).unwrap_or_else(|_| h.join("AppData/Roaming"));
+    let app = |linux: &str, mac: &str, win: &str| if cfg!(windows) { roaming.join(win) } else if cfg!(target_os = "macos") { h.join("Library/Application Support").join(mac) } else { h.join(".config").join(linux) };
+    let plain = json!({"command": exe, "args": ["mcp"]});
+    vec![
+        ("OpenCode", h.join(".config/opencode/opencode.json"), &["mcp", "servers"], json!({"type": "local", "command": [exe, "mcp"]})),
+        ("Cursor", h.join(".cursor/mcp.json"), &["mcpServers"], plain.clone()),
+        ("Windsurf", h.join(".codeium/windsurf/mcp_config.json"), &["mcpServers"], plain.clone()),
+        ("Gemini CLI", h.join(".gemini/settings.json"), &["mcpServers"], plain.clone()),
+        ("Claude Desktop", app("Claude", "Claude", "Claude").join("claude_desktop_config.json"), &["mcpServers"], plain),
+        ("VS Code", app("Code/User", "Code/User", "Code/User").join("mcp.json"), &["servers"], json!({"type": "stdio", "command": exe, "args": ["mcp"]})),
+    ]
+}
+
+/// Puts `entry` at keys.."edits" in a JSON config, keeping everything else; a file that is not JSON is left alone.
+fn add_to(text: &str, keys: &[&str], entry: Value) -> Option<String> {
+    let mut v: Value = if text.trim().is_empty() { json!({}) } else { serde_json::from_str(text).ok()? };
+    let mut at = &mut v;
+    for k in keys {
+        at = at.as_object_mut()?.entry(*k).or_insert_with(|| json!({}));
+    }
+    at.as_object_mut()?.insert("edits".into(), entry);
+    serde_json::to_string_pretty(&v).ok().map(|s| s + "\n")
+}
+
+/// `edits mcp install`: edits as an MCP server in every agent on this machine (one whose config folder exists).
+pub fn install() -> Result<(), String> {
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?.to_string_lossy().into_owned();
+    let mut done = vec![];
+    // their own CLIs; removed first so a moved binary is picked up again
+    for (name, cli, rm, add) in [
+        ("Claude Code", "claude", vec!["mcp", "remove", "-s", "user", "edits"], vec!["mcp", "add", "-s", "user", "edits", "--", &exe, "mcp"]),
+        ("Codex", "codex", vec!["mcp", "remove", "edits"], vec!["mcp", "add", "edits", "--", &exe, "mcp"]),
+    ] {
+        if crate::util::have(cli) {
+            let _ = crate::util::run(None, cli, &rm);
+            match crate::util::run(None, cli, &add) {
+                Ok(_) => done.push(name),
+                Err(e) => eprintln!("edits: {name}: {e}"),
+            }
+        }
+    }
+    for (name, file, keys, entry) in json_clients(&exe) {
+        if !file.parent().is_some_and(Path::is_dir) {
+            continue;
+        }
+        let text = std::fs::read_to_string(&file).unwrap_or_default();
+        match add_to(&text, keys, entry) {
+            Some(out) => {
+                std::fs::write(&file, out).map_err(|e| format!("{}: {e}", file.display()))?;
+                done.push(name);
+            }
+            None => eprintln!("edits: {name}: {} is not plain JSON, add it by hand: command {exe}, args [\"mcp\"]", file.display()),
+        }
+    }
+    if done.is_empty() {
+        println!("no agents found; add it by hand: command {exe}, args [\"mcp\"]");
+    } else {
+        println!("edits MCP server added to {} (restart them to see it)", done.join(", "));
+    }
+    Ok(())
+}
+
 pub fn serve() -> Result<(), String> {
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
@@ -267,6 +335,15 @@ pub fn serve() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn joins_a_config_without_losing_it() {
+        let out = add_to(r#"{"theme": "x", "mcp": {"servers": {"rea": {"type": "local"}}}}"#, &["mcp", "servers"], json!({"type": "local"})).unwrap();
+        let v: Value = serde_json::from_str(&out).unwrap();
+        assert!(v["theme"] == "x" && v["mcp"]["servers"]["rea"].is_object() && v["mcp"]["servers"]["edits"]["type"] == "local", "{out}");
+        assert!(add_to("", &["mcpServers"], json!({})).unwrap().contains("\"edits\""));
+        assert!(add_to("// comments\n{}", &["mcpServers"], json!({})).is_none(), "JSONC is left alone");
+    }
 
     #[test]
     fn protocol() {

@@ -24,6 +24,8 @@ USAGE
   edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4) in one jpg, to pick --shot
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
+  edits mcp install            add it to every agent here: Claude Code, Codex, OpenCode, Cursor, Windsurf,
+                               Gemini CLI, Claude Desktop, VS Code
   edits skills [install]       agent skills for every command
   edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
