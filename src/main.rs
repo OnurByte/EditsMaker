@@ -81,6 +81,7 @@ fn main() -> ExitCode {
             library::list(&args[1..]);
             Ok(())
         }
+        Some("mcp") if args.get(1).is_some_and(|a| a == "install") => mcp::install(),
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
         Some("looks") => {
@@ -1370,13 +1371,21 @@ const SKILLS: &[(&str, &str)] = &[
 fn skills(args: &[String]) -> Result<(), String> {
     match args.first().map(String::as_str) {
         Some("install") => {
-            let dir = args.get(1).map(PathBuf::from).unwrap_or_else(|| util::home().join(".claude/skills"));
-            for (name, text) in SKILLS {
-                let d = dir.join(name);
-                std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
-                std::fs::write(d.join("SKILL.md"), text).map_err(|e| e.to_string())?;
+            // a folder given, or Claude's and every other agent's skill folder that exists
+            let h = util::home();
+            let dirs: Vec<PathBuf> = match args.get(1) {
+                Some(d) => vec![PathBuf::from(d)],
+                None => std::iter::once(h.join(".claude/skills")).chain([".config/opencode/skills", ".codex/skills", ".cursor/skills", ".gemini/skills", ".codeium/windsurf/skills"]
+                    .iter().map(|d| h.join(d)).filter(|d| d.is_dir())).collect(),
+            };
+            for dir in &dirs {
+                for (name, text) in SKILLS {
+                    let d = dir.join(name);
+                    std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
+                    std::fs::write(d.join("SKILL.md"), text).map_err(|e| e.to_string())?;
+                }
+                println!("installed {} skills in {}", SKILLS.len(), dir.display());
             }
-            println!("installed {} skills in {}", SKILLS.len(), dir.display());
             Ok(())
         }
         _ => {
@@ -1390,7 +1399,6 @@ fn skills(args: &[String]) -> Result<(), String> {
     }
 }
 
-/// `edits preset ...`: list, show, save, import. Presets are JSON: read one, change what the moment needs, save it.
 /// `edits words <link|ID|file> [A-B] [--find TEXT] [--lang xx]`: what a video says, line by line with times, each
 /// line as a ready --say spec. The site's own captions when it has them, whisper otherwise.
 fn words(args: &[String]) -> Result<(), String> {
@@ -1456,6 +1464,7 @@ fn set_path(v: &mut serde_json::Value, path: &str, val: serde_json::Value) -> Re
     Ok(())
 }
 
+/// `edits preset ...`: list, show, save, set, import. Presets are JSON: read one, change what the moment needs, save it.
 fn preset_cmd(args: &[String]) -> Result<(), String> {
     match (args.first().map(String::as_str), args.get(1)) {
         (Some("list") | None, _) => {
