@@ -15,6 +15,14 @@
   <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
 </picture>
 
+<p align="center">
+  <a href="https://github.com/OnurByte/EditsMaker/stargazers"><img src="https://img.shields.io/github/stars/OnurByte/EditsMaker?style=for-the-badge&logo=github&label=Star&color=E5332A" alt="GitHub stars"></a>
+  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><img src="https://img.shields.io/github/downloads/OnurByte/EditsMaker/total?style=for-the-badge&label=Downloads&color=0B0B0C" alt="Downloads"></a>
+  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><img src="https://img.shields.io/github/v/release/OnurByte/EditsMaker?style=for-the-badge&label=Latest&color=0B0B0C" alt="Latest release"></a>
+</p>
+
+<p align="center"><b>⭐ Star it and the next update shows up in your feed. Every star puts EditsMaker in front of another editor.</b></p>
+
 ## Made with it
 
 <table>
@@ -128,6 +136,10 @@ No terminal needed. Paste this into Claude Code, Codex, Cursor or any agent and 
 ```text
 Install EditsMaker from github.com/OnurByte/EditsMaker, then run "edits mcp install" and "edits skills install".
 ```
+
+<p align="center">
+  <a href="https://github.com/OnurByte/EditsMaker/stargazers"><img src="https://img.shields.io/github/stars/OnurByte/EditsMaker?style=for-the-badge&logo=github&label=Made%20your%20first%20edit%3F%20Star%20it&color=E5332A" alt="Made your first edit? Star it"></a>
+</p>
 
 ---
 
