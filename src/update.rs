@@ -98,6 +98,10 @@ fn install(tag: &str) -> Result<(), String> {
         })
     })();
     let _ = std::fs::remove_dir_all(&tmp);
+    if res.is_ok() {
+        // the new edits sets up what it brings (the agent guard) for people who installed an older one
+        let _ = run(None, &exe.to_string_lossy(), &["guard", "install"]);
+    }
     res
 }
 

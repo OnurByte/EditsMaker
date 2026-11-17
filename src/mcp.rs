@@ -28,7 +28,7 @@ fn tools() -> Value {
             "captions": {"type": "string", "description": "caption style from edits_looks: hormozi, mrbeast, karaoke, box, minimal, neon, cinematic, glow, redglow, thunder, typewriter"},
             "bed": {"type": "string", "description": "music under talking clips, ducked under the voice"},
             "blur_faces": {"type": "boolean"}, "blur_box": {"type": "string", "description": "x,y,w,h fractions of the frame to blur (a watermark, a plate)"},
-            "anim": {"type": "string", "enum": ["rise", "pop", "slam", "slide", "drop", "blur", "type"], "description": "how captions_at, say_text and svgs come in: pop springs in, slam lands big on a beat, type writes itself out"},
+            "anim": {"type": "string", "enum": ["rise", "pop", "slam", "slide", "drop", "blur", "type"], "description": "how captions_at and svgs come in: pop springs in, slam lands big on a beat, type writes itself out"},
             "fix": {"type": "boolean", "description": "dark, flat or dull footage brought up before the look"},
             "pips": {"type": "array", "items": {"type": "string"}, "description": "picture in picture: another video (file or library clip) small in a white frame over the edit, FILE[@FROM-TO][:X,Y,SIZE], centre and width as fractions, default top right"},
             "transition": {"type": "string", "description": "music edits: one ffmpeg xfade transition on every soft cut, e.g. dissolve, wipeleft, slideup, circleopen, pixelize, radial, squeezeh, coverleft"},
@@ -57,9 +57,9 @@ fn tools() -> Value {
             "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
             "tag": {"type": "string"},
             "captions_at": {"type": "array", "items": {"type": "string"}, "description": "words on screen at the top, TEXT@FROM-TO seconds of the edit, emoji drawn in colour: meme labels like \"sayın barış özbay 🗿@0-3.5\""},
-            "say_text": {"type": "boolean", "description": "draw the spoken say line at the bottom as it is said"},
+            "say_text": {"type": "boolean", "description": "draw the spoken say line as it is said, in the captions style (cinematic, typewriter, glow...; default karaoke)"},
             "math": {"type": "boolean", "description": "formulas, sine waves and the song's waveform flashing in for a split second on the cuts (chaotic 'math' edits)"},
-            "flash_texts": {"type": "array", "items": {"type": "string"}, "description": "subliminal lines, SECONDS:TEXT, each shown for two frames on black"},
+            "flash_texts": {"type": "array", "items": {"type": "string"}, "description": "subliminal lines, SECONDS:TEXT, each shown for two frames on black in the captions style"},
             "intro": {"type": "string", "description": "a short piece before the edit: VIDEOID@FROM-TO[/PICTURE_FROM] (that video's words from FROM to TO, its picture from PICTURE_FROM), or a video file"},
             "intro_bed": {"type": "string", "description": "a song under the intro (library name, file), quiet, stopped by a record scratch"},
             "intro_caption": {"type": "string", "description": "words over the intro, emoji allowed"},
@@ -225,7 +225,7 @@ fn reply(id: &Value, result: Value) -> Value {
 }
 
 /// Sent to the agent on connect: agents that script around the tools break things the tools already do.
-const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, whisper or yt-dlp yourself: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
+const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, ffprobe, whisper or yt-dlp yourself, not even to test: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
 
 pub fn handle(msg: &Value) -> Option<Value> {
     let id = msg.get("id")?.clone(); // notifications get no answer
@@ -304,10 +304,65 @@ pub fn install() -> Result<(), String> {
             None => eprintln!("edits: {name}: {} is not plain JSON, add it by hand: command {exe}, args [\"mcp\"]", file.display()),
         }
     }
+    if let Err(e) = guard_install(false) {
+        eprintln!("edits: {e}");
+    }
     if done.is_empty() {
         println!("no agents found; add it by hand: command {exe}, args [\"mcp\"]");
     } else {
         println!("edits MCP server added to {} (restart them to see it)", done.join(", "));
+    }
+    Ok(())
+}
+
+/// The rule every agent gets: a shell command that runs ffmpeg, ffprobe, yt-dlp or whisper itself. Grepping for
+/// the word, a commit message or cargo test are not that.
+pub fn by_hand(cmd: &str) -> bool {
+    let re = regex::Regex::new(r#"(?m)(^|[;&|(`]|\$\()\s*((sudo|nohup|exec|time)\s+|timeout\s+\S+\s+|[A-Za-z_]+=\S*\s+)*(\S*/)?(ffmpeg|ffprobe|ffplay|yt-dlp|whisper-cli|whisper)(\.exe)?(\s|$)"#).unwrap();
+    re.is_match(cmd)
+}
+
+const RULE: &str = "edits: no ffmpeg, ffprobe, yt-dlp or whisper by hand, not even to test. Use edits: edits words (find a line), edits frames (look at footage or a render), edits check (measure a render), edits make (render). If edits cannot do it, tell the user what is missing instead of scripting around it.";
+
+/// `edits guard`: a Claude Code PreToolUse hook. Reads the tool call on stdin and refuses (exit 2) a Bash command
+/// that does video work by hand.
+pub fn guard() -> Result<(), String> {
+    let mut input = String::new();
+    std::io::Read::read_to_string(&mut std::io::stdin(), &mut input).map_err(|e| e.to_string())?;
+    let v: Value = serde_json::from_str(&input).unwrap_or_default();
+    if by_hand(v["tool_input"]["command"].as_str().unwrap_or_default()) {
+        eprintln!("{RULE}");
+        std::process::exit(2);
+    }
+    Ok(())
+}
+
+/// Puts the guard hook into a Claude Code settings.json, once, keeping everything else; None when it is not JSON.
+fn add_guard(text: &str, exe: &str) -> Option<String> {
+    let mut v: Value = if text.trim().is_empty() { json!({}) } else { serde_json::from_str(text).ok()? };
+    let pre = v.as_object_mut()?.entry("hooks").or_insert_with(|| json!({})).as_object_mut()?.entry("PreToolUse").or_insert_with(|| json!([]));
+    let list = pre.as_array_mut()?;
+    // an older edits path is replaced, not added twice
+    list.retain(|e| !e["hooks"].as_array().is_some_and(|h| h.iter().any(|x| x["command"].as_str().is_some_and(|c| c.ends_with(" guard") && c.contains("edits")))));
+    list.push(json!({"matcher": "Bash", "hooks": [{"type": "command", "command": format!("\"{exe}\" guard")}]}));
+    serde_json::to_string_pretty(&v).ok().map(|s| s + "\n")
+}
+
+/// `edits guard install`: the guard in Claude Code's user settings, when Claude Code is on this machine.
+pub fn guard_install(quiet: bool) -> Result<(), String> {
+    let dir = crate::util::home().join(".claude");
+    if !dir.is_dir() {
+        return Ok(());
+    }
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?.to_string_lossy().into_owned();
+    let file = dir.join("settings.json");
+    let text = std::fs::read_to_string(&file).unwrap_or_default();
+    let out = add_guard(&text, &exe).ok_or(format!("{} is not plain JSON; add a Bash PreToolUse hook running \"{exe}\" guard by hand", file.display()))?;
+    if out != text {
+        std::fs::write(&file, out).map_err(|e| format!("{}: {e}", file.display()))?;
+        if !quiet {
+            println!("edits: Claude Code now refuses ffmpeg/yt-dlp/whisper by hand ({})", file.display());
+        }
     }
     Ok(())
 }
@@ -343,6 +398,17 @@ mod tests {
         assert!(v["theme"] == "x" && v["mcp"]["servers"]["rea"].is_object() && v["mcp"]["servers"]["edits"]["type"] == "local", "{out}");
         assert!(add_to("", &["mcpServers"], json!({})).unwrap().contains("\"edits\""));
         assert!(add_to("// comments\n{}", &["mcpServers"], json!({})).is_none(), "JSONC is left alone");
+        // the guard joins other hooks, and a moved edits replaces itself instead of piling up
+        let one = add_guard(r#"{"model": "x", "hooks": {"PreToolUse": [{"matcher": "Edit", "hooks": []}]}}"#, "/old/edits").unwrap();
+        let two: Value = serde_json::from_str(&add_guard(&one, "/new/edits").unwrap()).unwrap();
+        let pre = two["hooks"]["PreToolUse"].as_array().unwrap();
+        assert!(two["model"] == "x" && pre.len() == 2 && pre[1]["hooks"][0]["command"] == "\"/new/edits\" guard", "{two}");
+        for bad in ["ffmpeg -i a.mp4 b.png", "cd x && ffmpeg -y o.mp4", "nohup /usr/bin/yt-dlp URL", "whisper-cli -m m.bin", "X=1 ffprobe a.mp4", "a; timeout 60 ffmpeg -i x", "ls\nffmpeg -i x"] {
+            assert!(by_hand(bad), "{bad}");
+        }
+        for ok in ["cargo test", "grep -n ffmpeg src/wrap.rs", "edits frames ID 30", "git commit -m \"no ffmpeg\"", "edits doctor"] {
+            assert!(!by_hand(ok), "{ok}");
+        }
     }
 
     #[test]

@@ -8,7 +8,8 @@ description: Make short viral edits (TikTok, Reels, Shorts) from a YouTube link,
 **Use the commands, never your own scripts.** Every step has one: `edits words` finds where a line is said (ready
 `--say ID@A-B`), `edits frames` shows footage, `edits check` measures a render, `edits preset set` changes a preset,
 `edits looks` / `edits library` list what there is. Do not write Python, shell loops, ffmpeg, whisper or yt-dlp
-commands: they are slower and break where these work. If no command does it, tell the user what is missing.
+commands, not even to test a change: they are slower and break where these work, and in Claude Code `edits guard`
+refuses them. If no command does it, tell the user what is missing.
 
 ## Work like an editor, not a command runner
 

@@ -25,7 +25,8 @@ USAGE
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
   edits mcp install            add it to every agent here: Claude Code, Codex, OpenCode, Cursor, Windsurf,
-                               Gemini CLI, Claude Desktop, VS Code
+                               Gemini CLI, Claude Desktop, VS Code (and the guard below)
+  edits guard install          Claude Code refuses video work done by hand (a shell running the tools edits wraps)
   edits skills [install]       agent skills for every command
   edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
@@ -61,9 +62,9 @@ OPTIONS
       --captions S    talking clips' caption style: hormozi (default), mrbeast, karaoke, box, minimal, neon
       --bed SONG      music under talking clips, ducked under the voice (link, file or trend:N)
       --caption TEXT@FROM-TO  words on screen at the top (repeat), emoji in colour: "sayın barış özbay 🗿@0-3.5"
-      --say-text      draw the --say line at the bottom as it is said
+      --say-text      draw the --say line as it is said, in the --captions style
       --math          formulas and waves flash in for a split second on the cuts
-      --flash-text SECONDS:TEXT  a subliminal line, two frames on black (repeat)
+      --flash-text SECONDS:TEXT  a subliminal line, two frames on black in the --captions style (repeat)
       --intro VIDEOID@FROM-TO[/PIC]  a short piece before the edit (its words, its picture from PIC), or a file
       --intro-bed SONG   a song under the intro, quiet, stopped by a record scratch
       --intro-caption TEXT  words over the intro
@@ -74,7 +75,7 @@ OPTIONS
       --lines N       N sentences from the videos' own words on screen (music and preset edits)
       --line TEXT     a line of your own on screen (repeat for more); replaces the picked ones
       --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)
-      --anim A        how --caption, --say-text and --svg come in: rise (default), pop, slam, slide, drop, blur, type
+      --anim A        how --caption and --svg come in: rise (default), pop, slam, slide, drop, blur, type
       --fix           dark, flat or dull footage brought up before the look (levels stretched, colour back)
       --svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR][~ANIM]   draw an arrow, circle, underline, cross, check, burst,
                       question, exclaim, heart, sparkle or your own .svg over the edit (repeatable)
