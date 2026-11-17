@@ -164,7 +164,9 @@ mod tests {
         assert_eq!(video_chain(&fx, None), "curves=preset=darker,huesaturation=colors=y+g+c+b+m:saturation=-1:strength=100");
         let (a, ext) = encoder("prores", "master");
         assert_eq!((a.join(" "), ext), ("-c:v prores_ks -profile:v 3".to_string(), "mov"));
-        assert_eq!(encoder("h264", "draft").0.join(" "), "-c:v libx264 -preset medium -crf 28 -pix_fmt yuv420p");
+        // the encoder is the GPU's when this machine has a working one (auto), else x264
+        let h = encoder("h264", "draft").0.join(" ");
+        assert_eq!(h, if crate::util::nvenc() { "-c:v h264_nvenc -preset p5 -rc vbr -b:v 0 -cq 28 -pix_fmt yuv420p" } else { "-c:v libx264 -preset medium -crf 28 -pix_fmt yuv420p" });
         assert!(encoder("h265", "high").0.contains(&"hvc1".to_string()));
     }
 }

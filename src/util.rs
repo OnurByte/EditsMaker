@@ -42,7 +42,7 @@ pub fn now() -> Option<(String, String)> {
 
 static NVENC: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
 
-/// The video encoder for this run (from --encoder, else EDITS_ENCODER): cpu (default), nvenc, or auto (nvenc when it works).
+/// The video encoder for this run (from --encoder, else EDITS_ENCODER): auto (default: nvenc when it works), nvenc, or cpu.
 pub fn set_encoder(name: &str) -> Result<(), String> {
     let on = match name {
         "cpu" => false,
@@ -57,8 +57,9 @@ pub fn set_encoder(name: &str) -> Result<(), String> {
 pub fn nvenc() -> bool {
     *NVENC.get_or_init(|| match std::env::var("EDITS_ENCODER").as_deref() {
         Ok("nvenc") => true,
-        Ok("auto") => nvenc_works(),
-        _ => false,
+        Ok("cpu") => false,
+        // a GPU renders several times faster; the test encode falls back to the CPU when it is missing or full
+        _ => nvenc_works(),
     })
 }
 
