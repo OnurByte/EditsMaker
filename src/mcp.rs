@@ -368,6 +368,8 @@ pub fn guard_install(quiet: bool) -> Result<(), String> {
 }
 
 pub fn serve() -> Result<(), String> {
+    // every agent session starts here, so people who updated from an edits without the guard get it too
+    let _ = guard_install(true);
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
     for line in stdin.lock().lines() {
