@@ -1,4 +1,4 @@
-#![recursion_limit = "256"]
+#![recursion_limit = "512"]
 mod capcut;
 mod check;
 mod create;
@@ -58,6 +58,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
+        Some("encoder") => util::encoder_cmd(args.get(1).map(String::as_str)),
         Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
         Some("info") => update::info(),

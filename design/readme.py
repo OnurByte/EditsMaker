@@ -364,6 +364,25 @@ def presets():
     return out + [t(0, 268, js, 12, 400, font=MONO, raw=True)]
 
 
+@page("encoder", 250, "Renders on your GPU: NVIDIA GPUs by default, or in software on any CPU (Intel, AMD, Apple). "
+      "One command switches: edits encoder", "3.5")
+def encoder():
+    out = head("GPU or CPU,\nyour call", "An NVIDIA GPU renders the video when it works. No GPU? It renders in "
+               "software on any CPU. One command switches, and it stays.")
+    cols = [("GPU", "RED", ["NVIDIA"], ["NVIDIA GeForce and RTX", "hardware encoder (NVENC)", "picked by itself"]),
+            ("Software", "INK", ["Intel", "AMD", "Apple"], ["any processor", "x264, nothing to install", "the fallback, always there"])]
+    for i, (h, c, brands, lines) in enumerate(cols):
+        x = i * 320
+        out += [rule(x, x + 296, 120.5), t(x, 152, h, 19, 700, c, ls=-0.3)]
+        out += [logo(b, x + 120 + k * 40, 134, 24, c if b == "NVIDIA" else "INK") for k, b in enumerate(brands)]
+        out += [t(x, 180 + j * 21, s, 15) for j, s in enumerate(lines)]
+    x = C3
+    out += [rule(x, W, 120.5), t(x, 152, "Switch", 19, 700, ls=-0.3)]
+    out += [t(x, 180 + j * 21, s, 14, 400, font=MONO, raw=True) for j, s in enumerate(
+        ['edits encoder <tspan fill="%RED%">auto</tspan>', "edits encoder nvenc", "edits encoder cpu"])]
+    return out
+
+
 def main():
     for name, (h, aria, folio, fn) in PAGES.items():
         body, w = fn(), W
