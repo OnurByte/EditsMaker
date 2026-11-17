@@ -153,10 +153,12 @@ pub fn math(clip: &Path, cuts: &[f64], math: bool, words: &str, lang: &str) -> R
         png(&math_svg(w, h, lang), w * 2, &tile)?;
         args.extend(["-loop".into(), "1".into(), "-t".into(), format!("{total:.3}"), "-i".into(), tile.to_string_lossy().into()]);
         temp.push(tile);
-        let k: String = bursts(cuts, total).iter().map(|t| format!("between(T,{t:.2},{:.2})", t + 0.17)).collect::<Vec<_>>().join("+");
+        let k: String = bursts(cuts, total).iter().map(|t| format!("between(t,{t:.2},{:.2})", t + 0.17)).collect::<Vec<_>>().join("+");
+        // the screened math is built in (fast); a per-pixel expression with every burst in it took minutes
         g.push_str(&format!(
             "[1:v]fps=30,crop={w}:{h}:'t*28':'t*17',format=gray[fm];[0:a]showwaves=s={w}x{}:mode=cline:rate=30:colors=white:scale=sqrt,pad={w}:{h}:0:{},format=gray[sw];\
-             [fm][sw]blend=all_mode=lighten:shortest=1,format=gbrp[ml];[0:v]format=gbrp[b0];[b0][ml]blend=all_expr='A+B*0.85*({k})-A*B*0.85*({k})/255':shortest=1,format=yuv420p[m0];",
+             [fm][sw]blend=all_mode=lighten:shortest=1,format=gbrp[ml];[0:v]split[b0][b1];[b0]format=gbrp[bg];[bg][ml]blend=all_mode=screen:all_opacity=0.85:shortest=1,format=yuv420p[scr];\
+             [b1][scr]overlay=0:0:shortest=1:enable='{k}'[m0];",
             h * 3 / 10, h * 35 / 100
         ));
         last = "m0".into();
