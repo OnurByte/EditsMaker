@@ -396,7 +396,7 @@ edits preset save my-preset.json
 <summary><b>Agents</b></summary>
 
 The installer adds it to every agent it finds: Claude Code, Codex, OpenCode, Cursor, Windsurf, Gemini CLI, Claude
-Desktop and VS Code, with the skills in each one's skill folder. Again after installing a new agent:
+Desktop and VS Code, with the skills in each one's skill folder; every update brings the new skills. Again after installing a new agent:
 
 ```sh
 edits mcp install
