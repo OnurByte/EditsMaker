@@ -1,6 +1,6 @@
 {
   "name": "retro-vhs",
-  "about": "genre: retro VHS - slow handheld wobble, colour split, faded vintage colour, warm light leaks every 3rd cut",
+  "about": "genre: retro VHS - slow handheld wobble, colour split, faded vintage colour, warm light leaks every 3rd cut, scan lines and tape grain",
   "w": 1080,
   "h": 1920,
   "total": 20.8,
@@ -23,7 +23,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 1.6,
@@ -39,7 +41,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 3.2,
@@ -55,7 +59,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 4.8,
@@ -71,7 +77,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 6.4,
@@ -87,7 +95,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 8.0,
@@ -103,7 +113,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 9.6,
@@ -119,7 +131,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 11.2,
@@ -135,7 +149,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 12.8,
@@ -151,7 +167,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 14.4,
@@ -167,7 +185,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 16.0,
@@ -183,7 +203,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 17.6,
@@ -199,7 +221,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     },
     {
       "start": 19.2,
@@ -215,7 +239,9 @@
       ],
       "shake_hz": 3.0,
       "saturation": 0.85,
-      "rgb": true
+      "rgb": true,
+      "scanlines": 0.45,
+      "grain": 0.25
     }
   ],
   "flashes": [

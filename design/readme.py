@@ -133,9 +133,9 @@ def sites():
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 44, "MCP server, 7 agent skills, 50 presets, 40 looks, TikTok trends, 1,700+ sites")
+@page("badges", 44, "MCP server, 7 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites")
 def badges():
-    cells = ["MCP server", "7 agent skills", "50 presets", "40 looks", "TikTok trends", "1,700+ sites"]
+    cells = ["MCP server", "7 agent skills", "62 presets", "40 looks", "TikTok trends", "1,700+ sites"]
     widths = [len(c) * 8 + 36 for c in cells]
     x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
@@ -337,7 +337,7 @@ def basics():
     return out
 
 
-@page("presets", 278, "Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 "
+@page("presets", 278, "Real edits as data: 62 Alight Motion, CapCut and hand-made edits, 40 looks and 178 "
       "Premiere cut moves, every shot and keyframe as editable JSON", "3.4")
 def presets():
     out = head("Real edits, as data", "50 edits, 40 looks, 178 cut moves. Every shot, ramp, keyframe and layer "

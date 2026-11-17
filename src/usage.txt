@@ -64,7 +64,7 @@ OPTIONS
       --outro edits|FILE  the EditsMaker card (or a clip) after the edit
       --speed K       footage speed (talking clips: speech speed), 0.5 slow motion, 2 double
       --velocity      speed ramps on every longer shot: slow, rushing, slow onto the beat
-      --fx LIST       hits on the hardest beats: shake, flash, rgb, glitch, invert, blur, freeze, zoom
+      --fx LIST       hits on the hardest beats: shake, flash, rgb, glitch, invert, blur, freeze, zoom, strobe, bw, pulse
       --lines N       N sentences from the videos' own words on screen (music and preset edits)
       --line TEXT     a line of your own on screen (repeat for more); replaces the picked ones
       --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)

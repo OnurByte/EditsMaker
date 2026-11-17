@@ -4,7 +4,7 @@ use crate::face::median;
 use crate::montage::Frame;
 use crate::preset::{Curve, Ease};
 
-pub const HITS: &[&str] = &["shake", "flash", "rgb", "glitch", "invert", "blur", "freeze", "zoom"];
+pub const HITS: &[&str] = &["shake", "flash", "rgb", "glitch", "invert", "blur", "freeze", "zoom", "strobe", "bw", "pulse"];
 
 /// ffmpeg's built-in tone curves (Lumetri's curve presets).
 pub const CURVES: &[&str] = &["vintage", "strong_contrast", "medium_contrast", "increase_contrast", "lighter", "darker", "cross_process", "linear_contrast", "negative", "color_negative"];
@@ -45,6 +45,9 @@ pub fn hit(kinds: &[String], w: u32, h: u32) -> String {
             "invert" => f.push_str(",negate=enable='lt(t,0.07)'"),
             "blur" => f.push_str(",gblur=sigma=18:enable='lt(t,0.1)'"),
             "zoom" => f.push_str(&format!(",zoompan=z='if(lt(it,0.2),1.25-1.25*it,1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30,setsar=1")),
+            "strobe" => f.push_str(",eq=brightness='0.5*lt(mod(t*16,1),0.5)*lt(t,0.3)':eval=frame"),
+            "bw" => f.push_str(",hue=s=0:enable='lt(t,0.25)'"),
+            "pulse" => f.push_str(&format!(",zoompan=z='if(lt(it,0.25),1+0.18*sin(it/0.25*PI),1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30,setsar=1")),
             _ => {}
         }
     }

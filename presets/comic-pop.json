@@ -1,0 +1,528 @@
+{
+  "name": "comic-pop",
+  "about": "made for edits: comic book - drawn edges over bright colour, slam zooms that bounce back, a sideways jolt on each cut, white panels on the drop. Meme and anime edits",
+  "w": 1080,
+  "h": 1920,
+  "total": 18.8,
+  "song": null,
+  "look": "pop",
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 0.7,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 0.7,
+      "end": 1.4,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 1.4,
+      "end": 2.0,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 2.0,
+      "end": 2.6,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 2.6,
+      "end": 3.4,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 3.4,
+      "end": 3.9,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 3.9,
+      "end": 4.4,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 4.4,
+      "end": 4.9,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3,
+      "drop": true
+    },
+    {
+      "start": 4.9,
+      "end": 5.4,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 5.4,
+      "end": 6.3,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 6.3,
+      "end": 6.9,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 6.9,
+      "end": 7.5,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 7.5,
+      "end": 8.2,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 8.2,
+      "end": 9.4,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 9.4,
+      "end": 10.1,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 10.1,
+      "end": 10.8,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 10.8,
+      "end": 11.4,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 11.4,
+      "end": 12.0,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 12.0,
+      "end": 12.8,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 12.8,
+      "end": 13.3,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 13.3,
+      "end": 13.8,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 13.8,
+      "end": 14.3,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 14.3,
+      "end": 14.8,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 14.8,
+      "end": 15.7,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 15.7,
+      "end": 16.3,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 16.3,
+      "end": 16.9,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 16.9,
+      "end": 17.6,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, -0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    },
+    {
+      "start": 17.6,
+      "end": 18.8,
+      "speed": 1.2,
+      "comic": true,
+      "zoom": [
+        [0, 1.35, "linear"],
+        [0.35, 1.05, "out 4"],
+        [1, 1.08, "linear"]
+      ],
+      "x": [
+        [0, 0.06, "linear"],
+        [0.3, 0.0, "out 3"]
+      ],
+      "saturation": 1.3,
+      "sharpen": 0.3
+    }
+  ],
+  "flashes": [
+    {
+      "start": 0.0,
+      "end": 0.12,
+      "color": "ffffff",
+      "opacity": [
+        [0, 0.6, "linear"],
+        [1, 0, "out 3"]
+      ]
+    },
+    {
+      "start": 5.4,
+      "end": 5.52,
+      "color": "ffffff",
+      "opacity": [
+        [0, 0.6, "linear"],
+        [1, 0, "out 3"]
+      ]
+    },
+    {
+      "start": 9.4,
+      "end": 9.52,
+      "color": "ffffff",
+      "opacity": [
+        [0, 0.6, "linear"],
+        [1, 0, "out 3"]
+      ]
+    },
+    {
+      "start": 14.8,
+      "end": 14.92,
+      "color": "ffffff",
+      "opacity": [
+        [0, 0.6, "linear"],
+        [1, 0, "out 3"]
+      ]
+    }
+  ]
+}
