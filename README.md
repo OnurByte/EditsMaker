@@ -230,6 +230,12 @@ Measure a finished clip: length, loudness, cut rhythm and a contact sheet to loo
 edits check ~/Videos/edits/2026-11-16/"21.04 Video title"/01-VIDEO_ID.mp4
 ```
 
+Look at moments of the footage before picking shots by hand (`edits_frames`): one row of frames per time, in one jpg:
+
+```sh
+edits frames VIDEO_ID 5:36 390+4 414
+```
+
 Timelines for other editors beside each clip (`fcpxml`, `edl`, captions as `srt` or `vtt`):
 
 ```sh
@@ -390,7 +396,7 @@ edits skills install
 ```
 
 Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_create`, `edits_learn`,
-`edits_check`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
+`edits_check`, `edits_frames`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
 the footage, renders with it and measures the result; the output folder is always edits' own choice.
 
 </details>

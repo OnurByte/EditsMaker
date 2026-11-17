@@ -139,6 +139,10 @@ fn main() -> ExitCode {
             Some(clip) => check::check(Path::new(clip)).map(|s| println!("{s}")),
             None => Err("usage: edits check <clip.mp4>   length, loudness, cut rhythm and a contact sheet to look at".into()),
         },
+        Some("frames") => match args.get(1) {
+            Some(v) if args.len() > 2 => check::frames(v, &args[2..]).map(|s| println!("{s}")),
+            _ => Err("usage: edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)".into()),
+        },
         Some("study") => match args.get(1) {
             Some(dir) => study::study(Path::new(dir)),
             None => Err("usage: edits study <folder of edits you like>".into()),

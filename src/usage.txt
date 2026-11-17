@@ -18,6 +18,7 @@ USAGE
   edits draw <video> SPEC...   draw arrows, rings, crosses or your own .svg over a finished clip (see --svg)
                                and --overlay SPEC library clips (see --overlay)
   edits check <clip.mp4>      measure a render: length, loudness, cut rhythm, a contact sheet to look at
+  edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4) in one jpg, to pick --shot
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
   edits skills [install]       agent skills for every command
