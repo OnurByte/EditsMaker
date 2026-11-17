@@ -326,20 +326,34 @@ fn line_spans(n: usize, total: f64) -> Vec<(f64, f64)> {
 
 /// Lines on screen as ASS: each types itself out word by word, holds, and fades.
 pub fn lines_ass(lines: &[String], total: f64, st: &CaptionStyle, w: u32, h: u32) -> String {
+    let cues: Vec<(f64, f64, String)> = lines.iter().zip(line_spans(lines.len(), total)).map(|(l, (a, b))| (a, b, l.clone())).collect();
+    cues_ass(&cues, &[], st, w, h)
+}
+
+/// Lines on screen at their own times (start, end, text), in the style's look and reveal, plus subliminal
+/// flashes (seconds, text): the line alone, centred on a black frame for two frames.
+pub fn cues_ass(cues: &[(f64, f64, String)], flashes: &[(f64, String)], st: &CaptionStyle, w: u32, h: u32) -> String {
     let mut s = format!(
         "[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n\
          [V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n\
-         Style: L,{},{},{},{},{},&H99000000&,-1,0,0,0,100,100,{},0,{},{},{},2,90,90,{},1\n\n\
+         Style: L,{},{},{},{},{},&H99000000&,-1,0,0,0,100,100,{},0,{},{},{},2,90,90,{},1\n\
+         Style: F,{0},{1},{2},{2},{4},&H00000000&,-1,0,0,0,100,100,{5},0,1,0,0,5,90,90,0,1\n\n\
          [Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n",
         st.font, (w as f64 * st.size * 0.9) as u32, ass_color(&st.color), ass_color(&st.color), ass_color(&st.outline_color),
         st.fsp(w as f64 * st.size * 0.9), if st.boxed { 3 } else { 1 }, st.outline, st.shadow, (h as f64 * (st.position + 0.08)) as u32
     );
     let tags = st.tags();
     let clean = |t: &str| t.chars().filter(|c| !matches!(c, '{' | '}' | '\\')).collect::<String>();
-    for (line, (a, b)) in lines.iter().zip(line_spans(lines.len(), total)) {
+    let ms = |x: f64| (x * 1000.0).round() as i64;
+    for (t, text) in flashes {
+        let (a, b) = (ass_time(*t), ass_time(t + 0.067));
+        s.push_str(&format!("Dialogue: 0,{a},{b},F,,0,0,0,,{{\\an7\\pos(0,0)\\1c&H000000&\\bord0\\shad0\\p1}}m 0 0 l {w} 0 {w} {h} 0 {h}{{\\p0}}\n"));
+        let words: Vec<String> = clean(text).split_whitespace().map(|x| if st.upper { upper(x) } else { x.to_string() }).collect();
+        s.push_str(&format!("Dialogue: 1,{a},{b},F,,0,0,0,,{tags}{}\n", words.join(" ")));
+    }
+    for (a, b, line) in cues.iter().map(|(a, b, l)| (*a, *b, l)) {
         let words: Vec<String> = clean(line).split_whitespace().map(|w| if st.upper { upper(w) } else { w.to_string() }).collect();
         let rv = &st.reveal;
-        let ms = |x: f64| (x * 1000.0).round() as i64;
         if rv.by == "spread" {
             // the whole line fades in while its letters close up from wide apart
             let fsp = st.fsp(w as f64 * st.size * 0.9);
@@ -536,6 +550,10 @@ mod tests {
         let a = lines_ass(&[good.into()], 10.0, &st, 1080, 1920);
         assert!(a.contains("Dialogue: 0,0:00:00.40,") && a.contains("Artık {\\alpha&HFF&}hiç kimse") && a.contains("{\\fad(0,300)}Artık hiç kimse bunu yazmıyor."), "{a}");
         assert_eq!(lines_srt(&[good.into()], 10.0)[0].0, 0.4);
+        // the spoken line at its own time and a flash on black, both in the chosen style
+        let c = cues_ass(&[(2.5, 4.0, "çıkarın beni".into())], &[(9.0, "her şey rastgele".into())], &style("cinematic").unwrap(), 1080, 1080);
+        assert!(c.contains("Dialogue: 0,0:00:02.50,0:00:04.00,L,") && c.contains("ÇIKARIN BENİ"), "{c}");
+        assert!(c.contains("Style: F,Nimbus Sans,") && c.contains("Dialogue: 0,0:00:09.00,0:00:09.07,F,,0,0,0,,{\\an7\\pos(0,0)\\1c&H000000&") && c.contains("Dialogue: 1,0:00:09.00,0:00:09.07,F,,0,0,0,,HER ŞEY RASTGELE"), "{c}");
     }
 
     #[test]

@@ -109,16 +109,6 @@ fn math_svg(w: u32, h: u32, lang: &str) -> String {
     s
 }
 
-/// A line of text alone on a black frame, for subliminal flashes.
-fn flash_svg(text: &str, w: u32, h: u32) -> String {
-    let size = h as f64 * 0.065;
-    let lines = wrap(text, ((w as f64 * 0.85) / (size * 0.5)) as usize);
-    let top = h as f64 / 2.0 - (lines.len() as f64 - 1.0) * size * 0.6;
-    let spans: String = lines.iter().enumerate()
-        .map(|(i, l)| format!(r#"<tspan x="{:.0}" y="{:.0}">{}</tspan>"#, w as f64 / 2.0, top + i as f64 * size * 1.2, esc(l))).collect();
-    format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><rect width="{w}" height="{h}" fill="black"/><text text-anchor="middle" font-family="Noto Serif, DejaVu Serif, serif" font-style="italic" font-size="{size:.0}" fill="white">{spans}</text></svg>"#)
-}
-
 /// An svg string as a PNG `w` wide.
 fn png(svg_src: &str, w: u32, file: &Path) -> Result<(), String> {
     let s = file.with_extension("svg");
@@ -145,18 +135,19 @@ pub fn bursts(cuts: &[f64], total: f64) -> Vec<f64> {
     kept
 }
 
-/// The math layer and the subliminal flashes over `clip`, in place.
-pub fn math(clip: &Path, cuts: &[f64], math: bool, flashes: &[(f64, String)], lang: &str) -> Result<(), String> {
-    if !math && flashes.is_empty() {
+/// The math layer and the words (an ASS script: the spoken line, subliminal flashes) over `clip`, in place.
+pub fn math(clip: &Path, cuts: &[f64], math: bool, words: &str, lang: &str) -> Result<(), String> {
+    let words = if words.contains("Dialogue:") { words } else { "" };
+    if !math && words.is_empty() {
         return Ok(());
     }
+    let clip = &std::path::absolute(clip).map_err(|e| e.to_string())?;
     let (w, h) = crate::fetch::dims(clip);
     let total = crate::fetch::duration(clip)?;
     let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into(), "-i".into(), clip.to_string_lossy().into()];
     let mut temp: Vec<PathBuf> = vec![];
     let mut g = String::new();
     let mut last = "0:v".to_string();
-    let mut n = 1;
     if math {
         let tile = clip.with_extension("math.png");
         png(&math_svg(w, h, lang), w * 2, &tile)?;
@@ -169,16 +160,14 @@ pub fn math(clip: &Path, cuts: &[f64], math: bool, flashes: &[(f64, String)], la
             h * 3 / 10, h * 35 / 100
         ));
         last = "m0".into();
-        n = 2;
     }
-    for (i, (t, text)) in flashes.iter().enumerate() {
-        let p = clip.with_extension(format!("flash{i}.png"));
-        png(&flash_svg(text, w, h), w, &p)?;
-        args.extend(["-loop".into(), "1".into(), "-t".into(), format!("{total:.3}"), "-i".into(), p.to_string_lossy().into()]);
-        temp.push(p);
-        g.push_str(&format!("[{last}][{n}:v]overlay=0:0:enable='between(t,{t:.3},{:.3})'[f{i}];", t + 0.067));
-        last = format!("f{i}");
-        n += 1;
+    if !words.is_empty() {
+        let ass = clip.with_extension("words.ass");
+        std::fs::write(&ass, words).map_err(|e| e.to_string())?;
+        // ffmpeg runs beside the clip, so the filter names the file alone and needs no path escaping
+        g.push_str(&format!("[{last}]ass='{}'[w0];", ass.file_name().unwrap().to_string_lossy().replace('\'', "")));
+        temp.push(ass);
+        last = "w0".into();
     }
     g.push_str(&format!("[{last}]format=yuv420p[v]"));
     let tmp = clip.with_extension("math.mp4");
@@ -186,7 +175,7 @@ pub fn math(clip: &Path, cuts: &[f64], math: bool, flashes: &[(f64, String)], la
     args.extend(crate::util::h264(18));
     args.extend(["-c:a", "copy", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(tmp.to_string_lossy().into());
-    let r = run(None, "ffmpeg", &args);
+    let r = run(clip.parent(), "ffmpeg", &args);
     temp.iter().for_each(|p| { let _ = std::fs::remove_file(p); });
     r?;
     std::fs::rename(&tmp, clip).map_err(|e| e.to_string())
@@ -372,7 +361,7 @@ pub fn around(clip: &Path, a: &Around, lang: &str, lufs: f64, cache: &Path) -> R
     args.extend(crate::util::h264(18));
     args.extend(["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart"].iter().map(|s| s.to_string()));
     args.push(tmp.to_string_lossy().into());
-    let r = run(None, "ffmpeg", &args);
+    let r = run(clip.parent(), "ffmpeg", &args);
     temp.iter().for_each(|p| { let _ = std::fs::remove_file(p); });
     r?;
     std::fs::rename(&tmp, clip).map_err(|e| e.to_string())?;

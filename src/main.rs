@@ -82,6 +82,8 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("mcp") if args.get(1).is_some_and(|a| a == "install") => mcp::install(),
+        Some("guard") if args.get(1).is_some_and(|a| a == "install") => mcp::guard_install(false),
+        Some("guard") => mcp::guard(),
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
         Some("looks") => {
@@ -941,13 +943,11 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
 
 /// The last pass (stabilise, clean the voice, frame rate, codec) and the timelines for other editors.
 fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, String> {
-    // words drawn as stickers: --caption at the top, the spoken line at the bottom
-    let mut words = wrap::text_stickers(out, &c.captions_at, 0.11, 0.09, "cap")?;
-    if c.say_text {
-        let said: Vec<(String, f64, f64)> = tl.said.iter().map(|(a, b, t)| (t.clone(), *a, *b)).collect();
-        // above TikTok's and Reels' caption and buttons (their bottom sixth), never under them
-        words.extend(wrap::text_stickers(out, &said, 0.76, 0.06, "said")?);
-    }
+    // words drawn as stickers (--caption, emoji in colour); the spoken line and the flashes in the caption style
+    let words = wrap::text_stickers(out, &c.captions_at, 0.11, 0.09, "cap")?;
+    let said: &[(f64, f64, String)] = if c.say_text { &tl.said } else { &[] };
+    let (w, h) = fetch::dims(out);
+    let styled = talk::cues_ass(said, &c.flash_texts, &line_style(c)?, w, h);
     let mut st = c.svgs.clone();
     st.extend(words.iter().map(|w| w.0.clone()));
     st.iter_mut().filter(|s| s.anim.is_empty()).for_each(|s| s.anim = c.anim.clone());
@@ -956,7 +956,7 @@ fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, Stri
     drawn?;
     library::apply(out, &c.overlays)?;
     let cuts: Vec<f64> = tl.clips.iter().scan(0.0, |t, cl| { *t += cl.2; Some(*t) }).collect();
-    wrap::math(out, &cuts[..cuts.len().saturating_sub(1)], c.math, &c.flash_texts, &c.lang)?;
+    wrap::math(out, &cuts[..cuts.len().saturating_sub(1)], c.math, &styled, &c.lang)?;
     let fin = finish::apply(out, &c.finish)?;
     let shift = wrap::around(&fin, &c.around, &c.lang, c.opts.lufs, &util::home().join(".cache/edits"))?;
     let mut tl = tl.clone();
