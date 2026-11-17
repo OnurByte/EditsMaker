@@ -24,6 +24,18 @@
     <td align="center"><video src="https://github.com/user-attachments/assets/62d9bf57-3a64-42e7-b92a-b8af929f41b7" width="180" controls></video><br><sub>Sad edit</sub></td>
     <td align="center"><video src="https://github.com/user-attachments/assets/deedfb5a-d044-400d-af0d-884ec000410a" width="180" controls></video><br><sub>Sad edit, own voice</sub></td>
   </tr>
+  <tr>
+    <td align="center"><video src="https://github.com/user-attachments/assets/060661a6-87bd-4e0b-bdb2-ea14fbd70b23" width="180" controls></video><br><sub>RGB zoom preset</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/90f2cc99-eff4-437f-8001-449196b35fea" width="180" controls></video><br><sub>Anime edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/f5ec7017-5a43-466f-9fe9-11462a850bf8" width="180" controls></video><br><sub>Character edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/c037dc9e-ce79-4a1e-9709-403b409f98a3" width="180" controls></video><br><sub>Series hit edit</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><video src="https://github.com/user-attachments/assets/f2c4679e-b15f-454e-ad1d-f952c775a3a3" width="180" controls></video><br><sub>Meme edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/6ab7c886-a260-47fc-862f-c0ffe483e9a8" width="180" controls></video><br><sub>Lemon preset</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/877b4983-0b2a-4d37-a933-16ec088bd4e8" width="180" controls></video><br><sub>Emotional edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/71b36535-380c-4100-8ca5-e5620734c75c" width="180" controls></video><br><sub>Black and white edit</sub></td>
+  </tr>
 </table>
 
 <sub>Every one is a single `edits` command. 🔊 for sound.</sub>
@@ -58,8 +70,10 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
-  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 3.7 MB (Windows 3.7, Linux 3.7, macOS 3.4), auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents and reads TikTok's trending songs.">
+  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 3.7 MB (Windows 3.7, Linux 3.7, macOS 3.4), auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents, reads TikTok's trending songs, takes footage from a link and reverse-engineers any edit into a preset.">
 </picture>
+
+Saw an edit you love? Hand edits its link. It reverse-engineers every cut, flash, zoom, slide and shake into a preset, then puts your footage into the same shape. No other editor does that.
 
 <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
   <picture>
@@ -113,7 +127,9 @@ curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh
 irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 ```
 
-### Or ask your agent
+### Prompt Install
+
+No terminal needed. Paste this into Claude Code, Codex, Cursor or any agent and it installs EditsMaker, connects it and learns its skills.
 
 ```text
 Install EditsMaker from github.com/OnurByte/EditsMaker, then run "edits mcp install" and "edits skills install".
@@ -425,7 +441,7 @@ It keeps itself up to date: once a day it installs a newer release from GitHub (
 <details>
 <summary><b>Sizes, sources</b></summary>
 
-November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
+November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. auto-editor takes links only with yt-dlp beside it; CapCut copies an edit only as a creator's template. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
 
 </details>
 

@@ -166,18 +166,18 @@ def agents():
     return out
 
 
-# (name, MB, how the size was got, free, open source, built for agents, TikTok trends): 2 yes, 1 partly, 0 no.
-# Sources are linked in the README under the picture.
+# (name, MB, how the size was got, free, open source, built for agents, TikTok trends, footage from a link,
+# copies an edit into a preset): 2 yes, 1 partly, 0 no. Sources are linked in the README under the picture.
 RIVALS = [
-    ("EditsMaker", 3.7, "download", 2, 2, 2, 2),
-    ("auto-editor", 46, "download", 2, 2, 0, 0),
-    ("HyperFrames", 360, "npm + Chrome", 2, 2, 2, 0),
-    ("CapCut", 510, "~ download", 1, 0, 0, 1),
-    ("Descript", 654, "~ download", 1, 0, 0, 0),
-    ("Filmora", 810, "~ download", 1, 0, 0, 0),
-    ("DaVinci Resolve", 1700, "~ download", 2, 0, 0, 0),
-    ("Premiere Pro", 8000, "to install", 0, 0, 0, 0),
-    ("After Effects", 8000, "to install", 0, 0, 0, 0),
+    ("EditsMaker", 3.7, "download", 2, 2, 2, 2, 2, 2),
+    ("auto-editor", 46, "download", 2, 2, 0, 0, 1, 0),
+    ("HyperFrames", 360, "npm + Chrome", 2, 2, 2, 0, 0, 0),
+    ("CapCut", 510, "~ download", 1, 0, 0, 1, 0, 1),
+    ("Descript", 654, "~ download", 1, 0, 0, 0, 0, 0),
+    ("Filmora", 810, "~ download", 1, 0, 0, 0, 0, 0),
+    ("DaVinci Resolve", 1700, "~ download", 2, 0, 0, 0, 0, 0),
+    ("Premiere Pro", 8000, "to install", 0, 0, 0, 0, 0, 0),
+    ("After Effects", 8000, "to install", 0, 0, 0, 0, 0, 0),
 ]
 
 
@@ -190,10 +190,11 @@ def dot(cx, cy, v, c):
     return ring + (f'<path d="M{cx},{cy - r} A{r},{r} 0 0 0 {cx},{cy + r} Z" fill="%{c}%"/>' if v == 1 else "")
 
 
-@page("size", 514, "EditsMaker against other editors. Download: EditsMaker 3.7 MB (Windows 3.7, Linux 3.7, macOS 3.4), auto-editor 46 MB, HyperFrames "
+@page("size", 528, "EditsMaker against other editors. Download: EditsMaker 3.7 MB (Windows 3.7, Linux 3.7, macOS 3.4), auto-editor 46 MB, HyperFrames "
       "about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci "
       "Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that "
-      "is free, open source, built for AI agents and reads TikTok's trending songs.", "1.3")
+      "is free, open source, built for AI agents, reads TikTok's trending songs, takes footage from a link and "
+      "reverse-engineers any edit into a preset.", "1.3")
 def size():
     out = head("Size, and what\nyou get for it", "The whole editor, with its presets, looks, MCP server and skills, "
                "is one file. No Python, no Node, no Electron, no cloud.", 4)
@@ -202,10 +203,12 @@ def size():
     for i, (os_, mb) in enumerate([("Windows", "3.7"), ("Linux", "3.7"), ("Apple", "3.4")]):
         x = C3 + 4 + i * 96
         out += [logo(os_, x, 104, 16, "GRAY"), t(x + 23, 117, f"{mb} MB", 13, 700, "INK")]
-    top, bar0, span = 156, 190, 300
-    cols = [("Free", 680), ("Open source", 760), ("For agents", 840), ("TikTok trends", 920)]
+    top, bar0, span = 170, 190, 240
+    heads = ["Free", "Open\nsource", "For\nagents", "TikTok\ntrends", "From\na link", "Copies\nany edit"]
+    cols = [(h, 590 + i * 66) for i, h in enumerate(heads)]
     out += [t(0, top - 12, "Size", 12, 400, "GRAY"), rule(0, W, top - 4.5, "HAIR")]
-    out += [t(x, top - 12, h, 12, 400, "GRAY", "middle") for h, x in cols]
+    out += [t(x, top - 12 - 14 * k, line, 12, 400, "GRAY", "middle")
+            for h, x in cols for k, line in enumerate(reversed(h.split("\n")))]
     for i, (name, mb, how, *marks) in enumerate(RIVALS):
         y, us = top + 8 + i * 34, i == 0
         c = "RED" if us else "INK"
@@ -216,9 +219,9 @@ def size():
                 t(bar0 + w + 8, y + 15, val, 13, 700, c), t(bar0 + w + 12 + len(val) * 7.6, y + 15, how, 11, 400, "GRAY")]
         out += [dot(x, y + 10, v, c) for (_, x), v in zip(cols, marks)]
         out.append(rule(0, W, y + 26.5, "HAIR"))
-    out += [dot(5, 502, 2, "INK"), t(16, 506, "yes", 11, 400, "GRAY"), dot(49, 502, 1, "INK"),
-            t(60, 506, "partly", 11, 400, "GRAY"), dot(112, 502, 0, "INK"),
-            t(123, 506, "no", 11, 400, "GRAY")]
+    out += [dot(5, 516, 2, "INK"), t(16, 520, "yes", 11, 400, "GRAY"), dot(49, 516, 1, "INK"),
+            t(60, 520, "partly", 11, 400, "GRAY"), dot(112, 516, 0, "INK"),
+            t(123, 520, "no", 11, 400, "GRAY"), t(W, 520, "Only EditsMaker fills every column.", 12, 700, "RED", "end")]
     return out
 
 
