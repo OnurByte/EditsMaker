@@ -72,13 +72,118 @@ pub fn text_stickers(clip: &Path, items: &[(String, f64, f64)], y: f64, size_fra
     }).collect()
 }
 
-/// Formulas and sine waves, drawn twice the frame size so they can drift. Sarcastic ones in Turkish.
-fn math_svg(w: u32, h: u32, lang: &str) -> String {
+const TEX: &[(&str, &str)] = &[("alpha", "α"), ("beta", "β"), ("gamma", "γ"), ("delta", "δ"), ("epsilon", "ε"), ("varepsilon", "ε"), ("zeta", "ζ"),
+    ("eta", "η"), ("theta", "θ"), ("iota", "ι"), ("kappa", "κ"), ("lambda", "λ"), ("mu", "μ"), ("nu", "ν"), ("xi", "ξ"), ("pi", "π"), ("rho", "ρ"),
+    ("sigma", "σ"), ("tau", "τ"), ("upsilon", "υ"), ("phi", "φ"), ("varphi", "φ"), ("chi", "χ"), ("psi", "ψ"), ("omega", "ω"), ("Gamma", "Γ"),
+    ("Delta", "Δ"), ("Theta", "Θ"), ("Lambda", "Λ"), ("Xi", "Ξ"), ("Pi", "Π"), ("Sigma", "Σ"), ("Phi", "Φ"), ("Psi", "Ψ"), ("Omega", "Ω"),
+    ("int", "∫"), ("iint", "∬"), ("iiint", "∭"), ("oint", "∮"), ("sum", "Σ"), ("prod", "∏"), ("infty", "∞"), ("partial", "∂"), ("nabla", "∇"),
+    ("cdot", "·"), ("times", "×"), ("div", "÷"), ("pm", "±"), ("mp", "∓"), ("leq", "≤"), ("le", "≤"), ("geq", "≥"), ("ge", "≥"), ("neq", "≠"),
+    ("ne", "≠"), ("approx", "≈"), ("equiv", "≡"), ("sim", "∼"), ("propto", "∝"), ("to", "→"), ("rightarrow", "→"), ("leftarrow", "←"),
+    ("Rightarrow", "⇒"), ("implies", "⇒"), ("iff", "⇔"), ("mapsto", "↦"), ("in", "∈"), ("notin", "∉"), ("subset", "⊂"), ("subseteq", "⊆"),
+    ("cup", "∪"), ("cap", "∩"), ("emptyset", "∅"), ("varnothing", "∅"), ("forall", "∀"), ("exists", "∃"), ("neg", "¬"), ("land", "∧"),
+    ("lor", "∨"), ("hbar", "ℏ"), ("ell", "ℓ"), ("circ", "∘"), ("degree", "°"), ("ldots", "…"), ("cdots", "⋯"), ("dots", "…"), ("langle", "⟨"),
+    ("rangle", "⟩"), ("quad", "  "), ("qquad", "    ")];
+
+/// Superscript and subscript forms; a script with a character missing here is written ^(..) / _(..).
+const SUP: (&str, &str) = ("0123456789+-−=()abcdefghijklmnoprstuvwxyz", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁻⁼⁽⁾ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ");
+const SUB: (&str, &str) = ("0123456789+-−=()aehijklmnoprstuvx", "₀₁₂₃₄₅₆₇₈₉₊₋₋₌₍₎ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓ");
+
+/// A LaTeX formula as Unicode text, since the math layer draws text, not TeX: Greek, operators, \frac, \sqrt,
+/// \mathbb, ^ and _. shortcut: no stacked fractions, matrices or big operators with limits above and below;
+/// a real TeX engine would break the download size.
+pub fn tex(s: &str) -> String {
+    let c: Vec<char> = s.chars().collect();
+    tex_until(&c, &mut 0, false)
+}
+
+fn tex_until(c: &[char], i: &mut usize, close: bool) -> String {
+    let mut out = String::new();
+    while *i < c.len() {
+        let ch = c[*i];
+        *i += 1;
+        match ch {
+            '}' if close => return out,
+            '{' => out.push_str(&tex_until(c, i, true)),
+            '^' | '_' => out.push_str(&script(&tex_arg(c, i), ch == '^')),
+            '\\' => out.push_str(&tex_command(c, i)),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+fn tex_command(c: &[char], i: &mut usize) -> String {
+    let start = *i;
+    while *i < c.len() && c[*i].is_ascii_alphabetic() {
+        *i += 1;
+    }
+    let name: String = c[start..*i].iter().collect();
+    if name.is_empty() {
+        // \, \; \! spacing, \{ \} braces
+        let Some(&ch) = c.get(*i) else { return String::new() };
+        *i += 1;
+        return match ch { ',' | ';' | ':' | ' ' => " ".into(), '!' => String::new(), _ => ch.to_string() };
+    }
+    let paren = |a: String| if a.chars().count() > 1 && !a.starts_with('(') { format!("({a})") } else { a };
+    match name.as_str() {
+        "frac" | "dfrac" | "tfrac" => {
+            let (a, b) = (tex_arg(c, i), tex_arg(c, i));
+            format!("{}/{}", paren(a), paren(b))
+        }
+        "sqrt" => format!("√{}", paren(tex_arg(c, i))),
+        "mathbb" => tex_arg(c, i).chars().map(|x| match x { 'R' => 'ℝ', 'N' => 'ℕ', 'Z' => 'ℤ', 'Q' => 'ℚ', 'C' => 'ℂ', 'P' => 'ℙ', o => o }).collect(),
+        "text" | "mathrm" | "mathbf" | "mathit" | "operatorname" | "boldsymbol" => tex_arg(c, i),
+        "left" | "right" | "displaystyle" | "limits" => String::new(),
+        _ => TEX.iter().find(|(n, _)| *n == name).map_or(name.clone(), |(_, u)| u.to_string()),
+    }
+}
+
+/// The next argument: a {group}, a \command or one character.
+fn tex_arg(c: &[char], i: &mut usize) -> String {
+    while c.get(*i) == Some(&' ') {
+        *i += 1;
+    }
+    match c.get(*i) {
+        Some('{') => {
+            *i += 1;
+            tex_until(c, i, true)
+        }
+        Some('\\') => {
+            *i += 1;
+            tex_command(c, i)
+        }
+        Some(&ch) => {
+            *i += 1;
+            ch.to_string()
+        }
+        None => String::new(),
+    }
+}
+
+fn script(a: &str, up: bool) -> String {
+    let (from, to) = if up { SUP } else { SUB };
+    let to: Vec<char> = to.chars().collect();
+    // a script inside a script (e^{-x^2}) is already raised: it stays as it is
+    let mapped: Option<String> = a.chars().map(|x| from.chars().position(|f| f == x).map(|k| to[k]).or(to.contains(&x).then_some(x))).collect();
+    match mapped {
+        Some(m) if !m.is_empty() => m,
+        _ if a.chars().count() == 1 => format!("{}{a}", if up { '^' } else { '_' }),
+        _ => format!("{}({a})", if up { '^' } else { '_' }),
+    }
+}
+
+/// Formulas and sine waves, drawn twice the frame size so they can drift. Sarcastic ones in Turkish. `own`
+/// formulas (already Unicode, see `tex`) replace the built-in ones.
+fn math_svg(w: u32, h: u32, lang: &str, own: &[String]) -> String {
     let mut f: Vec<&str> = vec!["e^(iπ) + 1 = 0", "∫ f(x) dx", "Σ 1/n² = π²/6", "∇ · E = ρ/ε₀", "sin²x + cos²x = 1", "ζ(s) = Σ 1/nˢ", "x → ∞",
         "π ≈ 3.14159", "ℏ = h/2π", "∞ − ∞ = ?", "y = ax² + bx + c", "det(A) = 0", "∂u/∂t = α∇²u", "lim x→0 sin x / x = 1", "∮ F · ds", "√2 ∉ ℚ"];
     if lang == "tr" {
         f.extend(["f(dışarı) = 0", "Σ sorumluluk = ∅", "∫ ev dt = huzur", "P(çıkmak) ≈ 0.0001", "ev² = mc²", "∂(hayat)/∂t = 0",
             "∀ gün : uyu()", "dışarı ∉ ℝ", "log(iş) → −∞", "Σ fatura = 0", "Δ motivasyon < 0"]);
+    }
+    if !own.is_empty() {
+        // repeated to the built-in count, so the layer is as full as ever
+        f = own.iter().map(String::as_str).cycle().take(own.len().max(16)).collect();
     }
     let (cw, ch) = (w * 2, h * 2);
     // a fixed scatter, so every render of the same edit looks the same
@@ -136,7 +241,7 @@ pub fn bursts(cuts: &[f64], total: f64) -> Vec<f64> {
 }
 
 /// The math layer and the words (an ASS script: the spoken line, subliminal flashes) over `clip`, in place.
-pub fn math(clip: &Path, cuts: &[f64], math: bool, words: &str, lang: &str) -> Result<(), String> {
+pub fn math(clip: &Path, cuts: &[f64], math: bool, formulas: &[String], words: &str, lang: &str) -> Result<(), String> {
     let words = if words.contains("Dialogue:") { words } else { "" };
     if !math && words.is_empty() {
         return Ok(());
@@ -150,7 +255,7 @@ pub fn math(clip: &Path, cuts: &[f64], math: bool, words: &str, lang: &str) -> R
     let mut last = "0:v".to_string();
     if math {
         let tile = clip.with_extension("math.png");
-        png(&math_svg(w, h, lang), w * 2, &tile)?;
+        png(&math_svg(w, h, lang, formulas), w * 2, &tile)?;
         args.extend(["-loop".into(), "1".into(), "-t".into(), format!("{total:.3}"), "-i".into(), tile.to_string_lossy().into()]);
         temp.push(tile);
         let k: String = bursts(cuts, total).iter().map(|t| format!("between(t,{t:.2},{:.2})", t + 0.17)).collect::<Vec<_>>().join("+");
@@ -397,6 +502,17 @@ mod tests {
     }
 
     #[test]
+    fn latex_as_unicode() {
+        assert_eq!(tex(r"e^{i\pi} + 1 = 0"), "e^(iπ) + 1 = 0");
+        assert_eq!(tex(r"\int_0^\infty e^{-x^2}dx"), "∫₀^∞ e⁻ˣ²dx");
+        assert_eq!(tex(r"\frac{a+b}{2} \leq \sqrt{ab}"), "(a+b)/2 ≤ √(ab)");
+        assert_eq!(tex(r"\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}"), "Σₙ₌₁^∞ 1/(n²) = (π²)/6");
+        assert_eq!(tex(r"\sqrt{2} \notin \mathbb{Q}"), "√2 ∉ ℚ");
+        assert_eq!(tex(r"\lim_{x \to 0} \frac{\sin x}{x}"), "lim_(x → 0) (sin x)/x");
+        assert_eq!(tex(r"\left( \hbar \right)"), "( ℏ )");
+    }
+
+    #[test]
     fn text_draws_with_emoji() {
         let dir = std::env::temp_dir().join("edits-wrap-test");
         std::fs::create_dir_all(&dir).unwrap();
@@ -414,7 +530,7 @@ mod tests {
         if has("Noto Color Emoji") {
             assert!(px.pixels().iter().any(|c| c.red() > 180 && c.green() < 90 && c.blue() < 90 && c.alpha() > 200));
         }
-        png(&math_svg(540, 540, "tr"), 1080, &p).unwrap();
+        png(&math_svg(540, 540, "tr", &[tex(r"\int_0^\infty e^{-x^2}dx")]), 1080, &p).unwrap();
         png(&outro_svg(540, 540, "en"), 540, &p).unwrap();
         let _ = std::fs::remove_dir_all(dir);
     }

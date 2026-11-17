@@ -116,8 +116,10 @@ pub fn styles() -> Vec<CaptionStyle> {
 
 pub fn style(name: &str) -> Result<CaptionStyle, String> {
     let all = styles();
-    all.iter().find(|s| s.name == name).cloned()
-        .ok_or(format!("no caption style \"{name}\"; there are: {}", all.iter().map(|s| s.name.as_str()).collect::<Vec<_>>().join(", ")))
+    let st = all.iter().find(|s| s.name == name).cloned()
+        .ok_or(format!("no caption style \"{name}\"; there are: {}", all.iter().map(|s| s.name.as_str()).collect::<Vec<_>>().join(", ")))?;
+    crate::fonts::ensure(&st.font);
+    Ok(st)
 }
 
 /// What a talking clip gets.

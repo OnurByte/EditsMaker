@@ -59,6 +59,7 @@ fn tools() -> Value {
             "captions_at": {"type": "array", "items": {"type": "string"}, "description": "words on screen at the top, TEXT@FROM-TO seconds of the edit, emoji drawn in colour: meme labels like \"sayın barış özbay 🗿@0-3.5\""},
             "say_text": {"type": "boolean", "description": "draw the spoken say line as it is said, in the captions style (cinematic, typewriter, glow...; default karaoke)"},
             "math": {"type": "boolean", "description": "formulas, sine waves and the song's waveform flashing in for a split second on the cuts (chaotic 'math' edits)"},
+            "formulas": {"type": "array", "items": {"type": "string"}, "description": "your own formulas for the math layer, in LaTeX (\\int_0^\\infty e^{-x^2}dx, \\frac{a}{b}, \\sum, Greek); implies math"},
             "flash_texts": {"type": "array", "items": {"type": "string"}, "description": "subliminal lines, SECONDS:TEXT, each shown for two frames on black in the captions style"},
             "intro": {"type": "string", "description": "a short piece before the edit: VIDEOID@FROM-TO[/PICTURE_FROM] (that video's words from FROM to TO, its picture from PICTURE_FROM), or a video file"},
             "intro_bed": {"type": "string", "description": "a song under the intro (library name, file), quiet, stopped by a record scratch"},
@@ -181,6 +182,9 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             }
             for t in a["captions_at"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--caption".into(), t.into()]);
+            }
+            for t in a["formulas"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--formula".into(), t.into()]);
             }
             for t in a["flash_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--flash-text".into(), t.into()]);

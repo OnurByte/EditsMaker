@@ -101,7 +101,7 @@ pub fn add(src: &Path) -> Result<PathBuf, String> {
     } else {
         return Err(format!("{}: not a zip or a folder", src.display()));
     };
-    let fonts = home().join(".local/share/fonts/edits");
+    let fonts = crate::fonts::dir();
     let mut counts = std::collections::BTreeMap::<&str, usize>::new();
     let mut put = |f: &Path, rel: &str| -> Result<(), String> {
         let Some(k) = kind(rel) else { return Ok(()) };

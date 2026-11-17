@@ -20,7 +20,8 @@ edits preset list
   look the pack shows: `--look rajjcc-4`. Each is its layer stack as JSON (effects, opacity, blend mode) baked into
   a LUT; `edits cube NAME` writes it as a .cube for Premiere, Resolve or CapCut. Glows and streaks are left out.
 - Text packs: their styles are not imported automatically; read the text layers (font, colour, glow, letter
-  spacing, how they come in) and add a caption style to captions.json (`glow`, `spacing`, `reveal`).
+  spacing, how they come in) and add a caption style to captions.json (`glow`, `spacing`, `reveal`). Its `font` can be any Google
+  Fonts family ("Anton", "Montserrat Black"); edits fetches it the first time it is used.
 - CapCut drafts (a draft folder, its zip, or its `draft_content.json`) become presets: each main-track clip's
   timing, speed and curve-speed ramp, zoom/slide/turn (keyframed or still), effect clips named like flash, shake,
   blur, RGB/glitch or invert, white-flash transitions and the song's name. Drafts live in
