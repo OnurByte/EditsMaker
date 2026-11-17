@@ -18,5 +18,5 @@ for c in $commits; do
   [ "$count" -gt 1 ] && printf '### %s\n\n' "$title"
   [ -n "$body" ] && printf '%s\n\n' "$body"
 done
-# README's Install section, its OS logo pictures turned into plain headings
-sed -n '/^## Install/,/^<picture>/p' README.md | sed '$d' | sed 's/^### <picture>.*<\/picture> /### /'
+# README's Install section alone (it ends at the "---" before the folded sections), OS logo pictures as plain headings
+sed -n '/^## Install/,/^---$/p' README.md | sed '$d' | sed 's/^### <picture>.*<\/picture> /### /'
