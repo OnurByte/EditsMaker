@@ -28,6 +28,9 @@ Over MCP: `edits_preset_get` → change → `edits_make` with `preset_json`, or 
   - `hue` curve in degrees (`[[0,180,"linear"]]` shifts every colour, `[[0,0],[1,360]]` cycles the rainbow across the shot).
   - Look per shot: `contrast` (1 normal), `kelvin` (3000 orange, 12000 blue, 0 off), `vignette`, `grain`, `glow`, `sharpen` (0..1),
     `pixelate` (block px), `lens` (-1..1, above 0 fisheye bulge), `trails` (0..1 ghost echo), `flip` (mirror).
+  - CapCut-style per shot: `letterbox` (0..1 cinema bars), `split` (2 or 3: split screen N x N), `mirror` (kaleidoscope
+    symmetry), `strobe` (flicker Hz), `comic` (drawn edges), `scanlines` (0..1 VHS lines), `leak` (0..1 warm light leak),
+    `fade_in` / `fade_out` (seconds from / to black).
   - `reverse` (true = the shot plays backwards), `curves` (`vintage`, `strong_contrast`, `cross_process`, `darker`, ... or points
     `"0/0 0.4/0.3 1/1"`), `pop` (`red`, `yellow`, `green`, `cyan`, `blue`, `magenta`: only that colour stays).
 - `flashes`: coloured layers over the picture, `{start, end, color "rrggbb", opacity curve, blink}`.

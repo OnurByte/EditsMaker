@@ -132,8 +132,30 @@ fn effect(name: &str, from: f64, to: f64, slots: &mut [Slot], flashes: &mut Vec<
         if has(&["blur"]) {
             s.blur = Curve { keys: vec![(0.0, 0.6, Ease::Linear), (0.3, 0.0, Ease::Out(2.0))] };
         }
-        if has(&["rgb", "chromatic", "glitch", "split", "aberration"]) {
+        let screens = has(&["split screen", "split 4", "split 9", "multi screen", "4 screen", "9 screen"]);
+        if screens {
+            s.split = if has(&["9", "3x3", "three"]) { 3 } else { 2 };
+        } else if has(&["rgb", "chromatic", "glitch", "split", "aberration"]) {
             s.rgb = true;
+        }
+        if has(&["mirror", "kaleido", "symmetr"]) {
+            s.mirror = true;
+        }
+        if has(&["strobe", "flicker"]) {
+            s.strobe = 8.0;
+        }
+        if has(&["comic", "cartoon", "sketch", "manga", "edge"]) {
+            s.comic = true;
+        }
+        if has(&["vhs", "scan", "crt", "retro", "old tv"]) {
+            s.scanlines = 0.5;
+            s.grain = s.grain.max(0.2);
+        }
+        if has(&["leak", "film burn", "flare"]) {
+            s.leak = 0.5;
+        }
+        if has(&["movie", "cinema", "letterbox", "bars", "widescreen"]) {
+            s.letterbox = 0.7;
         }
         if has(&["invert", "negative"]) {
             s.invert = true;
@@ -211,7 +233,21 @@ pub fn parse(text: &str, name: &str) -> Result<Preset, String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use serde_json::json;
+
+    #[test]
+    fn capcut_effect_names_become_shot_fx() {
+        let mut slots: Vec<Slot> = vec![serde_json::from_value(serde_json::json!({"start": 0.0, "end": 2.0})).unwrap()];
+        let mut fl = vec![];
+        for n in ["Split Screen 4", "Mirror", "Comic", "VHS", "Light Leak", "Movie Bars", "Strobe"] {
+            effect(n, 0.0, 1.0, &mut slots, &mut fl);
+        }
+        let s = &slots[0];
+        assert!(s.split == 2 && !s.rgb && s.mirror && s.comic && s.scanlines > 0.0 && s.leak > 0.0 && s.letterbox > 0.0 && s.strobe > 0.0, "{s:?}");
+        effect("RGB Split", 0.0, 1.0, &mut slots, &mut fl);
+        assert!(slots[0].rgb);
+    }
 
     #[test]
     fn a_draft_becomes_a_preset() {

@@ -244,6 +244,32 @@ pub struct Slot {
     /// colour pop: only this colour stays (red, yellow, green, cyan, blue, magenta), the rest goes grey
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub pop: String,
+    /// 0..1: black cinema bars top and bottom (1 = a 2.39:1 strip on a 16:9 frame)
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub letterbox: f64,
+    /// split screen: the shot tiled N x N (2 or 3)
+    #[serde(default, skip_serializing_if = "is_zero_u")]
+    pub split: u32,
+    /// left half mirrored onto the right (kaleidoscope symmetry)
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub mirror: bool,
+    /// flicker: light pulses per second, 0 = off
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub strobe: f64,
+    /// comic / cartoon: edges drawn over flattened colour
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub comic: bool,
+    /// 0..1: VHS / CRT scan lines
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub scanlines: f64,
+    /// 0..1: a warm light leak drifting over the shot
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub leak: f64,
+    /// seconds faded in from black at the start, out to black at the end
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub fade_in: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub fade_out: f64,
 }
 
 impl Slot {
@@ -302,6 +328,10 @@ fn is_one(v: &f64) -> bool {
 
 fn is_zero(v: &f64) -> bool {
     *v == 0.0
+}
+
+fn is_zero_u(v: &u32) -> bool {
+    *v == 0
 }
 
 fn is_four(v: &f64) -> bool {
@@ -387,6 +417,12 @@ impl Preset {
             ("blur", &|s: &Slot| !s.blur.is_empty(), 0.2),
             ("rgb", &|s: &Slot| s.rgb, 0.2),
             ("velocity", &|s: &Slot| !s.ramp.is_empty() || s.speed > 1.4, 0.2),
+            ("split", &|s: &Slot| s.split >= 2 || s.mirror, 0.2),
+            ("strobe", &|s: &Slot| s.strobe > 0.0, 0.2),
+            ("comic", &|s: &Slot| s.comic, 0.3),
+            ("retro", &|s: &Slot| s.scanlines > 0.0 || s.leak > 0.0, 0.3),
+            ("cinema", &|s: &Slot| s.letterbox > 0.0, 0.5),
+            ("fade", &|s: &Slot| s.fade_in > 0.0 || s.fade_out > 0.0, 0.5),
         ] {
             if share(f) >= at {
                 t.push(tag);
@@ -603,6 +639,15 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         pop: String::new(),
         motion_blur: ["motionblur4", "motionblur2", "motionblur", "moblurplus", "zoomblur3", "spinblur2"].iter().any(|e| has_effect(n, e) || has_effect(m, e)),
         drop: false,
+        letterbox: 0.0,
+        split: 0,
+        mirror: false,
+        strobe: 0.0,
+        comic: false,
+        scanlines: 0.0,
+        leak: 0.0,
+        fade_in: 0.0,
+        fade_out: 0.0,
     })
 }
 
@@ -956,6 +1001,16 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
         let rot = if s.rot.is_moving() { s.rot.expr("t", len) } else { String::new() };
         f.push_str(&moves(w, h, &format!("{}{}", s.x.expr("t", len), sh(&s.shake, 0.0)), &format!("{}{}", s.y.expr("t", len), sh(&s.shake, 1.3)), &rot, reach(&[&s.x, &s.y]) + if shaking { reach(&[&s.shake]) } else { 0.0 }));
     }
+    if s.mirror {
+        f.push_str(&format!(",crop=iw/2:ih:0:0,split[mi{i}a][mi{i}b];[mi{i}b]hflip[mi{i}c];[mi{i}a][mi{i}c]hstack,scale={w}:{h}"));
+    }
+    if (2..=3).contains(&s.split) {
+        let n = s.split;
+        let (cw, ch) = (w / n / 2 * 2, h / n / 2 * 2);
+        let tiles: String = (0..n * n).map(|k| format!("[sp{i}x{k}]")).collect();
+        let layout: Vec<String> = (0..n * n).map(|k| format!("{}_{}", k % n * cw, k / n * ch)).collect();
+        f.push_str(&format!(",scale={cw}:{ch},split={}{tiles};{tiles}xstack=inputs={}:layout={},scale={w}:{h}", n * n, n * n, layout.join("|")));
+    }
     if s.blur.max() > 0.25 {
         f.push_str(&format!(",gblur=sigma=14:enable='gt({},0.25)'", s.blur.expr("t", len)));
     }
@@ -980,6 +1035,9 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
     if s.pixelate >= 2.0 {
         f.push_str(&format!(",pixelize=w={0:.0}:h={0:.0}", s.pixelate.min(200.0)));
     }
+    if s.comic {
+        f.push_str(",edgedetect=mode=colormix:high=0.15:low=0.05,eq=saturation=1.4");
+    }
     if s.rgb {
         f.push_str(",rgbashift=rh=-7:bh=7");
     }
@@ -992,7 +1050,29 @@ pub fn chain(s: &Slot, i: usize, w: u32, h: u32, x: &Extra, len: f64) -> String 
     if s.vignette > 0.0 {
         f.push_str(&format!(",vignette=angle={:.3}", 0.3 + s.vignette.min(1.0) * 0.6));
     }
+    if s.leak > 0.0 {
+        // screened in RGB like the glow; the gradient's colours drift round as the shot plays
+        f.push_str(&format!(",format=gbrp[lk{i}a];gradients=s={w}x{h}:r=30:c0=0xff7a1f:c1=0x000000:c2=0xffc070:c3=0x000000:nb_colors=4:speed=0.04:d={:.3}[lk{i}g];[lk{i}g]format=gbrp[lk{i}h];[lk{i}a][lk{i}h]blend=all_mode=screen:all_opacity={:.2}:shortest=1,format=yuv420p", len + 1.0, s.leak.min(1.0) * 0.7));
+    }
+    if s.scanlines > 0.0 {
+        f.push_str(&format!(",drawgrid=w=iw:h=4:t=1:color=black@{:.2}", 0.15 + 0.45 * s.scanlines.min(1.0)));
+    }
+    if s.strobe > 0.0 {
+        f.push_str(&format!(",eq=brightness='0.35*lt(mod(t*{:.2},1),0.5)':eval=frame", s.strobe.min(15.0)));
+    }
     f.push_str(&x.post);
+    if s.letterbox > 0.0 {
+        // after the beat hits, so a shake moves the picture and not the bars
+        let bar = (h as f64 * 0.12 * s.letterbox.min(1.0)).round();
+        f.push_str(&format!(",drawbox=x=0:y=0:w=iw:h={bar}:t=fill:color=black,drawbox=x=0:y=ih-{bar}:w=iw:h={bar}:t=fill:color=black"));
+    }
+    if s.fade_in > 0.0 {
+        f.push_str(&format!(",fade=t=in:st=0:d={:.3}", s.fade_in.min(len)));
+    }
+    if s.fade_out > 0.0 {
+        let d = s.fade_out.min(len);
+        f.push_str(&format!(",fade=t=out:st={:.3}:d={d:.3}", len - d));
+    }
     // every shot square-pixelled, or concat refuses to join them
     f.push_str(",setsar=1");
     f.push_str(&format!(",trim=duration={len:.3},setpts=PTS-STARTPTS[v{i}];"));
@@ -1183,11 +1263,13 @@ mod tests {
         assert!(chain(&tinted, 1, 1080, 1200, &Extra::default(), 1.0).contains(",hue=h='"));
         let plain = chain(&p.slots[1], 1, 1080, 1200, &Extra::default(), 1.0);
         let all: Slot = serde_json::from_value(serde_json::json!({"start": 0.0, "end": 1.0, "contrast": 1.4, "kelvin": 3000.0, "vignette": 0.5, "grain": 0.3,
-            "glow": 0.6, "sharpen": 0.5, "pixelate": 12.0, "lens": 0.6, "trails": 0.5, "flip": true, "reverse": true, "curves": "vintage", "pop": "red"})).unwrap();
+            "glow": 0.6, "sharpen": 0.5, "pixelate": 12.0, "lens": 0.6, "trails": 0.5, "flip": true, "reverse": true, "curves": "vintage", "pop": "red",
+            "letterbox": 0.5, "split": 2, "mirror": true, "strobe": 6.0, "comic": true, "scanlines": 0.5, "leak": 0.5, "fade_in": 0.2, "fade_out": 0.3})).unwrap();
         let c = chain(&all, 1, 1080, 1200, &Extra::default(), 1.0);
         for want in ["contrast=1.40", "colortemperature=temperature=3000", "vignette=angle=", "noise=alls=18", "blend=all_mode=screen:all_opacity=0.60",
             "unsharp=5:5:1.00", "pixelize=w=12:h=12", "lenscorrection=k1=-0.300", "lagfun=decay=0.890", "hflip", "trim=end=1.000,setpts=PTS-STARTPTS,reverse",
-            "curves=preset=vintage", "huesaturation=colors=y+g+c+b+m"] {
+            "curves=preset=vintage", "huesaturation=colors=y+g+c+b+m", "hflip[mi1c]", "xstack=inputs=4:layout=0_0|540_0|0_600|540_600", "edgedetect=mode=colormix",
+            "drawgrid=w=iw:h=4", "gradients=s=1080x1200", "lt(mod(t*6.00,1),0.5)", "drawbox=x=0:y=ih-72:w=iw:h=72", "fade=t=in:st=0:d=0.200", "fade=t=out:st=0.700:d=0.300"] {
             assert!(c.contains(want) && !plain.contains(want), "{want}: {c}");
         }
         assert!(b.contains("gblur=sigma=14:enable=") && b.contains("crop=1080:1200:x='1080-(") && !b.contains("zoompan"), "{b}");
@@ -1201,6 +1283,18 @@ mod tests {
         assert_eq!(slug("ʟɪᴋᴋ ᴘʀᴇꜱᴇᴛ #33"), "33");
         let fl = flashes(&p);
         assert!(fl.starts_with(",drawbox=x=0:y=0:w=iw:h=ih:t=fill:color=0xffffff@0.80:enable='between(t,1.000,1.100)*gt("), "{fl}");
+    }
+
+    #[test]
+    fn every_shot_effect_runs_in_ffmpeg() {
+        let Ok(_) = std::process::Command::new("ffmpeg").arg("-version").output() else { return };
+        let all: Slot = serde_json::from_value(serde_json::json!({"start": 0.0, "end": 1.0, "zoom": [[0.0, 1.0, "linear"], [1.0, 1.2, "out 2"]],
+            "shake": [[0.0, 0.02, "linear"]], "glow": 0.5, "letterbox": 0.5, "split": 3, "mirror": true, "strobe": 6.0, "comic": true,
+            "scanlines": 0.5, "leak": 0.5, "fade_in": 0.2, "fade_out": 0.3})).unwrap();
+        let post = crate::fx::hit(&["strobe".into(), "bw".into(), "pulse".into()], 360, 640);
+        let g = chain(&all, 0, 360, 640, &Extra { post, ..Default::default() }, 1.0);
+        let out = std::process::Command::new("ffmpeg").args(["-v", "error", "-f", "lavfi", "-i", "testsrc=s=640x360:d=2:r=30", "-filter_complex", g.trim_end_matches(';'), "-map", "[v0]", "-f", "null", "-"]).output().unwrap();
+        assert!(out.status.success(), "{}\n{g}", String::from_utf8_lossy(&out.stderr));
     }
 
     #[test]

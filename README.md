@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 7 agent skills, 50 presets, 40 looks, TikTok trends, 1,700+ sites">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 7 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
 </picture>
 
 ## Made with it
@@ -87,7 +87,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/presets-dark.svg">
-  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 50 Alight Motion, CapCut and hand-made edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
+  <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 62 Alight Motion, CapCut and hand-made edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
 ## Install
@@ -325,6 +325,9 @@ server and preset JSON; no timeline to drag.
 | Lumetri: HSL secondary | `--pop red` keeps one colour, the rest grey; per shot `"pop"` |
 | Lumetri: creative look, LUTs | `--look` (40 looks), `--lut FILE.cube`, `edits cube` writes one out |
 | Gaussian blur, mosaic | `--blur-faces`, `--blur-box`, per shot `blur`, `pixelate` |
+| CapCut: split screen, mirror | per shot `split` (2x2, 3x3 tiles), `mirror` (kaleidoscope) |
+| CapCut: cinema bars, fade in/out | per shot `letterbox`, `fade_in`, `fade_out` |
+| CapCut: strobe, comic, VHS, light leak | per shot `strobe`, `comic`, `scanlines`, `leak`; `--fx strobe,bw,pulse` on the beats |
 | Essential Graphics, captions | `--captions` (6 styles), `--caption TEXT@FROM-TO`, `--text`, `--line`, `--svg` shapes |
 | Animated titles (text presets) | `--anim pop`, `slam`, `slide`, `drop`, `blur`, `type`; one drawing its own with `~pop` |
 | Title safe margins | words stay above TikTok's and Reels' caption and buttons |
