@@ -54,7 +54,7 @@ OPTIONS
       --look L        colour: none, bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia, bleach,
                       neon, matrix, sunset, pop
       --lut FILE      a .cube LUT over the picture
-      --encoder E     cpu (default, libx264), nvenc (NVIDIA GPU, much faster) or auto (nvenc when it works);
+      --encoder E     auto (default: nvenc on an NVIDIA GPU when it works, else libx264), nvenc or cpu;
                       EDITS_ENCODER sets it for every run
       --lang L        spoken language (default: $EDITS_LANG, else the system's); its words are in presets/lang.json
   -o, --out DIR       output folder (default: a new folder per run in $EDITS_OUT or ~/Videos/edits, by day and title)
