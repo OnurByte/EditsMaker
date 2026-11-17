@@ -133,9 +133,9 @@ def sites():
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 44, "MCP server, 7 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites")
+@page("badges", 44, "MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites")
 def badges():
-    cells = ["MCP server", "7 agent skills", "62 presets", "40 looks", "TikTok trends", "1,700+ sites"]
+    cells = ["MCP server", "8 agent skills", "62 presets", "40 looks", "TikTok trends", "1,700+ sites"]
     widths = [len(c) * 8 + 36 for c in cells]
     x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
@@ -270,7 +270,7 @@ def steps():
 @page("features", 190, "Presets, trends, looks, agents, reads captions first, every frame size", "3.1")
 def features():
     cells = [("Presets", "50 real edits, as JSON", "an agent can change"), ("Trends", "TikTok's chart,", "one flag: trend:3"),
-             ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server", "and 7 skills"),
+             ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server", "and 8 skills"),
              ("Reads first", "captions before video:", "downloads only the best"), ("Every frame", "9:16 to 21:9", "or any WxH")]
     out = []
     for i, (h, a, b) in enumerate(cells):

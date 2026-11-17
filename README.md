@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 7 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
 </picture>
 
 ## Made with it

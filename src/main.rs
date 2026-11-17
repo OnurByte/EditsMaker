@@ -1366,6 +1366,7 @@ const SKILLS: &[(&str, &str)] = &[
     ("edits-mcp", include_str!("../skills/edits-mcp/SKILL.md")),
     ("edits-preset-create", include_str!("../skills/edits-preset-create/SKILL.md")),
     ("edits-tricks", include_str!("../skills/edits-tricks/SKILL.md")),
+    ("edits-reverse", include_str!("../skills/edits-reverse/SKILL.md")),
 ];
 
 /// `edits skills install [DIR]`: the agent skills into ~/.claude/skills (or DIR). `edits skills` lists them.
