@@ -145,6 +145,8 @@ edits <link|channel> -n 3 --aspect 9:16 --captions hormozi --bed trend:7
 
 - Pauses are cut out (jump cuts) and every other cut punches in; the punchline punches in harder with a boom.
 - `--captions`: hormozi, mrbeast, karaoke, box, minimal, neon (JSON in presets/captions.json, change freely).
+  Any Google Fonts family works as a style's `font` ("Bebas Neue", "Montserrat Black"): edits fetches it the first
+  time; `edits font NAME` fetches one now.
 - `--bed SONG`: music under the voice, ducked while they talk. A hook line shows on top for the first seconds.
 - `--no-jumpcuts`, `--no-sfx`, `--no-hook`, `--no-captions` turn parts off.
 - Screen recordings with no face keep the whole frame over a blurred copy; faces are cropped around.
@@ -173,7 +175,8 @@ Other kinds, when asked for:
   seconds of the edit, repeatable), `--say-text` (the `--say` line at the bottom as it is said). MCP: `captions_at`,
   `say_text`.
 - Chaos for "math"/sigma edits: `--math` (formulas, sine waves and the song's waveform flash in for 0.17 s on the
-  cuts, never sitting on screen), `--flash-text "5.2:dışarısı bir simülasyon"` (a subliminal line, two frames on
+  cuts, never sitting on screen), `--formula '\frac{\partial u}{\partial t} = \alpha\nabla^2 u'` (your own
+  formulas in LaTeX instead of the built-in ones, repeat; Greek, \frac, \sqrt, \sum, \int, ^ and _), `--flash-text "5.2:dışarısı bir simülasyon"` (a subliminal line, two frames on
   black). Library transitions over a black-and-white edit turn grey by themselves.
 - Before and after, never by hand with ffmpeg: `--intro VIDEOID@FROM-TO[/PICTURE_FROM]` (that video's words, its
   picture from PICTURE_FROM; only that stretch is downloaded), `--intro-bed SONG` (quiet under it, stopped by a

@@ -4,6 +4,7 @@ mod check;
 mod create;
 mod face;
 mod fetch;
+mod fonts;
 mod finish;
 mod fx;
 mod grades;
@@ -112,6 +113,11 @@ fn main() -> ExitCode {
             }
             Ok(())
         })(),
+        Some("font") if args.len() > 1 => args[1..].iter().try_for_each(|f| {
+            let fresh = fonts::add(f)?;
+            println!("{f}: {}", if fresh { "installed from Google Fonts" } else { "already here" });
+            Ok(())
+        }),
         Some("cube") => match (args.get(1).and_then(|n| grades::find(n)), args.get(2)) {
             (Some(g), out) => (|| {
                 let tmp = std::env::temp_dir().join("edits-cube");
@@ -233,6 +239,8 @@ struct Cli {
     say_text: bool,
     /// math flashing in on the cuts
     math: bool,
+    /// --formula: the math layer's own formulas, LaTeX already turned to Unicode
+    formulas: Vec<String>,
     /// one-frame lines on black (--flash-text SECONDS:TEXT)
     flash_texts: Vec<(f64, String)>,
     /// an intro before the edit and an outro after it
@@ -253,7 +261,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
         transition: None,
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -390,6 +398,10 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--caption" => c.captions_at.push(wrap::parse_caption(&val("--caption")?)?),
             "--say-text" => c.say_text = true,
             "--math" => c.math = true,
+            "--formula" => {
+                c.formulas.push(wrap::tex(&val("--formula")?));
+                c.math = true;
+            }
             "--flash-text" => c.flash_texts.push(wrap::parse_flash(&val("--flash-text")?)?),
             "--intro" => c.around.intro = Some(wrap::parse_intro(&val("--intro")?)?),
             "--intro-bed" => c.around.intro_bed = Some(val("--intro-bed")?),
@@ -957,7 +969,7 @@ fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, Stri
     drawn?;
     library::apply(out, &c.overlays)?;
     let cuts: Vec<f64> = tl.clips.iter().scan(0.0, |t, cl| { *t += cl.2; Some(*t) }).collect();
-    wrap::math(out, &cuts[..cuts.len().saturating_sub(1)], c.math, &styled, &c.lang)?;
+    wrap::math(out, &cuts[..cuts.len().saturating_sub(1)], c.math, &c.formulas, &styled, &c.lang)?;
     let fin = finish::apply(out, &c.finish)?;
     let shift = wrap::around(&fin, &c.around, &c.lang, c.opts.lufs, &util::home().join(".cache/edits"))?;
     let mut tl = tl.clone();
