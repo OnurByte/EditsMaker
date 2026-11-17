@@ -75,6 +75,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the footage"}, "name": {"type": "string"}, "like": {"type": "array", "items": {"type": "string"}, "description": "presets to take inspiration from"}, "length": {"type": "number", "description": "seconds of the video to use (default 18)"}}, "required": ["video"]}},
         {"name": "edits_check", "description": "Measure a finished clip: length, loudness (LUFS), cut rhythm, and write a contact sheet jpg beside it. Read the sheet to look at the edit before showing it; fast montages usually sit near -11 LUFS.",
          "inputSchema": {"type": "object", "properties": {"clip": {"type": "string", "description": "path of the rendered mp4"}}, "required": ["clip"]}},
+        {"name": "edits_frames", "description": "Look at moments of footage before picking shots by hand: each time becomes a row of 6 frames over its length (default 3 s), all rows in one jpg to Read. Times as 336, 5:36 or 336+4 (4 s long). The video is a path or a YouTube ID edits already fetched. Then use the good ones as edits_make shots [\"ID@336\"].",
+         "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path, or a fetched video's ID"}, "at": {"type": "array", "items": {"type": "string"}}}, "required": ["video", "at"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_library", "description": "The user's asset library from imported editing packs: sound effects, music, overlays, transitions, green screens, backgrounds, memes, images. Without arguments: how many of each kind. With `kind` and/or `words`: the matching files. Use a name with edits_make music, overlays, whoosh or boom; a meme or background path works as `input`.",
          "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["sfx", "music", "overlay", "transition", "greenscreen", "background", "meme", "video", "image"]}, "words": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
@@ -94,6 +96,10 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         "edits_preset_save" => v.extend(["preset".into(), "save".into(), "-".into()]),
         "edits_looks" => v.push("looks".into()),
         "edits_check" => v.extend(["check".into(), s("clip").ok_or("clip is needed")?]),
+        "edits_frames" => {
+            v.extend(["frames".into(), s("video").ok_or("video is needed")?]);
+            v.extend(a["at"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from).or(x.as_f64().map(|n| n.to_string()))));
+        }
         "edits_preset_create" => {
             v.extend(["preset".into(), "create".into(), s("video").ok_or("video is needed")?]);
             for (key, flag) in [("name", "--name"), ("length", "--length")] {
@@ -245,7 +251,7 @@ mod tests {
         assert_eq!(init["result"]["serverInfo"]["name"], "edits");
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 11);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 12);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 
@@ -254,6 +260,7 @@ mod tests {
         let a = json!({"input": "https://www.youtube.com/@x", "preset": "megumi", "music": "trend:2", "n": 2, "intensity": 1.5, "sad": true, "voice": false, "fx": "shake,freeze", "velocity": true, "lines": 3, "out": "work/x"});
         assert_eq!(args_for("edits_make", &a).unwrap(), ["https://www.youtube.com/@x", "--preset", "megumi", "--music", "trend:2", "--fx", "shake,freeze", "-n", "2", "--intensity", "1.5", "--lines", "3", "--sad", "--velocity"]);
         assert_eq!(args_for("edits_check", &json!({"clip": "a.mp4"})).unwrap(), ["check", "a.mp4"]);
+        assert_eq!(args_for("edits_frames", &json!({"video": "abc", "at": ["5:36", 390]})).unwrap(), ["frames", "abc", "5:36", "390"]);
         assert_eq!(args_for("edits_preset_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["preset", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
         assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);

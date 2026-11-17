@@ -39,6 +39,49 @@ pub fn contact_sheet(video: &Path, total: f64, sheet: &Path, cols: u32, rows: u3
     if sheet.exists() { Ok(()) } else { Err(format!("no contact sheet for {}", video.display())) }
 }
 
+/// "336", "336.5" or "5:36" as seconds.
+fn secs(s: &str) -> Option<f64> {
+    s.split(':').try_fold(0.0, |acc, p| p.trim().parse::<f64>().ok().map(|v| acc * 60.0 + v))
+}
+
+/// The footage behind a path or a video ID edits already fetched (~/.cache/edits/ID: hd.mp4, src.mp4 or v.mp4).
+fn footage(v: &str) -> Result<PathBuf, String> {
+    let p = PathBuf::from(v);
+    if p.is_file() {
+        return Ok(p);
+    }
+    let dir = crate::util::home().join(".cache/edits").join(v);
+    ["hd.mp4", "src.mp4", "v.mp4"].iter().map(|f| dir.join(f)).find(|f| f.is_file()).ok_or(format!("no video at {v} and none fetched under that ID"))
+}
+
+/// `edits frames VIDEO|ID AT[+LEN]...`: each moment as a row of 6 frames over LEN seconds (default 3), stacked in
+/// one jpg, to look at before picking `--shot ID@AT`. No text on the picture: the rows are listed in order.
+pub fn frames(video: &str, at: &[String]) -> Result<String, String> {
+    let v = footage(video)?;
+    let rows: Vec<(f64, f64)> = at.iter().map(|a| {
+        let (s, l) = a.split_once('+').unwrap_or((a, "3"));
+        Some((secs(s)?, secs(l)?.max(0.2)))
+    }).collect::<Option<_>>().filter(|r: &Vec<_>| !r.is_empty()).ok_or("times look like 336, 5:36 or 336+4 (from 336 s, 4 s long)")?;
+    let out = crate::util::home().join(".cache/edits/frames").join(format!("{}-{}.jpg", v.parent().and_then(|d| d.file_name()).unwrap_or_default().to_string_lossy(), at.join("_").replace([':', '+', '.'], "-")));
+    std::fs::create_dir_all(out.parent().unwrap()).map_err(|e| e.to_string())?;
+    let vs = v.to_string_lossy();
+    let mut args: Vec<String> = vec![];
+    let mut graph = String::new();
+    for (i, (s, l)) in rows.iter().enumerate() {
+        args.extend(["-ss".into(), format!("{s}"), "-t".into(), format!("{l}"), "-i".into(), vs.to_string()]);
+        graph += &format!("[{i}:v]fps={:.4},scale=200:-2,tile=6x1[r{i}];", 6.0 / l);
+    }
+    graph += &if rows.len() == 1 { "[r0]null".into() } else { format!("{}vstack=inputs={}", (0..rows.len()).map(|i| format!("[r{i}]")).collect::<String>(), rows.len()) };
+    let o = out.to_string_lossy().to_string();
+    args.extend(["-filter_complex".into(), graph, "-frames:v".into(), "1".into(), "-update".into(), "1".into(), o.clone()]);
+    log(&args.iter().map(String::as_str).collect::<Vec<_>>())?;
+    if !out.exists() {
+        return Err(format!("no frames from {}", v.display()));
+    }
+    let list: Vec<String> = rows.iter().enumerate().map(|(i, (s, l))| format!("row {}: {s:.1}-{:.1}s", i + 1, s + l)).collect();
+    Ok(format!("{o}\n{}", list.join("\n")))
+}
+
 pub fn check(clip: &Path) -> Result<String, String> {
     let c = clip.to_string_lossy();
     let probe = crate::util::run(None, "ffprobe", &["-v", "error", "-show_entries", "format=duration:stream=width,height", "-of", "csv=p=0", &c])?;
@@ -73,5 +116,6 @@ mod tests {
         assert_eq!(cut_times(c), [1.5, 4.0]);
         assert_eq!(shots(&[1.5, 4.0], 10.0), [1.5, 2.5, 6.0]);
         assert_eq!(shots(&[], 10.0), [10.0]);
+        assert_eq!((secs("336.5"), secs("5:36"), secs("1:00:00"), secs("x")), (Some(336.5), Some(336.0), Some(3600.0), None));
     }
 }
