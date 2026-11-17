@@ -139,6 +139,7 @@ fn main() -> ExitCode {
             Some(clip) => check::check(Path::new(clip)).map(|s| println!("{s}")),
             None => Err("usage: edits check <clip.mp4>   length, loudness, cut rhythm and a contact sheet to look at".into()),
         },
+        Some("words") if args.len() > 1 => words(&args[1..]),
         Some("frames") => match args.get(1) {
             Some(v) if args.len() > 2 => check::frames(v, &args[2..]).map(|s| println!("{s}")),
             _ => Err("usage: edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)".into()),
@@ -1390,6 +1391,71 @@ fn skills(args: &[String]) -> Result<(), String> {
 }
 
 /// `edits preset ...`: list, show, save, import. Presets are JSON: read one, change what the moment needs, save it.
+/// `edits words <link|ID|file> [A-B] [--find TEXT] [--lang xx]`: what a video says, line by line with times, each
+/// line as a ready --say spec. The site's own captions when it has them, whisper otherwise.
+fn words(args: &[String]) -> Result<(), String> {
+    let opt = |k: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).cloned();
+    let lang = opt("--lang").unwrap_or_else(|| lang::code().into());
+    let find = opt("--find").map(|f| f.to_lowercase());
+    let range = args[1..].iter().find(|a| !a.starts_with("--") && Some(*a) != opt("--lang").as_ref() && Some(*a) != opt("--find").as_ref())
+        .and_then(|r| r.split_once('-')).and_then(|(a, b)| Some((a.parse::<f64>().ok()?, b.parse::<f64>().ok()?)));
+    let cache = util::home().join(".cache/edits");
+    let input = &args[0];
+    let src = if Path::new(input).is_file() {
+        fetch::local(&std::fs::canonicalize(input).map_err(|e| e.to_string())?, &cache)?
+    } else {
+        let is_id = input.len() == 11 && input.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+        let (id, url) = if is_id { (input.clone(), format!("https://www.youtube.com/watch?v={input}")) } else { fetch::resolve(input, 1)?.remove(0) };
+        fetch::remote(&id, &url, &cache)?
+    };
+    let t = transcribe::transcript(&src.work, &src.wav, &lang, &src.language)?;
+    eprintln!("edits: {} ({:.0}s), words from {}", src.title, src.duration, t.from);
+    for l in transcribe::lines(&t.words) {
+        let inside = range.is_none_or(|(a, b)| l.e > a && l.s < b);
+        if inside && find.as_ref().is_none_or(|f| l.text.to_lowercase().contains(f)) {
+            println!("{}@{:.2}-{:.2}\t{}", src.id, l.s, l.e, l.text);
+        }
+    }
+    Ok(())
+}
+
+fn save_preset(p: preset::Preset) -> Result<(), String> {
+    if p.slots.is_empty() {
+        return Err("a preset needs at least one shot".into());
+    }
+    std::fs::create_dir_all(presets::user_dir()).map_err(|e| e.to_string())?;
+    let to = presets::user_dir().join(format!("{}.json", preset::slug(&p.name)));
+    std::fs::write(&to, preset::pretty(&p)).map_err(|e| e.to_string())?;
+    println!("saved \"{}\" to {}", p.name, to.display());
+    Ok(())
+}
+
+/// Sets `path` (dots; numbers index lists from 0, * is every item) in a preset's JSON.
+fn set_path(v: &mut serde_json::Value, path: &str, val: serde_json::Value) -> Result<(), String> {
+    let (head, rest) = path.split_once('.').map_or((path, None), |(h, r)| (h, Some(r)));
+    let targets: Vec<&mut serde_json::Value> = match (head, &mut *v) {
+        ("*", serde_json::Value::Array(a)) => a.iter_mut().collect(),
+        (n, serde_json::Value::Array(a)) => {
+            let i: usize = n.parse().map_err(|_| format!("{n}: a list needs a number from 0 or *"))?;
+            let len = a.len();
+            vec![a.get_mut(i).ok_or(format!("{i}: there are {len} (0..{})", len.saturating_sub(1)))?]
+        }
+        (k, serde_json::Value::Object(o)) if rest.is_none() => {
+            o.insert(k.to_string(), val);
+            return Ok(());
+        }
+        (k, serde_json::Value::Object(o)) => vec![o.get_mut(k).ok_or(format!("{k}: no such field"))?],
+        (k, _) => return Err(format!("{k}: nothing to go into there")),
+    };
+    for t in targets {
+        match rest {
+            Some(r) => set_path(t, r, val.clone())?,
+            None => *t = val.clone(),
+        }
+    }
+    Ok(())
+}
+
 fn preset_cmd(args: &[String]) -> Result<(), String> {
     match (args.first().map(String::as_str), args.get(1)) {
         (Some("list") | None, _) => {
@@ -1424,15 +1490,21 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             } else {
                 std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?
             };
-            let p: preset::Preset = serde_json::from_str(&text).map_err(|e| format!("not a valid preset: {e}"))?;
-            if p.slots.is_empty() {
-                return Err("a preset needs at least one shot".into());
+            save_preset(serde_json::from_str(&text).map_err(|e| format!("not a valid preset: {e}"))?)
+        }
+        (Some("set"), Some(name)) => {
+            // KEY=VALUE changes without a script: total=12, shots.0.zoom=1.3, shots.*.speed=2, look="bw"; --as NEW
+            let mut v = serde_json::to_value(preset::load(name)?).map_err(|e| e.to_string())?;
+            let mut rest = args[2..].iter();
+            while let Some(a) = rest.next() {
+                if a == "--as" {
+                    v["name"] = rest.next().ok_or("--as needs a name")?.as_str().into();
+                    continue;
+                }
+                let (k, val) = a.split_once('=').ok_or(format!("{a}: changes look like KEY=VALUE (shots.0.zoom=1.3)"))?;
+                set_path(&mut v, k, serde_json::from_str(val).unwrap_or_else(|_| val.into()))?;
             }
-            std::fs::create_dir_all(presets::user_dir()).map_err(|e| e.to_string())?;
-            let to = presets::user_dir().join(format!("{}.json", preset::slug(&p.name)));
-            std::fs::write(&to, preset::pretty(&p)).map_err(|e| e.to_string())?;
-            println!("saved \"{}\" to {}", p.name, to.display());
-            Ok(())
+            save_preset(serde_json::from_value(v).map_err(|e| format!("not a valid preset after that: {e}"))?)
         }
         (Some("import"), Some(_)) => {
             // --into DIR writes elsewhere (presets/ to build them in); default: your preset folder
