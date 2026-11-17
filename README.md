@@ -25,16 +25,10 @@
     <td align="center"><video src="https://github.com/user-attachments/assets/deedfb5a-d044-400d-af0d-884ec000410a" width="180" controls></video><br><sub>Sad edit, own voice</sub></td>
   </tr>
   <tr>
-    <td align="center"><video src="https://github.com/user-attachments/assets/060661a6-87bd-4e0b-bdb2-ea14fbd70b23" width="180" controls></video><br><sub>RGB zoom preset</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/90f2cc99-eff4-437f-8001-449196b35fea" width="180" controls></video><br><sub>Anime edit</sub></td>
     <td align="center"><video src="https://github.com/user-attachments/assets/f5ec7017-5a43-466f-9fe9-11462a850bf8" width="180" controls></video><br><sub>Character edit</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/c037dc9e-ce79-4a1e-9709-403b409f98a3" width="180" controls></video><br><sub>Series hit edit</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><video src="https://github.com/user-attachments/assets/f2c4679e-b15f-454e-ad1d-f952c775a3a3" width="180" controls></video><br><sub>Meme edit</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/6ab7c886-a260-47fc-862f-c0ffe483e9a8" width="180" controls></video><br><sub>Lemon preset</sub></td>
     <td align="center"><video src="https://github.com/user-attachments/assets/877b4983-0b2a-4d37-a933-16ec088bd4e8" width="180" controls></video><br><sub>Emotional edit</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/71b36535-380c-4100-8ca5-e5620734c75c" width="180" controls></video><br><sub>Black and white edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/f2c4679e-b15f-454e-ad1d-f952c775a3a3" width="180" controls></video><br><sub>Meme edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/90f2cc99-eff4-437f-8001-449196b35fea" width="180" controls></video><br><sub>Anime edit</sub></td>
   </tr>
 </table>
 
