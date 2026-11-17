@@ -87,6 +87,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["sfx", "music", "overlay", "transition", "greenscreen", "background", "meme", "video", "image"]}, "words": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_trends", "description": "What is trending on TikTok now in a country (two letters, default tr). Use one with music \"trend:N\".",
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_encoder", "description": "What renders the video, saved for every run: auto (NVIDIA GPU when it works, else CPU; the default), nvenc (GPU) or cpu. Without `use`: what it is now and whether the GPU works.",
+         "inputSchema": {"type": "object", "properties": {"use": {"type": "string", "enum": ["auto", "nvenc", "cpu"]}}}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
     ])
 }
@@ -135,6 +137,10 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
         }
         "edits_learn" => v.extend(["learn".into(), s("video").ok_or("video is needed")?]),
         "edits_doctor" => v.push("doctor".into()),
+        "edits_encoder" => {
+            v.push("encoder".into());
+            v.extend(s("use"));
+        }
         "edits_library" => {
             v.push("library".into());
             v.extend(s("kind"));
@@ -420,7 +426,7 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 14);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 15);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 

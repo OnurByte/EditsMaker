@@ -42,7 +42,7 @@ pub fn now() -> Option<(String, String)> {
 
 static NVENC: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
 
-/// The video encoder for this run (from --encoder, else EDITS_ENCODER): auto (default: nvenc when it works), nvenc, or cpu.
+/// The video encoder for this run (from --encoder, else EDITS_ENCODER, else `edits encoder`): auto (default: nvenc when it works), nvenc, or cpu.
 pub fn set_encoder(name: &str) -> Result<(), String> {
     let on = match name {
         "cpu" => false,
@@ -55,12 +55,43 @@ pub fn set_encoder(name: &str) -> Result<(), String> {
 }
 
 pub fn nvenc() -> bool {
-    *NVENC.get_or_init(|| match std::env::var("EDITS_ENCODER").as_deref() {
-        Ok("nvenc") => true,
-        Ok("cpu") => false,
+    *NVENC.get_or_init(|| match encoder_choice().as_str() {
+        "nvenc" => true,
+        "cpu" => false,
         // a GPU renders several times faster; the test encode falls back to the CPU when it is missing or full
         _ => nvenc_works(),
     })
+}
+
+fn encoder_file() -> PathBuf {
+    home().join(".config/edits/encoder")
+}
+
+/// The encoder asked for: EDITS_ENCODER, else the one `edits encoder` saved, else auto.
+fn encoder_choice() -> String {
+    std::env::var("EDITS_ENCODER").ok()
+        .or_else(|| std::fs::read_to_string(encoder_file()).ok())
+        .map(|s| s.trim().to_string()).filter(|s| matches!(s.as_str(), "auto" | "nvenc" | "cpu"))
+        .unwrap_or_else(|| "auto".into())
+}
+
+/// `edits encoder [auto|nvenc|cpu]`: what renders the video (GPU or CPU), saved for every run, or what it is now.
+pub fn encoder_cmd(want: Option<&str>) -> Result<(), String> {
+    if let Some(w) = want {
+        if !matches!(w, "auto" | "nvenc" | "cpu") {
+            return Err(format!("edits encoder: {w}? use auto (GPU when it works), nvenc (NVIDIA GPU) or cpu"));
+        }
+        let f = encoder_file();
+        std::fs::create_dir_all(f.parent().unwrap()).map_err(|e| e.to_string())?;
+        std::fs::write(&f, w).map_err(|e| e.to_string())?;
+    }
+    let gpu = nvenc_works();
+    let used = match encoder_choice().as_str() { "nvenc" => "NVIDIA GPU (h264_nvenc)", "cpu" => "CPU (libx264)", _ if gpu => "NVIDIA GPU (h264_nvenc)", _ => "CPU (libx264)" };
+    println!("edits encoder: {} -> renders on the {used}; a working NVIDIA GPU here: {}", encoder_choice(), if gpu { "yes" } else { "no" });
+    if encoder_choice() == "nvenc" && !gpu {
+        println!("edits: the GPU test encode fails here, renders will fail; edits encoder auto falls back to the CPU");
+    }
+    Ok(())
 }
 
 /// A tiny test encode: ffmpeg can list h264_nvenc without a usable NVIDIA GPU or driver.

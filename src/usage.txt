@@ -3,6 +3,7 @@ edits - give it a link, a topic or a file; get finished edits.
 USAGE
   edits <youtube-link | topic | video-file> [options]
   edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
+  edits encoder [auto|nvenc|cpu]  what renders the video (GPU or CPU), saved for every run
   edits setup                  fetch ffmpeg and yt-dlp if missing (also done on first use)
   edits info                   version, updates, the author's GitHub and X
   edits update [check|on|off]  install the newest release now; on by default once a day (EDITS_AUTO_UPDATE=0 stops it)
@@ -55,7 +56,7 @@ OPTIONS
                       neon, matrix, sunset, pop
       --lut FILE      a .cube LUT over the picture
       --encoder E     auto (default: nvenc on an NVIDIA GPU when it works, else libx264), nvenc or cpu;
-                      EDITS_ENCODER sets it for every run
+                      edits encoder auto|nvenc|cpu (or EDITS_ENCODER) sets it for every run
       --lang L        spoken language (default: $EDITS_LANG, else the system's); its words are in presets/lang.json
   -o, --out DIR       output folder (default: a new folder per run in $EDITS_OUT or ~/Videos/edits, by day and title)
       --join          also join all clips into joined.mp4

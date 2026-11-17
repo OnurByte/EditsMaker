@@ -90,6 +90,11 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
   <img src="assets/readme/presets-light.svg" width="100%" alt="Real edits as data: 62 Alight Motion, CapCut and hand-made edits, 40 looks and 178 Premiere cut moves, every shot and keyframe as editable JSON">
 </picture>
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/encoder-dark.svg">
+  <img src="assets/readme/encoder-light.svg" width="100%" alt="Renders on your GPU: NVIDIA GPUs by default, or in software on any CPU (Intel, AMD, Apple). One command switches: edits encoder">
+</picture>
+
 ## Install
 
 ### <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-apple-dark.svg"><img src="assets/readme/os-apple-light.svg" height="20" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/os-linux-dark.svg"><img src="assets/readme/os-linux-light.svg" height="20" alt=""></picture> macOS and Linux
