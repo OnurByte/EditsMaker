@@ -648,14 +648,49 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         leak: 0.0,
         fade_in: 0.0,
         fade_out: 0.0,
+    }).map(|mut s| {
+        for x in if m != n { vec![n, m] } else { vec![n] } {
+            dress(x, &mut s);
+        }
+        s
     })
+}
+
+/// Colour and texture effects that sit on a shot as a whole, carried to its native fields: sharpen, vignette,
+/// a hue turn, a light glow, a flicker, a lens bulge or pinch, posterize/halftone as comic, directional and lens blur.
+fn dress(n: Node, s: &mut Slot) {
+    let top = |e: &str, p: &str| effect_prop(n, e, p).map(|c| c.max());
+    if let Some(v) = top("sharpen", "strength").or_else(|| top("unsharpmask", "strength")) {
+        s.sharpen = s.sharpen.max(v.clamp(0.0, 1.0));
+    }
+    if let Some(v) = top("vignette", "strength") {
+        s.vignette = s.vignette.max((v * 0.5).clamp(0.0, 1.0));
+    }
+    if let (Some(c), true) = (effect_prop(n, "hueshift", "hue"), s.hue.is_empty()) {
+        s.hue = c;
+    }
+    if let Some(v) = top("lightglow", "strength") {
+        s.glow = s.glow.max(v.clamp(0.0, 1.0));
+    }
+    if let (Some(f), true) = (top("flicker2", "freq"), top("flicker2", "mag").unwrap_or(0.0) > 0.05) {
+        s.strobe = f.clamp(1.0, 30.0);
+    }
+    if let Some(v) = top("pinchbulge2", "strength") {
+        s.lens = v.clamp(-1.0, 1.0);
+    }
+    s.comic |= has_effect(n, "posterize") || has_effect(n, "halftonedots");
+    s.motion_blur |= has_effect(n, "dblur");
+    if let (Some(v), true) = (top("lensblur2", "strength"), s.blur.is_empty()) {
+        s.blur = Curve::constant(v.clamp(0.0, 1.0));
+    }
 }
 
 /// Effects every importer path understands (on a footage layer or an adjustment layer); the rest are reported.
 const READ: &[&str] = &["lift", "tile", "mirror", "oscillate3", "shake2", "randomdisplace", "jitter", "gaussianblur", "innerblur", "fastboxblur", "lensblurobs",
     "zoomblur3", "spinblur2", "motionblur", "motionblur2", "motionblur4", "moblurplus", "exposure", "brightcont2", "highlightshadow", "threshold",
     "deepglow", "deepglow2", "softglow", "edgeglow", "satvib", "rgbsepnew", "chromabbr", "chromaticzoomblur", "invert", "blink2",
-    "transform2", "wipe2", "fade", "ccjaws", "turbulence2", "dropshadow"];
+    "transform2", "wipe2", "fade", "ccjaws", "turbulence2", "dropshadow", "sharpen", "unsharpmask", "vignette", "hueshift", "lightglow",
+    "flicker2", "pinchbulge2", "posterize", "halftonedots", "dblur", "lensblur2"];
 
 /// Effects that only dress titles and logos (letter spacing, bevels, a gradient plate, a line drawing itself): they
 /// belong to a caption style (captions.json: `spacing`, `glow`, `outline`, `shadow`), not to a shot.
@@ -698,6 +733,10 @@ fn adjust(n: Node, slots: &mut [Slot], w: f64) {
         s.invert |= any(&["invert"]);
         if let (Some(v), true) = (sat, ub - ua >= 0.5) {
             s.saturation = v;
+        }
+        // a colour layer over most of the shot is the shot's colour
+        if ub - ua >= 0.5 {
+            dress(n, s);
         }
     }
 }
@@ -1323,5 +1362,17 @@ mod tests {
         assert!(p.flashes.is_empty(), "a copy-background layer is not a white flash");
         let blur = &p.slots[2].blur;
         assert!((blur.at(0.2) - 0.6).abs() < 1e-6 && blur.at(0.1) == 0.0 && blur.at(0.9) == 0.0, "a blur pulse where the adjustment layer sits: {blur:?}");
+    }
+
+    #[test]
+    fn colour_effects_land_on_native_fields() {
+        let xml = r#"<shape><effect id="com.alightcreative.effects.sharpen"><property name="strength" type="float" value="0.2"/></effect>
+            <effect id="com.alightcreative.effects.vignette"><property name="strength" type="float" value="0.8"/></effect>
+            <effect id="com.alightcreative.effects.flicker2"><property name="freq" type="float" value="10"/><property name="mag" type="float" value="0.16"/></effect>
+            <effect id="com.alightcreative.effects.posterize"/></shape>"#;
+        let doc = Document::parse(xml).unwrap();
+        let mut s: Slot = serde_json::from_value(serde_json::json!({"start": 0.0, "end": 1.0})).unwrap();
+        dress(doc.root_element(), &mut s);
+        assert!(s.sharpen == 0.2 && s.vignette == 0.4 && s.strobe == 10.0 && s.comic, "{s:?}");
     }
 }
