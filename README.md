@@ -15,6 +15,14 @@
   <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
 </picture>
 
+<p align="center">
+  <a href="https://github.com/OnurByte/EditsMaker/stargazers"><img src="https://img.shields.io/github/stars/OnurByte/EditsMaker?style=for-the-badge&logo=github&label=Star&color=E5332A" alt="GitHub stars"></a>
+  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><img src="https://img.shields.io/github/downloads/OnurByte/EditsMaker/total?style=for-the-badge&label=Downloads&color=0B0B0C" alt="Downloads"></a>
+  <a href="https://github.com/OnurByte/EditsMaker/releases/latest"><img src="https://img.shields.io/github/v/release/OnurByte/EditsMaker?style=for-the-badge&label=Latest&color=0B0B0C" alt="Latest release"></a>
+</p>
+
+<p align="center"><b>⭐ Star it and the next update shows up in your feed. Every star puts EditsMaker in front of another editor.</b></p>
+
 ## Made with it
 
 <table>
@@ -25,16 +33,10 @@
     <td align="center"><video src="https://github.com/user-attachments/assets/deedfb5a-d044-400d-af0d-884ec000410a" width="180" controls></video><br><sub>Sad edit, own voice</sub></td>
   </tr>
   <tr>
-    <td align="center"><video src="https://github.com/user-attachments/assets/060661a6-87bd-4e0b-bdb2-ea14fbd70b23" width="180" controls></video><br><sub>RGB zoom preset</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/90f2cc99-eff4-437f-8001-449196b35fea" width="180" controls></video><br><sub>Anime edit</sub></td>
     <td align="center"><video src="https://github.com/user-attachments/assets/f5ec7017-5a43-466f-9fe9-11462a850bf8" width="180" controls></video><br><sub>Character edit</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/c037dc9e-ce79-4a1e-9709-403b409f98a3" width="180" controls></video><br><sub>Series hit edit</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><video src="https://github.com/user-attachments/assets/f2c4679e-b15f-454e-ad1d-f952c775a3a3" width="180" controls></video><br><sub>Meme edit</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/6ab7c886-a260-47fc-862f-c0ffe483e9a8" width="180" controls></video><br><sub>Lemon preset</sub></td>
     <td align="center"><video src="https://github.com/user-attachments/assets/877b4983-0b2a-4d37-a933-16ec088bd4e8" width="180" controls></video><br><sub>Emotional edit</sub></td>
-    <td align="center"><video src="https://github.com/user-attachments/assets/71b36535-380c-4100-8ca5-e5620734c75c" width="180" controls></video><br><sub>Black and white edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/f2c4679e-b15f-454e-ad1d-f952c775a3a3" width="180" controls></video><br><sub>Meme edit</sub></td>
+    <td align="center"><video src="https://github.com/user-attachments/assets/90f2cc99-eff4-437f-8001-449196b35fea" width="180" controls></video><br><sub>Anime edit</sub></td>
   </tr>
 </table>
 
@@ -134,6 +136,10 @@ No terminal needed. Paste this into Claude Code, Codex, Cursor or any agent and 
 ```text
 Install EditsMaker from github.com/OnurByte/EditsMaker, then run "edits mcp install" and "edits skills install".
 ```
+
+<p align="center">
+  <a href="https://github.com/OnurByte/EditsMaker/stargazers"><img src="https://img.shields.io/github/stars/OnurByte/EditsMaker?style=for-the-badge&logo=github&label=Made%20your%20first%20edit%3F%20Star%20it&color=E5332A" alt="Made your first edit? Star it"></a>
+</p>
 
 ---
 
