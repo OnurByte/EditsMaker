@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, 1,700+ sites">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, stream VODs into clips">
 </picture>
 
 <p align="center">
@@ -86,17 +86,17 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
-  <img src="assets/readme/features-light.svg" width="100%" alt="Presets, trends, looks, agents, reads captions first, every frame size">
+  <img src="assets/readme/features-light.svg" width="100%" alt="Presets, trends, looks, agents, reads captions first, every frame size, stream VODs into clips, captions in any language, the person cut out">
 </picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/fx-dark.svg">
-  <img src="assets/readme/fx-light.svg" width="100%" alt="Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, music ducking, stabilize, ProRes">
+  <img src="assets/readme/fx-light.svg" width="100%" alt="Everything an edit needs: speed ramps, freeze, face tracking, facecam layouts, hits, captions, song lyrics, captions in any language, looks, LUTs, music ducking, seamless loops, stabilize, ProRes">
 </picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/basics-dark.svg">
-  <img src="assets/readme/basics-light.svg" width="100%" alt="The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked under the voice, cuts on the beat, faces followed into 9:16">
+  <img src="assets/readme/basics-light.svg" width="100%" alt="The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked under the voice, cuts on the beat, faces followed into 9:16, a stream's facecam over the game">
 </picture>
 
 <picture>
