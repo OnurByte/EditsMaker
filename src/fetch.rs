@@ -127,14 +127,24 @@ pub fn parse_chart(html: &str) -> Vec<String> {
     }).collect()
 }
 
-/// What is trending on TikTok in a country right now (two-letter code), from kworb.net's public chart.
-pub fn trends(country: &str) -> Result<Vec<String>, String> {
-    let cc: String = country.chars().filter(|c| c.is_ascii_alphabetic()).take(2).collect::<String>().to_lowercase();
-    let html = run(None, "curl", &["-fsSL", "--max-time", "20", "-A", "Mozilla/5.0", &format!("https://kworb.net/charts/tiktok/{cc}.html")])
-        .map_err(|e| format!("could not read the TikTok chart for \"{cc}\": {e}"))?;
+/// The kworb.net page of a chart: TikTok's (`trend`) or Spotify's daily one, for a two-letter country (Spotify: also "global").
+pub fn chart_url(kind: &str, cc: &str) -> String {
+    match kind {
+        "spotify" => format!("https://kworb.net/spotify/country/{cc}_daily.html"),
+        _ => format!("https://kworb.net/charts/tiktok/{cc}.html"),
+    }
+}
+
+/// What is trending in a country right now (two-letter code), from kworb.net's public charts: TikTok's sounds, or
+/// with `kind` "spotify" the most streamed songs of the day.
+pub fn trends(kind: &str, country: &str) -> Result<Vec<String>, String> {
+    let cc: String = if country.eq_ignore_ascii_case("global") { "global".into() } else { country.chars().filter(|c| c.is_ascii_alphabetic()).take(2).collect::<String>().to_lowercase() };
+    let name = if kind == "spotify" { "Spotify" } else { "TikTok" };
+    let html = run(None, "curl", &["-fsSL", "--max-time", "20", "-A", "Mozilla/5.0", &chart_url(kind, &cc)])
+        .map_err(|e| format!("could not read the {name} chart for \"{cc}\": {e}"))?;
     let list = parse_chart(&html);
     if list.is_empty() {
-        return Err(format!("the TikTok chart for \"{cc}\" had no songs"));
+        return Err(format!("the {name} chart for \"{cc}\" had no songs"));
     }
     Ok(list)
 }
@@ -149,10 +159,12 @@ pub fn country() -> String {
     }
 }
 
-/// `--music trend`, `trend:3` or `trend:us:3`: the song at that place on TikTok's chart, found on YouTube.
+/// `--music trend`, `trend:3` or `trend:us:3`: the song at that place on TikTok's chart, found on YouTube;
+/// `spotify`, `spotify:3`, `spotify:us:3` the same on Spotify's daily chart.
 /// A file or link is used as it is; any other text is a song title, found on YouTube.
 pub fn music(spec: &str) -> Result<String, String> {
-    let Some(rest) = spec.strip_prefix("trend") else {
+    let kind = if spec.starts_with("spotify") { "spotify" } else { "trend" };
+    let Some(rest) = spec.strip_prefix(kind).filter(|r| r.is_empty() || r.starts_with(':')) else {
         // a file or a link as it is; any other text is a song title to look up
         let is_link = spec.starts_with("http://") || spec.starts_with("https://");
         if is_link {
@@ -178,9 +190,9 @@ pub fn music(spec: &str) -> Result<String, String> {
         [x] => x.parse().map_or((x, 1), |n| (home.as_str(), n)),
         [c, x, ..] => (c, x.parse().unwrap_or(1)),
     };
-    let list = trends(cc)?;
+    let list = trends(kind, cc)?;
     let song = list.get(n.max(1) - 1).ok_or(format!("the chart has {} songs", list.len()))?;
-    eprintln!("edits: trending #{n} in {cc}: {song}");
+    eprintln!("edits: {} #{n} in {cc}: {song}", if kind == "spotify" { "Spotify" } else { "trending" });
     find_song(song)
 }
 
@@ -403,6 +415,11 @@ mod tests {
         assert_eq!(parse_chart(html), vec!["Ravi İncigöz - Maşallah", "Heijan & Muti - Yansın Geceler"]);
         assert!(parse_chart("<html></html>").is_empty());
         assert_eq!(music("https://youtu.be/x").unwrap(), "https://youtu.be/x");
+        // Spotify's daily chart: artist and title are two links in one cell
+        let sp = r#"<tr><td>1</td><td class="text mp"><div><a href="../artist/1.html">Mabel Matiz</a> - <a href="../track/2.html">Umrumdışı</a></div></td><td>572,574</td></tr>"#;
+        assert_eq!(parse_chart(sp), vec!["Mabel Matiz - Umrumdışı"]);
+        assert_eq!(chart_url("spotify", "tr"), "https://kworb.net/spotify/country/tr_daily.html");
+        assert_eq!(chart_url("trend", "us"), "https://kworb.net/charts/tiktok/us.html");
     }
 
     #[test]

@@ -578,14 +578,15 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         let rest = c.keys.iter().map(|k| k.1).min_by(|a, b| (a - size / 2.0).abs().total_cmp(&(b - size / 2.0).abs())).unwrap_or(size / 2.0);
         c.map(|v| (v - rest) / size)
     }).unwrap_or_default();
-    let mut shake = both(&|x| effect_prop(x, "oscillate3", "mag").or_else(|| effect_prop(x, "shake2", "mag"))).unwrap_or_default().map(|v| v / w);
+    let mut shake = both(&|x| effect_prop(x, "oscillate3", "mag").or_else(|| effect_prop(x, "shake2", "mag")).or_else(|| effect_prop(x, "effects.shake", "mag"))).unwrap_or_default().map(|v| v / w);
     if shake.keys.is_empty() {
         shake = both(&|x| effect_prop(x, "randomdisplace", "mag")).unwrap_or_default().map(|v| v / w * 0.5);
     }
     let hz = both(&|x| effect_prop(x, "oscillate3", "freq").or_else(|| effect_prop(x, "shake2", "freq"))).map_or(4.0, |c| c.max().clamp(0.5, 16.0));
     let blur = both(&|x| effect_prop(x, "gaussianblur", "strength").map(|c| c.map(|v| v / 0.1))
         .or_else(|| effect_prop(x, "lensblurobs", "progressa").map(|c| c.map(|v| v / 0.3)))
-        .or_else(|| effect_prop(x, "zoomblur3", "strength"))).unwrap_or_default();
+        .or_else(|| effect_prop(x, "zoomblur3", "strength")).or_else(|| effect_prop(x, "zoomblur2", "strength")).or_else(|| effect_prop(x, "zoomblur", "strength"))
+        .or_else(|| effect_prop(x, "effects.lensblur", "strength"))).unwrap_or_default();
     let saturation = both(&|x| effect_prop(x, "satvib", "saturation")).map_or(1.0, |c| (1.0 + c.max()).clamp(0.0, 2.0));
     // Alight's Transform effect: a zoom (posz, a factor), a turn (angle, degrees) and an offset on top of the layer's own
     let t2 = |p: &str| both(&|x| effect_prop(x, "transform2", p)).or_else(|| parent(n).and_then(|q| effect_prop(q, "transform2", p)));
@@ -631,7 +632,7 @@ fn slot(n: Node, w: f64, h: f64) -> Option<Slot> {
         lens: 0.0,
         trails: 0.0,
         flip: false,
-        rgb: [n, m].iter().any(|x| has_effect(*x, "rgbsepnew") || has_effect(*x, "chromabbr")),
+        rgb: [n, m].iter().any(|x| has_effect(*x, "rgbsepnew") || has_effect(*x, "rgbsep") || has_effect(*x, "chromabbr")),
         invert: has_effect(n, "invert") || has_effect(m, "invert"),
         ramp: Curve::default(),
         reverse: false,
@@ -690,7 +691,9 @@ const READ: &[&str] = &["lift", "tile", "mirror", "oscillate3", "shake2", "rando
     "zoomblur3", "spinblur2", "motionblur", "motionblur2", "motionblur4", "moblurplus", "exposure", "brightcont2", "highlightshadow", "threshold",
     "deepglow", "deepglow2", "softglow", "edgeglow", "satvib", "rgbsepnew", "chromabbr", "chromaticzoomblur", "invert", "blink2",
     "transform2", "wipe2", "fade", "ccjaws", "turbulence2", "dropshadow", "sharpen", "unsharpmask", "vignette", "hueshift", "lightglow",
-    "flicker2", "pinchbulge2", "posterize", "halftonedots", "dblur", "lensblur2"];
+    "flicker2", "pinchbulge2", "posterize", "halftonedots", "dblur", "lensblur2",
+    // same moves under older ids, from Alight's effect catalog (alight-motion-xml-schema)
+    "shake", "swing", "swing2", "rgbsep", "zoomblur", "zoomblur2", "lensblur", "boxblur", "boxblur2", "boxblur3"];
 
 /// Effects that only dress titles and logos (letter spacing, bevels, a gradient plate, a line drawing itself): they
 /// belong to a caption style (captions.json: `spacing`, `glow`, `outline`, `shadow`), not to a shot.
@@ -706,9 +709,9 @@ fn adjust(n: Node, slots: &mut [Slot], w: f64) {
     let (Some(a), Some(b)) = (ms(n, "startTime"), ms(n, "endTime")) else { return };
     let any = |ids: &[&str]| ids.iter().any(|e| has_effect(n, e));
     let peak = |e: &str, p: &str, scale: f64, dflt: f64| effect_prop(n, e, p).map_or(dflt, |c| (c.max().abs() * scale).clamp(0.0, 1.0));
-    let blur = any(&["gaussianblur", "innerblur", "fastboxblur", "lensblurobs", "zoomblur3", "chromaticzoomblur"]).then(|| peak("gaussianblur", "strength", 10.0, 0.6));
+    let blur = any(&["gaussianblur", "innerblur", "fastboxblur", "boxblur", "boxblur2", "boxblur3", "lensblurobs", "effects.lensblur", "zoomblur", "zoomblur2", "zoomblur3", "chromaticzoomblur"]).then(|| peak("gaussianblur", "strength", 10.0, 0.6));
     let bright = any(&["exposure", "brightcont2", "highlightshadow", "threshold", "deepglow", "deepglow2", "softglow", "edgeglow"]).then(|| peak("exposure", "exposure", 1.0, 0.35));
-    let shake = any(&["oscillate3", "shake2", "randomdisplace", "jitter"]).then(|| effect_prop(n, "oscillate3", "mag").or_else(|| effect_prop(n, "shake2", "mag")).map_or(0.03, |c| (c.max() / w).clamp(0.005, 0.1)));
+    let shake = any(&["oscillate3", "shake2", "effects.shake", "swing", "swing2", "randomdisplace", "jitter"]).then(|| effect_prop(n, "oscillate3", "mag").or_else(|| effect_prop(n, "shake2", "mag")).or_else(|| effect_prop(n, "effects.shake", "mag")).map_or(0.03, |c| (c.max() / w).clamp(0.005, 0.1)));
     let sat = effect_prop(n, "satvib", "saturation").map(|c| (1.0 + c.max()).clamp(0.0, 2.0));
     for s in slots.iter_mut().filter(|s| s.start < b && s.end > a) {
         let len = (s.end - s.start).max(1e-3);
@@ -729,7 +732,7 @@ fn adjust(n: Node, slots: &mut [Slot], w: f64) {
             s.shake = pulse(v);
             s.shake_hz = 12.0;
         }
-        s.rgb |= any(&["rgbsepnew", "chromabbr", "chromaticzoomblur"]);
+        s.rgb |= any(&["rgbsepnew", "rgbsep", "chromabbr", "chromaticzoomblur"]);
         s.invert |= any(&["invert"]);
         if let (Some(v), true) = (sat, ub - ua >= 0.5) {
             s.saturation = v;
@@ -1242,6 +1245,16 @@ mod tests {
   </shape>
   <audio id="6" label="Montagem Royal - Slowed &amp; Reverb Mp4" startTime="0" endTime="2000" src="content://a" inTime="6484" outTime="8484"/>
 </scene>"##;
+
+    #[test]
+    fn older_alight_effect_ids_read_like_the_new_ones() {
+        // ids from Alight's effect catalog: shake (not shake2), zoomblur (not zoomblur3), rgbsep (not rgbsepnew)
+        let xml = XML.replace("effects.oscillate3", "effects.shake").replace("effects.gaussianblur\"><property name=\"strength\" type=\"float\"><kf t=\"0\" v=\"0.1\"/>", "effects.zoomblur\"><property name=\"strength\" type=\"float\"><kf t=\"0\" v=\"1\"/>")
+            .replace("<effect id=\"com.alightcreative.effects.motionblur4\">", "<effect id=\"com.alightcreative.effects.rgbsep\"/><effect id=\"com.alightcreative.effects.motionblur4\">");
+        let p = parse(&xml, "t").unwrap();
+        assert!((p.slots[0].shake.max() - 0.05).abs() < 1e-9 && p.slots[0].rgb, "{:?}", p.slots[0]);
+        assert!(p.slots[1].blur.at(0.0) > 0.99 && p.slots[1].blur.at(1.0) == 0.0);
+    }
 
     #[test]
     fn reads_a_project() {

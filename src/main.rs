@@ -19,6 +19,7 @@ mod premiere;
 mod preset;
 mod presets;
 mod render;
+mod shazam;
 mod signals;
 mod study;
 mod svg;
@@ -63,10 +64,16 @@ fn main() -> ExitCode {
         Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
         Some("info") => update::info(),
-        Some("trends") => fetch::trends(&args.get(1).cloned().unwrap_or_else(|| lang::system().1)).map(|list| {
-            list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
-            println!("\nuse one: --music trend:N  (another country: --music trend:us:N)");
-        }),
+        Some("trends") => {
+            // edits trends [spotify] [country]
+            let spotify = args.get(1).is_some_and(|a| a == "spotify");
+            let (kind, tag) = if spotify { ("spotify", "spotify") } else { ("trend", "trend") };
+            let cc = args.get(if spotify { 2 } else { 1 }).cloned().unwrap_or_else(|| lang::system().1);
+            fetch::trends(kind, &cc).map(|list| {
+                list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
+                println!("\nuse one: --music {tag}:N  (another country: --music {tag}:us:N)");
+            })
+        }
         Some("rate") => rate(&args[1..]),
         Some("preset") => preset_cmd(&args[1..]),
         Some("library") if args.get(1).is_some_and(|a| a == "add") && args.len() > 2 => (|| {
@@ -110,6 +117,9 @@ fn main() -> ExitCode {
                 let file = into.join(format!("{}.json", preset::slug(&name)));
                 std::fs::write(&file, preset::pretty(&p)).map_err(|e| e.to_string())?;
                 println!("{}: {} ({:.1}s) -> --preset {}", file.display(), p.about, p.total, preset::slug(&name));
+                if let Ok(Some(f)) = shazam::recognize(path, None) {
+                    println!("  its song: {} - {} (--music \"{} - {}\")", f.artist, f.title, f.artist, f.title);
+                }
             }
             Ok(())
         })(),
@@ -150,6 +160,8 @@ fn main() -> ExitCode {
             None => Err("usage: edits check <clip.mp4>   length, loudness, cut rhythm and a contact sheet to look at".into()),
         },
         Some("words") if args.len() > 1 => words(&args[1..]),
+        Some("song") if args.len() > 1 => shazam::cmd(&args[1..]),
+        Some("cut") if args.len() > 2 => check::cut(&args[1], &args[2..], &auto_out(&args[1])).map(|v| v.iter().for_each(|f| println!("{}", f.display()))),
         Some("frames") => match args.get(1) {
             Some(v) if args.len() > 2 => check::frames(v, &args[2..]).map(|s| println!("{s}")),
             _ => Err("usage: edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)".into()),
@@ -844,7 +856,8 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             if len > p.total - 0.9 {
                 eprintln!("edits: the --say line ({len:.1}s) is longer than the preset ({:.1}s); it is cut off", p.total);
             }
-            (&spoken[*i], m, montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &lift, len, p.total, p.slots.iter().find(|s| s.drop).map(|s| s.start)) })
+            let v = montage::Voice { file: spoken[*i].src.audio.clone(), start: m.start, len, at: voice_at(&cut_starts, &lift, len, p.total, p.slots.iter().find(|s| s.drop).map(|s| s.start)) };
+            (&spoken[*i], m, if c.finish.denoise { finish::clean_voice(v, &cache.join("voices")) } else { v })
         });
         let slots: Vec<&preset::Slot> = spans.iter().map(|(a, _)| p.slots.iter().rfind(|s| s.start <= a + 0.02).unwrap_or(&p.slots[0])).collect();
         let lens: Vec<f64> = spans.iter().zip(&slots).map(|((a, b), s)| (s.end - s.start).max(b - a)).collect();
@@ -970,7 +983,9 @@ fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, Stri
     library::apply(out, &c.overlays)?;
     let cuts: Vec<f64> = tl.clips.iter().scan(0.0, |t, cl| { *t += cl.2; Some(*t) }).collect();
     wrap::math(out, &cuts[..cuts.len().saturating_sub(1)], c.math, &c.formulas, &styled, &c.lang)?;
-    let fin = finish::apply(out, &c.finish)?;
+    // music and preset edits had their voice line cleaned before the mix; the song must not go through a denoiser
+    let edit = c.music.is_some() || c.preset.is_some() || c.like.is_some();
+    let fin = finish::apply(out, &finish::Finish { denoise: c.finish.denoise && !edit, ..c.finish.clone() })?;
     let shift = wrap::around(&fin, &c.around, &c.lang, c.opts.lufs, &util::home().join(".cache/edits"))?;
     let mut tl = tl.clone();
     tl.captions.iter_mut().for_each(|x| { x.0 += shift; x.1 += shift; });
@@ -1283,7 +1298,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
             (None, None) => {
                 let wins = montage::windows(&song.beats, song.stretch(), c.look.length, k + 1);
                 let start = *wins.get(k).or(wins.last())?;
-                (start, montage::cuts(&song.beats, start, c.look.length, look.shot()), 0.0)
+                (start, montage::cuts(&song.beats, &song.loud, start, c.look.length, look.shot()), 0.0)
             }
         };
         let total = *cuts.last()?;
@@ -1327,7 +1342,8 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 let out = c.out.join(format!("{kind}-{:02}.mp4", p.k + 1));
                 let work = cache.join("renders").join(format!("{kind}-{:02}", p.k + 1));
                 std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
-                let v = p.voice.map(|(a, m)| montage::Voice { file: a.src.audio.clone(), start: m.start, len: m.end - m.start, at: p.at });
+                let v = p.voice.map(|(a, m)| montage::Voice { file: a.src.audio.clone(), start: m.start, len: m.end - m.start, at: p.at })
+                    .map(|v| if c.finish.denoise { finish::clean_voice(v, &work) } else { v });
                 let (words, line) = match p.voice {
                     Some((a, m)) if opts.captions => (&a.words[..], Some(m)),
                     _ => (&[][..], None),
@@ -1381,18 +1397,48 @@ const SKILLS: &[(&str, &str)] = &[
     ("edits-reverse", include_str!("../skills/edits-reverse/SKILL.md")),
 ];
 
+/// Skill packs from other projects, fetched from GitHub when asked for instead of built in: the binary stays small and
+/// a pack is as new as its repository. (name, repository, folder of skills in it, what it is for)
+const CATALOG: &[(&str, &str, &str, &str)] = &[
+    ("remotion", "remotion-dev/skills", "skills", "Remotion, videos written in React: create, markup, captions, render, studio, maps"),
+    ("youtube-research", "TubeLabHQ/youtube-research-skills", "skills", "YouTube research: niches, channels, titles, thumbnails, comments, trends (TubeLab)"),
+];
+
+/// Claude's skill folder and every other agent's that exists here, or the one asked for.
+fn skill_dirs(given: Option<&String>) -> Vec<PathBuf> {
+    let h = util::home();
+    match given {
+        Some(d) => vec![PathBuf::from(d)],
+        None => std::iter::once(h.join(".claude/skills")).chain([".config/opencode/skills", ".codex/skills", ".cursor/skills", ".gemini/skills", ".codeium/windsurf/skills"]
+            .iter().map(|d| h.join(d)).filter(|d| d.is_dir())).collect(),
+    }
+}
+
+fn copy_tree(from: &Path, to: &Path) -> Result<(), String> {
+    std::fs::create_dir_all(to).map_err(|e| e.to_string())?;
+    for e in std::fs::read_dir(from).map_err(|e| e.to_string())?.flatten() {
+        let (src, dst) = (e.path(), to.join(e.file_name()));
+        if src.is_dir() { copy_tree(&src, &dst)? } else { std::fs::copy(&src, &dst).map(|_| ()).map_err(|e| format!("{}: {e}", dst.display()))? }
+    }
+    Ok(())
+}
+
+/// The skill folders (each holding a SKILL.md) under `root`, by name.
+fn skill_folders(root: &Path) -> Vec<(String, PathBuf)> {
+    let mut v: Vec<(String, PathBuf)> = std::fs::read_dir(root).into_iter().flatten().flatten().map(|e| e.path())
+        .filter(|p| p.join("SKILL.md").is_file()).map(|p| (p.file_name().unwrap_or_default().to_string_lossy().into_owned(), p)).collect();
+    v.sort();
+    v
+}
+
 /// `edits skills install [DIR]`: the agent skills into ~/.claude/skills (or DIR). `edits skills` lists them.
+/// `edits skills catalog`: packs from other projects; `edits skills add PACK [SKILL...] [--into DIR]` fetches one.
 fn skills(args: &[String]) -> Result<(), String> {
+    let into = args.iter().position(|a| a == "--into").and_then(|i| args.get(i + 1));
     match args.first().map(String::as_str) {
         Some("install") => {
             // a folder given, or Claude's and every other agent's skill folder that exists
-            let h = util::home();
-            let dirs: Vec<PathBuf> = match args.get(1) {
-                Some(d) => vec![PathBuf::from(d)],
-                None => std::iter::once(h.join(".claude/skills")).chain([".config/opencode/skills", ".codex/skills", ".cursor/skills", ".gemini/skills", ".codeium/windsurf/skills"]
-                    .iter().map(|d| h.join(d)).filter(|d| d.is_dir())).collect(),
-            };
-            for dir in &dirs {
+            for dir in &skill_dirs(args.get(1)) {
                 for (name, text) in SKILLS {
                     let d = dir.join(name);
                     std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
@@ -1402,12 +1448,49 @@ fn skills(args: &[String]) -> Result<(), String> {
             }
             Ok(())
         }
+        Some("catalog") => {
+            for (name, repo, _, about) in CATALOG {
+                println!("{name:<18} {about}\n{:<18} github.com/{repo}", "");
+            }
+            println!("\nadd one: edits skills add PACK [SKILL...]   (all of its skills, or only those named)");
+            Ok(())
+        }
+        Some("add") => {
+            let pack = args.get(1).ok_or("usage: edits skills add PACK [SKILL...] [--into DIR]   (edits skills catalog lists them)")?;
+            let &(_, repo, folder, _) = CATALOG.iter().find(|c| c.0 == pack).ok_or(format!("no pack \"{pack}\" (edits skills catalog lists them)"))?;
+            let want: Vec<&String> = args[2..].iter().take_while(|a| *a != "--into").collect();
+            let tmp = std::env::temp_dir().join(format!("edits-skills-{}", std::process::id()));
+            std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+            let res = (|| {
+                let tar = tmp.join("pack.tar.gz");
+                util::run(None, "curl", &["-fsSL", "--max-time", "120", "-o", &tar.to_string_lossy(), &format!("https://codeload.github.com/{repo}/tar.gz/HEAD")])
+                    .map_err(|e| format!("could not download {repo}: {e}"))?;
+                util::run(None, "tar", &["-xzf", &tar.to_string_lossy(), "-C", &tmp.to_string_lossy()])?;
+                // the archive holds one folder, named after the repository and commit
+                let top = std::fs::read_dir(&tmp).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).find(|p| p.is_dir()).ok_or("the download was empty")?;
+                let found = skill_folders(&top.join(folder));
+                let pick: Vec<&(String, PathBuf)> = found.iter().filter(|(n, _)| want.is_empty() || want.contains(&n)).collect();
+                if pick.is_empty() {
+                    return Err(format!("{pack} has: {}", found.iter().map(|f| f.0.as_str()).collect::<Vec<_>>().join(", ")));
+                }
+                for dir in &skill_dirs(into) {
+                    for (name, src) in &pick {
+                        copy_tree(src, &dir.join(name))?;
+                    }
+                    println!("{pack}: {} skill(s) in {}: {}", pick.len(), dir.display(), pick.iter().map(|p| p.0.as_str()).collect::<Vec<_>>().join(", "));
+                }
+                Ok(())
+            })();
+            let _ = std::fs::remove_dir_all(&tmp);
+            res
+        }
         _ => {
             for (name, text) in SKILLS {
                 let about = text.lines().find_map(|l| l.strip_prefix("description: ")).unwrap_or("");
                 println!("{name:<22} {}", about.chars().take(110).collect::<String>());
             }
             println!("\ninstall them: edits skills install [DIR]   (default ~/.claude/skills)");
+            println!("more from other projects (Remotion, YouTube research): edits skills catalog");
             Ok(())
         }
     }
@@ -1637,6 +1720,22 @@ fn doctor() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn skill_packs_copy_whole_folders() {
+        let root = std::env::temp_dir().join(format!("edits-skilltest-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("pack/a/refs")).unwrap();
+        std::fs::create_dir_all(root.join("pack/not-a-skill")).unwrap();
+        std::fs::write(root.join("pack/a/SKILL.md"), "name: a").unwrap();
+        std::fs::write(root.join("pack/a/refs/more.md"), "x").unwrap();
+        let found = super::skill_folders(&root.join("pack"));
+        assert_eq!(found.iter().map(|f| f.0.as_str()).collect::<Vec<_>>(), ["a"]);
+        super::copy_tree(&found[0].1, &root.join("out/a")).unwrap();
+        assert!(root.join("out/a/refs/more.md").is_file());
+        assert!(super::CATALOG.iter().all(|c| c.1.contains('/')));
+        let _ = std::fs::remove_dir_all(&root);
+    }
 
     #[test]
     fn say_stops_before_the_next_word() {

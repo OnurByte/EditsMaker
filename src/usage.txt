@@ -23,6 +23,8 @@ USAGE
   edits check <clip.mp4|link> measure a render: length, loudness, cut rhythm, a contact sheet to look at
   edits words <link|ID|file> [A-B] [--find TEXT]   what it says, line by line, each as a ready --say ID@A-B
   edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4) in one jpg, to pick --shot
+  edits song <video|link|ID> [AT]   which song plays there (Shazam), ready for --music
+  edits cut <video|link|ID> A-B...  stretches copied out without re-encoding (lossless, instant), each from the keyframe before A
   edits font NAME...          a Google Fonts family for caption styles ("Bebas Neue", "Montserrat Black");
                                a style naming one this machine lacks fetches it by itself
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
@@ -31,12 +33,13 @@ USAGE
                                Gemini CLI, Claude Desktop, VS Code (and the guard below)
   edits guard install          Claude Code refuses video work done by hand (a shell running the tools edits wraps)
   edits skills [install]       agent skills for every command
-  edits trends [country]      what is trending on TikTok now (default tr); use with --music trend:N
+  edits skills catalog | add PACK [SKILL...]   skill packs from other projects (Remotion, YouTube research), fetched from GitHub
+  edits trends [spotify] [country]   what is trending on TikTok now (default tr), or Spotify's daily chart; use with --music trend:N / spotify:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
 
 OPTIONS
       --music SONG    make music edits: the footage's best shots cut on the song's beats (link, file, a library song, or
-                      trend:N for TikTok's Nth trending song, trend:us:N for another country)
+                      trend:N for TikTok's Nth trending song, trend:us:N for another country, spotify:N for Spotify's daily chart)
       --preset NAME   replay a preset (name or .json file) over the footage: timing, speed, moves, shakes, flashes, song
       --intensity K   preset moves: 0.5 calmer, 2 wilder (default: the preset's own)
       --like EDIT     copy a reference edit (file or link): its music (dialogue removed), cuts, flashes, colour and shape
@@ -95,7 +98,8 @@ OPTIONS
       --pop COLOUR    colour pop: only red, yellow, green, cyan, blue or magenta stays, the rest goes grey
       --bass DB       low end boost (6 = phonk)   --pitch N  semitones up or down, tempo kept
       --reverb        a room behind the sound (slowed + reverb)
-      --stabilize  --denoise  --smooth  --fps N  --codec h264|h265|prores|av1  --quality draft|high|master
+      --denoise       clean the voice: a --say line loses the noise and score under it (DeepFilterNet), talking clips their hiss
+      --stabilize  --smooth  --fps N  --codec h264|h265|prores|av1  --quality draft|high|master
       --export LIST   timelines beside each clip for other editors: fcpxml, edl, srt, vtt
       --no-jumpcuts   keep the pauses   --no-sfx  no whoosh/boom   --no-hook  no title on top
       --no-captions   no burned-in captions

@@ -104,6 +104,41 @@ pub fn audio_chain(f: &Finish) -> String {
     a.join(",")
 }
 
+/// A voice line cleaned before it meets the music: its stretch of `v.file` (half a second either side) through
+/// DeepFilterNet, which keeps the speech and drops the noise and score under it; ffmpeg's afftdn when DeepFilterNet
+/// cannot run here. The music itself is never touched. Falls back to the voice as it was.
+pub fn clean_voice(v: crate::montage::Voice, work: &Path) -> crate::montage::Voice {
+    let pad = v.start.min(0.5);
+    let dir = work.join("clean");
+    let raw = dir.join(format!("voice-{:.2}-{:.2}.wav", v.start, v.len));
+    let done = dir.join("out").join(raw.file_name().unwrap_or_default());
+    let res = (|| {
+        if done.is_file() {
+            return Ok(());
+        }
+        std::fs::create_dir_all(dir.join("out")).map_err(|e| e.to_string())?;
+        let src = v.file.to_string_lossy();
+        let cut = |af: &str, to: &Path| run(None, "ffmpeg", &["-v", "error", "-y", "-ss", &format!("{:.3}", v.start - pad), "-t", &format!("{:.3}", v.len + pad + 0.5),
+            "-i", src.as_ref(), "-vn", "-ac", "1", "-ar", "48000", "-af", af, &to.to_string_lossy()]).map(|_| ());
+        cut("anull", &raw)?;
+        match crate::tools::deep_filter() {
+            // -D: no delay added, so the words stay where they were
+            Ok(df) => run(None, &df, &["-D", "-o", &dir.join("out").to_string_lossy(), &raw.to_string_lossy()]).map(|_| ()),
+            Err(e) => {
+                eprintln!("edits: {e}; the voice is cleaned with ffmpeg instead");
+                cut("afftdn=nf=-25,dialoguenhance", &done)
+            }
+        }
+    })();
+    match res {
+        Ok(()) if done.is_file() => crate::montage::Voice { file: done, start: pad, ..v },
+        other => {
+            eprintln!("edits: could not clean the voice ({}); it keeps its noise", other.err().unwrap_or_else(|| "no output".into()));
+            v
+        }
+    }
+}
+
 /// Runs the pass over `clip` in place (a ProRes delivery becomes a .mov beside it). Returns the final file.
 pub fn apply(clip: &Path, f: &Finish) -> Result<PathBuf, String> {
     if !f.wanted() {
