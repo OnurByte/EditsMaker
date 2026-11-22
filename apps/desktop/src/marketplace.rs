@@ -56,7 +56,7 @@ impl Workspace {
             .child(div().w_full().h(px(144.)).rounded(SMALL).overflow_hidden().bg(b.hair)
                 .children(picture(p).map(|img| img.size_full().object_fit(ObjectFit::Cover))))
             .child(text(p.name.clone(), 15., BOLD, b.ink).truncate())
-            .child(text(format!("{} · {}", if is_automation(&p.kinds) { "Automation" } else { "Pack" }, p.author), 12., FontWeight::NORMAL, b.gray).truncate())
+            .child(text(format!("{} · {}", if is_automation(&p.kinds) { "Automation" } else if p.is("feed") { "RSS" } else { "Pack" }, p.author), 12., FontWeight::NORMAL, b.gray).truncate())
             .child(text(p.description.clone(), 13., LIGHT, b.gray).h(px(36.)).line_clamp(2))
             .child(div().pt(px(8.)).child(action))
     }
@@ -110,6 +110,7 @@ impl Workspace {
             .child(div().id("market").flex_1().min_h_0().overflow_y_scroll()
                 .child(div().w_full().max_w(px(960.)).mx_auto().p(px(24.)).flex().flex_col().gap(px(24.))
                     .child(text(about, 15., LIGHT, b.gray))
+                    .when(automations, |d| d.child(self.flows_section(&b, cx)))
                     .child(text("From the community", 19., BOLD, b.ink))
                     .child(community)
                     .child(text("Here", 19., BOLD, b.ink))

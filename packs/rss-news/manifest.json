@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-news",
+  "name": "News",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "News from 10 feeds, BBC News, CNN.com - RSS Channel - World, International: Top News And Analysis: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "BBC News",
+      "url": "http://feeds.bbci.co.uk/news/world/rss.xml"
+    },
+    {
+      "name": "CNN.com - RSS Channel - World",
+      "url": "http://rss.cnn.com/rss/edition_world.rss"
+    },
+    {
+      "name": "International: Top News And Analysis",
+      "url": "https://www.cnbc.com/id/100727362/device/rss/rss.html"
+    },
+    {
+      "name": "NDTV News Search Records Found 1000",
+      "url": "http://feeds.feedburner.com/ndtvnews-world-news"
+    },
+    {
+      "name": "NYT > World News",
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+    },
+    {
+      "name": "Top stories - Google News",
+      "url": "https://news.google.com/rss"
+    },
+    {
+      "name": "World",
+      "url": "http://feeds.washingtonpost.com/rss/world"
+    },
+    {
+      "name": "World News",
+      "url": "https://www.reddit.com/r/worldnews/.rss"
+    },
+    {
+      "name": "World News, Today World News, Latest International News, World Breaking News, Trending News of World - Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms"
+    },
+    {
+      "name": "World news | The Guardian",
+      "url": "https://www.theguardian.com/world/rss"
+    }
+  ]
+}

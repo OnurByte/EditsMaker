@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-funny",
+  "name": "Funny",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Funny from 13 feeds, Cracked: All Posts, Explosm.net, FAIL Blog: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Cracked: All Posts",
+      "url": "http://feeds.feedburner.com/CrackedRSS"
+    },
+    {
+      "name": "Explosm.net",
+      "url": "http://feeds.feedburner.com/Explosm"
+    },
+    {
+      "name": "FAIL Blog",
+      "url": "http://feeds.feedburner.com/failblog"
+    },
+    {
+      "name": "I Can Has Cheezburger?",
+      "url": "http://feeds.feedburner.com/icanhascheezburger"
+    },
+    {
+      "name": "PHD Comics",
+      "url": "http://phdcomics.com/gradfeed.php"
+    },
+    {
+      "name": "Penny Arcade",
+      "url": "https://www.penny-arcade.com/feed"
+    },
+    {
+      "name": "PostSecret",
+      "url": "https://postsecret.com/feed/?alt=rss"
+    },
+    {
+      "name": "Saturday Morning Breakfast Cereal",
+      "url": "https://www.smbc-comics.com/comic/rss"
+    },
+    {
+      "name": "The Bloggess",
+      "url": "https://thebloggess.com/feed/"
+    },
+    {
+      "name": "The Daily WTF",
+      "url": "http://syndication.thedailywtf.com/TheDailyWtf"
+    },
+    {
+      "name": "The Oatmeal - Comics by Matthew Inman",
+      "url": "http://feeds.feedburner.com/oatmealfeed"
+    },
+    {
+      "name": "The Onion",
+      "url": "https://www.theonion.com/rss"
+    },
+    {
+      "name": "xkcd.com",
+      "url": "https://xkcd.com/rss.xml"
+    }
+  ]
+}

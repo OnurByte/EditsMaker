@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "made for edits: character edit - slow build, held face, drop of punch cuts, still end",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

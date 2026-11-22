@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-chess",
+  "name": "Chess",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Chess from 16 feeds, Better Chess, Chess News, Chess Talk: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Better Chess",
+      "url": "https://betterchess.net/feed/"
+    },
+    {
+      "name": "Chess News",
+      "url": "https://en.chessbase.com/feed"
+    },
+    {
+      "name": "Chess Talk",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC6HDXr-sNPnWLF_Q-y3KduA"
+    },
+    {
+      "name": "Chess | The Guardian",
+      "url": "https://www.theguardian.com/sport/chess/rss"
+    },
+    {
+      "name": "Chess.com",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=wwwChesscom"
+    },
+    {
+      "name": "Chess.com News",
+      "url": "https://www.chess.com/rss/news"
+    },
+    {
+      "name": "ChessBase India",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCIsEhwBMPkRHsEgqYAPQHsA"
+    },
+    {
+      "name": "Chessable Blog",
+      "url": "https://www.chessable.com/blog/feed/"
+    },
+    {
+      "name": "For the budding patzer",
+      "url": "https://www.reddit.com/r/chessbeginners/.rss"
+    },
+    {
+      "name": "Lichess's Blog",
+      "url": "https://lichess.org/blog.atom"
+    },
+    {
+      "name": "Perpetual Chess Podcast",
+      "url": "https://feeds.megaphone.fm/BLU4811105299"
+    },
+    {
+      "name": "The Week in Chess",
+      "url": "https://theweekinchess.com/twic-rss-feed"
+    },
+    {
+      "name": "agadmator's Chess Channel",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCL5YbN5WLFD8dLIegT5QAbA"
+    },
+    {
+      "name": "chess24",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=chess24media"
+    },
+    {
+      "name": "r/Chess",
+      "url": "https://www.reddit.com/r/chess/.rss"
+    },
+    {
+      "name": "thechesswebsite",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=thechesswebsite"
+    }
+  ]
+}

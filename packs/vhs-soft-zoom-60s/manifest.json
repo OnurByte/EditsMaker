@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "49 shots (1.3 s), gentle 1.15x zoom-outs under a VHS look; CapCut draft from github.com/Davidb-2107/capcut-cli-david (MIT)",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

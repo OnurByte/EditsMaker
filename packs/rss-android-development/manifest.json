@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-android-development",
+  "name": "Android Development",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Android Development from 23 feeds, Android Developers, Android Developers - Medium, Android Developers Backstage: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Android Developers",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=androiddevelopers"
+    },
+    {
+      "name": "Android Developers - Medium",
+      "url": "https://medium.com/feed/androiddevelopers"
+    },
+    {
+      "name": "Android Developers Backstage",
+      "url": "http://feeds.feedburner.com/blogspot/androiddevelopersbackstage"
+    },
+    {
+      "name": "Android Developers Blog",
+      "url": "http://feeds.feedburner.com/blogspot/hsDu"
+    },
+    {
+      "name": "Android in MindOrks on Medium",
+      "url": "https://medium.com/feed/mindorks/tagged/android"
+    },
+    {
+      "name": "Android in The Airbnb Tech Blog on Medium",
+      "url": "https://medium.com/feed/airbnb-engineering/tagged/android"
+    },
+    {
+      "name": "Chris Keenan Codes",
+      "url": "https://chrynan.codes/rss/"
+    },
+    {
+      "name": "Company | The JetBrains Blog",
+      "url": "https://blog.jetbrains.com/blog/feed"
+    },
+    {
+      "name": "Dan Lew Codes",
+      "url": "https://blog.danlew.net/rss/"
+    },
+    {
+      "name": "Developing Android Apps",
+      "url": "https://reddit.com/r/androiddev.rss"
+    },
+    {
+      "name": "Fragmented - AI Developer Podcast",
+      "url": "https://feeds.simplecast.com/LpAGSLnY"
+    },
+    {
+      "name": "Handstand Sam",
+      "url": "https://handstandsam.com/feed/"
+    },
+    {
+      "name": "Jake Wharton",
+      "url": "https://jakewharton.com/atom.xml"
+    },
+    {
+      "name": "Kotlin",
+      "url": "https://www.youtube.com/feeds/videos.xml?playlist_id=PLQ176FUIyIUa6SChjajjVc-LMzxWiz6dy"
+    },
+    {
+      "name": "OkKotlin",
+      "url": "https://okkotlin.com/rss.xml"
+    },
+    {
+      "name": "ProAndroidDev - Medium",
+      "url": "https://proandroiddev.com/feed"
+    },
+    {
+      "name": "Public Object",
+      "url": "https://publicobject.com/rss/"
+    },
+    {
+      "name": "Saket Narayan",
+      "url": "https://saket.me/feed/"
+    },
+    {
+      "name": "The Android Arsenal",
+      "url": "https://feeds.feedburner.com/Android_Arsenal"
+    },
+    {
+      "name": "Zac Sweers",
+      "url": "https://www.zacsweers.dev/rss/"
+    },
+    {
+      "name": "Zarah Dominguez",
+      "url": "https://zarah.dev/feed.xml"
+    },
+    {
+      "name": "droidcon SF",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCKubKoe1CBw_-n_GXetEQbg"
+    },
+    {
+      "name": "zsmb.co",
+      "url": "https://zsmb.co/index.xml"
+    }
+  ]
+}

@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "made for edits: whip slides from both sides, punch every 4th cut",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

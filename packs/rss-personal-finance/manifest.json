@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-personal-finance",
+  "name": "Personal finance",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Personal finance from 30 feeds, Afford Anything®, Afford Anything®, Budgets Are Sexy: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Afford Anything®",
+      "url": "https://affordanything.com/feed/"
+    },
+    {
+      "name": "Afford Anything®",
+      "url": "https://feeds.feedburner.com/AffordAnythingFeed"
+    },
+    {
+      "name": "Budgets Are Sexy",
+      "url": "https://feeds2.feedburner.com/budgetsaresexy"
+    },
+    {
+      "name": "Financial Samurai",
+      "url": "https://www.financialsamurai.com/feed/"
+    },
+    {
+      "name": "Frugalwoods",
+      "url": "https://feeds.feedburner.com/Frugalwoods"
+    },
+    {
+      "name": "Good Financial Cents®",
+      "url": "https://www.goodfinancialcents.com/feed/"
+    },
+    {
+      "name": "Invest Like the Best with Patrick O'Shaughnessy",
+      "url": "http://investlikethebest.libsyn.com/rss"
+    },
+    {
+      "name": "Learn To Trade The Market",
+      "url": "https://www.learntotradethemarket.com/feed"
+    },
+    {
+      "name": "Listen Money Matters - Free your inner financial badass. All the stuff you should know about personal finance.",
+      "url": "https://feeds.megaphone.fm/listen-money-matters"
+    },
+    {
+      "name": "Making Sense Of Cents",
+      "url": "https://www.makingsenseofcents.com/feed"
+    },
+    {
+      "name": "Millennial Money",
+      "url": "https://millennialmoney.com/feed/"
+    },
+    {
+      "name": "Money Crashers",
+      "url": "https://www.moneycrashers.com/feed/"
+    },
+    {
+      "name": "Money For the Rest of Us",
+      "url": "https://rss.art19.com/money-for-the-rest-of-us"
+    },
+    {
+      "name": "Money Saving Mom®",
+      "url": "https://moneysavingmom.com/feed/"
+    },
+    {
+      "name": "Money Under 30",
+      "url": "https://www.moneyunder30.com/feed"
+    },
+    {
+      "name": "MoneyNing",
+      "url": "http://feeds.feedburner.com/MoneyNing"
+    },
+    {
+      "name": "MyWifeQuitHerJob.com",
+      "url": "https://mywifequitherjob.com/feed/"
+    },
+    {
+      "name": "Nerd's Eye View | Kitces.com",
+      "url": "http://feeds.feedblitz.com/kitcesnerdseyeview&x=1"
+    },
+    {
+      "name": "NerdWallet",
+      "url": "https://www.nerdwallet.com/blog/feed/"
+    },
+    {
+      "name": "Oblivious Investor",
+      "url": "https://obliviousinvestor.com/feed/"
+    },
+    {
+      "name": "Personal Finance",
+      "url": "https://reddit.com/r/personalfinance/.rss"
+    },
+    {
+      "name": "SavingAdvice.com Blog",
+      "url": "https://www.savingadvice.com/feed/"
+    },
+    {
+      "name": "Side Hustle Nation",
+      "url": "https://www.sidehustlenation.com/feed"
+    },
+    {
+      "name": "So Money with Farnoosh Torabi",
+      "url": "https://feeds.megaphone.fm/somoney"
+    },
+    {
+      "name": "The Clark Howard Podcast",
+      "url": "https://feeds.megaphone.fm/clarkhoward"
+    },
+    {
+      "name": "The College Investor",
+      "url": "https://thecollegeinvestor.com/feed/"
+    },
+    {
+      "name": "The Ramsey Show",
+      "url": "https://daveramsey.libsyn.com/rss"
+    },
+    {
+      "name": "The Stacking Benjamins Show",
+      "url": "https://feeds.megaphone.fm/stacking-benjamins"
+    },
+    {
+      "name": "Well Kept Wallet",
+      "url": "https://wellkeptwallet.com/feed/"
+    },
+    {
+      "name": "Wise Bread",
+      "url": "http://feeds.killeraces.com/wisebread"
+    }
+  ]
+}

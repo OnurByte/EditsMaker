@@ -22,7 +22,8 @@ pub struct Manifest {
     pub version: String,
     pub author: String,
     pub description: String,
-    /// what is in the folder: "preset" (preset.json), "skill" (SKILL.md), "automation" (automation.js)
+    /// what is in it: "preset" (preset.json), "skill" (SKILL.md, in every pack), "automation" (automation.js),
+    /// "feed" (`feeds` below)
     pub kinds: Vec<String>,
     /// the picture beside the manifest: preview.svg, .png, .jpg or .webp
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -34,6 +35,15 @@ pub struct Manifest {
     /// for an automation: the one site its automation.js runs on
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub automation: Option<Automation>,
+    /// for a feed pack: the RSS or Atom feeds `edits news` and `edits follow` read, first one by default
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub feeds: Vec<Feed>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Feed {
+    pub name: String,
+    pub url: String,
 }
 
 /// Where an automation runs. Its script runs only inside `page`, a page of `domain`, signed in with the person's own
@@ -112,8 +122,18 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, automation: Op
             return Err(format!("{id}: kinds says {:?} but {file} is {}", m.kinds, if there { "there" } else { "missing" }));
         }
     }
-    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation"].contains(&k.as_str())) {
-        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", not {:?}", m.kinds));
+    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation", "feed"].contains(&k.as_str())) {
+        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", \"feed\", not {:?}", m.kinds));
+    }
+    if skill.is_none() {
+        return Err(format!("{id}: every pack carries a SKILL.md (edits packs make drafts one)"));
+    }
+    if m.kinds.iter().any(|k| k == "feed") != !m.feeds.is_empty() {
+        return Err(format!("{id}: kinds says {:?} but it has {} feeds", m.kinds, m.feeds.len()));
+    }
+    // a feed is only read, so plain http is fine too
+    if let Some(f) = m.feeds.iter().find(|f| f.name.trim().is_empty() || site_of(&f.url.replacen("http://", "https://", 1)).is_none()) {
+        return Err(format!("{id}: feed \"{}\" needs a name and an http(s):// address", f.name));
     }
     if let Some(js) = automation {
         let a = m.automation.as_ref().ok_or(format!("{id}: an automation needs an \"automation\" block in manifest.json (PACKS.md)"))?;
@@ -289,9 +309,34 @@ pub fn remove(id: &str) -> Result<Pack, String> {
     Ok(pack)
 }
 
+/// A SKILL.md for a pack that has none: when an agent should reach for it, and the commands that use it.
+pub fn draft_skill(m: &Manifest, p: Option<&Preset>) -> String {
+    let has = |k: &str| m.kinds.iter().any(|x| x == k);
+    // YAML: one double-quoted line, so a colon or a # in a preset's name cannot break the front matter
+    let q = |s: &str| format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', " "));
+    let (about, body) = if let Some(a) = m.automation.as_ref().filter(|_| has("automation")) {
+        (format!("Post finished clips to {} from the person's own signed-in account with edits ({}). Use when the user wants an edit posted on {}.", a.site, m.name, a.site),
+         format!("```sh\nedits connect {0}                     # once: sign in, in a window of its own\nedits post clip.mp4 --to {0} --caption \"...\"\nedits follow <channel|feed> --post {0}   # every new video, made and posted\n```\n\nIt runs only on {0}, from the person's own account. Ask before posting anything they did not ask to post.\n", a.site))
+    } else if has("feed") {
+        let short = m.id.strip_prefix("edits.rss-").unwrap_or(&m.id);
+        let some: Vec<&str> = m.feeds.iter().take(3).map(|f| f.name.as_str()).collect();
+        (format!("Make short videos from {} RSS ({} feeds, {} and more) with edits, each new post's headline cut from footage found for it and shown on screen. Use when the user wants {} videos from the news, posts on autopilot, or an automation from RSS to video to social media.", m.name, m.feeds.len(), some.join(", "), m.name),
+         format!("```sh\nedits rss {short} --list                    # the newest posts (--json for programs)\nedits rss {short} -n 3                       # a video for each of the 3 newest\nedits rss {short} --feed all -n 5 --preset sinema-bant\nedits follow {short} --post tiktok --every 30 # RSS in, video made, posted out (edits watch runs it)\n```\n\nFeeds:\n\n{}\n\nEach video is footage found for the headline, with the headline on screen for its first seconds. Check a headline before posting it, and say whose post it was.\n",
+            m.feeds.iter().map(|f| format!("- {} {}", f.name, f.url)).collect::<Vec<_>>().join("\n")))
+    } else if let Some(p) = p {
+        let tags = m.tags.join(", ");
+        (format!("Cut an edit in the {} style with edits ({}). Use when the user asks for {} or a {} edit.", p.name, m.description, p.name, if tags.is_empty() { "similar" } else { &tags }),
+         format!("```sh\nedits <link|topic|video> --preset {0}\nedits <link> --preset {0} --music trend:1     # on a trending song\n```\n\nMCP: `edits_make` with `preset` \"{0}\". Read it with `edits_preset_get`; make it calmer or wilder with the edits-preset-tweak skill.\n\n{1:.1} s, {2} shots, {3}x{4}.\n", p.name, p.total, p.slots.len(), p.w, p.h))
+    } else {
+        (format!("{} with edits. Use when the user asks for {}.", m.description, m.name), String::new())
+    };
+    format!("---\nname: {}\ndescription: {}\n---\n\n# {}\n\n{}\n\n{body}", m.id.replace('.', "-"), q(&about), m.name, m.description)
+}
+
 /// Makes `d` a pack: with `preset` it first writes that preset there as preset.json; then writes manifest.json
-/// (filling what it lacks from the preset or SKILL.md) and preview.svg, unless the pack has its own picture.
-pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>) -> Result<Manifest, String> {
+/// (filling what it lacks from the preset or SKILL.md), a SKILL.md when it has none, and preview.svg, unless the pack
+/// has its own picture.
+pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path>) -> Result<Manifest, String> {
     std::fs::create_dir_all(d).map_err(|e| e.to_string())?;
     if let Some(name) = preset {
         std::fs::write(d.join("preset.json"), crate::preset::pretty(&crate::preset::load(name)?)).map_err(|e| e.to_string())?;
@@ -299,29 +344,45 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>) -> Result<Manifest
     let text = |f: &str| std::fs::read_to_string(d.join(f)).ok();
     let p: Option<Preset> = text("preset.json").map(|t| serde_json::from_str(&t).map_err(|e| format!("{}/preset.json: {e}", d.display()))).transpose()?;
     let (skill, automation) = (text("SKILL.md"), text("automation.js"));
-    if p.is_none() && skill.is_none() && automation.is_none() {
-        return Err(format!("{}: put a preset.json, a SKILL.md or an automation.js in it, or give --preset NAME", d.display()));
-    }
     let old: Option<Manifest> = text("manifest.json").and_then(|t| serde_json::from_str(&t).ok());
+    // an OPML list (a reader's export) gives the feeds, and its first group's name the pack's
+    let listed = opml.map(|f| std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display())).and_then(|x| crate::rss::opml(&x))).transpose()?;
+    let feeds = listed.as_ref().map(|l| l.1.clone()).or(old.as_ref().map(|m| m.feeds.clone())).unwrap_or_default();
+    let group = listed.and_then(|l| l.0);
+    if p.is_none() && skill.is_none() && automation.is_none() && feeds.is_empty() {
+        return Err(format!("{}: put a preset.json, a SKILL.md or an automation.js in it (or feeds in its manifest.json), or give --preset NAME", d.display()));
+    }
     let folder = d.canonicalize().ok().and_then(|c| c.file_name().map(|n| n.to_string_lossy().into_owned())).unwrap_or_else(|| "pack".into());
     let about = skill.as_deref().and_then(|s| front(s, "description")).map(String::from);
     let id = id.map(String::from).or(old.as_ref().map(|m| m.id.clone())).unwrap_or_else(|| crate::preset::slug(&folder));
-    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", skill.is_some()), ("automation", automation.is_some())].iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
+    // a SKILL.md is drafted when there is none, so every pack has one
+    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", true), ("automation", automation.is_some()), ("feed", !feeds.is_empty())].iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
     let own_picture = old.as_ref().and_then(|m| m.preview.clone()).filter(|f| f != "preview.svg" && d.join(f).is_file());
     let m = Manifest {
         schema_version: 1,
-        name: old.as_ref().map(|m| m.name.clone()).or(p.as_ref().map(|p| p.name.clone())).or(skill.as_deref().and_then(skill_name).map(String::from)).unwrap_or(folder),
+        name: old.as_ref().map(|m| m.name.clone()).or(group.clone()).or(p.as_ref().map(|p| p.name.clone())).or(skill.as_deref().and_then(skill_name).map(String::from)).unwrap_or(folder),
         version: old.as_ref().map_or("1.0.0".into(), |m| m.version.clone()),
         author: old.as_ref().map(|m| m.author.clone()).unwrap_or_else(|| if id.starts_with("edits.") { "edits".into() } else { std::env::var("USER").or(std::env::var("USERNAME")).unwrap_or_else(|_| "you".into()) }),
-        description: old.as_ref().map(|m| m.description.clone()).or(p.as_ref().map(|p| p.about.clone()).filter(|a| !a.is_empty())).or(about).unwrap_or_default(),
+        description: old.as_ref().map(|m| m.description.clone())
+            .or(group.as_ref().map(|g| format!("{g} from {} feeds, {}: videos from their newest posts.", feeds.len(), feeds.iter().take(3).map(|f| f.name.as_str()).collect::<Vec<_>>().join(", "))))
+            .or(p.as_ref().map(|p| p.about.clone()).filter(|a| !a.is_empty())).or(about).unwrap_or_default(),
         kinds,
         preview: Some(own_picture.clone().unwrap_or_else(|| "preview.svg".into())),
         tags: old.as_ref().map(|m| m.tags.clone()).filter(|t| !t.is_empty()).unwrap_or_else(|| p.as_ref().map(|p| p.tags().iter().map(|t| t.to_string()).collect()).unwrap_or_default()),
         license: old.as_ref().and_then(|m| m.license.clone()),
         automation: old.and_then(|m| m.automation),
+        feeds,
         id,
     };
-    check(&m, text("preset.json").as_deref(), skill.as_deref(), automation.as_deref(), m.id.starts_with("edits."))?;
+    let skill = match skill {
+        Some(s) => s,
+        None => {
+            let s = draft_skill(&m, p.as_ref());
+            std::fs::write(d.join("SKILL.md"), &s).map_err(|e| e.to_string())?;
+            s
+        }
+    };
+    check(&m, text("preset.json").as_deref(), Some(&skill), automation.as_deref(), m.id.starts_with("edits."))?;
     if own_picture.is_none() {
         std::fs::write(d.join("preview.svg"), preview(&m, p.as_ref())).map_err(|e| e.to_string())?;
     }
@@ -363,7 +424,7 @@ pub fn preview(m: &Manifest, p: Option<&Preset>) -> String {
     let (bg, ink) = (format!("hsl({hue},{sat}%,11%)"), format!("hsl({hue},{}%,64%)", if sat == 0 { 0 } else { 70 }));
     let has = |k: &str| m.kinds.iter().any(|x| x == k);
     // one word in sentence case (BRAND.md § 4): a preset and a skill are both a pack to the person
-    let kind = if has("automation") { "Automation" } else { "Pack" };
+    let kind = if has("automation") { "Automation" } else if has("feed") { "RSS" } else { "Pack" };
     let font = "font-family=\"Inter, Helvetica, Arial, sans-serif\"";
     let mut s = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 360\" width=\"640\" height=\"360\">\n\
         <rect width=\"640\" height=\"360\" rx=\"24\" fill=\"{bg}\"/>\n\
@@ -397,6 +458,11 @@ pub fn preview(m: &Manifest, p: Option<&Preset>) -> String {
             s += &format!("<text x=\"32\" y=\"344\" {font} font-size=\"13\" fill=\"#fff\" fill-opacity=\"0.6\">{}</text>\n", esc(&m.tags.join("  ")));
             s += &format!("<text x=\"608\" y=\"344\" text-anchor=\"end\" {font} font-size=\"13\" fill=\"#fff\" fill-opacity=\"0.6\">{} shots  {:.1}s</text>\n", p.slots.len(), p.total);
         }
+        None if has("feed") => {
+            let some: Vec<String> = m.feeds.iter().take(3).map(|f| f.name.chars().take(24).collect()).collect();
+            let more = if m.feeds.len() > 3 { format!("  +{} more", m.feeds.len() - 3) } else { String::new() };
+            s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">{}{more}</text>\n", esc(&some.join("  ·  ")));
+        }
         None if has("automation") => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits connect {}</text>\n", esc(m.automation.as_ref().map_or("", |a| &a.site))),
         None => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits skills install</text>\n"),
     }
@@ -408,14 +474,34 @@ pub fn gallery(d: &Path) -> Result<usize, String> {
     let mut packs: Vec<(String, Manifest)> = std::fs::read_dir(d).map_err(|e| e.to_string())?.flatten()
         .filter_map(|e| Some((e.file_name().to_string_lossy().into_owned(), serde_json::from_str(&std::fs::read_to_string(e.path().join("manifest.json")).ok()?).ok()?)))
         .collect();
-    packs.sort_by(|a, b| (a.1.kinds.contains(&"skill".to_string()), &a.0).cmp(&(b.1.kinds.contains(&"skill".to_string()), &b.0)));
-    let mut s = format!("# Packs\n\n{} built-in packs: presets, agent skills and automations, each with a `manifest.json` and a picture. \
-        The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).\n\n<p>\n", packs.len());
-    for (f, m) in &packs {
-        let pic = m.preview.as_deref().unwrap_or("preview.svg");
-        s += &format!("<a href=\"{f}\"><img src=\"{f}/{pic}\" width=\"300\" alt=\"{}\"></a>\n", esc(&m.name));
+    packs.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut s = format!("# Packs\n\n{} built-in packs, each with a `manifest.json`, an agent skill and a picture. The marketplace: \
+        `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).\n", packs.len());
+    // the RSS banner, in the reader's light or dark
+    if d.join("rss-light.svg").is_file() && d.join("rss-dark.svg").is_file() {
+        s += "\n<picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"rss-dark.svg\"><img src=\"rss-light.svg\" width=\"100%\" \
+            alt=\"RSS in. Edits out. Each new post from BBC, CNN, The Guardian, NYT, Reddit, IGN, TechCrunch, NASA, Anadolu Ajansı or TRT Haber becomes an edit, and a flow posts it.\"></picture>\n";
     }
-    s += "</p>\n";
+    let has = |m: &Manifest, k: &str| m.kinds.iter().any(|x| x == k);
+    type Wants<'a> = &'a dyn Fn(&Manifest) -> bool;
+    let sections: [(&str, Wants); 4] = [
+        ("RSS", &|m| has(m, "feed")),
+        ("Presets", &|m| has(m, "preset")),
+        ("Automations", &|m| has(m, "automation")),
+        ("Agent skills", &|m| !has(m, "feed") && !has(m, "preset") && !has(m, "automation")),
+    ];
+    for (title, wants) in sections {
+        let these: Vec<&(String, Manifest)> = packs.iter().filter(|p| wants(&p.1)).collect();
+        if these.is_empty() {
+            continue;
+        }
+        s += &format!("\n## {title}\n\n<p>\n");
+        for (f, m) in these {
+            let pic = m.preview.as_deref().unwrap_or("preview.svg");
+            s += &format!("<a href=\"{f}\"><img src=\"{f}/{pic}\" width=\"300\" alt=\"{}\"></a>\n", esc(&m.name));
+        }
+        s += "</p>\n";
+    }
     std::fs::write(d.join("README.md"), s).map_err(|e| e.to_string())?;
     Ok(packs.len())
 }
@@ -453,6 +539,19 @@ mod tests {
         assert!(valid_id("io.github.you.sad-pack") && !valid_id("../x") && !valid_id("A") && !valid_id("a/b"));
     }
 
+    const SKILL: &str = "---\nname: x\ndescription: x\n---\n";
+
+    #[test]
+    fn every_pack_needs_a_skill() {
+        let m: Manifest = serde_json::from_value(serde_json::json!({"schemaVersion": 1, "id": "io.github.you.x", "name": "x", "version": "1.0.0",
+            "author": "you", "description": "x", "kinds": ["feed", "skill"], "feeds": [{"name": "BBC", "url": "http://feeds.bbci.co.uk/news/rss.xml"}]})).unwrap();
+        check(&m, None, Some(SKILL), None, false).unwrap();
+        assert!(check(&m, None, None, None, false).is_err(), "no SKILL.md");
+        let mut bad = m.clone();
+        bad.feeds[0].url = "ftp://x/rss".into();
+        assert!(check(&bad, None, Some(SKILL), None, false).is_err(), "a feed is http or https");
+    }
+
     #[test]
     fn an_automation_stays_on_its_own_site() {
         assert_eq!(site_of("https://studio.youtube.com/x?y=1").as_deref(), Some("youtube.com"));
@@ -461,14 +560,14 @@ mod tests {
         }
         assert_ne!(site_of("https://tiktok.com.evil.io/"), site_of("https://www.tiktok.com/"));
         let m: Manifest = serde_json::from_value(serde_json::json!({"schemaVersion": 1, "id": "io.github.you.x", "name": "x", "version": "1.0.0",
-            "author": "you", "description": "x", "kinds": ["automation"],
+            "author": "you", "description": "x", "kinds": ["automation", "skill"],
             "automation": {"site": "x", "login": "https://x.com/login", "page": "https://evil.io/", "cookie": "auth", "domain": "x.com"}})).unwrap();
-        assert!(check(&m, None, None, Some("async (p) => {\n}"), false).is_err(), "a page off its site");
+        assert!(check(&m, None, Some(SKILL), Some("async (p) => {\n}"), false).is_err(), "a page off its site");
         let mut ok = m.clone();
         ok.automation.as_mut().unwrap().page = "https://x.com/compose".into();
-        check(&ok, None, None, Some("// posts\nasync (p) => {\n}"), false).unwrap();
-        assert!(check(&ok, None, None, Some("fetch('https://evil.io')"), false).is_err(), "not one function");
-        assert!(check(&ok, None, None, None, false).is_err(), "kinds says automation, no automation.js");
+        check(&ok, None, Some(SKILL), Some("// posts\nasync (p) => {\n}"), false).unwrap();
+        assert!(check(&ok, None, Some(SKILL), Some("fetch('https://evil.io')"), false).is_err(), "not one function");
+        assert!(check(&ok, None, Some(SKILL), None, false).is_err(), "kinds says automation, no automation.js");
     }
 
     #[test]
@@ -478,13 +577,14 @@ mod tests {
         let (_, _, p, _, _) = BUILT_IN_PACKS.iter().find(|x| x.2.is_some()).unwrap();
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(d.join("preset.json"), p.unwrap()).unwrap();
-        let m = make(&d, None, Some("io.github.you.test")).unwrap();
-        assert_eq!(m.kinds, ["preset"]);
+        let m = make(&d, None, Some("io.github.you.test"), None).unwrap();
+        assert_eq!(m.kinds, ["preset", "skill"], "a skill is drafted when there is none");
+        assert!(std::fs::read_to_string(d.join("SKILL.md")).unwrap().starts_with("---\nname: io-github-you-test\ndescription: \""));
         let svg = std::fs::read_to_string(d.join("preview.svg")).unwrap();
         assert!(svg.starts_with("<svg") && svg.contains("polyline"));
         assert_eq!(read(&d).unwrap().manifest.id, "io.github.you.test");
         // a pack that is added may not take a built-in id
-        make(&d, None, Some("edits.mine")).unwrap();
+        make(&d, None, Some("edits.mine"), None).unwrap();
         assert!(read(&d).is_err());
         let _ = std::fs::remove_dir_all(&d);
     }

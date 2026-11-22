@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-nature",
+  "name": "Nature",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Nature from 14 feeds, BBC Earth, BBC Earth Podcast, BLOG POSTS – Mark Avery: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "BBC Earth",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCwmZiChSryoWQCZMIQezgTg"
+    },
+    {
+      "name": "BBC Earth Podcast",
+      "url": "https://rss.acast.com/bbcearthpodcast"
+    },
+    {
+      "name": "BLOG POSTS – Mark Avery",
+      "url": "https://markavery.info/blog/feed/"
+    },
+    {
+      "name": "Blog | Nature | PBS",
+      "url": "https://www.pbs.org/wnet/nature/blog/feed/"
+    },
+    {
+      "name": "EarthPorn: Amazing images of light and landscape",
+      "url": "https://www.reddit.com/r/EarthPorn/.rss"
+    },
+    {
+      "name": "Explore Oceans",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSyg9cb3Iq-NtlbxqNB9wGw"
+    },
+    {
+      "name": "National Geographic",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpVm7bg6pXKo1Pr6k5kxG9A"
+    },
+    {
+      "name": "Nature",
+      "url": "http://feeds.nature.com/nature/rss/current?x=1"
+    },
+    {
+      "name": "Nature",
+      "url": "https://www.reddit.com/r/nature/.rss"
+    },
+    {
+      "name": "Nature Gifs",
+      "url": "https://www.reddit.com/r/NatureGifs/.rss"
+    },
+    {
+      "name": "Nature on PBS",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCcBp_9YPyma4c3HTadmRJ3Q"
+    },
+    {
+      "name": "Reflections of the Natural World",
+      "url": "https://reflectionsofthenaturalworld.com/feed/"
+    },
+    {
+      "name": "Stories Archives - Nature Canada",
+      "url": "https://naturecanada.ca/category/news/blog/feed/"
+    },
+    {
+      "name": "nature video",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC7c8mE90qCtu11z47U0KErg"
+    }
+  ]
+}

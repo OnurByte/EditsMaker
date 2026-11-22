@@ -284,7 +284,11 @@ pub fn mmss(t: f64) -> String {
 pub fn curl(opts: &[(&str, &str)]) -> Result<(u16, String), String> {
     let q = |v: &str| v.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n").replace('\r', "\\r").replace('\t', "\\t");
     let mut cfg: String = opts.iter().map(|(k, v)| if v.is_empty() { format!("{k}\n") } else { format!("{k} = \"{}\"\n", q(v)) }).collect();
-    cfg.push_str("silent\nshow-error\nlocation\nmax-time = 900\nwrite-out = \"\\n%{http_code}\"\n");
+    // a caller's own max-time wins (curl takes the last one given)
+    if !opts.iter().any(|(k, _)| *k == "max-time") {
+        cfg.push_str("max-time = 900\n");
+    }
+    cfg.push_str("silent\nshow-error\nlocation\nwrite-out = \"\\n%{http_code}\"\n");
     let out = run_stdin("curl -K -", &cfg)?;
     let (body, code) = out.rsplit_once('\n').unwrap_or(("", &out));
     Ok((code.trim().parse().unwrap_or(0), body.to_string()))

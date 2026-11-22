@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(270,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(270,70%,64%)">RSS</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">Tech</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Tech from 28 feeds, Accidental Tech Podcast, Analog(ue), Ars</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Technica - All content: videos from their newest posts.</text>
+<text x="32" y="336" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="hsl(270,70%,64%)">Accidental Tech Podcast  ·  Analog(ue)  ·  Ars Technica - All conte  +25 more</text>
+</svg>

@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "trick: replay loop - a single slow push-in across every cut that returns to the opening framing on the last shot, so the end runs back into the start",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

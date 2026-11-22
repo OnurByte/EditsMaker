@@ -1,5 +1,7 @@
 //! Automations, as in Tehom: follow a YouTube channel, a Kick channel or any RSS/Atom feed; every new video is made
-//! into clips with the options given when it was followed, and the clips can be posted to connected accounts.
+//! into clips with the options given when it was followed, and the clips can be posted to connected accounts. A feed
+//! pack (or `--titles`) follows articles instead: each new item is made from its headline (rss.rs), like n8n's
+//! RSS in, video made, posted out.
 //! `edits watch` does the checking (or `edits service install` keeps it running in the background).
 use crate::util::{curl, home};
 use serde::{Deserialize, Serialize};
@@ -20,6 +22,9 @@ pub struct Follow {
     pub post: String,
     #[serde(default)]
     pub private: bool,
+    /// the items are articles, not videos: each is made from its headline
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub titles: bool,
     /// minutes between checks
     pub every: u64,
     #[serde(default)]
@@ -122,8 +127,19 @@ fn feed(xml: &str) -> Option<Vec<Found>> {
 
 /// `edits follow <channel|feed|kick link> [--every MIN] [--post ACCOUNTS] [--private] [edit options...]`
 pub fn add(args: &[String]) -> Result<(), String> {
-    let source = args.first().filter(|a| !a.starts_with('-')).ok_or("usage: edits follow <YouTube channel | Kick channel | RSS/Atom feed> [--every MINUTES] [--post ACCOUNT,...|all] [--private] [edit options: --preset, --music, -n ...]")?;
-    let mut f = Follow { source: source.clone(), every: 60, ..Default::default() };
+    let given = args.first().filter(|a| !a.starts_with('-')).ok_or("usage: edits follow <YouTube channel | Kick channel | RSS/Atom feed | feed pack> [--feed NAME] [--titles] [--every MINUTES] [--post ACCOUNT,...|all] [--private] [edit options: --preset, --music, -n ...]")?;
+    let mut f = Follow { source: given.clone(), every: 60, ..Default::default() };
+    // a feed pack: one of its feeds, its items made from their headlines, in the pack's look
+    if !given.contains("://") {
+        let (feeds, preset) = crate::rss::resolve(given)?;
+        let want = args.iter().position(|a| a == "--feed").and_then(|i| args.get(i + 1)).map(|w| w.to_lowercase());
+        let feed = feeds.iter().find(|x| want.as_ref().is_none_or(|w| x.name.to_lowercase().contains(w))).ok_or("no feed like that in the pack")?;
+        (f.source, f.titles) = (feed.url.clone(), true);
+        if let Some(p) = preset.filter(|_| !args.iter().any(|a| a == "--preset")) {
+            f.args.extend(["--preset".into(), p]);
+        }
+    }
+    let source = &f.source.clone();
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -137,6 +153,8 @@ pub fn add(args: &[String]) -> Result<(), String> {
                 i += 1;
             }
             "--private" => f.private = true,
+            "--titles" => f.titles = true,
+            "--feed" => i += 1,
             a => f.args.push(a.to_string()),
         }
         i += 1;
@@ -144,6 +162,9 @@ pub fn add(args: &[String]) -> Result<(), String> {
     // the options must make sense now, not at 3 a.m. on the first new video
     crate::parse(&[vec!["x".to_string()], f.args.clone()].concat(), None)?;
     let found = latest(source)?;
+    if found.is_empty() {
+        return Err(format!("{source} lists nothing now"));
+    }
     // what is already there counts as seen: only videos that come out from now on are made
     f.seen = found.iter().map(|x| x.0.clone()).collect();
     let mut l = all();
@@ -214,7 +235,8 @@ fn check(f: &mut Follow) -> Result<(), String> {
     let new: Vec<Found> = found.into_iter().filter(|x| !f.seen.contains(&x.0)).collect::<Vec<_>>().into_iter().rev().take(PER_CHECK).collect();
     for (id, url, title) in new {
         log(&format!("{}: new video {}", f.source, if title.is_empty() { &url } else { &title }));
-        match make(&url, &f.args) {
+        let made = if f.titles { make_from(&[crate::rss::args_for(&title), f.args.clone()].concat()) } else { make(&url, &f.args) };
+        match made {
             Ok(clips) => {
                 f.seen.push(id.clone());
                 f.failed.remove(&id);
@@ -251,8 +273,13 @@ fn check(f: &mut Follow) -> Result<(), String> {
 
 /// Runs edits itself on the video, the way a person would, and returns the clips it made.
 fn make(url: &str, args: &[String]) -> Result<Vec<PathBuf>, String> {
+    make_from(&[vec![url.to_string()], args.to_vec()].concat())
+}
+
+/// Runs `edits ARGS` and returns the clips it made.
+pub fn make_from(args: &[String]) -> Result<Vec<PathBuf>, String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    let out = std::process::Command::new(exe).arg(url).args(args).stdin(std::process::Stdio::null()).stderr(std::process::Stdio::inherit())
+    let out = std::process::Command::new(exe).args(args).stdin(std::process::Stdio::null()).stderr(std::process::Stdio::inherit())
         .output().map_err(|e| e.to_string())?;
     if !out.status.success() {
         return Err("edits failed on it (its output above says why)".into());

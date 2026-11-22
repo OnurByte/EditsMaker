@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "genre: glitch - 0.35 s cuts, colour split on all, inverted frame every 4th cut, 20 Hz jitter, strobing flashes, real flicker every 4th shot",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

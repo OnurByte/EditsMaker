@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-ui-ux",
+  "name": "UI / UX",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "UI / UX from 8 feeds, Articles on Smashing Magazine — For Web Designers And Developers, Boxes and Arrows, JUST™ Creative: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Articles on Smashing Magazine — For Web Designers And Developers",
+      "url": "https://www.smashingmagazine.com/feed"
+    },
+    {
+      "name": "Boxes and Arrows",
+      "url": "http://boxesandarrows.com/rss/"
+    },
+    {
+      "name": "JUST™ Creative",
+      "url": "https://feeds.feedburner.com/JustCreativeDesignBlog"
+    },
+    {
+      "name": "NN/g latest articles and announcements",
+      "url": "https://www.nngroup.com/feed/rss/"
+    },
+    {
+      "name": "UX Collective - Medium",
+      "url": "https://uxdesign.cc/feed"
+    },
+    {
+      "name": "UX Movement",
+      "url": "https://uxmovement.com/feed/"
+    },
+    {
+      "name": "Usability Geek",
+      "url": "https://usabilitygeek.com/feed/"
+    },
+    {
+      "name": "User Experience",
+      "url": "https://www.reddit.com/r/userexperience/.rss"
+    }
+  ]
+}

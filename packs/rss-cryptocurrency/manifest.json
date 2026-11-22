@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-cryptocurrency",
+  "name": "Cryptocurrency",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Cryptocurrency from 27 feeds, Bitcoin & Crypto Trading: Ledger Cast, Bitcoin - The Currency of the Internet, Bitcoin Audible: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Bitcoin & Crypto Trading: Ledger Cast",
+      "url": "https://feeds.simplecast.com/j5Cx9jps"
+    },
+    {
+      "name": "Bitcoin - The Currency of the Internet",
+      "url": "https://www.reddit.com/r/Bitcoin/.rss"
+    },
+    {
+      "name": "Bitcoin Audible",
+      "url": "https://bitcoinaudible.com/feed/"
+    },
+    {
+      "name": "Bitcoin News",
+      "url": "https://news.bitcoin.com/feed/"
+    },
+    {
+      "name": "BuyUcoin Talks - Medium",
+      "url": "https://medium.com/feed/buyucoin-talks"
+    },
+    {
+      "name": "Cointelegraph.com News",
+      "url": "https://cointelegraph.com/rss"
+    },
+    {
+      "name": "CryptoCurrency – Finance Magnates | Financial and business news",
+      "url": "https://www.financemagnates.com/cryptocurrency/feed/"
+    },
+    {
+      "name": "CryptoNinjas",
+      "url": "https://www.cryptoninjas.net/feed/"
+    },
+    {
+      "name": "CryptoPotato",
+      "url": "https://cryptopotato.com/feed/"
+    },
+    {
+      "name": "Cryptocurrency News & Discussion",
+      "url": "https://www.reddit.com/r/CryptoCurrency/.rss"
+    },
+    {
+      "name": "DailyCoin",
+      "url": "https://dailycoin.com/feed/"
+    },
+    {
+      "name": "Epicenter - Learn about Crypto, Blockchain, Ethereum, Bitcoin and Distributed Technologies",
+      "url": "https://feeds.simplecast.com/lKmQDG9R"
+    },
+    {
+      "name": "Ethereum",
+      "url": "https://www.reddit.com/r/ethereum/.rss"
+    },
+    {
+      "name": "Ethereum Foundation Blog",
+      "url": "https://blog.ethereum.org/feed.xml"
+    },
+    {
+      "name": "INCRYPTED",
+      "url": "https://incrypted.net/feed/"
+    },
+    {
+      "name": "Interviews",
+      "url": "https://feed.podbean.com/nuggetsnews/feed.xml"
+    },
+    {
+      "name": "Kraken Blog",
+      "url": "https://blog.kraken.com/feed/"
+    },
+    {
+      "name": "News - Cryptonews",
+      "url": "https://cryptonews.com/news/feed"
+    },
+    {
+      "name": "NewsBTC",
+      "url": "https://www.newsbtc.com/feed/"
+    },
+    {
+      "name": "Stephan Livera Podcast",
+      "url": "https://anchor.fm/s/7d083a4/podcast/rss"
+    },
+    {
+      "name": "The Bad Crypto Podcast",
+      "url": "https://badcryptopodcast.com/feed/"
+    },
+    {
+      "name": "The Bitcoin Knowledge Podcast",
+      "url": "https://www.bitcoin.kn/feed/podcast/"
+    },
+    {
+      "name": "The Bitcoin Podcast",
+      "url": "https://feeds.simplecast.com/xCQr3ykc"
+    },
+    {
+      "name": "The Market's Compass Technical View",
+      "url": "https://themarketscompass.substack.com/feed"
+    },
+    {
+      "name": "Today in Web 3",
+      "url": "https://feeds.soundcloud.com/users/soundcloud:users:844321453/sounds.rss"
+    },
+    {
+      "name": "ZebPay",
+      "url": "https://zebpay.com/feed/"
+    },
+    {
+      "name": "cryptocurrency | TechCrunch",
+      "url": "https://techcrunch.com/tag/cryptocurrency/feed"
+    }
+  ]
+}

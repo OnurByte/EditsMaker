@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-interior-design",
+  "name": "Interior design",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Interior design from 19 feeds, BLOG - decor8, Core77, Design MilkInterior Design Ideas for Your Modern Home | Design Milk: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "BLOG - decor8",
+      "url": "https://www.decor8blog.com/blog?format=rss"
+    },
+    {
+      "name": "Core77",
+      "url": "http://feeds.feedburner.com/core77/blog"
+    },
+    {
+      "name": "Design MilkInterior Design Ideas for Your Modern Home | Design Milk",
+      "url": "https://design-milk.com/category/interior-design/feed/"
+    },
+    {
+      "name": "Fubiz Media",
+      "url": "http://feeds.feedburner.com/fubiz"
+    },
+    {
+      "name": "In My Own Style",
+      "url": "https://inmyownstyle.com/feed"
+    },
+    {
+      "name": "Interior Design",
+      "url": "https://www.interiordesign.net/rss/"
+    },
+    {
+      "name": "Interior Design (Interior Architecture)",
+      "url": "https://www.reddit.com/r/InteriorDesign/.rss"
+    },
+    {
+      "name": "Interior Design Ideas",
+      "url": "http://www.home-designing.com/feed"
+    },
+    {
+      "name": "Interior design | Dezeen",
+      "url": "https://www.dezeen.com/interiors/feed/"
+    },
+    {
+      "name": "Latest from Ideal Home in News",
+      "url": "https://www.idealhome.co.uk/feed"
+    },
+    {
+      "name": "Liz Marie Blog",
+      "url": "https://www.lizmarieblog.com/feed/"
+    },
+    {
+      "name": "The Inspired Room",
+      "url": "https://theinspiredroom.net/feed/"
+    },
+    {
+      "name": "Thrifty Decor Chick | Thrifty DIY, Decor and Organizing",
+      "url": "http://feeds.feedburner.com/blogspot/ZBcZ"
+    },
+    {
+      "name": "Trendir",
+      "url": "https://www.trendir.com/feed/"
+    },
+    {
+      "name": "Yanko Design",
+      "url": "http://feeds.feedburner.com/yankodesign"
+    },
+    {
+      "name": "Yatzer | Live Beautifully. Explore Endlessly.",
+      "url": "https://www.yatzer.com/rss.xml"
+    },
+    {
+      "name": "Young House Love",
+      "url": "https://www.younghouselove.com/feed/"
+    },
+    {
+      "name": "decoist",
+      "url": "https://www.decoist.com/feed/"
+    },
+    {
+      "name": "design archives | designboom | architecture & design magazine",
+      "url": "https://www.designboom.com/design/feed"
+    }
+  ]
+}

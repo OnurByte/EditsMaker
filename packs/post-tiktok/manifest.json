@@ -6,6 +6,7 @@
   "author": "edits",
   "description": "Signs in to TikTok once in a window of its own and posts your clips there from your own account: edits connect tiktok, then edits post --to tiktok.",
   "kinds": [
+    "skill",
     "automation"
   ],
   "preview": "preview.svg",

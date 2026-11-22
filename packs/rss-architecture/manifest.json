@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-architecture",
+  "name": "Architecture",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Architecture from 11 feeds, A Weekly Dose of Architecture Books, ArchDaily Global, Architectural Digest: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "A Weekly Dose of Architecture Books",
+      "url": "http://feeds.feedburner.com/archidose"
+    },
+    {
+      "name": "ArchDaily Global",
+      "url": "http://feeds.feedburner.com/Archdaily"
+    },
+    {
+      "name": "Architectural Digest",
+      "url": "https://www.architecturaldigest.com/feed/rss"
+    },
+    {
+      "name": "Architectural Digest",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=ArchitecturalDigest"
+    },
+    {
+      "name": "Architecture",
+      "url": "https://www.reddit.com/r/architecture/.rss"
+    },
+    {
+      "name": "Architecture news and projects | Dezeen",
+      "url": "https://www.dezeen.com/architecture/feed/"
+    },
+    {
+      "name": "Design MilkArchitecture, Architectural Designs, and House Designs | Design Milk",
+      "url": "https://design-milk.com/category/architecture/feed/"
+    },
+    {
+      "name": "Journal",
+      "url": "https://architizer.wpengine.com/feed/"
+    },
+    {
+      "name": "Living Big In A Tiny House",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=livingbigtinyhouse"
+    },
+    {
+      "name": "The Architect’s Newspaper",
+      "url": "https://archpaper.com/feed"
+    },
+    {
+      "name": "architecture archives | designboom | architecture & design magazine",
+      "url": "https://www.designboom.com/architecture/feed/"
+    }
+  ]
+}

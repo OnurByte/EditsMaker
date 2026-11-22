@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "made for edits: slow, long shots, soft drift, fade from and to dark",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

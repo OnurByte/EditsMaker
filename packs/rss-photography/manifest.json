@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-photography",
+  "name": "Photography",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Photography from 8 feeds, 500px, Digital Photography School, Light Stalking: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "500px",
+      "url": "https://iso.500px.com/feed/"
+    },
+    {
+      "name": "Digital Photography School",
+      "url": "https://feeds.feedburner.com/DigitalPhotographySchool"
+    },
+    {
+      "name": "Light Stalking",
+      "url": "https://www.lightstalking.com/feed/"
+    },
+    {
+      "name": "One Big Photo",
+      "url": "http://feeds.feedburner.com/OneBigPhoto"
+    },
+    {
+      "name": "PetaPixel",
+      "url": "https://petapixel.com/feed/"
+    },
+    {
+      "name": "Strobist",
+      "url": "http://feeds.feedburner.com/blogspot/WOBq"
+    },
+    {
+      "name": "Stuck in Customs",
+      "url": "https://stuckincustoms.com/feed/"
+    },
+    {
+      "name": "The Boston Globe",
+      "url": "https://www.bostonglobe.com/rss/bigpicture"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-music",
+  "name": "Music",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Music from 5 feeds, Consequence, Metal Injection, Music Business Worldwide: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Consequence",
+      "url": "http://consequenceofsound.net/feed"
+    },
+    {
+      "name": "Metal Injection",
+      "url": "http://feeds.feedburner.com/metalinjection"
+    },
+    {
+      "name": "Music Business Worldwide",
+      "url": "https://www.musicbusinessworldwide.com/feed/"
+    },
+    {
+      "name": "RSS: News",
+      "url": "http://pitchfork.com/rss/news"
+    },
+    {
+      "name": "Song Exploder",
+      "url": "http://feed.songexploder.net/songexploder"
+    }
+  ]
+}

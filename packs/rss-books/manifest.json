@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-books",
+  "name": "Books",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Books from 8 feeds, A year of reading the world, Aestas Book Blog, BOOK RIOT: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "A year of reading the world",
+      "url": "https://ayearofreadingtheworld.com/feed/"
+    },
+    {
+      "name": "Aestas Book Blog",
+      "url": "https://aestasbookblog.com/feed/"
+    },
+    {
+      "name": "BOOK RIOT",
+      "url": "https://bookriot.com/feed/"
+    },
+    {
+      "name": "Harry Potter and the Sacred Text",
+      "url": "https://rss.acast.com/harrypottersacredtext"
+    },
+    {
+      "name": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/feeds/rss/"
+    },
+    {
+      "name": "NewInBooks",
+      "url": "https://www.newinbooks.com/feed/"
+    },
+    {
+      "name": "So many books, so little time",
+      "url": "https://reddit.com/r/books/.rss"
+    },
+    {
+      "name": "Wokeread",
+      "url": "https://wokeread.home.blog/feed/"
+    }
+  ]
+}

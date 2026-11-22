@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-travel",
+  "name": "Travel",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Travel from 12 feeds, Adventure.com, Atlas Obscura - Latest Articles and Places, CNN.com - RSS Channel - App Travel Section: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Adventure.com",
+      "url": "http://adventure.com/feed/"
+    },
+    {
+      "name": "Atlas Obscura - Latest Articles and Places",
+      "url": "https://www.atlasobscura.com/feeds/latest"
+    },
+    {
+      "name": "CNN.com - RSS Channel - App Travel Section",
+      "url": "http://rss.cnn.com/rss/cnn_travel.rss"
+    },
+    {
+      "name": "Everything Everywhere",
+      "url": "http://feeds2.feedburner.com/EverythingEverywhere/"
+    },
+    {
+      "name": "Live Life Travel",
+      "url": "https://www.livelifetravel.world/feed/"
+    },
+    {
+      "name": "Million Mile Secrets",
+      "url": "http://feeds.feedburner.com/MillionMileSecrets"
+    },
+    {
+      "name": "NYT > Travel",
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml"
+    },
+    {
+      "name": "TFIL (Traveling to EVERY COUNTRY in A-Z Order)",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=ECastee"
+    },
+    {
+      "name": "The Points Guy Articles",
+      "url": "http://feeds.feedburner.com/thepointsguy"
+    },
+    {
+      "name": "Travel Blog -",
+      "url": "https://www.nomadicmatt.com/travel-blog/feed/"
+    },
+    {
+      "name": "Travel Dudes",
+      "url": "https://www.traveldudes.com/feed/"
+    },
+    {
+      "name": "Travel | The Guardian",
+      "url": "https://www.theguardian.com/uk/travel/rss"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-space",
+  "name": "Space",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Space from 6 feeds, /r/space: news, articles and discussion, Latest from Space.com, NASA: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "/r/space: news, articles and discussion",
+      "url": "https://www.reddit.com/r/space/.rss?format=xml"
+    },
+    {
+      "name": "Latest from Space.com",
+      "url": "https://www.space.com/feeds/all"
+    },
+    {
+      "name": "NASA",
+      "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss"
+    },
+    {
+      "name": "New Scientist - Space",
+      "url": "https://www.newscientist.com/subject/space/feed/"
+    },
+    {
+      "name": "Space | The Guardian",
+      "url": "https://www.theguardian.com/science/space/rss"
+    },
+    {
+      "name": "SpaceX",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=spacexchannel"
+    }
+  ]
+}

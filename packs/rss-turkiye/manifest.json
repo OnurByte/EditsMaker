@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-turkiye",
+  "name": "Türkiye",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Türkiye's news from Anadolu Ajansı, TRT Haber and BBC Türkçe: videos from their newest headlines.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "news",
+    "tr"
+  ],
+  "feeds": [
+    {
+      "name": "Anadolu Ajansı Güncel",
+      "url": "https://www.aa.com.tr/tr/rss/default?cat=guncel"
+    },
+    {
+      "name": "Anadolu Ajansı Dünya",
+      "url": "https://www.aa.com.tr/tr/rss/default?cat=dunya"
+    },
+    {
+      "name": "Anadolu Ajansı Ekonomi",
+      "url": "https://www.aa.com.tr/tr/rss/default?cat=ekonomi"
+    },
+    {
+      "name": "Anadolu Ajansı Spor",
+      "url": "https://www.aa.com.tr/tr/rss/default?cat=spor"
+    },
+    {
+      "name": "TRT Haber Manşet",
+      "url": "https://www.trthaber.com/manset_articles.rss"
+    },
+    {
+      "name": "BBC Türkçe",
+      "url": "https://feeds.bbci.co.uk/turkce/rss.xml"
+    }
+  ]
+}

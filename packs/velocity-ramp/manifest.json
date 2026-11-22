@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "genre: velocity - every shot rushes in, slows to 0.35x at its peak and rushes out, zoom follows the speed",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

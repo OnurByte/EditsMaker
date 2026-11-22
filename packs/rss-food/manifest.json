@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-food",
+  "name": "Food",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Food from 19 feeds, Binging with Babish, Bon Appétit, Budget Bytes: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Binging with Babish",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=bgfilms"
+    },
+    {
+      "name": "Bon Appétit",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=BonAppetitDotCom"
+    },
+    {
+      "name": "Budget Bytes",
+      "url": "http://budgetbytes.blogspot.com/feeds/posts/default"
+    },
+    {
+      "name": "Chocolate & Zucchini",
+      "url": "https://cnz.to/feed/"
+    },
+    {
+      "name": "David Lebovitz",
+      "url": "https://www.davidlebovitz.com/feed/"
+    },
+    {
+      "name": "Dinner: A Love Story",
+      "url": "http://www.dinneralovestory.com/feed/"
+    },
+    {
+      "name": "Food52",
+      "url": "http://feeds.feedburner.com/food52-TheAandMBlog"
+    },
+    {
+      "name": "Green Kitchen Stories",
+      "url": "https://greenkitchenstories.com/feed/"
+    },
+    {
+      "name": "How Sweet Eats",
+      "url": "https://www.howsweeteats.com/feed/"
+    },
+    {
+      "name": "Kitchn | Inspiring cooks, nourishing homes",
+      "url": "https://www.thekitchn.com/main.rss"
+    },
+    {
+      "name": "Laura in the Kitchen",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=LauraVitalesKitchen"
+    },
+    {
+      "name": "Love and Lemons",
+      "url": "http://www.loveandlemons.com/feed/"
+    },
+    {
+      "name": "Love and Olive Oil",
+      "url": "https://www.loveandoliveoil.com/feed"
+    },
+    {
+      "name": "NYT > Food",
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/DiningandWine.xml"
+    },
+    {
+      "name": "Serious Eats",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=SeriousEats"
+    },
+    {
+      "name": "Serious Eats: Recipes",
+      "url": "http://feeds.feedburner.com/seriouseats/recipes"
+    },
+    {
+      "name": "Shutterbean",
+      "url": "http://www.shutterbean.com/feed/"
+    },
+    {
+      "name": "Sprouted Kitchen",
+      "url": "https://www.sproutedkitchen.com/home?format=rss"
+    },
+    {
+      "name": "smitten kitchen",
+      "url": "http://feeds.feedburner.com/smittenkitchen"
+    }
+  ]
+}

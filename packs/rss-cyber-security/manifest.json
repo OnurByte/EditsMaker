@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-cyber-security",
+  "name": "Cyber security",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Cyber security from 21 feeds, Blackhat Library: Hacking techniques and research, CyberWire Daily, Darknet Diaries: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Blackhat Library: Hacking techniques and research",
+      "url": "https://www.reddit.com/r/blackhat/.rss"
+    },
+    {
+      "name": "CyberWire Daily",
+      "url": "https://feeds.megaphone.fm/cyberwire-daily-podcast"
+    },
+    {
+      "name": "Darknet Diaries",
+      "url": "https://feeds.megaphone.fm/darknetdiaries"
+    },
+    {
+      "name": "Darknet – Hacking Tools, Hacker News & Cyber Security",
+      "url": "http://feeds.feedburner.com/darknethackers"
+    },
+    {
+      "name": "Google Online Security Blog",
+      "url": "http://googleonlinesecurity.blogspot.com/atom.xml"
+    },
+    {
+      "name": "Hacking Humans",
+      "url": "https://feeds.megaphone.fm/hacking-humans"
+    },
+    {
+      "name": "ISF Podcast",
+      "url": "https://audioboom.com/channels/4991893.rss"
+    },
+    {
+      "name": "Krebs on Security",
+      "url": "http://krebsonsecurity.com/feed/"
+    },
+    {
+      "name": "Latest news",
+      "url": "https://www.zdnet.com/topic/security/rss.xml"
+    },
+    {
+      "name": "Malicious Life",
+      "url": "https://malicious.life/feed/podcast/"
+    },
+    {
+      "name": "Risky Business",
+      "url": "https://risky.biz/feeds/risky-business"
+    },
+    {
+      "name": "Schneier on Security",
+      "url": "http://www.schneier.com/blog/index.rdf"
+    },
+    {
+      "name": "Security Affairs",
+      "url": "http://securityaffairs.co/wordpress/feed"
+    },
+    {
+      "name": "Smashing Security",
+      "url": "http://www.smashingsecurity.com/rss"
+    },
+    {
+      "name": "Technical Information Security Content & Discussion",
+      "url": "https://www.reddit.com/r/netsec/.rss"
+    },
+    {
+      "name": "The Hacker News",
+      "url": "http://thehackernews.com/feeds/posts/default"
+    },
+    {
+      "name": "The Privacy, Security, & OSINT Show",
+      "url": "http://feeds.soundcloud.com/users/soundcloud:users:261098918/sounds.rss"
+    },
+    {
+      "name": "Threatpost",
+      "url": "http://threatpost.com/feed"
+    },
+    {
+      "name": "cybersecurity",
+      "url": "https://www.reddit.com/r/cybersecurity/.rss"
+    },
+    {
+      "name": "cybersecurity | TechCrunch",
+      "url": "https://techcrunch.com/tag/cybersecurity/feed/"
+    },
+    {
+      "name": "www.theregister.com - Articles",
+      "url": "http://www.theregister.co.uk/security/headlines.atom"
+    }
+  ]
+}

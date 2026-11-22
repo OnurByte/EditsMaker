@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "Alight Motion project \"✨ Shin Uzumaki 9:16 ✨\"",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

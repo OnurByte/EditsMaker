@@ -1,6 +1,57 @@
 # Packs
 
-73 built-in packs: presets, agent skills and automations, each with a `manifest.json` and a picture. The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).
+115 built-in packs, each with a `manifest.json`, an agent skill and a picture. The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="rss-dark.svg"><img src="rss-light.svg" width="100%" alt="RSS in. Edits out. Each new post from BBC, CNN, The Guardian, NYT, Reddit, IGN, TechCrunch, NASA, Anadolu Ajansı or TRT Haber becomes an edit, and a flow posts it."></picture>
+
+## RSS
+
+<p>
+<a href="rss-android"><img src="rss-android/preview.svg" width="300" alt="Android"></a>
+<a href="rss-android-development"><img src="rss-android-development/preview.svg" width="300" alt="Android Development"></a>
+<a href="rss-animal-and-wildlife"><img src="rss-animal-and-wildlife/preview.svg" width="300" alt="Animal &amp; Wildlife"></a>
+<a href="rss-apple"><img src="rss-apple/preview.svg" width="300" alt="Apple"></a>
+<a href="rss-architecture"><img src="rss-architecture/preview.svg" width="300" alt="Architecture"></a>
+<a href="rss-beauty"><img src="rss-beauty/preview.svg" width="300" alt="Beauty"></a>
+<a href="rss-books"><img src="rss-books/preview.svg" width="300" alt="Books"></a>
+<a href="rss-business-and-economy"><img src="rss-business-and-economy/preview.svg" width="300" alt="Business &amp; Economy"></a>
+<a href="rss-cars"><img src="rss-cars/preview.svg" width="300" alt="Cars"></a>
+<a href="rss-chess"><img src="rss-chess/preview.svg" width="300" alt="Chess"></a>
+<a href="rss-cricket"><img src="rss-cricket/preview.svg" width="300" alt="Cricket"></a>
+<a href="rss-cryptocurrency"><img src="rss-cryptocurrency/preview.svg" width="300" alt="Cryptocurrency"></a>
+<a href="rss-cyber-security"><img src="rss-cyber-security/preview.svg" width="300" alt="Cyber security"></a>
+<a href="rss-diy"><img src="rss-diy/preview.svg" width="300" alt="DIY"></a>
+<a href="rss-environment"><img src="rss-environment/preview.svg" width="300" alt="Environment"></a>
+<a href="rss-fashion"><img src="rss-fashion/preview.svg" width="300" alt="Fashion"></a>
+<a href="rss-food"><img src="rss-food/preview.svg" width="300" alt="Food"></a>
+<a href="rss-football"><img src="rss-football/preview.svg" width="300" alt="Football"></a>
+<a href="rss-funny"><img src="rss-funny/preview.svg" width="300" alt="Funny"></a>
+<a href="rss-gaming"><img src="rss-gaming/preview.svg" width="300" alt="Gaming"></a>
+<a href="rss-history"><img src="rss-history/preview.svg" width="300" alt="History"></a>
+<a href="rss-interior-design"><img src="rss-interior-design/preview.svg" width="300" alt="Interior design"></a>
+<a href="rss-ios-development"><img src="rss-ios-development/preview.svg" width="300" alt="iOS Development"></a>
+<a href="rss-memes"><img src="rss-memes/preview.svg" width="300" alt="Memes"></a>
+<a href="rss-movies"><img src="rss-movies/preview.svg" width="300" alt="Movies"></a>
+<a href="rss-music"><img src="rss-music/preview.svg" width="300" alt="Music"></a>
+<a href="rss-nature"><img src="rss-nature/preview.svg" width="300" alt="Nature"></a>
+<a href="rss-news"><img src="rss-news/preview.svg" width="300" alt="News"></a>
+<a href="rss-personal-finance"><img src="rss-personal-finance/preview.svg" width="300" alt="Personal finance"></a>
+<a href="rss-photography"><img src="rss-photography/preview.svg" width="300" alt="Photography"></a>
+<a href="rss-programming"><img src="rss-programming/preview.svg" width="300" alt="Programming"></a>
+<a href="rss-science"><img src="rss-science/preview.svg" width="300" alt="Science"></a>
+<a href="rss-space"><img src="rss-space/preview.svg" width="300" alt="Space"></a>
+<a href="rss-sports"><img src="rss-sports/preview.svg" width="300" alt="Sports"></a>
+<a href="rss-startups"><img src="rss-startups/preview.svg" width="300" alt="Startups"></a>
+<a href="rss-tech"><img src="rss-tech/preview.svg" width="300" alt="Tech"></a>
+<a href="rss-television"><img src="rss-television/preview.svg" width="300" alt="Television"></a>
+<a href="rss-tennis"><img src="rss-tennis/preview.svg" width="300" alt="Tennis"></a>
+<a href="rss-travel"><img src="rss-travel/preview.svg" width="300" alt="Travel"></a>
+<a href="rss-turkiye"><img src="rss-turkiye/preview.svg" width="300" alt="Türkiye"></a>
+<a href="rss-ui-ux"><img src="rss-ui-ux/preview.svg" width="300" alt="UI / UX"></a>
+<a href="rss-web-development"><img src="rss-web-development/preview.svg" width="300" alt="Web Development"></a>
+</p>
+
+## Presets
 
 <p>
 <a href="akis-whip"><img src="akis-whip/preview.svg" width="300" alt="akis-whip"></a>
@@ -26,9 +77,6 @@
 <a href="kitap-slayt"><img src="kitap-slayt/preview.svg" width="300" alt="kitap-slayt"></a>
 <a href="loop-push"><img src="loop-push/preview.svg" width="300" alt="loop-push"></a>
 <a href="phonk-drift"><img src="phonk-drift/preview.svg" width="300" alt="phonk-drift"></a>
-<a href="post-instagram"><img src="post-instagram/preview.svg" width="300" alt="Post to Instagram"></a>
-<a href="post-tiktok"><img src="post-tiktok/preview.svg" width="300" alt="Post to TikTok"></a>
-<a href="post-youtube"><img src="post-youtube/preview.svg" width="300" alt="Post to YouTube"></a>
 <a href="problem-cozum"><img src="problem-cozum/preview.svg" width="300" alt="problem-cozum"></a>
 <a href="punch-zoom-60s"><img src="punch-zoom-60s/preview.svg" width="300" alt="punch-zoom-60s"></a>
 <a href="quarter-spin-rush"><img src="quarter-spin-rush/preview.svg" width="300" alt="quarter-spin-rush"></a>
@@ -68,6 +116,19 @@
 <a href="yuz-sirasi"><img src="yuz-sirasi/preview.svg" width="300" alt="yuz-sirasi"></a>
 <a href="zoom-shake-9x16"><img src="zoom-shake-9x16/preview.svg" width="300" alt="zoom-shake-9x16"></a>
 <a href="zoom-slide-wide"><img src="zoom-slide-wide/preview.svg" width="300" alt="zoom-slide-wide"></a>
+</p>
+
+## Automations
+
+<p>
+<a href="post-instagram"><img src="post-instagram/preview.svg" width="300" alt="Post to Instagram"></a>
+<a href="post-tiktok"><img src="post-tiktok/preview.svg" width="300" alt="Post to TikTok"></a>
+<a href="post-youtube"><img src="post-youtube/preview.svg" width="300" alt="Post to YouTube"></a>
+</p>
+
+## Agent skills
+
+<p>
 <a href="edits"><img src="edits/preview.svg" width="300" alt="edits"></a>
 <a href="edits-mcp"><img src="edits-mcp/preview.svg" width="300" alt="edits-mcp"></a>
 <a href="edits-pack-create"><img src="edits-pack-create/preview.svg" width="300" alt="edits-pack-create"></a>

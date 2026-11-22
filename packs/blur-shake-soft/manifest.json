@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "Alight Motion project \"Megumi Trend Edit\"",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

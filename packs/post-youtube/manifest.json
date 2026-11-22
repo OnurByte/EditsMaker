@@ -6,6 +6,7 @@
   "author": "edits",
   "description": "Signs in to YouTube once in a window of its own and posts your clips there from your own account: edits connect youtube, then edits post --to youtube.",
   "kinds": [
+    "skill",
     "automation"
   ],
   "preview": "preview.svg",

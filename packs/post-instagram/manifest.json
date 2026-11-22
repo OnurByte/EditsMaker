@@ -6,6 +6,7 @@
   "author": "edits",
   "description": "Signs in to Instagram once in a window of its own and posts your clips there from your own account: edits connect instagram, then edits post --to instagram.",
   "kinds": [
+    "skill",
     "automation"
   ],
   "preview": "preview.svg",

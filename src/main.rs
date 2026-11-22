@@ -27,6 +27,7 @@ mod preset;
 mod presets;
 mod render;
 mod review;
+mod rss;
 mod shazam;
 mod social;
 mod signals;
@@ -75,6 +76,7 @@ fn main() -> ExitCode {
         Some("doctor") => doctor(),
         Some("app") => app(),
         Some("settings") => settings(),
+        Some("rss") => rss::cmd(&args[1..]),
         Some("encoder") => util::encoder_cmd(args.get(1).map(String::as_str)),
         Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
@@ -123,6 +125,12 @@ fn main() -> ExitCode {
         Some("disconnect") if args.len() > 1 => social::disconnect(&args[1]),
         Some("post") if args.len() > 1 => social::cmd(&args[1..]),
         Some("follow") if args.len() > 1 => follow::add(&args[1..]),
+        Some("follows") if args.iter().any(|a| a == "--json") => {
+            // the app's automations: each follow as a flow, source to edit to accounts
+            let v: Vec<serde_json::Value> = follow::all().iter().map(|f| serde_json::json!({"source": f.source, "args": f.args, "post": f.post, "every": f.every, "titles": f.titles, "last": f.last})).collect();
+            println!("{}", serde_json::Value::Array(v));
+            Ok(())
+        }
         Some("follows") => {
             follow::list();
             Ok(())
@@ -1914,7 +1922,7 @@ fn packs_cmd(args: &[String]) -> Result<(), String> {
                 let file = m.preview.as_ref().map(|f| packs::dir().join(&m.id).join(f)).filter(|f| !built_in && f.is_file());
                 serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
                     "kinds": m.kinds, "tags": m.tags, "builtIn": built_in, "trusted": p.automation.is_none() || packs::trusted(p),
-                    "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name),
+                    "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name), "feeds": m.feeds,
                     "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset.as_ref())) } else { None }})
             }).collect();
             println!("{}", serde_json::Value::Array(v));
@@ -1985,17 +1993,17 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             let d = packs::dir().join(&id);
             std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
             std::fs::write(d.join("preset.json"), preset::pretty(&p)).map_err(|e| e.to_string())?;
-            let m = packs::make(&d, None, Some(&id))?;
+            let m = packs::make(&d, None, Some(&id), None)?;
             println!("{}: pack {} ({}, {:.1}s) -> --preset {}; share it: PACKS.md", d.display(), m.id, p.about, p.total, p.name);
             Ok(())
         }
         (Some("make"), Some(dir)) => {
-            let m = packs::make(Path::new(dir), opt("--preset"), opt("--id"))?;
+            let m = packs::make(Path::new(dir), opt("--preset"), opt("--id"), opt("--opml").map(Path::new))?;
             println!("{}: {} {} ({}), picture {}", dir, m.id, m.version, kinds(&m.kinds), m.preview.unwrap_or_default());
             Ok(())
         }
         (Some("gallery"), Some(dir)) => packs::gallery(Path::new(dir)).map(|n| println!("{dir}/README.md: {n} packs")),
-        _ => Err("usage: edits packs [--json] [browse [--json] | add ID|LINK | trust ID | remove ID | create VIDEO [--name N] [--like A,B] [--length S] | make DIR [--preset NAME] [--id ID] | gallery DIR]".into()),
+        _ => Err("usage: edits packs [--json] [browse [--json] | add ID|LINK | trust ID | remove ID | create VIDEO [--name N] [--like A,B] [--length S] | make DIR [--preset NAME] [--id ID] [--opml FILE] | gallery DIR]".into()),
     }
 }
 

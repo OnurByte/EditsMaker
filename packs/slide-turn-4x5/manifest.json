@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "Alight Motion project \"New Project 124\"",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

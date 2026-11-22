@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-cars",
+  "name": "Cars",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Cars from 11 feeds, Autocar RSS Feed, BMWBLOG, BikeEXIF: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Autocar RSS Feed",
+      "url": "https://www.autocar.co.uk/rss"
+    },
+    {
+      "name": "BMWBLOG",
+      "url": "https://feeds.feedburner.com/BmwBlog"
+    },
+    {
+      "name": "BikeEXIF",
+      "url": "https://www.bikeexif.com/feed"
+    },
+    {
+      "name": "Car Body Design",
+      "url": "https://www.carbodydesign.com/feed/"
+    },
+    {
+      "name": "Carscoops",
+      "url": "https://www.carscoops.com/feed/"
+    },
+    {
+      "name": "Formula 1",
+      "url": "https://www.reddit.com/r/formula1/.rss"
+    },
+    {
+      "name": "Jalopnik - Obsessed with the culture of cars",
+      "url": "https://jalopnik.com/rss"
+    },
+    {
+      "name": "Latest Content - Car and Driver",
+      "url": "https://www.caranddriver.com/rss/all.xml/"
+    },
+    {
+      "name": "Speedhunters",
+      "url": "http://feeds.feedburner.com/speedhunters"
+    },
+    {
+      "name": "The best vintage and classic cars for sale online | Bring a Trailer",
+      "url": "https://bringatrailer.com/feed/"
+    },
+    {
+      "name": "TheTruthAboutCars",
+      "url": "https://www.thetruthaboutcars.com/feed/"
+    }
+  ]
+}

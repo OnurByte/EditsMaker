@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "81 fast shots (0.7 s), each punching in at 1.5x and easing out; CapCut draft from github.com/Davidb-2107/capcut-cli-david (MIT)",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

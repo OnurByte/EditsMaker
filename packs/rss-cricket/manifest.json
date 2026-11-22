@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-cricket",
+  "name": "Cricket",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Cricket from 19 feeds, BBC Sport, Can't Bowl Can't Throw Cricket Show, Cricbuzz: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "BBC Sport",
+      "url": "http://feeds.bbci.co.uk/sport/cricket/rss.xml"
+    },
+    {
+      "name": "Can't Bowl Can't Throw Cricket Show",
+      "url": "http://feeds.feedburner.com/cantbowlcantthrow"
+    },
+    {
+      "name": "Cricbuzz",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSRQXk5yErn4e14vN76upOw"
+    },
+    {
+      "name": "Cricket",
+      "url": "https://www.reddit.com/r/Cricket/.rss"
+    },
+    {
+      "name": "Cricket News Today, Latest Cricket Updates, Cricket Live Score, Upcoming Matches | Times of India",
+      "url": "https://timesofindia.indiatimes.com/rssfeeds/54829575.cms"
+    },
+    {
+      "name": "Cricket News: Stories, Features, Interviews, Opinion, Reports | Wisden",
+      "url": "https://www.wisden.com/feed"
+    },
+    {
+      "name": "Cricket news from ESPN Cricinfo.com",
+      "url": "http://www.espncricinfo.com/rss/content/story/feeds/0.xml"
+    },
+    {
+      "name": "Cricket | The Guardian",
+      "url": "https://www.theguardian.com/sport/cricket/rss"
+    },
+    {
+      "name": "Cricket | The Indian Express",
+      "url": "https://indianexpress.com/section/sports/cricket/feed/"
+    },
+    {
+      "name": "Cricket – The Roar",
+      "url": "https://www.theroar.com.au/cricket/feed/"
+    },
+    {
+      "name": "England & Wales Cricket Board",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=ecbcricket"
+    },
+    {
+      "name": "NDTV News Search Records Found 1000",
+      "url": "http://feeds.feedburner.com/ndtvsports-cricket"
+    },
+    {
+      "name": "Pakistan Cricket",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCiWrjBhlICf_L_RK5y6Vrxw"
+    },
+    {
+      "name": "Sri Lanka Cricket",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=TheOfficialSLC"
+    },
+    {
+      "name": "Stumped",
+      "url": "https://podcasts.files.bbci.co.uk/p02gsrmh.rss"
+    },
+    {
+      "name": "Switch Hit Podcast",
+      "url": "https://feeds.megaphone.fm/ESP9247246951"
+    },
+    {
+      "name": "Tailenders",
+      "url": "https://podcasts.files.bbci.co.uk/p02pcb4w.rss"
+    },
+    {
+      "name": "Test Match Special",
+      "url": "https://podcasts.files.bbci.co.uk/p02nrsl2.rss"
+    },
+    {
+      "name": "cricket.com.au",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=cricketaustraliatv"
+    }
+  ]
+}

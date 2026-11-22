@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "made for edits: build-up push-ins, hard punch cuts, black and white",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

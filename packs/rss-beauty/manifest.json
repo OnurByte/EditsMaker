@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-beauty",
+  "name": "Beauty",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Beauty from 7 feeds, Beauty - ELLE, Fashionista Full, From Head To Toe: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "Beauty - ELLE",
+      "url": "https://www.elle.com/rss/beauty.xml/"
+    },
+    {
+      "name": "Fashionista Full",
+      "url": "https://fashionista.com/.rss/excerpt/beauty"
+    },
+    {
+      "name": "From Head To Toe",
+      "url": "http://feeds.feedburner.com/frmheadtotoe"
+    },
+    {
+      "name": "Into The Gloss - Beauty Tips, Trends, And Product Reviews",
+      "url": "https://feeds.feedburner.com/intothegloss/oqoU"
+    },
+    {
+      "name": "POPSUGAR Beauty",
+      "url": "https://www.popsugar.com/beauty/feed"
+    },
+    {
+      "name": "Refinery29",
+      "url": "https://www.refinery29.com/beauty/rss.xml"
+    },
+    {
+      "name": "The Beauty Look Book",
+      "url": "https://thebeautylookbook.com/feed"
+    }
+  ]
+}

@@ -6,7 +6,8 @@
   "author": "edits",
   "description": "made for edits: split screen on the beat - full shots punch in, then the same shot splits into 4 and 9 tiles on the hits, then back. Fast songs, crowds, dances, sport",
   "kinds": [
-    "preset"
+    "preset",
+    "skill"
   ],
   "preview": "preview.svg",
   "tags": [

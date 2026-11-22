@@ -8,9 +8,10 @@ as a pack, made by hand, by `edits` or by an agent.
 ```
 sad-rain/
   manifest.json   what the pack is (always)
+  SKILL.md        what an AI agent does with it (always)         (kind "skill")
   preset.json     an edit's shape: shots, moves, flashes, look   (kind "preset")
-  SKILL.md        instructions an AI agent follows               (kind "skill")
   automation.js   a script that does a job on one website        (kind "automation")
+                  RSS feeds, in manifest.json                    (kind "feed")
   preview.svg     its picture: .svg, .png, .jpg, .jpeg or .webp
 ```
 
@@ -43,11 +44,12 @@ pack's folder, and removing it removes all of it.
 | `version` | yes | `MAJOR.MINOR.PATCH`. Raise it when you change the pack. |
 | `author` | yes | Who made it. Keep the original maker's name when you rebuild someone's preset. |
 | `description` | yes | One or two sentences on how the edit feels or what the skill does. |
-| `kinds` | yes | Some of `"preset"`, `"skill"`, `"automation"`: exactly the files that are there. |
+| `kinds` | yes | `"skill"` and some of `"preset"`, `"automation"`, `"feed"`: exactly what is there. |
 | `preview` | no | One of `preview.svg`, `preview.png`, `preview.jpg`, `preview.jpeg`, `preview.webp`. Leave it out and `edits` draws one. |
 | `tags` | no | Short words to find it by: pace, moves, frame (`fast`, `zoom`, `9:16`). |
 | `license` | no | An SPDX name (`MIT`, `CC-BY-4.0`). |
 | `automation` | for an automation | Where its script runs; see below. |
+| `feeds` | for a feed pack | Its RSS or Atom feeds, `[{"name": "BBC Türkçe", "url": "https://feeds.bbci.co.uk/turkce/rss.xml"}]`; see below. |
 
 Fields are camelCase. Unknown fields are ignored, so a newer pack still opens in an older `edits`.
 
@@ -71,7 +73,8 @@ A curve is a list of `[time 0..1 within the shot, value, ease]` keys; an ease is
 
 ## SKILL.md
 
-An [agent skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills): front matter with a `name:` (lowercase,
+Every pack has one: it is how an agent knows when to reach for the pack and what to run. `edits packs make` drafts it
+when the folder has none; change it as you like. An [agent skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills): front matter with a `name:` (lowercase,
 digits, dashes; it becomes the skill's folder name) and a `description:` saying when to use it, then the instructions.
 
 ```markdown
@@ -117,14 +120,31 @@ the post's address. Throw `"login"` when the sign-in has expired.
 one does not run at all until the person has read it and said so with `edits packs trust ID` (or in the app); if its
 `automation.js` changes, it asks again. Built-in ones are trusted.
 
+## Feeds
+
+RSS in, video out. A feed pack is a list of RSS or Atom feeds (`http://` or `https://`). Each new post becomes an
+edit: its headline is searched for footage and shown on screen for the first seconds, in the pack's preset when it
+has one.
+
+```sh
+edits rss football --list           # the newest posts as data (--json for programs)
+edits rss football -n 3             # a video for each of the 3 newest
+edits follow football --post tiktok # as posts come: RSS in, video made, posted out
+```
+
+`edits packs make DIR --opml FILE` turns any RSS reader's export into a feed pack. The built-in ones (`edits.rss-*`)
+come from [awesome-rss-feeds](https://github.com/plenaryapp/awesome-rss-feeds) (CC0), and `edits.rss-turkiye` from
+Anadolu Ajansı, TRT Haber and BBC Türkçe.
+
 ## Making one
 
 ```sh
 edits packs create footage.mp4 --name sad-rain      # a new pack from a video: its rhythm, moves borrowed from presets
 edits packs make DIR [--preset NAME] [--id ID]      # turn a folder (or a saved preset) into a pack: manifest, picture, check
+edits packs make DIR --opml feeds.opml               # a feed pack from an RSS reader's export
 ```
 
-Both write `manifest.json` and `preview.svg` for you and check the pack against this page. Packs made here land in
+They write `manifest.json`, `SKILL.md` (when there is none) and `preview.svg` for you and check the pack against this page. Packs made here land in
 `~/.config/edits/packs/<id>/`, next to the ones you added, and their presets work with `--preset` at once.
 
 ## Sharing one

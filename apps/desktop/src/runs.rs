@@ -49,6 +49,10 @@ pub struct Pack {
     pub built_in: bool,
     /// an automation runs only once trusted; the rest always are
     pub trusted: bool,
+    /// the preset it carries, by name
+    pub preset: Option<String>,
+    #[serde(default)]
+    pub feeds: Vec<FeedRef>,
     pub preview_file: Option<PathBuf>,
     pub preview_svg: Option<String>,
 }
@@ -61,6 +65,37 @@ pub struct Listed {
     pub description: String,
     pub kinds: Vec<String>,
     pub added: bool,
+}
+
+impl Pack {
+    pub fn is(&self, kind: &str) -> bool {
+        self.kinds.iter().any(|k| k == kind)
+    }
+
+    /// What `edits rss` and `edits follow` call a feed pack: football for edits.rss-football.
+    pub fn short(&self) -> String {
+        self.id.strip_prefix("edits.rss-").unwrap_or(&self.id).to_string()
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct FeedRef {
+    pub name: String,
+    pub url: String,
+}
+
+/// A follow, as the app shows it: a flow from a source, made into edits, posted to accounts.
+#[derive(Clone, Deserialize)]
+pub struct Flow {
+    pub source: String,
+    pub args: Vec<String>,
+    pub post: String,
+    pub every: u64,
+    pub titles: bool,
+}
+
+pub fn flows() -> Result<Vec<Flow>, String> {
+    serde_json::from_str(&output(&["follows", "--json"])?).map_err(|e| e.to_string())
 }
 
 pub fn packs() -> Result<Vec<Pack>, String> {

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-history",
+  "name": "History",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "History from 7 feeds, 30 for 30 Podcasts, Dan Carlin's Hardcore History, History in 28-minutes: videos from their newest posts.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "feeds": [
+    {
+      "name": "30 for 30 Podcasts",
+      "url": "https://feeds.megaphone.fm/ESP5765452710"
+    },
+    {
+      "name": "Dan Carlin's Hardcore History",
+      "url": "https://feeds.feedburner.com/dancarlin/history?format=xml"
+    },
+    {
+      "name": "History in 28-minutes",
+      "url": "https://www.historyisnowmagazine.com/blog?format=RSS"
+    },
+    {
+      "name": "HistoryNet",
+      "url": "http://www.historynet.com/feed"
+    },
+    {
+      "name": "Throughline",
+      "url": "https://feeds.npr.org/510333/podcast.xml"
+    },
+    {
+      "name": "You Must Remember This",
+      "url": "https://feeds.megaphone.fm/YMRT7068253588"
+    },
+    {
+      "name": "the memory palace",
+      "url": "http://feeds.thememorypalace.us/thememorypalace"
+    }
+  ]
+}
