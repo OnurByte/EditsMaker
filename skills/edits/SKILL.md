@@ -206,7 +206,8 @@ cuts from that part (the one people know from TikTok, often not the loudest); a 
 - `--loop`: the end runs into the start, picture and song (the last shot is what ran just before the first, the
   song's bar before the start comes in under the end, no fades). Rewatches count; use it on short music and preset
   edits. `edits_check` says how far apart the last and first frames are ("plays round seamlessly" under 12%).
-- `--lyrics`: the song's words on screen as sung, and music edits move cuts onto sung words. Needs a whisper model.
+- `--lyrics`: the song's words on screen as sung, and music edits move cuts onto sung words. The words come from LRCLIB
+  (the record's real lyrics, timed by whisper); without them, what whisper hears (needs a whisper model).
 - The person cut out (people, not anime; the model is fetched once): `--bg blur|black|#ff2a6d|picture|video`,
   `--behind "RUN@1-4"` (huge words between the background and the person), `--outline white` (a glowing edge).
   Captions go on after, on top.

@@ -100,8 +100,9 @@ pub fn work_size(w: u32, h: u32) -> (u32, u32) {
     (r16(w as f64 * k), r16(h as f64 * k))
 }
 
-/// The person in every frame of `clip` as a grey video (white = in front), at the work size.
-fn mask(clip: &Path, out: &Path) -> Result<usize, String> {
+/// The person in every frame of `clip` as a grey video (white = in front), at the work size. Returns the frames
+/// and, per row of the frame top to bottom, how much of it the person covers on average (0..1).
+fn mask(clip: &Path, out: &Path) -> Result<(usize, Vec<f64>), String> {
     let lib = crate::tools::onnxruntime()?;
     let model = crate::ort::Model::load(&lib, &crate::tools::matting_model()?)?;
     let (w, h) = crate::fetch::dims(clip);
@@ -110,8 +111,15 @@ fn mask(clip: &Path, out: &Path) -> Result<usize, String> {
     let mut ratio = [(384.0 / mw.max(mh) as f32).min(1.0)];
     let fps = format!("{:.3}", crate::fetch::fps(clip));
     let c = clip.to_string_lossy();
-    let mut dec = Command::new("ffmpeg").args(["-v", "error", "-i", &c, "-vf", &format!("scale={mw}:{mh},format=rgb24"), "-f", "rawvideo", "-"])
-        .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null()).spawn().map_err(|e| format!("ffmpeg: {e}"))?;
+    // one frame out per frame of the clip at its own rate, so the mask lines up with it frame for frame
+    let mut dec = Command::new("ffmpeg").args(["-v", "error", "-i", &c, "-vf", &format!("scale={mw}:{mh},format=rgb24"), "-fps_mode", "cfr", "-r", &fps, "-f", "rawvideo", "-"])
+        .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().map_err(|e| format!("ffmpeg: {e}"))?;
+    let mut dec_err = dec.stderr.take().ok_or("ffmpeg gave no messages")?;
+    let said = std::thread::spawn(move || {
+        let mut s = String::new();
+        let _ = std::io::Read::read_to_string(&mut dec_err, &mut s);
+        s
+    });
     let mut enc = Command::new("ffmpeg").args(["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "gray", "-s", &format!("{mw}x{mh}"), "-r", &fps, "-i", "-", "-c:v", "ffv1", &out.to_string_lossy()])
         .stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::piped()).spawn().map_err(|e| format!("ffmpeg: {e}"))?;
     let n = (mw * mh) as usize;
@@ -123,6 +131,7 @@ fn mask(clip: &Path, out: &Path) -> Result<usize, String> {
     let mut input = BufReader::with_capacity(n * 3, dec.stdout.take().ok_or("ffmpeg gave no frames")?);
     let mut sink = enc.stdin.take().ok_or("ffmpeg took no mask")?;
     let mut frames = 0;
+    let mut rows = vec![0f64; mh as usize];
     // the model carries what it saw in four recurrent states from frame to frame: steady edges, no flicker
     let mut state: Option<Vec<crate::ort::Value>> = None;
     let res = (|| -> Result<(), String> {
@@ -143,6 +152,7 @@ fn mask(clip: &Path, out: &Path) -> Result<usize, String> {
                 return Err(format!("the subject model gave {} values for a {mw}x{mh} frame", pha.len()));
             }
             pha.iter().zip(grey.iter_mut()).for_each(|(a, g)| *g = (a.clamp(0.0, 1.0) * 255.0).round() as u8);
+            grey.chunks(mw as usize).zip(rows.iter_mut()).for_each(|(r, sum)| *sum += r.iter().map(|&g| g as f64).sum::<f64>() / (255.0 * mw as f64));
             sink.write_all(&grey).map_err(|e| format!("ffmpeg stopped taking the mask: {e}"))?;
             drop(frame);
             state = Some(outs);
@@ -153,20 +163,47 @@ fn mask(clip: &Path, out: &Path) -> Result<usize, String> {
     drop(sink);
     let _ = dec.kill();
     let _ = dec.wait();
+    let dec_said = said.join().unwrap_or_default();
     let done = enc.wait_with_output().map_err(|e| e.to_string())?;
     res?;
+    // a mask that stops early freezes the person on its last frame for the rest of the clip: an error, not an edit
+    let want = (crate::fetch::duration(clip).unwrap_or(0.0) * crate::fetch::fps(clip)).round() as usize;
+    if short_mask(frames, want) {
+        let why = dec_said.lines().rev().take(4).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>().join(" | ");
+        return Err(format!("the person was cut out of only {frames} of {want} frames ({})", if why.is_empty() { "ffmpeg stopped without a word" } else { &why }));
+    }
     if !done.status.success() {
         return Err(format!("ffmpeg could not write the mask: {}", String::from_utf8_lossy(&done.stderr).trim()));
     }
     if frames == 0 {
         return Err(format!("{}: no frames", clip.display()));
     }
-    Ok(frames)
+    Ok((frames, rows.iter().map(|r| r / frames as f64).collect()))
+}
+
+/// Where words `part` of the frame's height tall sit behind the person, as a share of the room left above and
+/// below them (0 top, 1 bottom): the band the person covers least, a little in favour of just above the middle.
+pub fn behind_at(rows: &[f64], part: f64) -> f64 {
+    if rows.is_empty() || part >= 1.0 {
+        return 0.42;
+    }
+    let n = rows.len() as f64;
+    let cost = |k: f64| {
+        let a = (k * (1.0 - part) * n) as usize;
+        let b = ((a as f64 + part * n) as usize).clamp(a + 1, rows.len());
+        rows[a.min(rows.len() - 1)..b].iter().sum::<f64>() / (b - a.min(rows.len() - 1)) as f64 + 0.15 * (k - 0.42).abs()
+    };
+    (0..=20).map(|i| i as f64 / 20.0).min_by(|a, b| cost(*a).total_cmp(&cost(*b))).unwrap_or(0.42)
+}
+
+/// A mask more than a few frames shorter than its clip.
+fn short_mask(frames: usize, want: usize) -> bool {
+    frames + 3 < want
 }
 
 /// The filter graph over input 0 (the clip), 1 (the mask), then the background file (when there is one), then one
 /// picture per --behind line. `total` is the clip's length.
-pub fn graph(s: &Subject, w: u32, h: u32, total: f64) -> String {
+pub fn graph(s: &Subject, w: u32, h: u32, total: f64, at: &[f64]) -> String {
     let fg = s.bg.is_some() || !s.behind.is_empty();
     let uses = usize::from(fg) + 2 * usize::from(s.outline.is_some());
     let mut g = format!("[1:v]scale={w}:{h}:flags=bicubic,format=gray,setsar=1");
@@ -199,7 +236,7 @@ pub fn graph(s: &Subject, w: u32, h: u32, total: f64) -> String {
     };
     for (i, (_, a, b)) in s.behind.iter().enumerate() {
         let (a, b) = (a.max(0.0), b.min(total));
-        g.push_str(&format!("[{}:v]format=rgba,fade=t=in:st={a:.3}:d=0.25:alpha=1[tx{i}];[{cur}][tx{i}]overlay=x=(W-w)/2:y=(H-h)*0.42:enable='between(t,{a:.3},{b:.3})'[bt{i}];", next + i));
+        g.push_str(&format!("[{}:v]format=rgba,fade=t=in:st={a:.3}:d=0.25:alpha=1[tx{i}];[{cur}][tx{i}]overlay=x=(W-w)/2:y=(H-h)*{:.3}:enable='between(t,{a:.3},{b:.3})'[bt{i}];", next + i, at.get(i).copied().unwrap_or(0.42)));
         cur = format!("bt{i}");
     }
     if let Some(f) = fg_src {
@@ -228,7 +265,7 @@ pub fn apply(clip: &Path, s: &Subject) -> Result<(), String> {
     let total = crate::fetch::duration(clip)?;
     let started = std::time::Instant::now();
     let mask_file = clip.with_extension("mask.mkv");
-    let frames = mask(clip, &mask_file).inspect_err(|_| {
+    let (frames, rows) = mask(clip, &mask_file).inspect_err(|_| {
         let _ = std::fs::remove_file(&mask_file);
     })?;
     eprintln!("edits: the person cut out of {frames} frames in {:.0}s", started.elapsed().as_secs_f64());
@@ -239,14 +276,18 @@ pub fn apply(clip: &Path, s: &Subject) -> Result<(), String> {
         args.extend(["-t".into(), format!("{total:.3}"), "-i".into(), std::path::absolute(f).map_err(|e| e.to_string())?.to_string_lossy().into()]);
     }
     let mut temp: Vec<PathBuf> = vec![mask_file.clone()];
+    let mut at = vec![];
     for (i, (text, _, _)) in s.behind.iter().enumerate() {
         let png = clip.with_extension(format!("behind{i}.png"));
-        crate::wrap::png(&behind_svg(text, w), w, &png)?;
+        let svg = behind_svg(text, w);
+        let tall = svg.split("height=\"").nth(1).and_then(|x| x.split('"').next()).and_then(|x| x.parse::<f64>().ok()).unwrap_or(h as f64 * 0.2);
+        at.push(behind_at(&rows, tall / h.max(1) as f64));
+        crate::wrap::png(&svg, w, &png)?;
         args.extend(["-loop".into(), "1".into(), "-t".into(), format!("{total:.3}"), "-i".into(), png.to_string_lossy().into()]);
         temp.push(png);
     }
     let tmp = clip.with_extension("subject.mp4");
-    args.extend(["-filter_complex".into(), graph(s, w, h, total), "-map".into(), "[v]".into(), "-map".into(), "0:a?".into(), "-t".into(), format!("{total:.3}")]);
+    args.extend(["-filter_complex".into(), graph(s, w, h, total, &at), "-map".into(), "[v]".into(), "-map".into(), "0:a?".into(), "-t".into(), format!("{total:.3}")]);
     args.extend(crate::util::h264(18));
     args.extend(["-c:a", "copy", "-movflags", "+faststart"].iter().map(|x| x.to_string()));
     args.push(tmp.to_string_lossy().into());
@@ -259,6 +300,23 @@ pub fn apply(clip: &Path, s: &Subject) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn words_go_where_the_person_is_not() {
+        // a close-up: the person fills the lower 70 %, the top is wall
+        let close: Vec<f64> = (0..100).map(|r| if r < 30 { 0.05 } else { 0.9 }).collect();
+        assert!(behind_at(&close, 0.2) < 0.15, "{}", behind_at(&close, 0.2));
+        // nobody in frame: just above the middle
+        assert!((behind_at(&[0.0; 100], 0.2) - 0.4).abs() < 0.06);
+        assert_eq!(behind_at(&[], 0.2), 0.42);
+    }
+
+    #[test]
+    fn a_mask_must_cover_its_clip() {
+        assert!(short_mask(62, 528));
+        assert!(!short_mask(527, 528));
+        assert!(!short_mask(10, 0));
+    }
 
     #[test]
     fn colours_and_backgrounds() {
@@ -282,18 +340,18 @@ mod tests {
     #[test]
     fn graphs() {
         let bg = Subject { bg: Some(Bg::Blur), ..Default::default() };
-        let g = graph(&bg, 1080, 1920, 10.0);
+        let g = graph(&bg, 1080, 1920, 10.0, &[]);
         assert!(g.contains("[0:v]split[vb][vf];[vb]gblur=sigma=40") && g.contains("[vf][m0]alphamerge[cut];[base][cut]overlay") && g.ends_with("[front]format=yuv420p[v]"), "{g}");
         let all = Subject { bg: Some(Bg::File("x.png".into())), behind: vec![("RUN".into(), 1.0, 3.0)], outline: Some("white".into()) };
-        let g = graph(&all, 1080, 1920, 10.0);
+        let g = graph(&all, 1080, 1920, 10.0, &[]);
         assert!(g.contains(",split=3[m0][m1][m2];") && g.contains("[2:v]scale=1080:1920") && g.contains("[3:v]format=rgba,fade=t=in:st=1.000") && g.contains("[base][tx0]overlay"), "{g}");
         assert!(g.contains("[bt0][cut]overlay") && g.contains("[m1]gblur=sigma=5") && g.contains("[big][m2]blend=all_mode=subtract") && g.contains("[front][line]overlay") && g.ends_with("[lined]format=yuv420p[v]"), "{g}");
         // the whole edit long: clamped to the clip
         let words = Subject { behind: vec![("RUN".into(), 0.0, f64::MAX)], ..Default::default() };
-        let g = graph(&words, 1080, 1920, 10.0);
-        assert!(g.contains("[0:v]split[vb][vf];[2:v]format=rgba") && g.contains("between(t,0.000,10.000)") && g.contains("[bt0][cut]overlay"), "{g}");
+        let g = graph(&words, 1080, 1920, 10.0, &[0.1]);
+        assert!(g.contains("[0:v]split[vb][vf];[2:v]format=rgba") && g.contains("between(t,0.000,10.000)") && g.contains("[bt0][cut]overlay") && g.contains("y=(H-h)*0.100"), "{g}");
         let line = Subject { outline: Some("0xff0000".into()), ..Default::default() };
-        let g = graph(&line, 720, 1280, 5.0);
+        let g = graph(&line, 720, 1280, 5.0, &[]);
         assert!(g.contains(",split=2[m0][m1];[m0]gblur") && g.contains("[0:v][line]overlay"), "{g}");
     }
 

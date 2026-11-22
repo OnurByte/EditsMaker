@@ -1093,19 +1093,33 @@ pub fn color_hits(spans: &[(f64, f64)], joins: &[Join], story: bool) -> String {
 
 // ---------------------------------------------------------------- lyrics
 
-/// The song's sung words with their times (whisper, any language), cached beside the song; empty without a speech
-/// model or when nothing is sung. Instrumental marks ("[Music]", "♪") are left out.
+/// The song's sung words with their times, cached beside the song: the record's lyrics from LRCLIB when it has them,
+/// else what whisper hears (any language; instrumental marks like "[Music]" and "♪" left out). Empty when neither has any.
 pub fn lyrics(song: &Song, cache: &Path) -> Vec<Word> {
     let dir = cache.join("music").join(format!("lyrics-{}", safe(&song.file.file_stem().unwrap_or_default().to_string_lossy())));
     let wav = dir.join("a.wav");
     let made = std::fs::create_dir_all(&dir).map_err(|e| e.to_string())
         .and_then(|_| if wav.is_file() { Ok(String::new()) } else { run(None, "ffmpeg", &["-v", "error", "-y", "-i", &song.file.to_string_lossy(), "-vn", "-ar", "16000", "-ac", "1", &wav.to_string_lossy()]) })
         .and_then(|_| crate::transcribe::transcript(&dir, &wav, "auto", ""));
-    match made {
+    let heard: Vec<Word> = match made {
         Ok(t) => t.words.into_iter().filter(|w| !w.t.contains(['♪', '[', ']', '(', ')', '*']) && !w.t.trim().is_empty()).collect(),
         Err(e) => {
-            eprintln!("edits: no lyrics for {} ({e})", song.title);
+            eprintln!("edits: whisper did not hear the lyrics of {} ({e})", song.title);
             vec![]
+        }
+    };
+    // the record's own words where LRCLIB has them, set on this file's clock by whisper's, or as they are when the
+    // file is the record (same length); else whisper's words
+    let Some((lines, len)) = crate::lrc::find(&song.title, &dir) else { return heard };
+    let same_length = crate::fetch::duration(&song.file).is_ok_and(|d| len > 0.0 && (d - len).abs() <= 2.0);
+    match crate::lrc::offset(&lines, &heard).or(same_length.then_some(0.0)) {
+        Some(shift) => {
+            eprintln!("edits: lyrics of {} from LRCLIB ({} lines)", song.title, lines.len());
+            crate::lrc::words(&lines, shift)
+        }
+        None => {
+            eprintln!("edits: LRCLIB's lyrics of {} did not line up with this recording; whisper's words are used", song.title);
+            heard
         }
     }
 }

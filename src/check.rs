@@ -120,9 +120,20 @@ fn seam_apart(clip: &Path) -> Option<f64> {
         let mut args: Vec<&str> = vec!["-v", "error"];
         args.extend_from_slice(at);
         args.extend_from_slice(&["-i", &c, "-frames:v", "1", "-vf", "scale=36:64,format=gray", "-f", "rawvideo", "-"]);
-        crate::util::run_bytes("ffmpeg", &args).ok().filter(|b| b.len() == 36 * 64)
+        crate::util::run_bytes("ffmpeg", &args).ok().filter(|b| b.len() >= 36 * 64)
     };
-    Some(apart(&frame(&["-sseof", "-0.1"])?, &frame(&[])?))
+    // every frame of the last second, the last of them taken: a point just before the end can fall past the
+    // picture when the sound runs a little longer
+    let tail = frame_all(&c, &["-sseof", "-1"])?;
+    Some(apart(&tail[tail.len() - 36 * 64..], &frame(&[])?))
+}
+
+/// Every frame from `at` on as 36x64 grey, back to back.
+fn frame_all(c: &str, at: &[&str]) -> Option<Vec<u8>> {
+    let mut args: Vec<&str> = vec!["-v", "error"];
+    args.extend_from_slice(at);
+    args.extend_from_slice(&["-i", c, "-vf", "scale=36:64,format=gray", "-f", "rawvideo", "-"]);
+    crate::util::run_bytes("ffmpeg", &args).ok().filter(|b| b.len() >= 36 * 64 && b.len() % (36 * 64) == 0)
 }
 
 /// Mean difference of two grey frames, 0..1.
