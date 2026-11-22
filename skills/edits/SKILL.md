@@ -152,6 +152,23 @@ edits <link|channel> -n 3 --aspect 9:16 --captions hormozi --bed trend:7
 - `--bed SONG`: music under the voice, ducked while they talk. A hook line shows on top for the first seconds.
 - `--no-jumpcuts`, `--no-sfx`, `--no-hook`, `--no-captions` turn parts off.
 - Screen recordings with no face keep the whole frame over a blurred copy; faces are cropped around.
+- A stream with a facecam in a corner gets the facecam over the game by itself (`--layout stack`); `--layout inset`
+  lays it small on top of the game instead. `--translate tr` puts the captions, hook and .srt in Turkish (any language).
+
+Streams and other long videos (hours): find the moments first, look, then cut.
+
+```sh
+edits moments <VOD link> -n 20                      # moments.md: each with score, flags, 12 frames, a post caption
+edits moments <VOD link> --find "no way he|uçuyor"   # add lines already clipped elsewhere (quiet finds, punchlines)
+```
+
+- Every 30 s is scored by loudness against the whole stream, reactions said out loud in its own language ("no way",
+  "oha"), words and the chat replay (YouTube live chat, Twitch); the best 90 s apart are judged by a rubric (spoilers,
+  sexual content, hate and gambling dropped; hook, payoff, reaction, stands alone, phone-readable, new, suitable).
+- Look at every moment's frame sheet before cutting: is the promised thing on screen, where is the facecam, is it
+  only a menu or a cutscene. Drop what fails, then run each kept moment's `cut:` command (`--say ID@A-B`).
+- Flags warn, never drop: `profanity`, `sexual`, `spoiler`, `loop` (whisper made the same line up under music).
+- `edits <VOD link> -n 5` alone also works on a long video: the model reads only the best-scored stretches.
 
 Other kinds, when asked for:
 - Music montage with no preset: `--music SONG` (add `--sad` for slow, black-and-white, dissolves).

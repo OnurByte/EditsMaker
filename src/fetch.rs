@@ -263,7 +263,8 @@ pub fn remote(id: &str, url: &str, cache: &Path) -> Result<Source, String> {
     let (w, info_file) = (work.join("a.wav"), work.join("src.info.json"));
     if !(w.is_file() && info_file.is_file()) {
         let out = yt(&[
-            "--no-warnings", "--no-progress", "--no-playlist", "-f", "ba[ext=m4a]/ba/b",
+            // a stream's VOD comes in thousands of pieces: eight at a time
+            "--no-warnings", "--no-progress", "--no-playlist", "--concurrent-fragments", "8", "-f", "ba[ext=m4a]/ba/b",
             "--write-info-json", "--write-comments", "--extractor-args", "youtube:max_comments=300,all,0,0;comment_sort=top",
             // "-orig" is the speech recognition track in the language actually spoken, with per-word times
             "--write-auto-subs", "--sub-langs", ".*-orig", "--sub-format", "json3",
@@ -389,6 +390,38 @@ pub fn clip(src: &Source, start: f64, end: f64) -> Result<(PathBuf, f64), String
         return Err(format!("yt-dlp did not produce {}", out.display()));
     }
     Ok((out, 0.0))
+}
+
+/// A small (360p) copy of one stretch, to look at before cutting: (file, where the stretch starts inside it).
+pub fn peek(src: &Source, start: f64, end: f64) -> Result<(PathBuf, f64), String> {
+    if let Some(file) = &src.local {
+        return Ok((file.clone(), start));
+    }
+    let out = src.work.join(format!("peek-{start:.0}-{end:.0}.mp4"));
+    if !out.is_file() {
+        yt(&["--no-warnings", "--no-progress", "--no-playlist", "-f", "bv*[height<=360]/b[height<=360]/wv*/b", "--download-sections", &format!("*{start:.2}-{end:.2}"),
+            "-o", &out.with_extension("%(ext)s").to_string_lossy(), "--remux-video", "mp4", "--", &src.url])?;
+    }
+    if out.is_file() { Ok((out, 0.0)) } else { Err(format!("yt-dlp did not produce {}", out.display())) }
+}
+
+/// A stream's chat replay, fetched once beside its audio (YouTube's live chat, Twitch's rechat) as (second,
+/// message); empty for a file or a video that had no chat.
+pub fn chat(src: &Source) -> Vec<(f64, String)> {
+    if src.local.is_some() {
+        return vec![];
+    }
+    let none = src.work.join("chat.none");
+    let saved = || std::fs::read_dir(&src.work).into_iter().flatten().flatten().map(|e| e.path())
+        .find(|p| p.file_name().is_some_and(|n| { let n = n.to_string_lossy(); n.starts_with("chat.") && n.ends_with(".json") }));
+    if saved().is_none() && !none.is_file() {
+        let _ = yt(&["--no-warnings", "--no-progress", "--skip-download", "--no-playlist", "--write-subs", "--sub-langs", "live_chat,rechat",
+            "-o", &src.work.join("chat.%(ext)s").to_string_lossy(), "--", &src.url]);
+        if saved().is_none() {
+            let _ = std::fs::write(&none, "");
+        }
+    }
+    saved().and_then(|p| std::fs::read_to_string(p).ok()).map(|s| crate::vod::parse_chat(&s)).unwrap_or_default()
 }
 
 #[cfg(test)]

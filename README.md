@@ -77,7 +77,9 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 Saw an edit you love? Hand edits its link. It reverse-engineers every cut, flash, zoom, slide and shake into a preset, then puts your footage into the same shape. No other editor does that.
 
-Trending songs come in from the part everyone knows: edits asks Shazam where the Shorts using a song start and cuts from that hook, not just the loudest bar. `--loop` makes the end run into the start so it plays round seamlessly, `--long` passes the minute TikTok's Creator Rewards pays for, `--lyrics` writes the song's real words as they are sung, and `--bg`, `--behind` and `--outline` cut the person out to put a new background, huge words or a glowing edge around them. `edits review` opens a render so you can click a moment and say what to change, and `edits stats @channel` tells you which presets, songs and looks your viewers actually watched.
+Streamed for six hours? Give edits the VOD. It hears where you got loud, where you said "no way", where chat lost it, leaves out the spoilers, and hands back the moments worth posting with a caption written for each. Then it cuts them with your facecam over the game, and `--translate` puts the captions in any language.
+
+Trending songs come in from the part everyone knows: edits asks Shazam where the Shorts using a song start and cuts from that hook, not just the loudest bar. `--loop` makes the end run into the start so it plays round seamlessly, `--long` passes the minute TikTok's Creator Rewards pays for, `--lyrics` writes the song's real words as they are sung, and `--bg`, `--behind` and `--outline` cut the person out to put a new background, huge words or a glowing edge around them. `edits review` opens a render in its own window so you can click a moment and say what to change, and `edits stats @channel` tells you which presets, songs and looks your viewers actually watched.
 
 Heard a song in it? `edits song` names it, Shazam built in, and `--music` brings the clean original. Cuts land on the kick itself, come faster where the song gets loud and hold where it breathes. `--denoise` takes the score and room noise out from under a spoken line and leaves the song alone. On a Mac it renders on Apple's own hardware encoder, on a PC on your NVIDIA GPU.
 
@@ -445,7 +447,7 @@ edits skills add youtube-research
 Any other client: command `edits`, args `["mcp"]`.
 
 Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_set`, `edits_preset_create`, `edits_learn`,
-`edits_check`, `edits_frames`, `edits_words`, `edits_song`, `edits_cut`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
+`edits_check`, `edits_frames`, `edits_words`, `edits_moments`, `edits_song`, `edits_cut`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
 the footage, renders with it and measures the result; the output folder is always edits' own choice.
 
 </details>

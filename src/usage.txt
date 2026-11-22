@@ -24,6 +24,10 @@ USAGE
                                and --overlay SPEC library clips (see --overlay)
   edits check <clip.mp4|link> measure a render: length, loudness, cut rhythm, a contact sheet to look at
   edits words <link|ID|file> [A-B] [--find TEXT]   what it says, line by line, each as a ready --say ID@A-B
+  edits moments <link|ID|file> [-n N] [--find REGEX]...   a long video's (a stream's VOD) moments worth a clip: every
+                               30 s scored by loudness, reactions said, words and chat, the best 90 s apart, judged by
+                               a clipping rubric; each with flags, 12 frames to check, a post caption and its cut
+                               command (--lang L, --no-llm, --no-sheets)
   edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4) in one jpg, to pick --shot
   edits song <video|link|ID> [AT]   which song plays there (Shazam), ready for --music
   edits cut <video|link|ID> A-B...  stretches copied out without re-encoding (lossless, instant), each from the keyframe before A
@@ -73,7 +77,10 @@ OPTIONS
       --aspect A      9:16 (default), 4:5, 1:1, 3:4, 4:3, 16:9 or 21:9
       --size WxH      any frame size, like 1080x1350
       --fit           keep the whole frame over a blurred copy instead of cropping around faces
-      --look L        colour: none, bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia, bleach,
+      --layout L      talking clips: fill (crop around faces), fit, stack (a streamer's facecam over the game, chosen by
+                      itself when one is found) or inset (the facecam small on top of the game)
+      --translate L   talking clips: captions, hook and .srt in that language (tr, en, es...), the voice as said
+      --look L       colour: none, bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia, bleach,
                       neon, matrix, sunset, pop
       --lut FILE      a .cube LUT over the picture
       --encoder E     auto (default: Apple VideoToolbox on a Mac, an NVIDIA GPU elsewhere, when it works, else libx264),

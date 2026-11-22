@@ -69,6 +69,8 @@ fn tools() -> Value {
             "loop": {"type": "boolean", "description": "the end runs into the start (picture and song), no fades: plays round seamlessly; rewatches count. Music and preset edits; edits_check reports how far apart the last and first frames are"},
             "long": {"type": "boolean", "description": "one edit over a minute, what TikTok's Creator Rewards pays for: talking clips joined into long.mp4, music edits 64 s, a preset played round on one song"},
             "lyrics": {"type": "boolean", "description": "the song's words on screen as they are sung (the record's lyrics from LRCLIB, else whisper), and music edits cut on the sung words"},
+            "layout": {"type": "string", "enum": ["fill", "fit", "stack", "inset"], "description": "talking clips: fill crops around the faces, fit keeps the whole frame, stack puts a streamer's facecam over the game (chosen by itself when a facecam is found), inset lays the facecam small on top of the game"},
+            "translate": {"type": "string", "description": "talking clips: the captions, hook and .srt in this language (tr, en, es...), the voice as said"},
             "corecore": {"type": "boolean", "description": "corecore: many unrelated videos of a topic, faded and grainy, dips and long dissolves, glimpses, headlines from their own words; needs music (slow, sad)"},
             "bg": {"type": "string", "description": "the person cut out (Robust Video Matting, people only) with another background: blur, a colour (black, #ff2a6d), or a picture/video file or library background"},
             "behind": {"type": "array", "items": {"type": "string"}, "description": "huge words between the background and the person, at the height the person covers least; TEXT or TEXT@FROM-TO seconds"},
@@ -81,6 +83,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "changes": {"type": "array", "items": {"type": "string"}}, "as": {"type": "string"}, "revision": {"type": "string"}}, "required": ["name", "changes"]}},
         {"name": "edits_words", "description": "What a video says, line by line with times, each line as a ready say spec (ID@A-B) for edits_make say. Use it to find a line instead of transcribing yourself. `input`: a link, a YouTube ID or a file; `range` \"60-90\" seconds; `find` keeps the lines with those words.",
          "inputSchema": {"type": "object", "properties": {"input": {"type": "string"}, "range": {"type": "string"}, "find": {"type": "string"}, "lang": {"type": "string"}}, "required": ["input"]}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_moments", "description": "The moments worth a clip in a long video (a stream's VOD, a podcast, hours long): every 30 s scored by loudness against the whole video, reactions said out loud (in the video's language), how much is said and how hard the chat went, the best ones 90 s apart, judged by the clipping rubric. Each comes with flags (profanity, sexual, spoiler, loop), a sheet of 12 frames to look at before cutting, a post caption and its ready cut command (edits_make with say). Look at each sheet: is the promised thing on screen, where is the facecam, is it only a menu. `find`: regexes for lines already clipped elsewhere (quiet finds, one-line punchlines the scores miss).",
+         "inputSchema": {"type": "object", "properties": {"input": {"type": "string", "description": "link, YouTube ID or file"}, "n": {"type": "integer", "description": "how many (default 20)"}, "find": {"type": "array", "items": {"type": "string"}}, "lang": {"type": "string", "description": "spoken language when the site does not say (tr, en)"}, "llm": {"type": "boolean", "description": "false: the scores alone pick"}, "sheets": {"type": "boolean", "description": "false: no frame sheets (faster)"}}, "required": ["input"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name. `revision` (from edits_preset_get's log) refuses the save if the preset changed since.",
          "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}, "revision": {"type": "string"}}, "required": ["preset"]}},
         {"name": "edits_preset_undo", "description": "Take a preset back one change: the version a save or set replaced, or the built-in one when the first change was over it. Each call goes one step further back.",
@@ -131,6 +135,24 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
                 v.extend(["--as".into(), n]);
             }
             v.extend(s("revision").into_iter().flat_map(|r| ["--if".into(), r]));
+        }
+        "edits_moments" => {
+            v.extend(["moments".into(), s("input").ok_or("input is needed")?]);
+            if let Some(n) = a["n"].as_u64() {
+                v.extend(["-n".into(), n.to_string()]);
+            }
+            for f in a["find"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--find".into(), f.into()]);
+            }
+            if let Some(l) = s("lang") {
+                v.extend(["--lang".into(), l]);
+            }
+            if a["llm"] == false {
+                v.push("--no-llm".into());
+            }
+            if a["sheets"] == false {
+                v.push("--no-sheets".into());
+            }
         }
         "edits_words" => {
             v.extend(["words".into(), s("input").ok_or("input is needed")?]);
@@ -199,7 +221,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
                 ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("encoder", "--encoder"), ("export", "--export"),
-                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("bg", "--bg"), ("outline", "--outline"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop"), ("anim", "--anim")] {
+                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("bg", "--bg"), ("outline", "--outline"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop"), ("anim", "--anim"), ("layout", "--layout"), ("translate", "--translate")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
@@ -564,7 +586,7 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 20);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 21);
         assert_eq!(args_for("edits_preset_set", &json!({"name": "x", "changes": ["total=12"], "revision": "ab12cd34"})).unwrap(), ["preset", "set", "x", "total=12", "--if", "ab12cd34"]);
         assert_eq!(args_for("edits_preset_undo", &json!({"name": "x"})).unwrap(), ["preset", "undo", "x"]);
         assert_eq!(args_for("edits_song", &json!({"video": "a.mp4", "at": "0:30"})).unwrap(), ["song", "a.mp4", "0:30"]);
@@ -578,6 +600,9 @@ mod tests {
         assert_eq!(args_for("edits_check", &json!({"clip": "a.mp4"})).unwrap(), ["check", "a.mp4"]);
         assert_eq!(args_for("edits_preset_set", &json!({"name": "yura", "changes": ["total=12", "shots.*.speed=2"], "as": "y2"})).unwrap(), ["preset", "set", "yura", "total=12", "shots.*.speed=2", "--as", "y2"]);
         assert_eq!(args_for("edits_words", &json!({"input": "abc", "range": "60-90", "find": "borç"})).unwrap(), ["words", "abc", "60-90", "--find", "borç"]);
+        assert_eq!(args_for("edits_moments", &json!({"input": "https://twitch.tv/videos/1", "n": 10, "find": ["uçuyor", "no way"], "lang": "tr", "sheets": false})).unwrap(),
+            ["moments", "https://twitch.tv/videos/1", "-n", "10", "--find", "uçuyor", "--find", "no way", "--lang", "tr", "--no-sheets"]);
+        assert_eq!(args_for("edits_make", &json!({"input": "abc", "layout": "stack", "translate": "tr"})).unwrap(), ["abc", "--layout", "stack", "--translate", "tr"]);
         assert_eq!(args_for("edits_frames", &json!({"video": "abc", "at": ["5:36", 390]})).unwrap(), ["frames", "abc", "5:36", "390"]);
         assert_eq!(args_for("edits_preset_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["preset", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);

@@ -22,6 +22,19 @@ pub struct Lang {
     /// i has a dot in capitals (İ) and ı has none (I), as in Turkish and Azerbaijani
     #[serde(default)]
     pub dotted_i: bool,
+    /// said on stream when something happens ("no way", "oha"): a long video's moments are where these pile up
+    #[serde(default)]
+    pub reactions: Vec<String>,
+    /// in a stream's chat: people losing it (KEKW, sjsj, 💀)
+    #[serde(default)]
+    pub hype: Vec<String>,
+    /// flags on a moment, never a reason to drop it alone: swearing, sexual talk, the story's ending
+    #[serde(default)]
+    pub profanity: Vec<String>,
+    #[serde(default)]
+    pub sexual: Vec<String>,
+    #[serde(default)]
+    pub spoiler: Vec<String>,
 }
 
 static CODE: OnceLock<String> = OnceLock::new();
@@ -62,6 +75,26 @@ fn words_for(t: &BTreeMap<String, Lang>, code: &str) -> Lang {
     let mut l = t.get(code).cloned().unwrap_or_default();
     l.laugh.extend(any.laugh);
     l.sound_tags.extend(any.sound_tags);
+    l.reactions.extend(any.reactions);
+    l.hype.extend(any.hype);
+    l.profanity.extend(any.profanity);
+    l.sexual.extend(any.sexual);
+    l.spoiler.extend(any.spoiler);
+    l
+}
+
+/// The words of the language a video is spoken in ("tr", "en-US"), which may not be this run's: a Turkish stream
+/// scanned on an English machine still counts "oha". English's stream words come along with any other's, since
+/// streamers everywhere say "chat" and "no way".
+pub fn for_spoken(spoken: &str) -> Lang {
+    let t = table();
+    let code = spoken.get(..2).map(str::to_lowercase).filter(|c| t.contains_key(c)).unwrap_or_else(|| code().to_string());
+    let mut l = words_for(&t, &code);
+    if code != "en" {
+        let en = t.get("en").cloned().unwrap_or_default();
+        l.reactions.extend(en.reactions);
+        l.spoiler.extend(en.spoiler);
+    }
     l
 }
 
