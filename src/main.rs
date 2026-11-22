@@ -10,6 +10,7 @@ mod fx;
 mod grades;
 mod hook;
 mod lang;
+mod lrc;
 mod learn;
 mod library;
 mod looks;

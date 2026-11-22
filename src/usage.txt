@@ -57,7 +57,8 @@ OPTIONS
       --loop          the end runs into the start, picture and song, no fades: it plays round seamlessly
       --long          one edit over a minute (TikTok's Creator Rewards pays only for those): talking clips are joined
                       into long.mp4, music edits run 64 s, a preset plays round on one song
-      --lyrics        the song's words on screen as they are sung; music edits cut on the sung words
+      --lyrics        the song's words on screen as they are sung (the record's own lyrics from LRCLIB when it has
+                      them, else what whisper hears); music edits cut on the sung words
       --voice         the speaker's best whole passage over their own footage, music under it, the drop as it ends, captions
       --shot ID@S[:X] preset edits: the footage for each shot by hand, in order (repeat), X = where the frame looks (0..1)
       --say ID@A-B    use what that video says from A to B seconds (repeat for more edits), whole words; also over --preset edits; implies --voice
@@ -99,7 +100,7 @@ OPTIONS
       --blur-faces    blur faces   --blur-box x,y,w,h  blur a region (fractions of the frame)
       --bg B          the person cut out, another background behind them: blur, a colour (black, #ff2a6d), or a
                       picture or video (a file or a library background); the model is fetched once (people)
-      --behind TEXT[@FROM-TO]   huge words behind the person (repeat)
+      --behind TEXT[@FROM-TO]   huge words behind the person (repeat), at the height the person covers least
       --outline COLOUR   a glowing outline around the person (white, #00e5ff)
       --anim A        how --caption and --svg come in: rise (default), pop, slam, slide, drop, blur, type
       --fix           dark, flat or dull footage brought up before the look (levels stretched, colour back)

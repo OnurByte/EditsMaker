@@ -128,25 +128,39 @@ fn search(key: &str, cache: &Path) -> (Option<f64>, bool) {
     });
     let mut offsets = vec![];
     let mut why = vec![];
+    let mut refused = 0;
     for (i, (id, f)) in files.into_iter().enumerate() {
         let got = f.map_err(|e| format!("download failed: {}", e.lines().last().unwrap_or_default())).and_then(|f| {
             if i > 0 {
-                std::thread::sleep(std::time::Duration::from_millis(700));
+                std::thread::sleep(std::time::Duration::from_secs(2));
             }
-            let mut heard = crate::shazam::recognize(&f, None);
-            if heard.is_err() {
-                // refused once: wait and ask again before giving up on the clip
-                std::thread::sleep(std::time::Duration::from_secs(3));
-                heard = crate::shazam::recognize(&f, None);
+            // one question per clip, from its middle (a Short is one stretch of the song); answered with where the
+            // clip itself starts
+            let at = (crate::fetch::duration(&f).unwrap_or(0.0) / 2.0 - 6.0).max(0.0);
+            let mut heard = crate::shazam::recognize(&f, Some(at));
+            // too many questions (HTTP 429): Shazam answers again after a pause
+            for wait in [8, 20] {
+                if !heard.as_ref().is_err_and(|e| e.contains("429")) {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_secs(wait));
+                heard = crate::shazam::recognize(&f, Some(at));
             }
             let _ = std::fs::remove_file(&f);
+            refused = if heard.as_ref().is_err_and(|e| e.contains("429")) { refused + 1 } else { 0 };
             place(key, heard)
         });
         match got {
             Ok(o) => offsets.push(o),
             Err(e) => why.push(format!("{id}: {e}")),
         }
+        if refused >= 2 {
+            why.push("Shazam keeps refusing; the rest are asked next time".into());
+            break;
+        }
     }
+    // the clips not asked about after a refusal are still there
+    let _ = std::fs::remove_dir_all(&dir);
     let hook = agree(&offsets);
     match hook {
         Some(h) => eprintln!("edits: the part people use starts at {} ({} of {} Shorts agree)", crate::util::mmss(h), offsets.iter().filter(|o| (*o - h).abs() <= 2.5).count(), offsets.len()),
