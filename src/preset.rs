@@ -469,6 +469,19 @@ impl Preset {
         self
     }
 
+    /// The preset played `n` times end to end (each time a shot later, its flashes with it): one edit `n` times as long.
+    /// Only the first time keeps its marked drop.
+    pub fn repeated(mut self, n: usize) -> Self {
+        let (slots, flashes, t) = (self.slots.clone(), self.flashes.clone(), self.total);
+        for k in 1..n {
+            let d = t * k as f64;
+            self.slots.extend(slots.iter().map(|s| Slot { start: s.start + d, end: s.end + d, drop: false, ..s.clone() }));
+            self.flashes.extend(flashes.iter().map(|f| Flash { start: f.start + d, end: f.end + d, ..f.clone() }));
+        }
+        self.total = t * n.max(1) as f64;
+        self
+    }
+
     /// Each cut moved onto the nearest beat (within 0.25 s) of the song it is now cut to.
     pub fn fit_to(mut self, beats: &[f64]) -> Self {
         for i in 1..self.slots.len() {
@@ -1180,6 +1193,17 @@ pub fn flashes(p: &Preset) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_preset_played_round() {
+        let p = load("sad-holds").unwrap();
+        let n = p.slots.len();
+        let r = p.clone().repeated(3);
+        assert_eq!(r.slots.len(), 3 * n);
+        assert!((r.total - 3.0 * p.total).abs() < 1e-9);
+        assert!((r.slots[n].start - (p.slots[0].start + p.total)).abs() < 1e-9 && (r.slots[3 * n - 1].end - (p.slots[n - 1].end + 2.0 * p.total)).abs() < 1e-9);
+        assert!(r.slots[n..].iter().all(|s| !s.drop) && r.flashes.len() == 3 * p.flashes.len());
+    }
+
     use super::*;
 
     #[test]

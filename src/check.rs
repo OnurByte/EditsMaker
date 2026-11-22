@@ -88,19 +88,46 @@ pub fn check(clip: &Path) -> Result<String, String> {
     let total: f64 = probe.lines().filter_map(|l| l.trim().parse().ok()).next().ok_or("could not read the length")?;
     let size = probe.lines().find(|l| l.contains(',')).unwrap_or("?").replace(',', "x");
     let loud = lufs(&log(&["-i", &c, "-af", "ebur128", "-f", "null", "-"])?);
-    let cuts = cut_times(&log(&["-i", &c, "-an", "-vf", "select='gt(scene,0.3)',showinfo", "-f", "null", "-"])?);
+    let cuts = cuts(clip);
     let sh = shots(&cuts, total);
     let sheet: PathBuf = clip.with_file_name(format!("{}-sheet.jpg", clip.file_stem().unwrap_or_default().to_string_lossy()));
     contact_sheet(clip, total, &sheet, 10, 2, 180)?;
     let longest = sh.iter().copied().fold(0.0, f64::max);
+    let round = seam_apart(clip).map_or(String::new(), |d| format!("\nend to start: frames {:.0}% apart ({})", d * 100.0, if d < LOOPS { "plays round seamlessly" } else { "a jump when it plays again" }));
     Ok(format!(
-        "{}: {total:.1}s {size}\nloudness: {} LUFS\ncuts: {} (shots average {:.1}s, longest {longest:.1}s)\nsheet: {}",
+        "{}: {total:.1}s {size}\nloudness: {} LUFS\ncuts: {} (shots average {:.1}s, longest {longest:.1}s){round}\nsheet: {}",
         clip.display(),
         loud.map_or("?".into(), |l| format!("{l:.1}")),
         cuts.len(),
         total / sh.len().max(1) as f64,
         sheet.display()
     ))
+}
+
+/// Where a clip cuts, seconds (the picture jumps).
+pub fn cuts(clip: &Path) -> Vec<f64> {
+    let c = clip.to_string_lossy();
+    log(&["-i", &c, "-an", "-vf", "select='gt(scene,0.3)',showinfo", "-f", "null", "-"]).map(|l| cut_times(&l)).unwrap_or_default()
+}
+
+/// Below this, the last frame runs into the first without a visible jump.
+const LOOPS: f64 = 0.12;
+
+/// How far apart a clip's last and first frames are, 0 (the same) to 1: small, grey, compared pixel by pixel.
+fn seam_apart(clip: &Path) -> Option<f64> {
+    let c = clip.to_string_lossy();
+    let frame = |at: &[&str]| -> Option<Vec<u8>> {
+        let mut args: Vec<&str> = vec!["-v", "error"];
+        args.extend_from_slice(at);
+        args.extend_from_slice(&["-i", &c, "-frames:v", "1", "-vf", "scale=36:64,format=gray", "-f", "rawvideo", "-"]);
+        crate::util::run_bytes("ffmpeg", &args).ok().filter(|b| b.len() == 36 * 64)
+    };
+    Some(apart(&frame(&["-sseof", "-0.1"])?, &frame(&[])?))
+}
+
+/// Mean difference of two grey frames, 0..1.
+fn apart(a: &[u8], b: &[u8]) -> f64 {
+    a.iter().zip(b).map(|(x, y)| (*x as f64 - *y as f64).abs()).sum::<f64>() / (255.0 * a.len().max(1) as f64)
 }
 
 /// "12-20" or "1:05-1:12.5" as (from, to) seconds.
@@ -143,6 +170,12 @@ pub fn cut(video: &str, spans: &[String], out: &Path) -> Result<Vec<PathBuf>, St
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn frames_apart() {
+        assert_eq!(apart(&[10, 20, 30], &[10, 20, 30]), 0.0);
+        assert!((apart(&[0, 0], &[255, 0]) - 0.5).abs() < 1e-9);
+    }
 
     #[test]
     fn reads_ffmpeg_logs() {

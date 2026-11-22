@@ -215,7 +215,7 @@ fn math_svg(w: u32, h: u32, lang: &str, own: &[String]) -> String {
 }
 
 /// An svg string as a PNG `w` wide.
-fn png(svg_src: &str, w: u32, file: &Path) -> Result<(), String> {
+pub fn png(svg_src: &str, w: u32, file: &Path) -> Result<(), String> {
     let s = file.with_extension("svg");
     std::fs::write(&s, svg_src).map_err(|e| e.to_string())?;
     let r = svg::rasterize(&Sticker { src: s.to_string_lossy().into_owned(), from: 0.0, to: 1.0, x: 0.5, y: 0.5, size: 1.0, color: "white".into(), anim: String::new() }, w, file);

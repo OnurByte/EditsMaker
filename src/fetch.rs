@@ -35,6 +35,17 @@ pub fn duration(video: &Path) -> Result<f64, String> {
     out.trim().parse().map_err(|_| format!("ffprobe gave no duration for {v}"))
 }
 
+/// Frames a second of a video's picture (30 when ffprobe cannot tell).
+pub fn fps(video: &Path) -> f64 {
+    let v = video.to_string_lossy();
+    let out = run(None, "ffprobe", &["-v", "error", "-select_streams", "V:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", v.as_ref()]).unwrap_or_default();
+    let (a, b) = out.trim().split_once('/').unwrap_or((out.trim(), "1"));
+    match (a.parse::<f64>(), b.parse::<f64>()) {
+        (Ok(a), Ok(b)) if a > 0.0 && b > 0.0 => a / b,
+        _ => 30.0,
+    }
+}
+
 /// Frame size (0, 0 if ffprobe cannot tell).
 pub fn dims(video: &Path) -> (u32, u32) {
     let v = video.to_string_lossy();

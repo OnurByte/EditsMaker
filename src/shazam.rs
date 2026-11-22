@@ -156,6 +156,8 @@ pub struct Found {
     /// where the listened stretch starts inside the song, seconds
     pub offset: f64,
     pub url: String,
+    /// how far the clip is sped up or pitched from the record (0 as released): a sped-up TikTok sound is not the record
+    pub skew: f64,
 }
 
 /// Shazam's answer: the song, or None when nothing matched.
@@ -163,7 +165,9 @@ pub fn parse(json: &str) -> Result<Option<Found>, String> {
     let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("Shazam answered something else: {e}"))?;
     let Some(t) = v.get("track") else { return Ok(None) };
     let s = |k: &str| t[k].as_str().unwrap_or_default().to_string();
-    Ok(Some(Found { artist: s("subtitle"), title: s("title"), offset: v["matches"][0]["offset"].as_f64().unwrap_or(0.0), url: s("url") }))
+    let m = &v["matches"][0];
+    let skew = ["timeskew", "frequencyskew"].iter().map(|k| m[*k].as_f64().unwrap_or(0.0).abs()).fold(0.0, f64::max);
+    Ok(Some(Found { artist: s("subtitle"), title: s("title"), offset: m["offset"].as_f64().unwrap_or(0.0), url: s("url"), skew }))
 }
 
 fn ask(samples: &[i16]) -> Result<Option<Found>, String> {
@@ -278,7 +282,9 @@ mod tests {
     #[test]
     fn reads_an_answer() {
         let f = parse(r#"{"matches":[{"offset":42.5}],"track":{"title":"Umrumdışı","subtitle":"Mabel Matiz","url":"https://www.shazam.com/track/1"}}"#).unwrap().unwrap();
-        assert_eq!((f.artist.as_str(), f.title.as_str(), f.offset), ("Mabel Matiz", "Umrumdışı", 42.5));
+        assert_eq!((f.artist.as_str(), f.title.as_str(), f.offset, f.skew), ("Mabel Matiz", "Umrumdışı", 42.5, 0.0));
+        let sped = parse(r#"{"matches":[{"offset":10,"timeskew":-0.12,"frequencyskew":0.11}],"track":{"title":"A","subtitle":"B"}}"#).unwrap().unwrap();
+        assert_eq!(sped.skew, 0.12);
         assert!(parse(r#"{"matches":[]}"#).unwrap().is_none());
         assert!(uuid().len() == 36 && uuid() != uuid());
     }

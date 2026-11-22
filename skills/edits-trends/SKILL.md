@@ -16,6 +16,9 @@ edits <input> --preset NAME --music spotify:tr:1
 Over MCP: `edits_trends` (`chart: "spotify"` for Spotify), then `edits_make` with `music: "trend:N"` or `"spotify:N"`.
 A song heard in someone's edit: `edits song <link|file>` (`edits_song`) names it.
 
+A trending song is cut from the part people use: edits asks Shazam where YouTube Shorts with it start (the TikTok
+hook, often not the loudest part). A TikTok sound link as `--music` becomes the clean record from where the clip starts.
+
 Match the song to the preset: phonk / "sped up" songs suit fast velocity presets (high `speed`, many shots);
 slow or emotional songs suit calm presets or `--sad`. The song is found on YouTube by its title; check the log line
 `song "…"` to see what was used. The chart page carries no date, so it can lag by a few days.
