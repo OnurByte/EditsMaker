@@ -10,13 +10,14 @@ keywords = ["video-editor", "tiktok", "shorts", "ffmpeg", "mcp"]
 categories = ["command-line-utilities", "multimedia::video"]
 license = "MIT"
 
-# the desktop app (apps/desktop, GPUI) is its own binary, so `edits` still runs where there is no screen;
-# `cargo test` and `cargo build` here stay the CLI's, `-p edits-app` builds the app
-[workspace]
-members = [".", "apps/desktop"]
-default-members = ["."]
+# the desktop app (src/app, GPUI and gpui-kit) is inside edits: `edits app`. A server build without a screen:
+# cargo build --release --no-default-features
+[features]
+default = ["app"]
+app = ["dep:gpui-kit"]
 
 [dependencies]
+gpui-kit = { version = "0.10.0", optional = true }
 regex = "1"
 resvg = { version = "0.45.1", default-features = false, features = ["text", "system-fonts", "raster-images"] }
 libloading = "0.8"
@@ -31,9 +32,3 @@ opt-level = "s"
 lto = true
 codegen-units = 1
 strip = true
-
-# the desktop app: built with --profile app, smallest over fastest (it waits on edits, not on itself)
-[profile.app]
-inherits = "release"
-opt-level = "z"
-panic = "abort"

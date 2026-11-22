@@ -16,7 +16,7 @@ cargo build --release && ./target/release/edits doctor
 - New logic needs a test beside it (`#[cfg(test)]` in the same file).
 - Rust and packs only: no HTML, JS or Python beside the code. A script a website must run is an automation pack.
 - `edits` stays one binary: new crates only when the standard library or ffmpeg cannot do the job. The app is
-  `apps/desktop` (GPUI): `cargo test -p edits-app`, and its look follows [BRAND.md](BRAND.md).
+  `src/app` (GPUI, the `app` feature; `--no-default-features` builds without it), and its look follows [BRAND.md](BRAND.md).
 - Check a change on a real video before calling it done: render one, look at the frames.
 
 ## Packs

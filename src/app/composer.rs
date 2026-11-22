@@ -1,10 +1,10 @@
 //! t3code's ChatComposer: one card under the timeline. On top, the files attached (dropped or picked, each made on
 //! its own) and the list a picker opened; then the prompt, growing with what is typed (Enter sends, Shift+Enter is a
 //! new line); under it what to make and with what on the left, a file and send on the right.
-use crate::icons::{icon, Icon};
-use crate::theme::{brand, Brand, CARD, COLUMN, SMALL};
-use crate::ui::{icon_button, pill, text};
-use crate::workspace::{Mode, Picker, Workspace};
+use crate::app::icons::{icon, Icon};
+use crate::app::theme::{self, brand, Brand, CARD, SMALL};
+use crate::app::ui::{icon_button, pill, text};
+use crate::app::workspace::{Mode, Picker, Workspace};
 use gpui_kit::component::input::Textarea;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
@@ -67,28 +67,28 @@ impl Workspace {
                     })))
         }).collect::<Vec<_>>();
         let preset = self.picker_pill("preset", Icon::Package, self.preset.clone().unwrap_or_else(|| "No preset".into()), Picker::Preset, &b, cx);
-        let source = self.picker_pill("source", Icon::Workflow, self.source.clone().unwrap_or_else(|| "Pick a source".into()), Picker::Source, &b, cx);
+        let source = self.picker_pill("source", Icon::Rss, self.source.clone().unwrap_or_else(|| "Pick a source".into()), Picker::Source, &b, cx);
         // how many edits each run makes: 1, 3, 5
         let count = pill("count", None, format!("{}x", self.count), false, &b).on_click(cx.listener(|this, _, _, cx| {
             this.count = match this.count { 1 => 3, 3 => 5, _ => 1 };
             cx.notify();
         }));
         let picker = self.picker.filter(|p| *p != Picker::FlowSource).map(|p| self.picker_list(p, &b, cx));
-        div().w_full().max_w(COLUMN).mx_auto().flex().flex_col().gap(px(8.)).bg(b.card).rounded(CARD).p(px(16.))
+        div().w_full().max_w(theme::column()).mx_auto().flex().flex_col().gap(px(8.)).bg(b.card).rounded(CARD).p(px(16.))
             .when(!files.is_empty(), |d| d.child(div().flex().flex_wrap().gap(px(8.)).children(files)))
             .children(picker)
             .child(Textarea::new(&self.input).appearance(false))
             .child(div().flex().items_center().gap(px(8.)).flex_wrap()
                 .child(mode("mode-edit", Icon::Film, "Edits", Mode::Edit, cx))
                 .child(mode("mode-pack", Icon::Package, "Pack", Mode::Pack, cx))
-                .child(mode("mode-rss", Icon::Workflow, "RSS", Mode::Rss, cx))
+                .child(mode("mode-rss", Icon::Rss, "RSS", Mode::Rss, cx))
                 .child(div().w(px(1.)).h(px(16.)).bg(b.hair))
                 .when(self.mode == Mode::Rss, |d| d.child(source))
                 .when(self.mode != Mode::Pack, |d| d.child(preset).child(count))
                 .child(div().flex_1())
                 .child(icon_button("pick", Icon::Folder, &b).on_click(cx.listener(|this, _, window, cx| this.pick(window, cx))))
-                .child(div().id("send").size(px(32.)).flex().items_center().justify_center().rounded_full().cursor_pointer().bg(b.ink)
-                    .child(icon(Icon::Send, b.page).size(px(16.)))
+                .child(div().id("send").size(px(32.)).flex().items_center().justify_center().rounded_full().cursor_pointer().bg(b.accent)
+                    .child(icon(Icon::Send, white()).size(px(16.)))
                     .on_click(cx.listener(|this, _, window, cx| this.start(window, cx)))))
     }
 }

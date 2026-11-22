@@ -1,8 +1,8 @@
 //! The window: t3code's AppSidebarLayout (sidebar on the left, the route on the right) holding the app's state. The
 //! screens are in sidebar.rs, chat_view.rs, composer.rs, marketplace.rs, settings.rs and review.rs, each an
 //! `impl Workspace`.
-use crate::runs::{self, Flow, Job, Listed, Note, Pack, Run, Settings, Sheet};
-use crate::theme::{self, brand};
+use crate::app::runs::{self, Flow, Job, Listed, Note, Pack, Run, Settings, Sheet};
+use crate::app::theme::{self, brand};
 use gpui_kit::component::input::{InputEvent, InputState, TextareaState};
 use gpui_kit::component::notification::Notification;
 use gpui_kit::component::WindowExt;
@@ -18,9 +18,8 @@ pub enum Route {
     Run(usize),
     /// the marketplace's packs (presets and skills)
     Market,
-    /// under the marketplace: automations
+    /// automations, sources and flows
     Automations,
-    Settings(Section),
     Review,
 }
 
@@ -119,6 +118,13 @@ pub struct Workspace {
     pub show_log: bool,
     pub market: Market,
     pub settings: Option<Result<Settings, String>>,
+    /// the settings window, over everything, as t3code opens it
+    pub settings_open: Option<Section>,
+    /// the AI provider being set up, its key and its server, and the models it offers
+    pub ai_open: Option<String>,
+    pub ai_key: Entity<InputState>,
+    pub ai_endpoint: Entity<InputState>,
+    pub ai_models: Option<Result<Vec<String>, String>>,
     /// what `edits doctor` said, in About
     pub doctor: Option<String>,
     /// the setting being changed
@@ -142,7 +148,27 @@ impl Workspace {
             }),
             cx.observe_window_appearance(window, |_, window, cx| theme::apply(Some(window), cx)),
         ];
-        let mut this = Self { input, mode: Mode::Edit, files: vec![], preset: None, source: None, count: 1, picker: None, flows: None,
+        let ai_key = cx.new(|cx| InputState::new(window, cx).masked(true).placeholder("API key"));
+        let ai_endpoint = cx.new(|cx| InputState::new(window, cx).placeholder("http://127.0.0.1:11434/v1"));
+        // following Omarchy: when its theme changes, so does the app's
+        cx.spawn_in(window, async move |this, cx| {
+            let mut seen = theme::omarchy_generation();
+            loop {
+                cx.background_executor().timer(Duration::from_secs(2)).await;
+                let now = theme::omarchy_generation();
+                if now != seen {
+                    seen = now;
+                    if this.update_in(cx, |_, window, cx| {
+                        theme::apply(Some(window), cx);
+                        window.refresh();
+                    }).is_err() {
+                        break;
+                    }
+                }
+            }
+        })
+        .detach();
+        let mut this = Self { input, mode: Mode::Edit, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, files: vec![], preset: None, source: None, count: 1, picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
             market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(), _subscriptions: subscriptions };
         if let Some(clip) = review {
@@ -159,7 +185,7 @@ impl Workspace {
         if matches!(to, Route::Market | Route::Automations) && self.market.packs.is_none() {
             self.load_market(cx);
         }
-        if matches!(to, Route::Settings(_) | Route::Automations) && self.settings.is_none() {
+        if to == Route::Automations && self.settings.is_none() {
             self.load_settings(cx);
         }
         if to == Route::Automations {
@@ -281,6 +307,15 @@ impl Workspace {
         .detach();
     }
 
+    /// The settings window, at a section.
+    pub fn open_settings(&mut self, at: Section, cx: &mut Context<Self>) {
+        self.settings_open = Some(at);
+        if self.settings.is_none() {
+            self.load_settings(cx);
+        }
+        cx.notify();
+    }
+
     pub fn load_settings(&mut self, cx: &mut Context<Self>) {
         cx.spawn(async move |this, cx| {
             let s = cx.background_executor().spawn(async { runs::settings() }).await;
@@ -359,11 +394,11 @@ impl Render for Workspace {
         let main = match self.route {
             Route::Market => self.marketplace(false, window, cx).into_any_element(),
             Route::Automations => self.marketplace(true, window, cx).into_any_element(),
-            Route::Settings(section) => self.settings_page(section, window, cx).into_any_element(),
             Route::Review => self.review_screen(window, cx).into_any_element(),
             _ => self.chat_view(window, cx).into_any_element(),
         };
-        div().size_full().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
+        let settings = self.settings_open.map(|at| self.settings_window(at, window, cx));
+        div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
             .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
                 if let Some(p) = paths.paths().first() {
                     this.put(&PathBuf::from(p), window, cx);
@@ -371,6 +406,7 @@ impl Render for Workspace {
             }))
             .when(!self.review_only, |d| d.child(self.sidebar(cx)))
             .child(div().flex_1().min_w_0().h_full().flex().flex_col().child(main))
+            .children(settings)
     }
 }
 

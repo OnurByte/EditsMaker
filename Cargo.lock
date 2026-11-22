@@ -1327,20 +1327,12 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 name = "edits"
 version = "0.31.0"
 dependencies = [
+ "gpui-kit",
  "libloading",
  "regex",
  "resvg 0.45.1",
  "roxmltree 0.21.2",
  "rustface",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "edits-app"
-version = "0.31.0"
-dependencies = [
- "gpui-kit",
  "serde",
  "serde_json",
 ]

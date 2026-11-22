@@ -1,11 +1,11 @@
 //! t3code's ChatView: the page header (WorkspacePageHeader) with the thread's project and title, the timeline in one
 //! column (MessagesTimeline: your message on the right, then what edits did and what it made), the composer below.
 //! With no thread, t3code's NoActiveThreadState: what to do, and the composer.
-use crate::icons::{icon, Icon};
-use crate::runs;
-use crate::theme::{brand, Brand, BOLD, COLUMN, HEADER, LIGHT, MONO};
-use crate::ui::{badge, card, icon_button, text};
-use crate::workspace::{Route, Workspace};
+use crate::app::icons::{icon, Icon};
+use crate::app::runs;
+use crate::app::theme::{self, brand, Brand, BOLD, HEADER, LIGHT, MONO};
+use crate::app::ui::{badge, card, icon_button, text};
+use crate::app::workspace::{Route, Workspace};
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 use std::path::PathBuf;
@@ -94,7 +94,7 @@ impl Workspace {
         if self.route == Route::New {
             return div().size_full().flex().flex_col()
                 .child(div().flex_1().flex().flex_col().items_center().justify_center().gap(px(16.)).px(px(24.))
-                    .child(icon(Icon::Mark, b.ink).size(px(48.)))
+                    .child(crate::app::icons::mark(b.ink).size(px(48.)))
                     .child(text("Link in. Edits out.", 32., BOLD, b.ink))
                     .child(text("A YouTube video or channel, a topic, or a video file: drop one anywhere here.", 15., LIGHT, b.gray).max_w(px(420.)).text_center()))
                 .child(composer);
@@ -103,7 +103,7 @@ impl Workspace {
         div().size_full().flex().flex_col()
             .child(self.header(&subject, title, folder, &b))
             .child(div().id("timeline").flex_1().min_h_0().overflow_y_scroll()
-                .child(div().w_full().max_w(COLUMN).mx_auto().px(px(24.)).py(px(24.)).flex().flex_col().gap(px(24.)).children(items)))
+                .child(div().w_full().max_w(theme::column()).mx_auto().px(px(24.)).py(px(24.)).flex().flex_col().gap(px(24.)).children(items)))
             .child(composer)
     }
 }

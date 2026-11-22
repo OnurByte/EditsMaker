@@ -1,10 +1,10 @@
 //! Reviewing a clip: its frames in a strip, the one picked large; point at a spot in it (a 3 x 3 grid), say what to
 //! change there, add a word on the whole edit, and the notes go beside the clip for the agent (`edits review`).
-use crate::icons::{icon, Icon};
-use crate::runs::{self, Note};
-use crate::theme::{brand, Brand, BOLD, HEADER, LIGHT, SMALL};
-use crate::ui::{card, pill, primary, text};
-use crate::workspace::{Route, Workspace};
+use crate::app::icons::{icon, Icon};
+use crate::app::runs::{self, Note};
+use crate::app::theme::{brand, Brand, BOLD, HEADER, LIGHT, SMALL};
+use crate::app::ui::{card, pill, primary, text};
+use crate::app::workspace::{Route, Workspace};
 use gpui_kit::component::input::Input;
 use gpui_kit::component::notification::Notification;
 use gpui_kit::component::WindowExt;

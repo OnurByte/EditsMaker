@@ -2,11 +2,11 @@
 //! that run something), each from here and from the community's list (packs.json). Every pack is built in, from the
 //! community, or made here (yours): any can be turned off; the community's and yours can be deleted; yours can be
 //! shared, sent to the marketplace as a GitHub issue. Filter by where they came from and by tag, newest first.
-use crate::icons::{self, icon, Icon};
-use crate::runs::{Listed, Pack};
-use crate::theme::{brand, Brand, BOLD, HEADER, LIGHT, SMALL};
-use crate::ui::{card, pill, primary, text};
-use crate::workspace::Workspace;
+use crate::app::icons::{self, icon, Icon};
+use crate::app::runs::{Listed, Pack};
+use crate::app::theme::{brand, Brand, BOLD, HEADER, LIGHT, SMALL};
+use crate::app::ui::{card, pill, primary, text};
+use crate::app::workspace::Workspace;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
@@ -65,7 +65,7 @@ impl Workspace {
             }
             actions.push(pill(("onoff", i), None, if p.enabled { "On" } else { "Off" }, p.enabled, b).on_click(act(if p.enabled { "off" } else { "on" }, p.id.clone(), cx.entity().downgrade())).into_any_element());
             if p.origin == "local" {
-                actions.push(pill(("share", i), Some(Icon::Send), "Share", false, b).on_click(act("share", p.id.clone(), cx.entity().downgrade())).into_any_element());
+                actions.push(pill(("share", i), Some(Icon::Share), "Share", false, b).on_click(act("share", p.id.clone(), cx.entity().downgrade())).into_any_element());
             }
             if p.origin != "built-in" {
                 actions.push(pill(("delete", i), Some(Icon::Trash), "Delete", false, b).on_click(act("remove", p.id.clone(), cx.entity().downgrade())).into_any_element());
@@ -165,7 +165,6 @@ impl Workspace {
         div().size_full().flex().flex_col()
             .child(div().h(HEADER).flex_none().px(px(24.)).flex().items_center().gap(px(8.)).border_b_1().border_color(b.hair)
                 .child(icon(i, b.gray).size(px(16.)))
-                .when(automations, |d| d.child(text("Marketplace", 14., FontWeight::NORMAL, b.gray)).child(text("/", 14., LIGHT, b.gray)))
                 .child(text(title, 14., BOLD, b.ink).flex_1()))
             .child(div().id("market").flex_1().min_h_0().overflow_y_scroll()
                 .child(div().w_full().max_w(px(960.)).mx_auto().p(px(24.)).flex().flex_col().gap(px(24.))

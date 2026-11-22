@@ -1,5 +1,5 @@
 #!/bin/sh
-# EditsMaker installer: downloads the prebuilt `edits` binary and its desktop app from GitHub Releases, verifies its SHA-256, installs it.
+# EditsMaker installer: downloads the prebuilt `edits` binary (its desktop app inside) from GitHub Releases, verifies its SHA-256, installs it.
 # No Rust, no compiler. ffmpeg and yt-dlp come along: `edits setup` downloads them at the end (whisper-cli is optional).
 #   EDITS_VERSION=v0.1.0   pick a release (default: latest)
 #   EDITS_BIN=~/bin        install directory (default: ~/.local/bin)
@@ -34,20 +34,18 @@ tar -xzf "$TMP/$ASSET" -C "$TMP"
 mkdir -p "$BIN"
 install -m 755 "$TMP/edits" "$BIN/edits"
 echo "edits: installed $("$BIN/edits" --version) to $BIN/edits"
-# the desktop app in the launcher: a .desktop entry on Linux, an app bundle on macOS (its notifications need one)
-if [ -f "$TMP/edits-app" ]; then
-  install -m 755 "$TMP/edits-app" "$BIN/edits-app"
-  case "$(uname -s)" in
+# the app (edits app) in the launcher: a .desktop entry on Linux, an app bundle on macOS (its notifications need one)
+case "$(uname -s)" in
     Linux)
       A="${XDG_DATA_HOME:-$HOME/.local/share}/applications"; mkdir -p "$A"
-      printf '[Desktop Entry]\nType=Application\nName=EditsMaker\nComment=Link in. Edits out.\nExec=%s\nIcon=video-x-generic\nCategories=AudioVideo;Video;\nStartupWMClass=edits\n' "$BIN/edits-app" > "$A/edits.desktop" ;;
+      printf '[Desktop Entry]\nType=Application\nName=EditsMaker\nComment=Link in. Edits out.\nExec=%s app\nIcon=video-x-generic\nCategories=AudioVideo;Video;\nStartupWMClass=edits\n' "$BIN/edits" > "$A/edits.desktop" ;;
     Darwin)
       C="$HOME/Applications/EditsMaker.app/Contents"; mkdir -p "$C/MacOS"
-      ln -sf "$BIN/edits-app" "$C/MacOS/edits-app"
+      # started by this name, edits opens its app
+      ln -sf "$BIN/edits" "$C/MacOS/edits-app"
       printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>io.github.onurbyte.edits</string><key>CFBundleName</key><string>EditsMaker</string><key>CFBundleExecutable</key><string>edits-app</string><key>CFBundlePackageType</key><string>APPL</string><key>NSHighResolutionCapable</key><true/></dict></plist>\n' > "$C/Info.plist" ;;
-  esac
-  echo "edits: the app is EditsMaker in your launcher, or edits app"
-fi
+esac
+echo "edits: the app is EditsMaker in your launcher, or edits app"
 case ":$PATH:" in *":$BIN:"*) ;; *) echo "edits: add $BIN to your PATH" ;; esac
 # ffmpeg and yt-dlp, if this machine lacks them: static builds into ~/.config/edits/bin, checksum checked
 "$BIN/edits" setup || echo "edits: ffmpeg/yt-dlp download failed; edits tries again on first use"

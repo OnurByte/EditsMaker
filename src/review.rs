@@ -34,7 +34,7 @@ pub fn describe(notes: &Value, cuts: &[f64]) -> String {
 
 /// What the review screen shows, as JSON: the clip's frames (FPS a second, small jpgs in a folder of their own), its
 /// cuts and length, and the preset, song and look it was made with.
-fn sheet(clip: &Path) -> Result<Value, String> {
+pub fn sheet(clip: &Path) -> Result<Value, String> {
     let total = crate::fetch::duration(clip)?;
     let dir = std::env::temp_dir().join(format!("edits-review-{:08x}", crate::util::crc32(clip.to_string_lossy().as_bytes())));
     let _ = std::fs::remove_dir_all(&dir);
@@ -69,12 +69,11 @@ pub fn cmd(args: &[String]) -> Result<(), String> {
         print!("notes on {}:\n{}", clip.display(), describe(&read()?, &crate::check::cuts(&clip)));
         return Ok(());
     }
-    // the review screen of the app beside this edits; it saves the notes and closes
-    let app = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name(format!("edits-app{}", std::env::consts::EXE_SUFFIX));
+    // the app's review screen, this same program; it saves the notes and closes
+    let app = std::env::current_exe().map_err(|e| e.to_string())?;
     let before = std::fs::metadata(notes_path(&clip)).and_then(|m| m.modified()).ok();
     eprintln!("edits: reviewing {} in the app; waiting for the notes", clip.display());
-    let status = std::process::Command::new(&app).arg("--review").arg(&clip).status()
-        .map_err(|e| format!("{}: {e} (the app comes with the release download: edits update)", app.display()))?;
+    let status = std::process::Command::new(&app).args(["app", "--review"]).arg(&clip).status().map_err(|e| format!("{}: {e}", app.display()))?;
     let after = std::fs::metadata(notes_path(&clip)).and_then(|m| m.modified()).ok();
     if !status.success() || after.is_none() || after == before {
         return Err("the review was closed without notes".into());

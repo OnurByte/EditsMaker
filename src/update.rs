@@ -78,13 +78,7 @@ fn install(tag: &str) -> Result<(), String> {
         // the version being replaced is kept, for `edits update rollback`
         let _ = std::fs::create_dir_all(dir());
         let _ = std::fs::copy(&exe, previous());
-        put(&bin, &exe)?;
-        // the desktop app comes in the same download and goes beside edits
-        let app = format!("edits-app{}", std::env::consts::EXE_SUFFIX);
-        if tmp.join(&app).is_file() {
-            put(&tmp.join(&app), &exe.with_file_name(&app))?;
-        }
-        Ok(())
+        put(&bin, &exe)
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     if res.is_ok() {

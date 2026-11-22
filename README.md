@@ -472,7 +472,7 @@ November 2026. EditsMaker 0.31: `edits` and its desktop app built for Linux x64,
 <summary><b>Brand</b></summary>
 
 The mark, colours, type, layout and words, and the research behind each rule: [BRAND.md](BRAND.md).
-Colours, type and sizes as code: [apps/desktop/src/theme.rs](apps/desktop/src/theme.rs), which the app draws with.
+Colours, type and sizes as code: [src/app/theme.rs](src/app/theme.rs), which the app draws with.
 
 </details>
 

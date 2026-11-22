@@ -7,16 +7,14 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 
-/// The `edits` beside this app (a release ships them together; the macOS bundle links here), else the one on PATH.
+/// This edits itself: jobs run as it, beside the app.
 pub fn edits() -> PathBuf {
-    let name = format!("edits{}", std::env::consts::EXE_SUFFIX);
-    std::env::current_exe().and_then(|e| e.canonicalize()).ok().map(|e| e.with_file_name(&name)).filter(|p| p.is_file()).unwrap_or_else(|| name.into())
+    std::env::current_exe().unwrap_or_else(|_| "edits".into())
 }
 
-/// Where edits puts its runs: $EDITS_OUT or ~/Videos/edits, the same rule as edits' own.
+/// Where edits puts its runs.
 pub fn out_dir() -> PathBuf {
-    let home = || PathBuf::from(std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| ".".into()));
-    std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| home().join("Videos/edits"))
+    crate::out_base()
 }
 
 fn command(args: &[&str]) -> Command {
@@ -108,15 +106,15 @@ pub struct Flow {
 }
 
 pub fn flows() -> Result<Vec<Flow>, String> {
-    serde_json::from_str(&output(&["follows", "--json"])?).map_err(|e| e.to_string())
+    serde_json::from_value(crate::follows_json()).map_err(|e| e.to_string())
 }
 
 pub fn packs() -> Result<Vec<Pack>, String> {
-    serde_json::from_str(&output(&["packs", "--json"])?).map_err(|e| e.to_string())
+    serde_json::from_value(crate::packs_json()).map_err(|e| e.to_string())
 }
 
 pub fn listed() -> Result<Vec<Listed>, String> {
-    serde_json::from_str(&output(&["packs", "browse", "--json"])?).map_err(|e| e.to_string())
+    serde_json::from_value(crate::listed_json(&crate::packs::registry()?)).map_err(|e| e.to_string())
 }
 
 /// What the settings screen shows, from `edits settings --json`.
@@ -124,7 +122,7 @@ pub fn listed() -> Result<Vec<Listed>, String> {
 pub struct Settings {
     pub version: String,
     pub ai: Ai,
-    pub providers: Vec<String>,
+    pub providers: Vec<Provider>,
     pub encoder: String,
     pub encoders: Vec<String>,
     pub updates: bool,
@@ -134,9 +132,28 @@ pub struct Settings {
     pub sites: Vec<String>,
 }
 
+/// A provider as t3code's cards show one: how it is reached, ready here or not, the one in use.
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Provider {
+    pub name: String,
+    /// what t3code calls it
+    pub label: String,
+    /// once (asked with the prompt), acp (spoken to over ACP), http
+    pub how: String,
+    /// the agent's command
+    pub command: String,
+    /// subscription (its own CLI), api (a key), local (a server on this computer)
+    pub kind: String,
+    pub ready: bool,
+    pub in_use: bool,
+    pub base: String,
+    pub key_var: String,
+}
+
 #[derive(Clone, Deserialize)]
 pub struct Ai {
-    pub provider: String,
+    pub model: String,
     pub about: String,
     pub ready: bool,
 }
@@ -149,7 +166,7 @@ pub struct Account {
 }
 
 pub fn settings() -> Result<Settings, String> {
-    serde_json::from_str(&output(&["settings", "--json"])?).map_err(|e| e.to_string())
+    serde_json::from_value(crate::settings_json()).map_err(|e| e.to_string())
 }
 
 /// What the review screen shows of a clip, from `edits review CLIP --frames`.
@@ -171,7 +188,7 @@ pub struct Frame {
 }
 
 pub fn sheet(clip: &Path) -> Result<Sheet, String> {
-    serde_json::from_str(&output(&["review", &clip.to_string_lossy(), "--frames"])?).map_err(|e| e.to_string())
+    serde_json::from_value(crate::review::sheet(clip)?).map_err(|e| e.to_string())
 }
 
 /// A note on a moment: when, where in the frame (0..1 across and down), what to change.

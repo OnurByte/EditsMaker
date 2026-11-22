@@ -1,10 +1,10 @@
 //! Flows, as in n8n but in one line each: a source (an RSS pack's feed, a channel), made into edits, posted to
 //! accounts. Each is an `edits follow`; `edits watch` (or the background service) runs them.
-use crate::icons::{icon, Icon};
-use crate::runs::Flow;
-use crate::theme::{Brand, BOLD, LIGHT};
-use crate::ui::{card, pill, primary, text};
-use crate::workspace::{Picker, Workspace};
+use crate::app::icons::{icon, Icon};
+use crate::app::runs::Flow;
+use crate::app::theme::{Brand, BOLD, LIGHT};
+use crate::app::ui::{card, pill, primary, text};
+use crate::app::workspace::{Picker, Workspace};
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 

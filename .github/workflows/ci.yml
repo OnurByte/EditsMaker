@@ -4,14 +4,8 @@ on:
     branches: [main]
   pull_request:
 jobs:
+  # edits and the app inside it, on each system it ships for
   test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test
-  # the desktop app on each system it ships for
-  app:
     strategy:
       fail-fast: false
       matrix:
@@ -21,5 +15,11 @@ jobs:
       - uses: actions/checkout@v4
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-x11-dev libwayland-dev libfontconfig-dev libx11-xcb-dev libvulkan-dev
-      - run: cargo clippy -p edits-app --all-targets -- -D warnings
-      - run: cargo test -p edits-app
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+  # the build for servers, without a screen
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo clippy --no-default-features --all-targets -- -D warnings

@@ -8,7 +8,7 @@ A brand is a promise that keeps its shape. People judge a page in about 50 milli
 
 The system descends from the 1976 NASA Graphics Standards Manual (NHB 1430.2) by Danne & Blackburn [5]: one logotype, one red, one typeface, a strict grid and nothing decorative. Since November 2026 one thing differs from the manual: sections sit on soft cards with round corners, because research and our readers both found that more comfortable (§ 6).
 
-Every value here also lives as code: colours, type and sizes in [`apps/desktop/src/theme.rs`](apps/desktop/src/theme.rs), which the app draws with. The README pictures in [`assets/readme`](assets/readme) are SVG files, kept to these rules by hand. If this document and the code disagree, the code is the bug: fix it, then this page.
+Every value here also lives as code: colours, type and sizes in [`src/app/theme.rs`](src/app/theme.rs), which the app draws with. The README pictures in [`assets/readme`](assets/readme) are SVG files, kept to these rules by hand. If this document and the code disagree, the code is the bug: fix it, then this page.
 
 ---
 

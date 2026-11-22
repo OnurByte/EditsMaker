@@ -1,5 +1,8 @@
 #![recursion_limit = "512"]
+mod acp;
 mod ai;
+#[cfg(feature = "app")]
+mod app;
 mod browser;
 mod capcut;
 mod check;
@@ -51,7 +54,11 @@ use std::process::ExitCode;
 const USAGE: &str = include_str!("usage.txt");
 
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    // started as edits-app (the macOS bundle's link, a launcher): the app
+    if std::env::args().next().is_some_and(|a| Path::new(&a).file_stem().is_some_and(|n| n == "edits-app")) {
+        args.insert(0, "app".into());
+    }
     // the guard runs before every shell command an agent makes: it checks nothing, fetches nothing
     if !matches!(args.first().map(String::as_str), Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "guard") | None) {
         update::auto();
@@ -75,7 +82,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
-        Some("app") => app(),
+        Some("app") => app(&args[1..]),
         Some("settings") => settings(),
         Some("rss") => rss::cmd(&args[1..]),
         Some("source") => source::cmd(&args[1..]),
@@ -128,9 +135,7 @@ fn main() -> ExitCode {
         Some("post") if args.len() > 1 => social::cmd(&args[1..]),
         Some("follow") if args.len() > 1 => follow::add(&args[1..]),
         Some("follows") if args.iter().any(|a| a == "--json") => {
-            // the app's automations: each follow as a flow, source to edit to accounts
-            let v: Vec<serde_json::Value> = follow::all().iter().map(|f| serde_json::json!({"source": f.source, "args": f.args, "post": f.post, "every": f.every, "titles": f.titles, "last": f.last})).collect();
-            println!("{}", serde_json::Value::Array(v));
+            println!("{}", follows_json());
             Ok(())
         }
         Some("follows") => {
@@ -798,19 +803,53 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
 }
 
 /// $EDITS_OUT or ~/Videos/edits: where runs go.
-fn out_base() -> PathBuf {
+pub fn out_base() -> PathBuf {
     std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"))
 }
 
-/// `edits settings --json`: everything the app's settings screen shows, in one go; each is changed by its own command.
+/// `edits settings --json`: everything the app's settings show, in one go; each is changed by its own command.
 fn settings() -> Result<(), String> {
+    println!("{}", settings_json());
+    Ok(())
+}
+
+/// What the settings show: the AI and its providers, the encoder, updates, where edits go, the accounts.
+pub fn settings_json() -> serde_json::Value {
     let c = ai::choice();
     let accounts: Vec<serde_json::Value> = social::all().iter().map(|a| serde_json::json!({"name": a.name, "platform": a.platform, "user": a.user})).collect();
     let sites: Vec<String> = packs::all().iter().filter(|p| packs::trusted(p)).filter_map(|p| p.manifest.automation.as_ref().map(|a| a.site.clone())).collect();
-    println!("{}", serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "ai": {"provider": c.provider, "model": c.model, "about": ai::describe(), "ready": ai::ready()},
-        "providers": ai::names(), "encoder": util::encoder_choice(), "encoders": util::ENCODERS, "updates": update::auto_on(), "out": out_base(),
-        "accounts": accounts, "sites": sites}));
-    Ok(())
+    serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "ai": {"provider": c.provider, "model": c.model, "endpoint": c.endpoint, "about": ai::describe(), "ready": ai::ready()},
+        "providers": ai::providers(), "encoder": util::encoder_choice(), "encoders": util::ENCODERS, "updates": update::auto_on(), "out": out_base(),
+        "accounts": accounts, "sites": sites})
+}
+
+/// Every pack here, on or off, with its cover: what the marketplace shows.
+pub fn packs_json() -> serde_json::Value {
+    let off = packs::disabled();
+    serde_json::Value::Array(packs::every().iter().map(|p| {
+        let m = &p.manifest;
+        let built_in = m.id.starts_with("edits.");
+        let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok());
+        let file = m.preview.as_ref().map(|f| packs::dir().join(&m.id).join(f)).filter(|f| !built_in && f.is_file());
+        serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
+            "kinds": m.kinds, "tags": m.tags, "trusted": packs::trusted(p),
+            "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name), "feeds": m.feeds,
+            "enabled": !off.contains(&m.id), "origin": packs::origin(&m.id).name(), "source": m.source.is_some(),
+            // when it came here, for "newest first": the folder's time for an added pack
+            "added": std::fs::metadata(packs::dir().join(&m.id)).and_then(|x| x.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_secs()),
+            "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset.as_ref())) } else { None }})
+    }).collect())
+}
+
+/// The marketplace's list (packs.json), with what is added here.
+pub fn listed_json(list: &[packs::Entry]) -> serde_json::Value {
+    let have: Vec<String> = packs::added().into_iter().map(|p| p.manifest.id).collect();
+    serde_json::Value::Array(list.iter().map(|e| serde_json::json!({"id": e.id, "name": e.name, "description": e.description, "kinds": e.kinds, "repo": e.repo, "added": have.contains(&e.id)})).collect())
+}
+
+/// Each follow as a flow: source, edit, accounts.
+pub fn follows_json() -> serde_json::Value {
+    serde_json::Value::Array(follow::all().iter().map(|f| serde_json::json!({"source": f.source, "args": f.args, "post": f.post, "every": f.every, "titles": f.titles, "last": f.last})).collect())
 }
 
 /// Where a run's clips go without --out: one folder per run, the same place whoever starts edits (the CLI in any
@@ -1900,12 +1939,16 @@ fn skills(args: &[String]) -> Result<(), String> {
     }
 }
 
-/// `edits app`: the desktop app the release ships beside this binary, started on its own.
-fn app() -> Result<(), String> {
-    let exe = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name(format!("edits-app{}", std::env::consts::EXE_SUFFIX));
-    // `edits app market|automations|settings` opens there
-    let at = std::env::args().nth(2).filter(|a| ["market", "automations", "settings"].contains(&a.as_str())).map(|a| format!("--{a}"));
-    std::process::Command::new(&exe).args(at).spawn().map(drop).map_err(|e| format!("{}: {e} (the app comes with the release download: edits update)", exe.display()))
+/// `edits app [market|automations|settings | --review CLIP]`: the desktop app, in this same program.
+#[cfg(feature = "app")]
+fn app(args: &[String]) -> Result<(), String> {
+    app::run(args);
+    Ok(())
+}
+
+#[cfg(not(feature = "app"))]
+fn app(_: &[String]) -> Result<(), String> {
+    Err("this edits was built without its app (--no-default-features)".into())
 }
 
 /// `edits packs`: the packs here (built in and added); `browse` the community list; `add ID|LINK`, `remove ID`;
@@ -1916,22 +1959,7 @@ fn packs_cmd(args: &[String]) -> Result<(), String> {
     let words: Vec<&String> = args.iter().filter(|a| *a != "--json").collect();
     match (words.first().map(|w| w.as_str()), words.get(1).copied()) {
         (Some("list") | None, _) if args.iter().any(|a| a == "--json") => {
-            // what the app's marketplace shows: every pack here, on or off, with its picture
-            let off = packs::disabled();
-            let v: Vec<serde_json::Value> = packs::every().iter().map(|p| {
-                let m = &p.manifest;
-                let built_in = m.id.starts_with("edits.");
-                let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok());
-                let file = m.preview.as_ref().map(|f| packs::dir().join(&m.id).join(f)).filter(|f| !built_in && f.is_file());
-                serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
-                    "kinds": m.kinds, "tags": m.tags, "builtIn": built_in, "trusted": p.automation.is_none() || packs::trusted(p),
-                    "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name), "feeds": m.feeds,
-                    "enabled": !off.contains(&m.id), "origin": packs::origin(&m.id).name(), "source": m.source.is_some(),
-                    // when it came here, for "newest first": the folder's time for an added pack
-                    "added": std::fs::metadata(packs::dir().join(&m.id)).and_then(|x| x.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_secs()),
-                    "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset.as_ref())) } else { None }})
-            }).collect();
-            println!("{}", serde_json::Value::Array(v));
+            println!("{}", packs_json());
             Ok(())
         }
         (Some("list") | None, _) => {
@@ -1951,8 +1979,7 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             let have: Vec<String> = packs::added().into_iter().map(|p| p.manifest.id).collect();
             let list = packs::registry()?;
             if args.iter().any(|a| a == "--json") {
-                let v: Vec<serde_json::Value> = list.iter().map(|e| serde_json::json!({"id": e.id, "name": e.name, "description": e.description, "kinds": e.kinds, "repo": e.repo, "added": have.contains(&e.id)})).collect();
-                println!("{}", serde_json::Value::Array(v));
+                println!("{}", listed_json(&list));
                 return Ok(());
             }
             for e in &list {
