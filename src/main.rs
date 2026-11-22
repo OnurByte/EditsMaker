@@ -1036,7 +1036,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             let (sh, from) = picks[0];
             let need = slots[last].source_len(spans[last].1 - spans[last].0);
             // no room around the first shot: another shot long enough for both, unless the shots were chosen by hand
-            let seamed = montage::seam((from, needs[0]), (shots[sh].s, shots[sh].e), need, sh < hand_from).map(|x| (sh, x))
+            let seamed = montage::seam((from, needs[0]), (shots[sh].s, shots[sh].scene_end.max(shots[sh].e)), need, sh < hand_from).map(|x| (sh, x))
                 .or_else(|| hand.is_empty().then(|| montage::roomy(&shots, hand_from, needs[0] + need)).flatten().map(|j| (j, (shots[j].s + need, shots[j].s))));
             match seamed {
                 Some((j, (a, b))) => {
@@ -1561,7 +1561,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
             let shot = videos.iter().position(|(_, f)| *f == first.0)
                 .and_then(|v| shots.iter().find(|x| x.video == v && x.s <= first.1 + 0.01 && first.1 < x.e));
             let (uses, need) = (spans[0].1 * speed, spans[last].1 * speed);
-            let seamed = shot.and_then(|x| montage::seam((first.1, uses), (x.s, x.e), need, voice.is_none())).map(|ab| (first.0.clone(), first.2, ab))
+            let seamed = shot.and_then(|x| montage::seam((first.1, uses), (x.s, x.scene_end.max(x.e)), need, voice.is_none())).map(|ab| (first.0.clone(), first.2, ab))
                 // no room around the first shot: another shot long enough for both (not when a voice line holds the first)
                 .or_else(|| voice.is_none().then(|| montage::roomy(&shots, shots.len(), uses + need)).flatten()
                     .map(|j| (videos[shots[j].video].1.clone(), shots[j].focus.unwrap_or(0.5), (shots[j].s + need, shots[j].s))));

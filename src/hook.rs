@@ -66,9 +66,12 @@ pub fn find(title: &str, cache: &Path) -> Option<f64> {
     if let Some(v) = known.get(&key) {
         return v.as_f64();
     }
-    let found = search(&key, cache);
-    known.insert(key, found.map_or(serde_json::Value::Null, serde_json::Value::from));
-    let _ = std::fs::write(&file, serde_json::to_string_pretty(&known).unwrap_or_default());
+    let (found, sure) = search(&key, cache);
+    // a search that heard too few clips (no Shorts, Shazam down) is tried again next time, not remembered as no hook
+    if sure {
+        known.insert(key, found.map_or(serde_json::Value::Null, serde_json::Value::from));
+        let _ = std::fs::write(&file, serde_json::to_string_pretty(&known).unwrap_or_default());
+    }
     found
 }
 
@@ -81,39 +84,78 @@ pub fn short(line: &str) -> Option<(String, String)> {
     (fits && url.starts_with("http") && !id.is_empty()).then(|| (id.to_string(), url.to_string()))
 }
 
-fn search(key: &str, cache: &Path) -> Option<f64> {
-    let out = yt(&["--no-warnings", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &format!("ytsearch15:{key} #shorts")]).ok()?;
+/// Why a Short's place was not used, or its place in the song.
+fn place(key: &str, heard: Result<Option<crate::shazam::Found>, String>) -> Result<f64, String> {
+    let f = heard?.ok_or("Shazam did not know it")?;
+    if !same_song(key, &f.title) {
+        return Err(format!("another song (\"{}\")", f.title));
+    }
+    // a sped-up clip's place is on the record's clock, not this song's
+    if f.skew >= 0.02 {
+        return Err(format!("sped up or pitched ({:.0}%)", f.skew * 100.0));
+    }
+    Ok(f.offset.max(0.0))
+}
+
+/// The hook, and whether the answer is sure enough to remember (at least two clips heard as this song).
+fn search(key: &str, cache: &Path) -> (Option<f64>, bool) {
+    let Ok(out) = yt(&["--no-warnings", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &format!("ytsearch15:{key} #shorts")]) else {
+        eprintln!("edits: no hook for \"{key}\": the YouTube search failed; the most replayed or loudest part is used");
+        return (None, false);
+    };
     // Shorts only: a full-length upload starts at the song's start and says nothing about the hook
     let found = out.lines().count();
     let shorts: Vec<(String, String)> = out.lines().filter_map(short).take(6).collect();
     if shorts.len() < 2 {
         eprintln!("edits: no hook for \"{key}\": {} Shorts among {found} search results; the most replayed or loudest part is used", shorts.len());
-        return None;
+        return (None, false);
     }
     let dir = cache.join("music").join("hook");
-    std::fs::create_dir_all(&dir).ok()?;
-    let offsets: Vec<f64> = std::thread::scope(|s| {
+    if std::fs::create_dir_all(&dir).is_err() {
+        return (None, false);
+    }
+    // downloads side by side; Shazam one clip at a time, since asking six at once gets every answer refused
+    let files: Vec<(String, Result<std::path::PathBuf, String>)> = std::thread::scope(|s| {
         let jobs: Vec<_> = shorts.iter().map(|(id, url)| {
             let dir = &dir;
             s.spawn(move || {
-                let got = yt(&["--no-warnings", "--no-progress", "--no-playlist", "-f", "ba[ext=m4a]/ba", "--print", "after_move:filepath",
-                    "-o", &dir.join(format!("{}.%(ext)s", crate::fetch::safe(id))).to_string_lossy(), "--", url]).ok()?;
-                let f = std::path::PathBuf::from(got.lines().last()?.trim());
-                let heard = crate::shazam::recognize(&f, None);
-                let _ = std::fs::remove_file(&f);
-                let found = heard.ok()??;
-                // a sped-up clip's place is on the record's clock, not this song's
-                (found.skew < 0.02 && same_song(key, &found.title)).then_some(found.offset.max(0.0))
+                yt(&["--no-warnings", "--no-progress", "--no-playlist", "-f", "ba[ext=m4a]/ba", "--print", "after_move:filepath",
+                    "-o", &dir.join(format!("{}.%(ext)s", crate::fetch::safe(id))).to_string_lossy(), "--", url])
+                    .and_then(|got| got.lines().last().map(|l| std::path::PathBuf::from(l.trim())).ok_or_else(|| "no file".to_string()))
             })
         }).collect();
-        jobs.into_iter().filter_map(|j| j.join().ok().flatten()).collect()
+        shorts.iter().zip(jobs).map(|((id, _), j)| (id.clone(), j.join().unwrap_or_else(|_| Err("download crashed".into())))).collect()
     });
+    let mut offsets = vec![];
+    let mut why = vec![];
+    for (i, (id, f)) in files.into_iter().enumerate() {
+        let got = f.map_err(|e| format!("download failed: {}", e.lines().last().unwrap_or_default())).and_then(|f| {
+            if i > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(700));
+            }
+            let mut heard = crate::shazam::recognize(&f, None);
+            if heard.is_err() {
+                // refused once: wait and ask again before giving up on the clip
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                heard = crate::shazam::recognize(&f, None);
+            }
+            let _ = std::fs::remove_file(&f);
+            place(key, heard)
+        });
+        match got {
+            Ok(o) => offsets.push(o),
+            Err(e) => why.push(format!("{id}: {e}")),
+        }
+    }
     let hook = agree(&offsets);
     match hook {
         Some(h) => eprintln!("edits: the part people use starts at {} ({} of {} Shorts agree)", crate::util::mmss(h), offsets.iter().filter(|o| (*o - h).abs() <= 2.5).count(), offsets.len()),
-        None => eprintln!("edits: no hook found in Shorts for \"{key}\" ({} heard); the most replayed or loudest part is used", offsets.len()),
+        None => eprintln!("edits: no hook found in Shorts for \"{key}\" ({} of {} heard as this song); the most replayed or loudest part is used", offsets.len(), shorts.len()),
     }
-    hook
+    if hook.is_none() && !why.is_empty() {
+        eprintln!("edits: Shorts left out: {}", why.join("; "));
+    }
+    (hook, offsets.len() >= 2)
 }
 
 #[cfg(test)]
@@ -144,6 +186,16 @@ mod tests {
         // a sped-up song is not answered by its original record
         assert!(!same_song("Cupid Twin Ver Sped Up", "Cupid (Twin Ver.)"));
         assert!(same_song("Cupid Twin Ver Sped Up", "Cupid (Twin Ver.) [Sped Up]".replace(['[', ']'], "").as_str()));
+    }
+
+    #[test]
+    fn a_short_is_placed_only_when_it_is_this_song_as_released() {
+        let f = |title: &str, skew: f64| Ok(Some(crate::shazam::Found { artist: String::new(), title: title.into(), offset: 42.0, url: String::new(), skew }));
+        assert_eq!(place("mabel matiz umrumdışı", f("Umrumdışı", 0.001)), Ok(42.0));
+        assert!(place("mabel matiz umrumdışı", f("Umrumdışı", 0.08)).unwrap_err().starts_with("sped up"));
+        assert!(place("mabel matiz umrumdışı", f("Başka Şarkı", 0.0)).unwrap_err().starts_with("another song"));
+        assert_eq!(place("mabel matiz umrumdışı", Ok(None)), Err("Shazam did not know it".into()));
+        assert_eq!(place("x y", Err("could not reach Shazam".into())), Err("could not reach Shazam".into()));
     }
 
     #[test]
