@@ -529,6 +529,9 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
         }
     }
     c.look_name = c.lut.as_ref().map_or(c.opts.grade.clone(), |l| l.file_stem().unwrap_or_default().to_string_lossy().into_owned());
+    if c.corecore && !c.looked {
+        c.look_name = "corecore".into();
+    }
     if c.look.length == 0.0 {
         c.look.length = if c.look.sad { 24.0 } else { 18.0 };
     }
@@ -1032,10 +1035,13 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             let last = picks.len() - 1;
             let (sh, from) = picks[0];
             let need = slots[last].source_len(spans[last].1 - spans[last].0);
-            match montage::seam((from, needs[0]), (shots[sh].s, shots[sh].e), need, sh < hand_from) {
-                Some((a, b)) => {
-                    picks[0].1 = a;
-                    picks[last] = (sh, b);
+            // no room around the first shot: another shot long enough for both, unless the shots were chosen by hand
+            let seamed = montage::seam((from, needs[0]), (shots[sh].s, shots[sh].e), need, sh < hand_from).map(|x| (sh, x))
+                .or_else(|| hand.is_empty().then(|| montage::roomy(&shots, hand_from, needs[0] + need)).flatten().map(|j| (j, (shots[j].s + need, shots[j].s))));
+            match seamed {
+                Some((j, (a, b))) => {
+                    picks[0] = (j, a);
+                    picks[last] = (j, b);
                 }
                 None => eprintln!("edits: edit {}: the first shot has no footage before it; the loop shows a cut where it starts again", k + 1),
             }
@@ -1554,10 +1560,15 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
             let speed = look.speed();
             let shot = videos.iter().position(|(_, f)| *f == first.0)
                 .and_then(|v| shots.iter().find(|x| x.video == v && x.s <= first.1 + 0.01 && first.1 < x.e));
-            match shot.and_then(|x| montage::seam((first.1, spans[0].1 * speed), (x.s, x.e), spans[last].1 * speed, voice.is_none())) {
-                Some((a, b)) => {
-                    files[0].1 = a;
-                    files[last] = (first.0.clone(), b, first.2);
+            let (uses, need) = (spans[0].1 * speed, spans[last].1 * speed);
+            let seamed = shot.and_then(|x| montage::seam((first.1, uses), (x.s, x.e), need, voice.is_none())).map(|ab| (first.0.clone(), first.2, ab))
+                // no room around the first shot: another shot long enough for both (not when a voice line holds the first)
+                .or_else(|| voice.is_none().then(|| montage::roomy(&shots, shots.len(), uses + need)).flatten()
+                    .map(|j| (videos[shots[j].video].1.clone(), shots[j].focus.unwrap_or(0.5), (shots[j].s + need, shots[j].s))));
+            match seamed {
+                Some((file, focus, (a, b))) => {
+                    files[0] = (file.clone(), a, focus);
+                    files[last] = (file, b, focus);
                 }
                 None => eprintln!("edits: edit {}: the first shot has no footage before it; the loop shows a cut where it starts again", k + 1),
             }
