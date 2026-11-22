@@ -223,6 +223,8 @@ struct Cli {
     lut: Option<PathBuf>,
     /// --aspect or --size was given: it wins over a preset's own frame
     sized: bool,
+    /// --preview: one edit at half size, encoded fast, to check before the full render
+    preview: bool,
     /// --look was given: it wins over a preset's own look
     looked: bool,
     /// --intensity: scales a preset's moves
@@ -292,7 +294,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
         transition: None,
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, preview: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -441,6 +443,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--no-captions" => c.opts.captions = false,
             "--no-llm" => c.llm = false,
             "--join" => c.join = true,
+            "--preview" => c.preview = true,
             s if s.starts_with('-') => return Err(format!("unknown option {s}; see `edits --help`")),
             s if c.input.is_empty() => c.input = s.to_string(),
             s => {
@@ -456,6 +459,9 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     if c.look.length == 0.0 {
         c.look.length = if c.look.sad { 24.0 } else { 18.0 };
     }
+    if c.preview {
+        c.n = 1;
+    }
     Ok(c)
 }
 
@@ -470,6 +476,13 @@ struct Analysed {
 
 /// Everything about one video up to "which moments": transcript, signals, the pick.
 /// `clips`: also pick talking-clip moments (music edits pick whole passages themselves).
+/// --preview halves the frame (even sides, as encoders want); everything placed on it scales with it.
+fn preview_size(c: &Cli, o: &mut render::Opts) {
+    if c.preview {
+        (o.w, o.h) = (o.w / 4 * 2, o.h / 4 * 2);
+    }
+}
+
 /// The videos named by `--say ID@A-B`, each once.
 fn say_ids(c: &Cli) -> Vec<&str> {
     let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).collect();
@@ -526,6 +539,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
     // nobody to frame on (screen recordings, graphics): cropping would cut content at random, so keep the whole frame
     let mut opts = c.opts.clone();
+    preview_size(c, &mut opts);
     if focus.is_none() && w * opts.h > h * opts.w {
         opts.layout = "fit".into();
     }
@@ -568,6 +582,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
         captions: transcribe::lines(&a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).cloned().collect::<Vec<_>>()).iter()
             .filter_map(|l| Some((talk::remap(l.s, &segs)? / c.speed, talk::remap(l.e, &segs).unwrap_or(talk::remap(l.s, &segs)? + 1.0) / c.speed, l.text.clone()))).collect(),
         said: vec![],
+        markers: vec![],
     };
     let out = &deliver(c, out, &tl)?;
     let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
@@ -616,6 +631,10 @@ fn folder_name(title: &str) -> String {
 
 fn make(args: &[String]) -> Result<(), String> {
     let mut cli = parse(args, study::load())?;
+    if cli.preview {
+        util::set_fast();
+        eprintln!("edits: preview: one edit at half size, encoded fast; drop --preview for the full render");
+    }
     let cache = &util::home().join(".cache/edits");
     std::fs::create_dir_all(cache).map_err(|e| e.to_string())?;
     if let Some(l) = cli.lut.clone() {
@@ -830,6 +849,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     if !c.sized {
         (opts.w, opts.h) = (p.w, p.h);
     }
+    preview_size(c, &mut opts);
     if let (false, Some(look)) = (c.looked, &p.look) {
         opts.grade = look.clone();
     }
@@ -971,6 +991,8 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         match util::run(Some(&work), "ffmpeg", &args) {
             Ok(_) => {
                 tl.captions = talk::lines_srt(&quotes, p.total);
+                let beats: Vec<f64> = song.beats.iter().map(|b| b - song_from).collect();
+                tl.markers = timeline::markers(&beats, p.total, p.slots.iter().find(|s| s.drop).map(|s| s.start), voice.as_ref().map(|v| v.2.at));
                 if let Some((a, m, v)) = &voice {
                     tl.said = voice_cues(&a.words, m, v.at);
                     tl.captions.extend(tl.said.clone());
@@ -1178,6 +1200,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         lap(&format!("reference: {} cuts, {} white flashes, {} dips, grade {}, {}", t.cuts.len() - 2,
             t.joins.iter().filter(|j| j.kind == "fadewhite").count(), t.joins.iter().filter(|j| j.kind == "fadeblack").count(), t.grade, t.aspect));
     }
+    preview_size(c, &mut opts);
     let look = montage::Look { punch: !c.look.sad && template.is_none(), pace: c.speed, hits: c.hits.clone(), ..c.look.clone() };
     let music = match (&template, &c.music) {
         (Some(t), _) => t.music.to_string_lossy().into_owned(),
@@ -1371,6 +1394,8 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                     music: Some((song.file.clone(), p.start)),
                     captions: p.voice.map(|(a, m)| voice_cues(&a.words, m, p.at)).unwrap_or_default(),
                     said: p.voice.map(|(a, m)| voice_cues(&a.words, m, p.at)).unwrap_or_default(),
+                    // a music edit's drop comes as the voice line ends
+                    markers: timeline::markers(&p.beats, *p.cuts.last().unwrap(), p.voice.map(|(_, m)| p.at + m.end - m.start), p.voice.map(|_| p.at)),
                 };
                 let out = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({
@@ -1539,14 +1564,10 @@ fn words(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn save_preset(p: preset::Preset) -> Result<(), String> {
-    if p.slots.is_empty() {
-        return Err("a preset needs at least one shot".into());
-    }
-    std::fs::create_dir_all(presets::user_dir()).map_err(|e| e.to_string())?;
-    let to = presets::user_dir().join(format!("{}.json", preset::slug(&p.name)));
-    std::fs::write(&to, preset::pretty(&p)).map_err(|e| e.to_string())?;
-    println!("saved \"{}\" to {}", p.name, to.display());
+/// Saves a changed preset (refused with `expect` when it changed since that revision); `edits preset undo` takes it back.
+fn save_preset(p: preset::Preset, expect: Option<&str>) -> Result<(), String> {
+    let (to, rev) = presets::save(&p, expect)?;
+    println!("saved \"{}\" to {} (revision {rev}; edits preset undo \"{}\" takes it back)", p.name, to.display(), p.name);
     Ok(())
 }
 
@@ -1600,9 +1621,13 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             Ok(())
         }
         (Some("show"), Some(name)) => {
-            println!("{}", preset::pretty(&preset::load(name)?));
+            let p = preset::load(name)?;
+            println!("{}", preset::pretty(&p));
+            // beside the JSON, not in it: change it with --if this, and a change made meanwhile is not overwritten
+            eprintln!("edits: revision {}", presets::revision(&p));
             Ok(())
         }
+        (Some("undo"), Some(name)) => presets::undo(name).map(|m| println!("{m}")),
         (Some("save"), Some(file)) => {
             let text = if file == "-" {
                 let mut t = String::new();
@@ -1611,21 +1636,27 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             } else {
                 std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?
             };
-            save_preset(serde_json::from_str(&text).map_err(|e| format!("not a valid preset: {e}"))?)
+            let expect = args.iter().position(|a| a == "--if").and_then(|i| args.get(i + 1)).map(String::as_str);
+            save_preset(serde_json::from_str(&text).map_err(|e| format!("not a valid preset: {e}"))?, expect)
         }
         (Some("set"), Some(name)) => {
             // KEY=VALUE changes without a script: total=12, shots.0.zoom=1.3, shots.*.speed=2, look="bw"; --as NEW
             let mut v = serde_json::to_value(preset::load(name)?).map_err(|e| e.to_string())?;
             let mut rest = args[2..].iter();
+            let mut expect = None;
             while let Some(a) = rest.next() {
                 if a == "--as" {
                     v["name"] = rest.next().ok_or("--as needs a name")?.as_str().into();
                     continue;
                 }
+                if a == "--if" {
+                    expect = Some(rest.next().ok_or("--if needs the revision edits preset show printed")?.as_str());
+                    continue;
+                }
                 let (k, val) = a.split_once('=').ok_or(format!("{a}: changes look like KEY=VALUE (shots.0.zoom=1.3)"))?;
                 set_path(&mut v, k, serde_json::from_str(val).unwrap_or_else(|_| val.into()))?;
             }
-            save_preset(serde_json::from_value(v).map_err(|e| format!("not a valid preset after that: {e}"))?)
+            save_preset(serde_json::from_value(v).map_err(|e| format!("not a valid preset after that: {e}"))?, expect)
         }
         (Some("import"), Some(_)) => {
             // --into DIR writes elsewhere (presets/ to build them in); default: your preset folder
@@ -1684,7 +1715,7 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             }
             Ok(())
         }
-        _ => Err("usage: edits preset list | show NAME | save FILE.json|- | import <zip|xml|folder|prfpset|capcut draft>... [--into DIR]".into()),
+        _ => Err("usage: edits preset list | show NAME | set NAME KEY=VALUE... [--as NEW] [--if REV] | save FILE.json|- [--if REV] | undo NAME | import <zip|xml|folder|prfpset|capcut draft>... [--into DIR]".into()),
     }
 }
 
@@ -1865,5 +1896,11 @@ mod tests {
         let c = parse(&args("x"), style()).unwrap();
         assert_eq!((c.opts.w, c.opts.h, c.opts.grade.as_str(), c.opts.lufs), (1440, 1080, "bw", -30.0));
         assert_eq!(parse(&args("x --aspect 9:16"), style()).unwrap().opts.h, 1920);
+        // --preview: one edit, and the frame it settles on comes out at half size
+        let pv = parse(&args("x -n 3 --preview"), style()).unwrap();
+        let mut o = pv.opts.clone();
+        (o.w, o.h) = (1080, 1920);
+        preview_size(&pv, &mut o);
+        assert_eq!((pv.n, o.w, o.h), (1, 540, 960));
     }
 }

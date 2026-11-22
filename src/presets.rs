@@ -1,7 +1,7 @@
 //! The presets: JSON files built into the binary from presets/, and your own in ~/.config/edits/presets
 //! (a saved preset with the same name replaces the built-in one). `moves.json` holds the cut moves.
 use crate::preset::{Motion, Preset};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 include!(concat!(env!("OUT_DIR"), "/built_in.rs"));
@@ -23,6 +23,84 @@ fn files() -> Vec<(String, String)> {
         }
     }
     all
+}
+
+/// A short code for a preset as it is now. A change made `--if` that code is refused once the preset has changed
+/// since (another agent, another edit), instead of quietly overwriting it.
+pub fn revision(p: &Preset) -> String {
+    format!("{:08x}", crate::util::crc32(crate::preset::pretty(p).as_bytes()))
+}
+
+fn built_in(name: &str) -> Option<Preset> {
+    BUILT_IN.iter().filter_map(|(_, t)| serde_json::from_str::<Preset>(t).ok()).find(|b| b.name == name)
+}
+
+/// The preset named exactly `name` as it is now: the one saved in `dir`, else the built-in one.
+fn current(dir: &Path, name: &str) -> Option<Preset> {
+    let saved = dir.join(format!("{}.json", crate::preset::slug(name)));
+    std::fs::read_to_string(saved).ok().and_then(|t| serde_json::from_str(&t).ok()).or_else(|| built_in(name))
+}
+
+/// Earlier versions of a saved preset, oldest first: .history/SLUG/<milliseconds>.json in your preset folder.
+fn history(dir: &Path, slug: &str) -> (PathBuf, Vec<PathBuf>) {
+    let dir = dir.join(".history").join(slug);
+    let mut v: Vec<PathBuf> = std::fs::read_dir(&dir).map(|d| d.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "json")).collect()).unwrap_or_default();
+    v.sort_by_key(|p| p.file_stem().and_then(|s| s.to_str()?.parse::<u128>().ok()).unwrap_or(0));
+    (dir, v)
+}
+
+/// Saves `p` as your preset; the version it replaces is kept (the last 20) for `undo`. With `expect`, a revision
+/// read earlier, it refuses when the preset has changed since. Returns the file and the new revision.
+pub fn save(p: &Preset, expect: Option<&str>) -> Result<(PathBuf, String), String> {
+    save_in(&user_dir(), p, expect)
+}
+
+fn save_in(dir: &Path, p: &Preset, expect: Option<&str>) -> Result<(PathBuf, String), String> {
+    if p.slots.is_empty() {
+        return Err("a preset needs at least one shot".into());
+    }
+    if let (Some(want), Some(now)) = (expect, current(dir, &p.name).map(|c| revision(&c))) {
+        if want != now {
+            return Err(format!("\"{}\" changed since revision {want} was read (it is {now} now): read it again and redo the change", p.name));
+        }
+    }
+    let slug = crate::preset::slug(&p.name);
+    let to = dir.join(format!("{slug}.json"));
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    if to.is_file() {
+        let (hist, old) = history(dir, &slug);
+        std::fs::create_dir_all(&hist).map_err(|e| e.to_string())?;
+        // one more than the newest, so two saves in the same millisecond keep both
+        let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0)
+            .max(old.last().and_then(|f| f.file_stem()?.to_str()?.parse::<u128>().ok()).map_or(0, |n| n + 1));
+        std::fs::copy(&to, hist.join(format!("{ms}.json"))).map_err(|e| e.to_string())?;
+        for f in old.iter().take((old.len() + 1).saturating_sub(20)) {
+            let _ = std::fs::remove_file(f);
+        }
+    }
+    std::fs::write(&to, crate::preset::pretty(p)).map_err(|e| e.to_string())?;
+    Ok((to, revision(p)))
+}
+
+/// Takes your preset back one step: the version it replaced, or the built-in one when your first save was over it.
+/// The version undone is not kept.
+pub fn undo(name: &str) -> Result<String, String> {
+    undo_in(&user_dir(), &crate::preset::load(name)?.name)
+}
+
+fn undo_in(dir: &Path, name: &str) -> Result<String, String> {
+    let slug = crate::preset::slug(name);
+    let to = dir.join(format!("{slug}.json"));
+    let (_, old) = history(dir, &slug);
+    if let Some(last) = old.last() {
+        std::fs::rename(last, &to).map_err(|e| e.to_string())?;
+        return Ok(format!("\"{name}\" is back to the version before ({} older one(s) left)", old.len() - 1));
+    }
+    if to.is_file() && built_in(name).is_some() {
+        std::fs::remove_file(&to).map_err(|e| e.to_string())?;
+        return Ok(format!("\"{name}\" is back to the built-in one"));
+    }
+    Err(format!("nothing to undo for \"{name}\""))
 }
 
 /// Files beside the presets that are not presets.
@@ -60,6 +138,40 @@ pub fn motions() -> &'static [Motion] {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test]
+    fn saves_keep_history_undo_walks_back_and_stale_changes_are_refused() {
+        let dir = std::env::temp_dir().join(format!("edits-undo-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        // a built-in preset, changed twice
+        let base = built_in(&all_built_in_name()).unwrap();
+        let first = revision(&base);
+        let mut a = base.clone();
+        a.total += 1.0;
+        let (_, ra) = save_in(&dir, &a, Some(&first)).unwrap();
+        let mut b = a.clone();
+        b.total += 1.0;
+        // someone still holding the built-in revision is refused: the preset moved on
+        assert!(save_in(&dir, &b, Some(&first)).unwrap_err().contains(&ra));
+        save_in(&dir, &b, Some(&ra)).unwrap();
+        assert_eq!(current(&dir, &b.name).unwrap().total, b.total);
+        // undo: back to a, then back to the built-in, then nothing left
+        undo_in(&dir, &b.name).unwrap();
+        assert_eq!(current(&dir, &b.name).unwrap().total, a.total);
+        assert!(undo_in(&dir, &b.name).unwrap().contains("built-in"));
+        assert_eq!(revision(&current(&dir, &b.name).unwrap()), first);
+        assert!(undo_in(&dir, &b.name).is_err());
+        let mut empty = base.clone();
+        empty.slots.clear();
+        assert!(save_in(&dir, &empty, None).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn all_built_in_name() -> String {
+        BUILT_IN.iter().find_map(|(_, t)| serde_json::from_str::<Preset>(t).ok()).unwrap().name
+    }
+
     #[test]
     fn built_in_presets_read() {
         // every shipped file parses

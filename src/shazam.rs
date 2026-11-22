@@ -93,16 +93,6 @@ pub fn peaks(samples: &[i16]) -> Peaks {
     out
 }
 
-fn crc32(data: &[u8]) -> u32 {
-    let mut c = !0u32;
-    for &b in data {
-        c ^= b as u32;
-        for _ in 0..8 {
-            c = if c & 1 != 0 { (c >> 1) ^ 0xedb8_8320 } else { c >> 1 };
-        }
-    }
-    !c
-}
 
 fn base64(data: &[u8]) -> String {
     const A: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -144,7 +134,7 @@ pub fn encode(peaks: &Peaks, samples: u32) -> Vec<u8> {
     let words = [0xcafe_2580, 0, len, 0x9411_9c00, 0, 0, 0, 3 << 27, 0, 0, samples + SR * 24 / 100, 0x007c_0000, 0x4000_0000, len];
     let mut sig: Vec<u8> = words.iter().flat_map(|w: &u32| w.to_le_bytes()).collect();
     sig.extend(body);
-    let crc = crc32(&sig[8..]);
+    let crc = crate::util::crc32(&sig[8..]);
     sig[4..8].copy_from_slice(&crc.to_le_bytes());
     sig
 }
@@ -238,7 +228,7 @@ mod tests {
 
     #[test]
     fn known_checksum_and_base64() {
-        assert_eq!(crc32(b"123456789"), 0xcbf4_3926);
+        assert_eq!(crate::util::crc32(b"123456789"), 0xcbf4_3926);
         assert_eq!(base64(b"Man"), "TWFu");
         assert_eq!(base64(b"Ma"), "TWE=");
         assert_eq!(base64(b"M"), "TQ==");
@@ -250,7 +240,7 @@ mod tests {
         let w = |o: usize| u32::from_le_bytes(sig[o..o + 4].try_into().unwrap());
         assert_eq!((w(0), w(12), w(28), w(40), w(44)), (0xcafe2580, 0x94119c00, 3 << 27, 128000 + 3840, (15 << 19) + 0x40000));
         assert_eq!(w(8), 8);
-        assert_eq!(w(4), crc32(&sig[8..]));
+        assert_eq!(w(4), crate::util::crc32(&sig[8..]));
         // a late peak is escaped with its absolute frame
         let mut p = Peaks::new();
         p.insert(0, vec![(0, 7, 9), (300, 7, 9)]);
