@@ -1,9 +1,12 @@
 #![recursion_limit = "512"]
+mod ai;
+mod browser;
 mod capcut;
 mod check;
 mod create;
 mod face;
 mod fetch;
+mod follow;
 mod fonts;
 mod finish;
 mod fx;
@@ -24,6 +27,7 @@ mod presets;
 mod render;
 mod review;
 mod shazam;
+mod social;
 mod signals;
 mod stats;
 mod study;
@@ -105,6 +109,23 @@ fn main() -> ExitCode {
         Some("study") if args.len() > 1 => study::study(Path::new(&args[1])),
         Some("stats") if args.len() > 1 => stats::cmd(&args[1..]),
         Some("review") if args.len() > 1 => review::cmd(&args[1..]),
+        Some("ai") => ai::cmd(&args[1..]),
+        Some("clean") => clean(&args[1..]),
+        Some("connect") if args.len() > 1 => social::connect(&args[1..]),
+        Some("accounts") => {
+            social::list();
+            Ok(())
+        }
+        Some("disconnect") if args.len() > 1 => social::disconnect(&args[1]),
+        Some("post") if args.len() > 1 => social::cmd(&args[1..]),
+        Some("follow") if args.len() > 1 => follow::add(&args[1..]),
+        Some("follows") => {
+            follow::list();
+            Ok(())
+        }
+        Some("unfollow") if args.len() > 1 => follow::remove(&args[1]),
+        Some("watch") => follow::watch(&args[1..]),
+        Some("service") => follow::service(&args[1..]),
         // a command named without what it needs says so, instead of searching YouTube for the word
         Some(cmd) if USAGE_OF.iter().any(|u| u.0 == cmd) => Err(format!("usage: {}", USAGE_OF.iter().find(|u| u.0 == cmd).map_or("", |u| u.1))),
         Some(_) => make(&args),
@@ -130,6 +151,11 @@ const USAGE_OF: &[(&str, &str)] = &[
     ("frames", "edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)"),
     ("study", "edits study <folder of edits you like>"),
     ("review", "edits review <clip.mp4> [--notes]   the clip in the browser: point at moments and spots, the notes come back"),
+    ("connect", "edits connect instagram|tiktok|youtube | bluesky HANDLE | facebook PAGE_ID   connect an account to post to"),
+    ("disconnect", "edits disconnect ACCOUNT   forget an account and its sign-in"),
+    ("post", "edits post <clip.mp4>... [--to ACCOUNT,...|all] [--caption TEXT] [--private]"),
+    ("follow", "edits follow <YouTube channel | Kick channel | RSS/Atom feed> [--every MIN] [--post ACCOUNT,...] [--private] [edit options]"),
+    ("unfollow", "edits unfollow N|SOURCE   (edits follows lists them)"),
     ("stats", "edits stats <@channel | channel or profile link> [N]   which posted edits worked, and what made them"),
 ];
 
@@ -153,6 +179,34 @@ fn library_add(srcs: &[String]) -> Result<(), String> {
         import.extend(library::walk(&root).iter().map(|f| f.to_string_lossy().into_owned()).filter(|f| f.to_lowercase().contains(".prfpset")));
         preset_cmd(&import)?;
     }
+    Ok(())
+}
+
+/// `edits clean [--all] [--dry-run]`: frees the disk the downloaded videos take, as Tehom's cleanup does. Transcripts
+/// and video info stay, so a video used again downloads but is not transcribed again; files used in the last day stay
+/// unless --all (a render may be using them).
+fn clean(args: &[String]) -> Result<(), String> {
+    let (all, dry) = (args.iter().any(|a| a == "--all"), args.iter().any(|a| a == "--dry-run"));
+    let day = std::time::Duration::from_secs(86_400);
+    let mut stack = vec![util::home().join(".cache/edits")];
+    let (mut n, mut bytes) = (0u64, 0u64);
+    while let Some(d) = stack.pop() {
+        for e in std::fs::read_dir(&d).into_iter().flatten().flatten() {
+            let (p, m) = (e.path(), match e.metadata() { Ok(m) => m, Err(_) => continue });
+            if m.is_dir() {
+                stack.push(p);
+                continue;
+            }
+            let media = p.extension().is_some_and(|x| ["mp4", "m4a", "webm", "mkv", "mov", "wav", "mp3", "opus", "part"].contains(&x.to_string_lossy().to_lowercase().as_str()));
+            let old = m.modified().ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age > day);
+            if media && (all || old) && (dry || std::fs::remove_file(&p).is_ok()) {
+                n += 1;
+                bytes += m.len();
+            }
+        }
+    }
+    println!("{} {n} downloaded file(s), {:.1} GB{}", if dry { "would delete" } else { "deleted" }, bytes as f64 / 1e9,
+        if all { "" } else { " (files used in the last day stay; --all takes them too)" });
     Ok(())
 }
 
@@ -1882,7 +1936,7 @@ fn moments_cmd(args: &[String]) -> Result<(), String> {
     eprintln!("edits: {} ({}): words from {from}, {} chat messages, {} windows of {:.0} s", src.title, util::mmss(src.duration), chat.len(), ws.len(), vod::WINDOW);
     let cands: Vec<pick::Moment> = vod::best(&ws, if use_llm { (n * 2).min(40) } else { n }).iter().map(vod::moment).collect();
     let judged = if use_llm && !cands.is_empty() {
-        match util::run_stdin(&pick::llm_cmd(), &vod::rubric_prompt(&src.title, &cands, &lines, &chat, n)).and_then(|r| vod::judged(&r, &cands)) {
+        match crate::ai::ask(&vod::rubric_prompt(&src.title, &cands, &lines, &chat, n)).and_then(|r| vod::judged(&r, &cands)) {
             Ok(j) if !j.is_empty() => Some(j),
             Ok(_) => { eprintln!("edits: the model kept none of the candidates; the scores decide"); None }
             Err(e) => { eprintln!("edits: {e}; the scores decide"); None }
@@ -2126,8 +2180,7 @@ fn doctor() -> Result<(), String> {
     let model = transcribe::model();
     check(model.is_some(), &format!("whisper model{}", model.map(|m| format!(": {}", m.display())).unwrap_or_default()),
         "put a ggml-*.bin in ~/.local/share/edits/models or set EDITS_WHISPER_MODEL (ggml-large-v3-turbo is best for Turkish)", false);
-    let llm = pick::llm_cmd();
-    check(util::have(llm.split_whitespace().next().unwrap_or("")), &format!("LLM command: {llm}"), "set EDITS_LLM to a command that reads a prompt on stdin; without it cuts follow viewer signals only", false);
+    check(ai::ready(), &format!("AI: {}", ai::describe()), "choose one with `edits ai` (a CLI, an API key or a local server); without it cuts follow viewer signals only", false);
     println!("taste file: {}", pick::taste_path().display());
     if missing > 0 {
         return Err(format!("{missing} required tool(s) missing"));

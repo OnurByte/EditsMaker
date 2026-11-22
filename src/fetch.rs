@@ -356,7 +356,7 @@ pub fn screen(found: Vec<(String, String)>, keep: usize, cache: &Path, lang: &st
             p.push_str(&prompt("videos", "item", &[("i", i.to_string()), ("title", v.title.clone()), ("views", format!("{:.0}", v.views)), ("text", v.text.chars().take(500).collect())]));
         }
         p.push_str(&prompt("videos", "tail", &[("n", keep.to_string())]));
-        let picked = crate::util::run_stdin(&crate::pick::llm_cmd(), &p).ok().and_then(|r| {
+        let picked = crate::ai::ask(&p).ok().and_then(|r| {
             let (a, b) = (r.find('[')?, r.rfind(']')?);
             serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
         });

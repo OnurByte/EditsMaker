@@ -153,7 +153,7 @@ pub fn translated(words: &[Word], m: &Moment, to: &str) -> Result<(Vec<Word>, St
     let mut lines = vec![m.title.clone()];
     lines.extend(spans.iter().map(|(a, b)| inside[*a..=*b].iter().map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")));
     let ask = crate::lang::prompt("translate", "ask", &[("to", to.to_string()), ("lines", serde_json::to_string_pretty(&lines).unwrap_or_default())]);
-    let reply = crate::util::run_stdin(&crate::pick::llm_cmd(), &ask)?;
+    let reply = crate::ai::ask(&ask)?;
     let got = spread(&reply, &inside, &spans, lines.len())?;
     Ok(got)
 }
@@ -338,7 +338,7 @@ pub fn best_lines(all: &[String], n: usize, use_llm: bool) -> Vec<String> {
             p.push_str(&prompt("lines", "item", &[("i", i.to_string()), ("text", l.clone())]));
         }
         p.push_str(&prompt("lines", "tail", &[("n", n.to_string())]));
-        let picked = crate::util::run_stdin(&crate::pick::llm_cmd(), &p).ok().and_then(|r| {
+        let picked = crate::ai::ask(&p).ok().and_then(|r| {
             let (a, b) = (r.find('[')?, r.rfind(']')?);
             serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
         });

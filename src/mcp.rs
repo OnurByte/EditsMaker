@@ -112,7 +112,16 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"channel": {"type": "string"}, "n": {"type": "integer", "minimum": 1, "maximum": 200, "description": "posts to read (default 30)"}}, "required": ["channel"]}},
         {"name": "edits_review", "description": "Show a finished clip to the user in a window of its own (a Chromium-family app window, else their browser) and wait (up to 20 minutes) for their notes: they click a moment, a shot or a spot in the frame and say what to change. Returns each note with its time, shot number and place in the frame; change exactly that and render again. `saved`: true returns the last notes without opening the page.",
          "inputSchema": {"type": "object", "properties": {"clip": {"type": "string"}, "saved": {"type": "boolean"}}, "required": ["clip"]}},
-        {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
+        {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_accounts", "description": "The accounts clips can be posted to (Instagram, TikTok, YouTube Shorts, Bluesky, Facebook Reels), by name.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_connect", "description": "Connect an Instagram, TikTok or YouTube Shorts account: a browser window opens and the user signs in there themselves (up to 10 minutes; edits never sees the password). Bluesky and Facebook need a secret typed in a terminal: tell the user to run `edits connect bluesky HANDLE` or `edits connect facebook PAGE_ID`. Unofficial routes can get an account restricted; say so.",
+         "inputSchema": {"type": "object", "properties": {"platform": {"type": "string", "enum": ["instagram", "tiktok", "youtube"]}}, "required": ["platform"]}},
+        {"name": "edits_post", "description": "Post finished clips to connected accounts (names from edits_accounts, a platform name, or \"all\"). The caption defaults to the one edits wrote for the clip. Ask the user before posting: it publishes.",
+         "inputSchema": {"type": "object", "properties": {"clips": {"type": "array", "items": {"type": "string"}}, "to": {"type": "string"}, "caption": {"type": "string"}, "private": {"type": "boolean"}}, "required": ["clips", "to"]}},
+        {"name": "edits_follow", "description": "Follow a YouTube channel, a Kick channel or an RSS/Atom feed: every new video is made into clips with `options` (edits command-line options such as [\"--preset\", \"NAME\", \"-n\", \"2\"]) and, with `post`, posted to those accounts. Videos there now are skipped. `every`: minutes between checks (default 60). It runs while `edits watch` or the background service (`edits service install`) does.",
+         "inputSchema": {"type": "object", "properties": {"source": {"type": "string"}, "options": {"type": "array", "items": {"type": "string"}}, "post": {"type": "string"}, "every": {"type": "integer", "minimum": 5, "maximum": 1440}, "private": {"type": "boolean"}}, "required": ["source"]}},
+        {"name": "edits_follows", "description": "What is followed, when each was last checked, and the latest automation events (clips made, posts, failures).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_unfollow", "description": "Stop following a source: its number from edits_follows, or its link.", "inputSchema": {"type": "object", "properties": {"which": {"type": "string"}}, "required": ["which"]}}
     ])
 }
 
@@ -191,6 +200,30 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.extend(s("at"));
         }
         "edits_doctor" => v.push("doctor".into()),
+        "edits_accounts" => v.push("accounts".into()),
+        "edits_connect" => v.extend(["connect".into(), s("platform").ok_or("platform is needed")?]),
+        "edits_post" => {
+            v.push("post".into());
+            v.extend(a["clips"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from)));
+            v.extend(["--to".into(), s("to").ok_or("to is needed")?]);
+            if let Some(c) = s("caption") {
+                v.extend(["--caption".into(), c]);
+            }
+            if a["private"].as_bool() == Some(true) {
+                v.push("--private".into());
+            }
+        }
+        "edits_follow" => {
+            v.extend(["follow".into(), s("source").ok_or("source is needed")?]);
+            v.extend(a["every"].as_u64().map(|n| ["--every".to_string(), n.to_string()]).into_iter().flatten());
+            v.extend(s("post").map(|p| ["--post".to_string(), p]).into_iter().flatten());
+            if a["private"].as_bool() == Some(true) {
+                v.push("--private".into());
+            }
+            v.extend(a["options"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from)));
+        }
+        "edits_follows" => v.push("follows".into()),
+        "edits_unfollow" => v.extend(["unfollow".into(), s("which").ok_or("which is needed")?]),
         "edits_stats" => {
             v.extend(["stats".into(), s("channel").ok_or("channel is needed")?]);
             v.extend(a["n"].as_u64().map(|n| n.to_string()));
@@ -586,7 +619,7 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 21);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 27);
         assert_eq!(args_for("edits_preset_set", &json!({"name": "x", "changes": ["total=12"], "revision": "ab12cd34"})).unwrap(), ["preset", "set", "x", "total=12", "--if", "ab12cd34"]);
         assert_eq!(args_for("edits_preset_undo", &json!({"name": "x"})).unwrap(), ["preset", "undo", "x"]);
         assert_eq!(args_for("edits_song", &json!({"video": "a.mp4", "at": "0:30"})).unwrap(), ["song", "a.mp4", "0:30"]);
