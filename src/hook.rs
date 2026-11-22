@@ -38,13 +38,18 @@ pub fn agree(offsets: &[f64]) -> Option<f64> {
     Some(best[best.len() / 2])
 }
 
-/// Shazam's song is the one searched for: most of its title's words are in the search.
+/// Words that mark another version of a song: its times differ from the record's.
+const VERSIONS: &[&str] = &["sped", "speed", "slowed", "nightcore", "reverb", "remix", "acoustic", "akustik"];
+
+/// Shazam's song is the one searched for: most of its title's words are in the search, and both are the same
+/// version (a sped-up search is not answered by the original record, whose times differ).
 pub fn same_song(want: &str, title: &str) -> bool {
     let w = clean(want);
     let have: Vec<&str> = w.split(' ').collect();
     let t = clean(title);
     let words: Vec<&str> = t.split(' ').filter(|x| !x.is_empty()).collect();
-    !words.is_empty() && words.iter().filter(|x| have.contains(x)).count() * 2 >= words.len()
+    let version = |ws: &[&str]| VERSIONS.iter().any(|v| ws.contains(v));
+    !words.is_empty() && words.iter().filter(|x| have.contains(x)).count() * 2 >= words.len() && version(&have) == version(&words)
 }
 
 /// Where in `title`'s song the clips people post start (seconds), from YouTube Shorts that use it, each heard by
@@ -55,7 +60,8 @@ pub fn find(title: &str, cache: &Path) -> Option<f64> {
     if key.split(' ').count() < 2 {
         return None;
     }
-    let file = cache.join("music").join("hooks.json");
+    // hook-starts.json, not 0.26.0's hooks.json: that one remembered searches that could not see Shorts
+    let file = cache.join("music").join("hook-starts.json");
     let mut known: serde_json::Map<String, serde_json::Value> = std::fs::read_to_string(&file).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
     if let Some(v) = known.get(&key) {
         return v.as_f64();
@@ -66,15 +72,22 @@ pub fn find(title: &str, cache: &Path) -> Option<f64> {
     found
 }
 
+/// A search line (id, length, link) that is a Short: a /shorts/ link (the search often gives no length for those),
+/// or anything 5 to 65 s long.
+pub fn short(line: &str) -> Option<(String, String)> {
+    let mut f = line.split('\t');
+    let (id, dur, url) = (f.next()?.trim(), f.next()?.trim(), f.next()?.trim());
+    let fits = url.contains("/shorts/") || dur.parse::<f64>().is_ok_and(|d| (5.0..=65.0).contains(&d));
+    (fits && url.starts_with("http") && !id.is_empty()).then(|| (id.to_string(), url.to_string()))
+}
+
 fn search(key: &str, cache: &Path) -> Option<f64> {
     let out = yt(&["--no-warnings", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &format!("ytsearch15:{key} #shorts")]).ok()?;
     // Shorts only: a full-length upload starts at the song's start and says nothing about the hook
-    let shorts: Vec<(String, String)> = out.lines().filter_map(|l| {
-        let mut f = l.split('\t');
-        let (id, dur, url) = (f.next()?.trim(), f.next()?.trim().parse::<f64>().ok()?, f.next()?.trim());
-        ((5.0..=65.0).contains(&dur) && url.starts_with("http")).then(|| (id.to_string(), url.to_string()))
-    }).take(6).collect();
+    let found = out.lines().count();
+    let shorts: Vec<(String, String)> = out.lines().filter_map(short).take(6).collect();
     if shorts.len() < 2 {
+        eprintln!("edits: no hook for \"{key}\": {} Shorts among {found} search results; the most replayed or loudest part is used", shorts.len());
         return None;
     }
     let dir = cache.join("music").join("hook");
@@ -89,7 +102,8 @@ fn search(key: &str, cache: &Path) -> Option<f64> {
                 let heard = crate::shazam::recognize(&f, None);
                 let _ = std::fs::remove_file(&f);
                 let found = heard.ok()??;
-                same_song(key, &found.title).then_some(found.offset.max(0.0))
+                // a sped-up clip's place is on the record's clock, not this song's
+                (found.skew < 0.02 && same_song(key, &found.title)).then_some(found.offset.max(0.0))
             })
         }).collect();
         jobs.into_iter().filter_map(|j| j.join().ok().flatten()).collect()
@@ -127,5 +141,16 @@ mod tests {
         assert!(same_song("mabel matiz umrumdışı", "Umrumdışı (Akustik)"));
         assert!(!same_song("Ravi İncigöz - Maşallah", "Bambaşka Bir Şarkı"));
         assert!(!same_song("Ravi İncigöz - Maşallah", ""));
+        // a sped-up song is not answered by its original record
+        assert!(!same_song("Cupid Twin Ver Sped Up", "Cupid (Twin Ver.)"));
+        assert!(same_song("Cupid Twin Ver Sped Up", "Cupid (Twin Ver.) [Sped Up]".replace(['[', ']'], "").as_str()));
+    }
+
+    #[test]
+    fn shorts_in_search_results() {
+        assert_eq!(short("abc\tNA\thttps://www.youtube.com/shorts/abc"), Some(("abc".into(), "https://www.youtube.com/shorts/abc".into())));
+        assert!(short("abc\t31\thttps://www.youtube.com/watch?v=abc").is_some());
+        assert!(short("abc\t213\thttps://www.youtube.com/watch?v=abc").is_none());
+        assert!(short("abc\tNA\thttps://www.youtube.com/watch?v=abc").is_none());
     }
 }

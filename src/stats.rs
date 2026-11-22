@@ -144,8 +144,16 @@ pub fn note(text: &str, liked: bool) -> Result<(), String> {
 pub fn cmd(args: &[String]) -> Result<(), String> {
     let input = args.first().ok_or("usage: edits stats <@channel | channel or profile link> [N]")?;
     let n: usize = args.get(1).map(|x| x.parse().ok().filter(|n| (1..=200).contains(n)).ok_or("N must be 1-200")).transpose()?.unwrap_or(30);
-    let t = target(input);
-    let listed = yt(&["--no-warnings", "--flat-playlist", "--playlist-end", &n.to_string(), "--print", "%(webpage_url,url)s", "--", &t])?;
+    let mut t = target(input);
+    let list = |t: &str| yt(&["--no-warnings", "--flat-playlist", "--playlist-end", &n.to_string(), "--print", "%(webpage_url,url)s", "--", t]);
+    let listed = match list(&t) {
+        // a channel that posts no Shorts: its videos
+        Err(e) if e.contains("shorts tab") && t.ends_with("/shorts") => {
+            t = format!("{}/videos", t.trim_end_matches("/shorts"));
+            list(&t)?
+        }
+        r => r?,
+    };
     let urls: Vec<String> = listed.lines().map(str::trim).filter(|l| l.starts_with("http")).map(String::from).collect();
     if urls.is_empty() {
         return Err(format!("no posts found at {t}"));

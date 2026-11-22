@@ -1185,6 +1185,12 @@ pub fn seam(first: (f64, f64), shot: (f64, f64), need: f64, movable: bool) -> Op
     (from + uses <= e + 0.05).then_some((from, from - need))
 }
 
+/// --loop when the first shot has no room before it: the best shot with room for both the first piece and the
+/// last one before it, among `shots[..usable]`.
+pub fn roomy(shots: &[Shot], usable: usize, need: f64) -> Option<usize> {
+    shots.iter().take(usable).enumerate().filter(|(_, x)| x.e - x.s >= need + 0.05).max_by(|a, b| a.1.score.total_cmp(&b.1.score)).map(|x| x.0)
+}
+
 /// One finished edit. `picks` are (video file, source start, focus) per piece, `joins` one per cut.
 /// `work` is the folder ffmpeg runs in; `subs` is the ASS text written there as cap.ass.
 #[allow(clippy::too_many_arguments)]
@@ -1334,6 +1340,15 @@ mod tests {
         // too close to its neighbour: stays
         assert_eq!(on_words(&[0.0, 1.8, 2.0, 4.0], &beats, &[1.5]), vec![0.0, 1.5, 2.0, 4.0]);
         assert_eq!(on_words(&[0.0, 1.6, 1.8, 4.0], &beats, &[1.5]), vec![0.0, 1.6, 1.8, 4.0]);
+    }
+
+    #[test]
+    fn a_roomy_shot_for_the_loop() {
+        let sh = |s: f64, e: f64, score: f64| Shot { video: 0, s, e, scene_end: e, score, focus: None };
+        let shots = vec![sh(0.0, 1.0, 9.0), sh(5.0, 9.0, 2.0), sh(10.0, 14.0, 3.0), sh(20.0, 30.0, 8.0)];
+        assert_eq!(roomy(&shots, 3, 3.0), Some(2));
+        assert_eq!(roomy(&shots, 4, 3.0), Some(3));
+        assert_eq!(roomy(&shots, 4, 20.0), None);
     }
 
     #[test]
