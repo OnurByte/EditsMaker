@@ -24,5 +24,13 @@
     "laugh": "(laughter or applause in the video)",
     "liked": "👍 like this",
     "disliked": "👎 not like this"
+  },
+  "vod": {
+    "head": "You choose which moments of a long video become short clips (TikTok, Reels, Shorts). Video: {title}\n\nEach candidate below was found by its signals: how loud it got against the whole video, reactions said out loud, how hard the chat went. Judge each by what was said and what the chat did.\n\nDrop first, whatever else: the story's ending or a plot spoiler, sexual content, hate speech, gambling or crypto promotion, a moment that needs an hour of context.\nScore the rest 0-3 on each of: hook (the first 3 seconds make you stay), payoff (something happens), reaction (someone reacts out loud), stands alone (no context needed), reads on a phone, new (not the same bit again), suitable (nothing a platform punishes). Keep 12 of 21 or more.\nCut each: start on the hook, not on setup chatter; end on the last word of the reaction; 20-45 s, never over 90.\n\n# Candidates\n",
+    "candidate": "\n## {id}: {at} ({start}-{end} s), {signals}\n{said}\nchat: {chat}\n",
+    "tail": "\n# Answer\nOnly a JSON array, best first, at most {n}: every candidate you keep (12 or more), none you drop.\n[{\"id\": candidate number, \"start\": seconds, \"end\": seconds, \"score\": 0-21, \"title\": \"short title in the video's language\", \"why\": \"one line\", \"post\": \"the post's caption in the video's language: one line and 3-5 hashtags\"}]\n"
+  },
+  "translate": {
+    "ask": "Translate each line of this JSON array into {to}, the way someone speaking {to} would say it out loud: keep slang, swearing, names and gamer talk, never explain. The first line is a short title; keep it short. Answer only a JSON array of strings, the same number of lines in the same order.\n\n{lines}\n"
   }
 }

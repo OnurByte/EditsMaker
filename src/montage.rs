@@ -1403,7 +1403,7 @@ mod tests {
         assert_eq!(seam((10.2, 1.0), (10.0, 20.0), 1.5, false), None);
         assert_eq!(seam((10.2, 1.0), (10.0, 12.0), 1.5, true), None);
         let look = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: true, core: false };
-        let o = Opts { w: 1080, h: 1920, grade: "none".into(), captions: true, layout: "fill".into(), lufs: -14.0 };
+        let o = Opts { w: 1080, h: 1920, grade: "none".into(), captions: true, layout: "fill".into(), lufs: -14.0, cam: None };
         let js = vec![CUT, CUT];
         let g = filter_graph(&o, &look, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, &[], 2.0, None, false, Some(0.5));
         assert!(!g.contains("fade=t=") && !g.contains("afade") && g.contains("[2:a]atrim=0:1.650") && g.contains("[3:a]asetpts"), "{g}");
@@ -1635,7 +1635,7 @@ mod tests {
         for i in [6, 9, 12] {
             js[i] = Join { kind: "fadewhite", dur: 0.3, motion: None };
         }
-        let o = Opts { w: 64, h: 64, grade: "dark".into(), captions: false, layout: "fill".into(), lufs: -12.0 };
+        let o = Opts { w: 64, h: 64, grade: "dark".into(), captions: false, layout: "fill".into(), lufs: -12.0, cam: None };
         let look = Look { sad: false, punch: true, length: 16.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false };
         let spans = pieces(&cuts, &js);
         let g = filter_graph(&o, &look, &vec![0.5; spans.len()], &spans, &js, &[], 16.718, None, false, None);
@@ -1652,7 +1652,7 @@ mod tests {
 
     #[test]
     fn graph_shapes() {
-        let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: false, layout: "fit".into(), lufs: -12.0 };
+        let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: false, layout: "fit".into(), lufs: -12.0, cam: None };
         let sad = Look { sad: true, punch: false, length: 6.0, tag: "@me".into(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false };
         let cuts = [0.0, 2.0, 4.0];
         let js = joins(&[1.0, 5.0, 1.0], true);
@@ -1672,7 +1672,7 @@ mod tests {
 
     #[test]
     fn caption_styles() {
-        let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: true, layout: "fill".into(), lufs: -12.0 };
+        let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: true, layout: "fill".into(), lufs: -12.0, cam: None };
         let w = |s: f64, t: &str| Word { s, e: s + 0.3, t: t.into() };
         let words = [w(10.0, "bunu"), w(10.4, "bilmiyordum."), w(11.0, "ama"), w(13.0, "sonra")];
         let m = Moment { start: 10.0, end: 12.0, punch: 11.0, score: 0.0, title: String::new(), why: String::new() };

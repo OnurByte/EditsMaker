@@ -35,6 +35,7 @@ mod tools;
 mod transcribe;
 mod update;
 mod util;
+mod vod;
 mod wrap;
 
 use std::path::{Path, PathBuf};
@@ -97,6 +98,7 @@ fn main() -> ExitCode {
         Some("draw") if args.len() > 2 => draw(&args[1], &args[2..]),
         Some("check") if args.len() > 1 => fetch::reference(&args[1]).and_then(|p| check::check(&p)).map(|s| println!("{s}")),
         Some("words") if args.len() > 1 => words(&args[1..]),
+        Some("moments") if args.len() > 1 => moments_cmd(&args[1..]),
         Some("song") if args.len() > 1 => shazam::cmd(&args[1..]),
         Some("cut") if args.len() > 2 => check::cut(&args[1], &args[2..], &auto_out(&args[1])).map(|v| v.iter().for_each(|f| println!("{}", f.display()))),
         Some("frames") if args.len() > 2 => check::frames(&args[1], &args[2..]).map(|s| println!("{s}")),
@@ -300,6 +302,8 @@ struct Cli {
     long: bool,
     /// --corecore: many unrelated videos, faded and grainy, headlines from their own words
     corecore: bool,
+    /// --translate LANG: talking clips' captions in another language
+    translate: Option<String>,
 }
 
 /// --long: TikTok's Creator Rewards pays for videos over a minute; a second of margin over it.
@@ -318,8 +322,8 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
         anim: String::new(),
         transition: None,
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
-        opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, preview: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), looped: false, look_name: String::new(), subject: subject::Subject::default(), lyrics: false, long: false, corecore: false, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false },
+        opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0), cam: None },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, preview: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), looped: false, look_name: String::new(), subject: subject::Subject::default(), lyrics: false, long: false, corecore: false, translate: None, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -357,6 +361,13 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--intensity" => c.intensity = Some(val("--intensity")?.parse().ok().filter(|k| (0.0..=3.0).contains(k)).ok_or("--intensity must be 0-3")?),
             "--use" => c.use_videos = val("--use")?.parse().ok().filter(|n| (1..=20).contains(n)).ok_or("--use must be 1-20")?,
             "--fit" => c.opts.layout = "fit".into(),
+            "--layout" => {
+                let v = val("--layout")?;
+                if !["fill", "fit", "stack", "inset"].contains(&v.as_str()) {
+                    return Err(format!("--layout {v}: fill, fit, stack (facecam over the game) or inset (facecam small on top)"));
+                }
+                c.opts.layout = v;
+            }
             "--music" => c.music = Some(val("--music")?),
             "--like" => c.like = Some(fetch::reference(&val("--like")?)?.to_string_lossy().into_owned()),
             "--preset" => c.preset = Some(val("--preset")?),
@@ -476,6 +487,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
                 c.subject.outline = Some(subject::colour(&v).ok_or(format!("--outline {v}: give a colour, like white or #ff2a6d"))?);
             }
             "--lyrics" => c.lyrics = true,
+            "--translate" => c.translate = Some(val("--translate")?),
             "--long" => c.long = true,
             "--corecore" => {
                 c.corecore = true;
@@ -548,6 +560,9 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     Ok(c)
 }
 
+/// Longer than this (seconds), a video's moments are found from its scored windows first.
+const STREAM: f64 = 2700.0;
+
 struct Analysed {
     src: fetch::Source,
     words: Vec<transcribe::Word>,
@@ -606,7 +621,22 @@ fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
         let (a, b): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
         (id == src.id).then(|| widen(&t.words, a, b)).flatten()
     }).collect();
-    let moments = if !clips { vec![] } else if !by_hand.is_empty() { by_hand } else { pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm) };
+    let moments = if !clips {
+        vec![]
+    } else if !by_hand.is_empty() {
+        by_hand
+    } else if src.duration > STREAM {
+        // a stream or a podcast: hours of transcript do not fit the model, so it reads only the stretches the
+        // loudness, reactions and chat point at
+        let spoken = if src.language.is_empty() { c.lang.clone() } else { src.language.clone() };
+        let (_, _, ws) = scan(&src, transcribe::Transcript { words: t.words.clone(), ..Default::default() }, &spoken);
+        let cands: Vec<pick::Moment> = vod::best(&ws, c.n * 3).iter().map(vod::moment).collect();
+        let near: Vec<transcribe::Line> = lines.iter().filter(|l| cands.iter().any(|m| l.e > m.start && l.s < m.end)).map(|l| transcribe::Line { s: l.s, e: l.e, text: l.text.clone() }).collect();
+        eprintln!("edits: a long video: the model reads the {} best of {} stretches", cands.len(), ws.len());
+        pick::pick(&src.title, &near, &curve, &hits, c.n, src.duration, c.llm)
+    } else {
+        pick::pick(&src.title, &lines, &curve, &hits, c.n, src.duration, c.llm)
+    };
     eprintln!("edits: {} ({}): words from {}, {comments} timestamped comments, {} laughs, replay heat {}, {} moments",
         src.title, util::mmss(src.duration), if t.from.is_empty() { "nothing" } else { t.from }, t.laughs.len(), if src.heat.is_empty() { "no" } else { "yes" }, moments.len());
     Analysed { src, words: t.words, lines, moments, curve }
@@ -616,27 +646,50 @@ fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
 fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, cache: &Path, out: &Path) -> Result<serde_json::Value, String> {
     let (video, seek) = fetch::clip(&a.src, m.start, m.end)?;
     let (w, h) = fetch::dims(&video);
-    let focus = if c.opts.layout == "fill" { face::center_x(&video, seek, m.end - m.start, w, h) } else { None };
+    let mut opts = c.opts.clone();
+    preview_size(c, &mut opts);
+    // a stream with a facecam in a corner: cropping around that small face would show the edge of the game, so the
+    // face goes over the game (stack) unless another layout was asked for
+    let wide = w * opts.h > h * opts.w;
+    if wide && ["fill", "stack", "inset"].contains(&opts.layout.as_str()) {
+        opts.cam = face::cam_box(&video, seek, m.end - m.start, w, h);
+        match (opts.cam.is_some(), opts.layout.as_str()) {
+            (true, "fill") => opts.layout = "stack".into(),
+            (false, "stack" | "inset") => {
+                eprintln!("edits: no facecam found in {}; the frame follows the faces instead", util::mmss(m.start));
+                opts.layout = "fill".into();
+            }
+            _ => {}
+        }
+    }
+    let focus = if opts.layout == "fill" { face::center_x(&video, seek, m.end - m.start, w, h) } else { None };
     // the subtitle file is per clip: clips render at the same time
     let work = a.src.work.join(out.file_stem().unwrap_or_default());
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
     // nobody to frame on (screen recordings, graphics): cropping would cut content at random, so keep the whole frame
-    let mut opts = c.opts.clone();
-    preview_size(c, &mut opts);
-    if focus.is_none() && w * opts.h > h * opts.w {
+    if opts.layout == "fill" && focus.is_none() && wide {
         opts.layout = "fit".into();
     }
     // the hook: the model's title for the moment, else its first words
+    // --translate: the captions, the hook and the .srt in that language, the voice as it was
+    let (shown, title) = match &c.translate {
+        Some(to) => talk::translated(&a.words, m, to).unwrap_or_else(|e| {
+            eprintln!("edits: captions not translated ({e}); they stay as said");
+            (vec![], m.title.clone())
+        }),
+        None => (vec![], m.title.clone()),
+    };
+    let said = if shown.is_empty() { &a.words[..] } else { &shown[..] };
     // its first sentence, if short enough to read in a glance
     let mut first: Vec<&str> = vec![];
-    for w in a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end) {
+    for w in said.iter().filter(|w| w.s >= m.start && w.e <= m.end) {
         first.push(&w.t);
         if w.t.ends_with(['.', '?', '!']) || first.len() == 9 {
             break;
         }
     }
     let first = first.join(" ");
-    let hook = c.hook.then(|| if m.title.trim().is_empty() { first } else { m.title.clone() });
+    let hook = c.hook.then(|| if title.trim().is_empty() { first } else { title.clone() });
     let t = talk::Talk {
         captions: if opts.captions { Some(talk::style(&c.caption_style)?) } else { None },
         jumpcuts: c.jumpcuts,
@@ -657,13 +710,14 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
             pre
         },
         defer_subs: c.subject.any(),
+        shown: shown.clone(),
     };
     let segs = talk::render(&video, seek, m, &a.words, &opts, &t, focus.unwrap_or(0.5), cache, &work, out)?;
     let tl = timeline::Timeline {
         name: a.src.title.clone(), w: opts.w, h: opts.h,
         clips: segs.iter().map(|(x, y)| (video.clone(), x - m.start + seek, y - x)).collect(),
         music: bed.cloned(),
-        captions: transcribe::lines(&a.words.iter().filter(|w| w.s >= m.start && w.e <= m.end).cloned().collect::<Vec<_>>()).iter()
+        captions: transcribe::lines(&said.iter().filter(|w| w.s >= m.start && w.e <= m.end).cloned().collect::<Vec<_>>()).iter()
             .filter_map(|l| Some((talk::remap(l.s, &segs)? / c.speed, talk::remap(l.e, &segs).unwrap_or(talk::remap(l.s, &segs)? + 1.0) / c.speed, l.text.clone()))).collect(),
         said: vec![],
         markers: vec![],
@@ -1759,14 +1813,7 @@ fn words(args: &[String]) -> Result<(), String> {
     let range = args[1..].iter().find(|a| !a.starts_with("--") && Some(*a) != opt("--lang").as_ref() && Some(*a) != opt("--find").as_ref())
         .and_then(|r| r.split_once('-')).and_then(|(a, b)| Some((a.parse::<f64>().ok()?, b.parse::<f64>().ok()?)));
     let cache = util::home().join(".cache/edits");
-    let input = &args[0];
-    let src = if Path::new(input).is_file() {
-        fetch::local(&std::fs::canonicalize(input).map_err(|e| e.to_string())?, &cache)?
-    } else {
-        let is_id = input.len() == 11 && input.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
-        let (id, url) = if is_id { (input.clone(), format!("https://www.youtube.com/watch?v={input}")) } else { fetch::resolve(input, 1)?.remove(0) };
-        fetch::remote(&id, &url, &cache)?
-    };
+    let src = one_source(&args[0], &cache)?;
     let t = transcribe::transcript(&src.work, &src.wav, &lang, &src.language)?;
     eprintln!("edits: {} ({:.0}s), words from {}", src.title, src.duration, t.from);
     for l in transcribe::lines(&t.words) {
@@ -1775,6 +1822,102 @@ fn words(args: &[String]) -> Result<(), String> {
             println!("{}@{:.2}-{:.2}\t{}", src.id, l.s, l.e, l.text);
         }
     }
+    Ok(())
+}
+
+/// One video by file, ID or link, fetched (sound, captions, info) into the cache.
+fn one_source(input: &str, cache: &Path) -> Result<fetch::Source, String> {
+    if Path::new(input).is_file() {
+        return fetch::local(&std::fs::canonicalize(input).map_err(|e| e.to_string())?, cache);
+    }
+    let is_id = input.len() == 11 && input.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    let (id, url) = if is_id { (input.to_string(), format!("https://www.youtube.com/watch?v={input}")) } else { fetch::resolve(input, 1)?.remove(0) };
+    fetch::remote(&id, &url, cache)
+}
+
+/// A long video's signals scored into windows: (lines kept, chat, windows). Whisper's loops are taken out of the
+/// words first; the reactions counted are the spoken language's.
+fn scan(src: &fetch::Source, t: transcribe::Transcript, spoken: &str) -> (Vec<transcribe::Line>, vod::Chat, Vec<vod::Window>) {
+    let (lines, dropped, loops) = vod::unloop(&transcribe::lines(&t.words));
+    if !loops.is_empty() {
+        eprintln!("edits: {} lines whisper made up over and over were taken out", loops.len());
+    }
+    let words = vod::keep_words(t.words, &dropped);
+    let loud = signals::loudness(&src.wav).unwrap_or_default();
+    let chat = fetch::chat(src);
+    let hits = signals::comment_hits(&src.comments, src.duration);
+    let viewers = if src.heat.is_empty() && hits.is_empty() { vec![] } else { signals::curve(src.duration, &src.heat, &hits, &[]) };
+    let ws = vod::windows(src.duration, &loud, &words, &chat, &viewers, &loops, &lang::for_spoken(spoken));
+    (lines, chat, ws)
+}
+
+/// `edits moments <link|ID|file> [-n N] [--find REGEX]... [--lang L] [--no-llm] [--no-sheets]`: the moments of a
+/// long video worth a clip, each with a sheet of 12 frames to check and the command that cuts it.
+fn moments_cmd(args: &[String]) -> Result<(), String> {
+    let opt = |k: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).cloned();
+    let finds: Vec<String> = args.windows(2).filter(|w| w[0] == "--find").map(|w| w[1].clone()).collect();
+    let n: usize = opt("-n").map(|v| v.parse().map_err(|_| format!("-n {v}: give a number"))).transpose()?.unwrap_or(20).clamp(1, 50);
+    let (use_llm, sheets) = (!args.iter().any(|a| a == "--no-llm"), !args.iter().any(|a| a == "--no-sheets"));
+    let cache = util::home().join(".cache/edits");
+    let src = one_source(&args[0], &cache)?;
+    let spoken = opt("--lang").unwrap_or_else(|| if src.language.is_empty() { lang::code().to_string() } else { src.language.clone() });
+    let t = transcribe::transcript(&src.work, &src.wav, &spoken, &opt("--lang").unwrap_or(src.language.clone()))?;
+    let from = t.from;
+    let (lines, chat, ws) = scan(&src, t, &spoken);
+    eprintln!("edits: {} ({}): words from {from}, {} chat messages, {} windows of {:.0} s", src.title, util::mmss(src.duration), chat.len(), ws.len(), vod::WINDOW);
+    let cands: Vec<pick::Moment> = vod::best(&ws, if use_llm { (n * 2).min(40) } else { n }).iter().map(vod::moment).collect();
+    let judged = if use_llm && !cands.is_empty() {
+        match util::run_stdin(&pick::llm_cmd(), &vod::rubric_prompt(&src.title, &cands, &lines, &chat, n)).and_then(|r| vod::judged(&r, &cands)) {
+            Ok(j) if !j.is_empty() => Some(j),
+            Ok(_) => { eprintln!("edits: the model kept none of the candidates; the scores decide"); None }
+            Err(e) => { eprintln!("edits: {e}; the scores decide"); None }
+        }
+    } else { None };
+    let by = if judged.is_some() { "the model, by the rubric" } else { "the scores" };
+    let judged: Vec<(pick::Moment, String)> = judged.unwrap_or_else(|| cands.into_iter().map(|m| (m, String::new())).collect()).into_iter().take(n).collect();
+    // each kept moment's post caption, found again after the cuts are snapped to whole lines
+    let posts: Vec<(f64, f64, String)> = judged.iter().map(|(m, p)| (m.start, m.end, p.clone())).collect();
+    let post = |m: &pick::Moment| posts.iter().find(|p| p.0 < m.end && p.1 > m.start).map(|p| p.2.clone()).unwrap_or_default();
+    let mut picked: Vec<pick::Moment> = judged.into_iter().map(|x| x.0).collect();
+    // asked for by what was said: always in, after the rest
+    picked.extend(vod::find(&lines, &finds)?);
+    let picked = pick::refine(picked, &lines, src.duration);
+    let out = auto_out(&args[0]);
+    std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
+    // 12 frames of each, four at a time: a 360p copy of the stretch online
+    let sheet_of = |k: usize, m: &pick::Moment| -> Option<PathBuf> {
+        let sheet = out.join(format!("moment-{:02}.jpg", k + 1));
+        fetch::peek(&src, m.start, m.end).and_then(|(f, at)| check::contact_sheet_at(&f, at, m.end - m.start, &sheet, 6, 2, 320))
+            .map_err(|e| eprintln!("edits: no frames for moment {}: {e}", k + 1)).ok().map(|_| sheet)
+    };
+    let sheets: Vec<Option<PathBuf>> = if !sheets { vec![None; picked.len()] } else {
+        picked.chunks(4).enumerate().flat_map(|(c, ms)| std::thread::scope(|s| {
+            let jobs: Vec<_> = ms.iter().enumerate().map(|(i, m)| s.spawn(move || sheet_of(c * 4 + i, m))).collect();
+            jobs.into_iter().map(|j| j.join().ok().flatten()).collect::<Vec<_>>()
+        })).collect()
+    };
+    let input = src.local.as_ref().map_or(src.url.clone(), |f| f.display().to_string());
+    let cut = |m: &pick::Moment| format!("edits \"{input}\" --say {}@{:.1}-{:.1}", src.id, m.start, m.end);
+    let mut md = format!("# Moments: {}\n\n{} · {} · words from {from} · {} chat messages · chosen by {by}\n", src.title, if src.url.is_empty() { src.id.clone() } else { src.url.clone() }, util::mmss(src.duration), chat.len());
+    let mut json = vec![];
+    for (k, (m, sheet)) in picked.iter().zip(&sheets).enumerate() {
+        let said: String = lines.iter().filter(|l| l.e > m.start && l.s < m.end).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ").chars().take(240).collect();
+        let name = if m.title.is_empty() { format!("Moment {}", k + 1) } else { m.title.clone() };
+        md.push_str(&format!("\n## {}. {name}\n{}-{} ({:.0} s) · score {:.1}\n{}\n\n> {said}\n\n", k + 1, util::mmss(m.start), util::mmss(m.end), m.end - m.start, m.score, m.why));
+        if let Some(s) = sheet {
+            md.push_str(&format!("![]({})\n\n", s.file_name().unwrap_or_default().to_string_lossy()));
+        }
+        if !post(m).is_empty() {
+            md.push_str(&format!("post: {}\n\n", post(m)));
+        }
+        md.push_str(&format!("cut: `{}`\n", cut(m)));
+        println!("{}. {}-{} ({:.0} s) {:.1} {name}: {}{}", k + 1, util::mmss(m.start), util::mmss(m.end), m.end - m.start, m.score, m.why, sheet.as_ref().map_or(String::new(), |s| format!("\n   frames: {}", s.display())));
+        println!("   cut: {}", cut(m));
+        json.push(serde_json::json!({ "start": m.start, "end": m.end, "score": m.score, "title": m.title, "why": m.why, "said": said, "sheet": sheet, "post": post(m), "cut": cut(m) }));
+    }
+    std::fs::write(out.join("moments.md"), md).map_err(|e| e.to_string())?;
+    std::fs::write(out.join("moments.json"), serde_json::to_string_pretty(&json).unwrap_or_default()).map_err(|e| e.to_string())?;
+    println!("moments: {}", out.join("moments.md").display());
     Ok(())
 }
 

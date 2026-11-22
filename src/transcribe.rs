@@ -57,25 +57,60 @@ pub fn transcript(work: &Path, wav: &Path, lang: &str, spoken: &str) -> Result<T
     if let Some(t) = subs.and_then(|p| std::fs::read_to_string(p).ok()).and_then(|s| parse_json3(&s)) {
         return Ok(t);
     }
+    // the language the site says is spoken, else the one asked for: an English default on a Turkish stream hears
+    // English words that were never said
+    let lang = spoken.get(..2).filter(|s| s.chars().all(|c| c.is_ascii_alphabetic())).unwrap_or(lang);
     let json = wav.with_extension("json");
-    if !json.is_file() {
-        let model = model().ok_or("no whisper model found; run `edits doctor`")?;
-        // measured on 6 cores: one thread per physical core and greedy decoding is ~2x faster than the defaults
-        // with the same text; more threads or two runs at once are slower (memory-bound)
-        let threads = (std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4) / 2).clamp(2, 8).to_string();
-        let model = model.to_string_lossy();
-        let base = wav.with_extension("");
-        let (base, input) = (base.to_string_lossy(), wav.to_string_lossy());
-        let mut args = vec!["-m", &model, "-l", lang, "-ml", "1", "-sow", "-oj", "-np", "-t", &threads, "-bs", "1", "-bo", "1"];
-        // keeps swearing as said (the words for the language are in lang.json)
-        let keep = &crate::lang::get().whisper_prompt;
-        if !keep.is_empty() {
-            args.extend(["--prompt", keep]);
-        }
-        args.extend(["-of", &base, &input]);
-        run(None, "whisper-cli", &args)?;
+    if json.is_file() {
+        return parse_whisper(&std::fs::read_to_string(&json).map_err(|e| format!("{}: {e}", json.display()))?);
     }
-    parse_whisper(&std::fs::read_to_string(&json).map_err(|e| format!("{}: {e}", json.display()))?)
+    let total = crate::fetch::duration(wav).unwrap_or(0.0);
+    if total <= CHUNK * 1.5 {
+        whisper(wav, lang)?;
+        return parse_whisper(&std::fs::read_to_string(&json).map_err(|e| format!("{}: {e}", json.display()))?);
+    }
+    // a long video (a stream's VOD) in 20-minute parts: each is kept as it finishes, so a stopped run goes on
+    // from the part it was in
+    let mut all = Transcript { from: "whisper", ..Default::default() };
+    let parts = (total / CHUNK).ceil() as usize;
+    for k in 0..parts {
+        let part = wav.with_file_name(format!("part{k:03}.wav"));
+        let done = part.with_extension("json");
+        if !done.is_file() {
+            eprintln!("edits: whisper, part {} of {parts}", k + 1);
+            run(None, "ffmpeg", &["-v", "error", "-y", "-ss", &format!("{:.0}", k as f64 * CHUNK), "-t", &format!("{CHUNK:.0}"), "-i", &wav.to_string_lossy(), "-c", "copy", &part.to_string_lossy()])?;
+            let r = whisper(&part, lang);
+            let _ = std::fs::remove_file(&part);
+            r?;
+        }
+        let t = parse_whisper(&std::fs::read_to_string(&done).map_err(|e| format!("{}: {e}", done.display()))?)?;
+        let at = k as f64 * CHUNK;
+        all.words.extend(t.words.into_iter().map(|w| Word { s: w.s + at, e: w.e + at, t: w.t }));
+        all.laughs.extend(t.laughs.into_iter().map(|s| s + at));
+    }
+    Ok(all)
+}
+
+/// How much whisper hears at a time in a long video.
+const CHUNK: f64 = 1200.0;
+
+/// whisper-cli over `wav`, its words in the json beside it.
+fn whisper(wav: &Path, lang: &str) -> Result<(), String> {
+    let model = model().ok_or("no whisper model found; run `edits doctor`")?;
+    // measured on 6 cores: one thread per physical core and greedy decoding is ~2x faster than the defaults
+    // with the same text; more threads or two runs at once are slower (memory-bound)
+    let threads = (std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4) / 2).clamp(2, 8).to_string();
+    let model = model.to_string_lossy();
+    let base = wav.with_extension("");
+    let (base, input) = (base.to_string_lossy(), wav.to_string_lossy());
+    let mut args = vec!["-m", &model, "-l", lang, "-ml", "1", "-sow", "-oj", "-np", "-t", &threads, "-bs", "1", "-bo", "1"];
+    // keeps swearing as said (the words for the language are in lang.json)
+    let keep = &crate::lang::get().whisper_prompt;
+    if !keep.is_empty() {
+        args.extend(["--prompt", keep]);
+    }
+    args.extend(["-of", &base, &input]);
+    run(None, "whisper-cli", &args).map(|_| ())
 }
 
 /// The track in the spoken language, else in the language asked for, else the only one there is.

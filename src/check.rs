@@ -40,11 +40,16 @@ fn shots(cuts: &[f64], total: f64) -> Vec<f64> {
 /// Frames more than 5 s apart come from keyframes alone: a 38-minute video's sheet takes 1 s instead of 54, and the
 /// frames are still all different (keyframes come every few seconds).
 pub fn contact_sheet(video: &Path, total: f64, sheet: &Path, cols: u32, rows: u32, width: u32) -> Result<(), String> {
+    contact_sheet_at(video, 0.0, total, sheet, cols, rows, width)
+}
+
+/// The same over `total` seconds from `from` on.
+pub fn contact_sheet_at(video: &Path, from: f64, total: f64, sheet: &Path, cols: u32, rows: u32, width: u32) -> Result<(), String> {
     let fps = (cols * rows) as f64 / total.max(1.0);
     let skip: &[&str] = if fps < 0.2 { &["-skip_frame", "nokey"] } else { &[] };
-    let (v, s) = (video.to_string_lossy(), sheet.to_string_lossy());
+    let (v, s, ss, t) = (video.to_string_lossy(), sheet.to_string_lossy(), format!("{from:.3}"), format!("{total:.3}"));
     let filter = format!("fps={fps:.4},scale={width}:-2,tile={cols}x{rows}");
-    log(&[skip, &["-i", &v, "-vf", &filter, "-frames:v", "1", &s]].concat())?;
+    log(&[skip, &["-ss", &ss, "-t", &t, "-i", &v, "-vf", &filter, "-frames:v", "1", "-y", &s]].concat())?;
     if sheet.exists() { Ok(()) } else { Err(format!("no contact sheet for {}", video.display())) }
 }
 

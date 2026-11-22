@@ -9,10 +9,13 @@ pub struct Opts {
     pub h: u32,
     pub grade: String,
     pub captions: bool,
-    /// "fill" crops around the faces, "fit" keeps the whole frame over a blurred copy
+    /// "fill" crops around the faces, "fit" keeps the whole frame over a blurred copy, "stack" puts the streamer's
+    /// facecam over the game, "inset" lays it small on top of the game
     pub layout: String,
     /// loudness target in LUFS
     pub lufs: f64,
+    /// the facecam (x, y, w, h, fractions of the frame) for "stack" and "inset"
+    pub cam: Option<(f64, f64, f64, f64)>,
 }
 
 
@@ -55,6 +58,22 @@ pub fn chunks(words: &[Word], m: &Moment) -> Vec<(f64, f64, String, bool)> {
 /// over a blurred copy of itself.
 pub fn shape(o: &Opts, focus: f64) -> String {
     let (w, h) = (o.w, o.h);
+    let cam_crop = |(x, y, cw, ch): (f64, f64, f64, f64)| format!("crop=iw*{cw:.4}:ih*{ch:.4}:iw*{x:.4}:ih*{y:.4}");
+    // the game: the middle of the frame (where the action is), cut to the part of the screen it gets
+    let game = |gh: u32| format!("crop=w='min(iw,ih*{w}/{gh})':h='min(ih,iw*{gh}/{w})',scale={w}:{gh}");
+    match (o.layout.as_str(), o.cam) {
+        ("stack", Some(cam)) => {
+            // a little over a third for the face, the rest for the game
+            let top = (h as f64 * 0.38 / 2.0).round() as u32 * 2;
+            return format!("split[sc][sg];[sc]{},scale={w}:{top}:force_original_aspect_ratio=increase,crop={w}:{top}[ct];[sg]{}[gb];[ct][gb]vstack,setsar=1",
+                cam_crop(cam), game(h - top));
+        }
+        ("inset", Some(cam)) => {
+            let cw = (w as f64 * 0.46 / 2.0).round() as u32 * 2;
+            return format!("split[sg][sc];[sg]{}[gb];[sc]{},scale={cw}:-2[ct];[gb][ct]overlay=(W-w)/2:H*0.07,setsar=1", game(h), cam_crop(cam));
+        }
+        _ => {}
+    }
     if o.layout == "fit" {
         format!("split[a][b];[a]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},boxblur=24:2,eq=brightness=-0.12[bg];\
                  [b]scale={w}:{h}:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1")
@@ -127,5 +146,17 @@ mod tests {
         assert!((c[1].1 - 1.9).abs() < 1e-9); // not held across the 2.7 s silence
     }
 
+    #[test]
+    fn stream_layouts_run_in_ffmpeg() {
+        let Ok(_) = std::process::Command::new("ffmpeg").arg("-version").output() else { return };
+        for layout in ["stack", "inset"] {
+            let o = Opts { w: 360, h: 640, grade: "none".into(), captions: false, layout: layout.into(), lufs: -14.0, cam: Some((0.8, 0.05, 0.18, 0.3)) };
+            let g = format!("[0:v]{}[v]", shape(&o, 0.5));
+            let out = std::process::Command::new("ffmpeg").args(["-v", "error", "-f", "lavfi", "-i", "testsrc=s=640x360:d=1:r=10", "-filter_complex", &g, "-map", "[v]", "-f", "framecrc", "-"]).output().unwrap();
+            assert!(out.status.success(), "{layout}: {}\n{g}", String::from_utf8_lossy(&out.stderr));
+            // framecrc lists the picture size in its header
+            assert!(String::from_utf8_lossy(&out.stdout).contains("360x640"), "{layout}");
+        }
+    }
 
 }

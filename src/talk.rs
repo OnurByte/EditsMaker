@@ -140,6 +140,39 @@ pub struct Talk {
     pub pre: String,
     /// the captions are written to cap.ass but not burned in (they go on after the person is cut out)
     pub defer_subs: bool,
+    /// the words the captions show when they are not the ones said (--translate); empty: the ones said
+    pub shown: Vec<Word>,
+}
+
+/// The words said in `m`, in another language for the captions: each sentence translated whole by the model (with
+/// the moment's title first) and its words spread over the time the sentence took, so the captions keep pace with
+/// the voice. Returns (words, the title translated).
+pub fn translated(words: &[Word], m: &Moment, to: &str) -> Result<(Vec<Word>, String), String> {
+    let inside: Vec<Word> = words.iter().filter(|w| w.s >= m.start - 0.05 && w.e <= m.end + 0.05).cloned().collect();
+    let spans = crate::pick::sentences(&inside);
+    let mut lines = vec![m.title.clone()];
+    lines.extend(spans.iter().map(|(a, b)| inside[*a..=*b].iter().map(|w| w.t.as_str()).collect::<Vec<_>>().join(" ")));
+    let ask = crate::lang::prompt("translate", "ask", &[("to", to.to_string()), ("lines", serde_json::to_string_pretty(&lines).unwrap_or_default())]);
+    let reply = crate::util::run_stdin(&crate::pick::llm_cmd(), &ask)?;
+    let got = spread(&reply, &inside, &spans, lines.len())?;
+    Ok(got)
+}
+
+/// The model's lines (a JSON array, the title first) as words over the sentences' times.
+fn spread(reply: &str, inside: &[Word], spans: &[(usize, usize)], want: usize) -> Result<(Vec<Word>, String), String> {
+    let (a, b) = (reply.find('[').ok_or("no JSON array in the translation")?, reply.rfind(']').ok_or("no JSON array in the translation")?);
+    let said: Vec<String> = serde_json::from_str(reply.get(a..=b).unwrap_or_default()).map_err(|e| format!("the translation is not a list of lines: {e}"))?;
+    if said.len() != want {
+        return Err(format!("the translation has {} lines for {want}", said.len()));
+    }
+    let mut out = vec![];
+    for ((s, e), text) in spans.iter().zip(&said[1..]) {
+        let (from, to) = (inside[*s].s, inside[*e].e);
+        let ws: Vec<&str> = text.split_whitespace().collect();
+        let d = (to - from) / ws.len().max(1) as f64;
+        out.extend(ws.iter().enumerate().map(|(k, w)| Word { s: from + k as f64 * d, e: from + (k + 1) as f64 * d, t: w.to_string() }));
+    }
+    Ok((out, said[0].clone()))
 }
 
 /// atempo takes 0.5..2 per stage: chain stages for anything beyond.
@@ -436,7 +469,7 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
     let pace = if t.pace > 0.0 { t.pace } else { 1.0 };
     let total: f64 = segs.iter().map(|x| x.1 - x.0).sum::<f64>() / pace;
     let punch = remap(m.punch, &segs).map(|p| p / pace).filter(|p| *p > 0.3);
-    let subs = captions(words, m, &segs, pace, t.captions.as_ref(), t.hook.as_deref(), o.w, o.h);
+    let subs = captions(if t.shown.is_empty() { words } else { &t.shown }, m, &segs, pace, t.captions.as_ref(), t.hook.as_deref(), o.w, o.h);
     std::fs::write(work.join("cap.ass"), &subs).map_err(|e| e.to_string())?;
     let mut args: Vec<String> = vec!["-v".into(), "error".into(), "-y".into(), "-i".into(), abs(video)?];
     let mut g = String::new();
@@ -472,7 +505,8 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
         grade(&o.grade), if t.defer_subs { "" } else { ",ass=cap.ass" }, (total - 0.25).max(0.0)));
     // the sound: voice, then the cut whooshes and the punchline boom, then the music bed ducked under the voice
     let mut mix = vec!["[voice]".to_string()];
-    g.push_str("[ac]asplit=2[voice][key];");
+    // a mic's rumble cut and its shouts and mumbles brought closer, so a phone speaker plays both
+    g.push_str("[ac]highpass=f=60,acompressor=threshold=0.1:ratio=2.5:attack=10:release=200:makeup=1.5,asplit=2[voice][key];");
     let mut input = 1;
     if t.sfx {
         let (whoosh, boom) = sfx(cache)?;
@@ -513,6 +547,20 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_translation_keeps_the_voice_s_pace() {
+        let w = |s: f64, e: f64, t: &str| Word { s, e, t: t.into() };
+        let inside = vec![w(10.0, 10.4, "no"), w(10.4, 11.0, "way."), w(13.0, 13.5, "chat"), w(13.5, 14.0, "look")];
+        let spans = crate::pick::sentences(&inside);
+        let (ws, title) = spread("sure: [\"Olamaz anı\", \"yok artık.\", \"chat bakın şuna\"]", &inside, &spans, 3).unwrap();
+        assert_eq!(title, "Olamaz anı");
+        assert_eq!(ws.iter().map(|w| w.t.as_str()).collect::<Vec<_>>(), ["yok", "artık.", "chat", "bakın", "şuna"]);
+        // "yok artık." over 10-11 s, three words over 13-14 s
+        assert_eq!((ws[0].s, ws[1].e), (10.0, 11.0));
+        assert!((ws[2].s - 13.0).abs() < 1e-9 && (ws[4].e - 14.0).abs() < 1e-9);
+        assert!(spread("[\"a\"]", &inside, &spans, 3).is_err());
+    }
 
     #[test]
     fn two_scripts_become_one() {
