@@ -38,7 +38,7 @@ fn tools() -> Value {
             "pitch": {"type": "number", "description": "semitones up or down, -12..12, tempo kept"},
             "reverb": {"type": "boolean", "description": "a room behind the sound (slowed + reverb, sad edits)"},
             "stabilize": {"type": "boolean"}, "denoise": {"type": "boolean"}, "smooth": {"type": "boolean", "description": "motion-interpolated frames"},
-            "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]}, "encoder": {"type": "string", "enum": ["cpu", "nvenc", "auto"], "description": "auto (default) renders on an NVIDIA GPU when it works, else the CPU"},
+            "fps": {"type": "integer"}, "codec": {"type": "string", "enum": ["h264", "h265", "prores", "av1"]}, "quality": {"type": "string", "enum": ["draft", "high", "master"]}, "encoder": {"type": "string", "enum": ["auto", "nvenc", "videotoolbox", "cpu"], "description": "auto (default) renders on Apple VideoToolbox on a Mac or an NVIDIA GPU elsewhere when it works, else the CPU"},
             "svgs": {"type": "array", "items": {"type": "string"}, "description": "drawn graphics over the edit to point things out: NAME[@FROM-TO][:X,Y,SIZE][#COLOUR][~ANIM], e.g. arrow@1.2-2.5:0.6,0.3,0.25 or circle@4:0.5,0.35#ffffff~pop. Names: arrow, circle, underline, cross, check, burst, question, exclaim, heart, sparkle, or an .svg file. X,Y is the centre and SIZE the width, as fractions of the frame; times are seconds of the finished edit"},
             "overlays": {"type": "array", "items": {"type": "string"}, "description": "library clips over the finished edit, NAME[@FROM[-TO]][:OPACITY] (names from edits_library): textures and backgrounds run under the whole edit screened, a transition or meme plays once at FROM, green screens are keyed. E.g. \"vhs texture:0.5\", \"burn 3@4.2\""},
             "whoosh": {"type": "string", "description": "talking clips: a library sound (edits_library sfx) on every cut instead of the made whoosh"},
@@ -92,8 +92,8 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path, link, or a fetched video's ID"}, "spans": {"type": "array", "items": {"type": "string"}}}, "required": ["video", "spans"]}},
         {"name": "edits_trends", "description": "What is trending now in a country (two letters, default tr): TikTok's sounds, or with chart \"spotify\" the day's most streamed songs (country may be \"global\"). Use one with music \"trend:N\" or \"spotify:N\".",
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}, "chart": {"type": "string", "enum": ["tiktok", "spotify"]}}}, "annotations": {"readOnlyHint": true}},
-        {"name": "edits_encoder", "description": "What renders the video, saved for every run: auto (NVIDIA GPU when it works, else CPU; the default), nvenc (GPU) or cpu. Without `use`: what it is now and whether the GPU works.",
-         "inputSchema": {"type": "object", "properties": {"use": {"type": "string", "enum": ["auto", "nvenc", "cpu"]}}}},
+        {"name": "edits_encoder", "description": "What renders the video, saved for every run: auto (the default: Apple VideoToolbox on a Mac, an NVIDIA GPU elsewhere, when its test encode works, else the CPU), nvenc, videotoolbox or cpu. Without `use`: what it is now and which hardware encoder works here.",
+         "inputSchema": {"type": "object", "properties": {"use": {"type": "string", "enum": ["auto", "nvenc", "videotoolbox", "cpu"]}}}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
     ])
 }

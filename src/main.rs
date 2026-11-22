@@ -1718,6 +1718,8 @@ fn doctor() -> Result<(), String> {
     check(util::have("ffmpeg") && util::have("ffprobe"), "ffmpeg + ffprobe", "run `edits setup` (it downloads a static build)", true);
     let libass = util::run(None, "ffmpeg", &["-hide_banner", "-filters"]).is_ok_and(|f| f.contains(" ass "));
     check(libass, "ffmpeg has libass (captions)", "install a full ffmpeg build", true);
+    let hw = util::auto_gpu();
+    check(hw != "cpu", &format!("hardware encoder: {}", util::describe(hw)), "none works here; renders run on the CPU (slower, same picture)", false);
     check(util::have("yt-dlp"), "yt-dlp (links and topics)", "run `edits setup`; local files work without it", false);
     check(util::have("whisper-cli"), "whisper-cli (captions, transcript)", "install whisper.cpp", false);
     let model = transcribe::model();
