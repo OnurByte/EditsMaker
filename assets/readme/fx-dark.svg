@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="330" viewBox="0 0 1040 330" role="img" aria-label="Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, music ducking, stabilize, ProRes">
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="330" viewBox="0 0 1040 330" role="img" aria-label="Everything an edit needs: speed ramps, freeze, face tracking, facecam layouts, hits, captions, song lyrics, captions in any language, looks, LUTs, music ducking, seamless loops, stabilize, ProRes">
 <rect x="0.5" y="0.5" width="1039" height="329" rx="20" fill="#161B22" stroke="#30363D"/>
 <g transform="translate(40,40)">
 <text x="0" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">Everything an edit needs</text>
@@ -10,7 +10,7 @@
 <text x="0" y="174" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">freeze frame</text>
 <text x="0" y="195" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">zoom punch</text>
 <text x="0" y="216" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">face tracking</text>
-<text x="0" y="237" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">reframe 9:16</text>
+<text x="0" y="237" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">facecam layouts</text>
 <line x1="192" y1="80.5" x2="368" y2="80.5" stroke="#30363D" stroke-width="1"/>
 <text x="192" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#F25247" text-anchor="start" letter-spacing="0">Hits</text>
 <text x="192" y="132" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">shake</text>
@@ -24,8 +24,9 @@
 <text x="384" y="132" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">11 text styles</text>
 <text x="384" y="153" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">word highlight</text>
 <text x="384" y="174" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">hook title</text>
-<text x="384" y="195" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">words on screen</text>
-<text x="384" y="216" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">SRT</text>
+<text x="384" y="195" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">real song lyrics</text>
+<text x="384" y="216" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">any language</text>
+<text x="384" y="237" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">SRT</text>
 <line x1="576" y1="80.5" x2="752" y2="80.5" stroke="#30363D" stroke-width="1"/>
 <text x="576" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">Colour and sound</text>
 <text x="576" y="132" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">40 looks</text>
@@ -36,10 +37,10 @@
 <text x="576" y="237" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">loudness</text>
 <line x1="768" y1="80.5" x2="944" y2="80.5" stroke="#30363D" stroke-width="1"/>
 <text x="768" y="104" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="15" fill="#F4F1EA" text-anchor="start" letter-spacing="0">Finish</text>
-<text x="768" y="132" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">stabilize</text>
-<text x="768" y="153" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">smooth slow-mo</text>
-<text x="768" y="174" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">H.265 / ProRes / AV1</text>
-<text x="768" y="195" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">any frame size</text>
+<text x="768" y="132" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">seamless loops</text>
+<text x="768" y="153" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">stabilize</text>
+<text x="768" y="174" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">smooth slow-mo</text>
+<text x="768" y="195" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">H.265 / ProRes / AV1</text>
 <text x="768" y="216" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">FCPXML / EDL</text>
 </g>
 </svg>

@@ -133,9 +133,9 @@ def sites():
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 44, "MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, 1,700+ sites")
+@page("badges", 44, "MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, stream VODs into clips")
 def badges():
-    cells = ["MCP server", "8 agent skills", "62 presets", "40 looks", "TikTok + Spotify charts", "1,700+ sites"]
+    cells = ["MCP server", "8 agent skills", "62 presets", "40 looks", "TikTok + Spotify charts", "VOD → clips"]
     widths = [len(c) * 8 + 36 for c in cells]
     x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
@@ -155,7 +155,7 @@ def agents():
         out += [rule(x, x + 296, 100.5), t(x, 122, label, 12, 400, "GRAY")]
     for i, s in enumerate(["“Make 3 sad edits from", "@channel with a trending", "song and words from", "his own videos.”"]):
         out.append(t(0, 152 + i * 24, s, 18, 700, ls=-0.3))
-    tools = ["edits_make", "edits_check", "edits_preset_get", "edits_preset_save", "edits_trends", "edits_looks", "edits_doctor"]
+    tools = ["edits_make", "edits_moments", "edits_check", "edits_preset_get", "edits_preset_save", "edits_trends", "edits_looks"]
     for i, s in enumerate(tools):
         out.append(t(C2, 150 + i * 22, s, 14, 400, "RED" if i == 0 else "INK", font=MONO))
     for i, s in enumerate(["Claude Code", "Codex", "Cursor", "Gemini CLI", "any MCP client"]):
@@ -225,12 +225,12 @@ def size():
     return out
 
 
-@page("sounds", 380, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
+@page("sounds", 408, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
       "takes its sound, ask for TikTok's or Spotify's chart in any country with --music trend:3, or let it name the "
       "song in any clip with edits song", "1.4")
 def sounds():
     out = head("Any sound,\nany trend", "Paste a TikTok, Reel, Short or SoundCloud link and edits takes its sound. "
-               "Or ask for trend:3: TikTok's 3rd song this week, cut on the part people replay most.", 2)
+               "Or ask for trend:3: TikTok's 3rd song this week, cut from the hook everyone's Shorts use.", 2)
     plats = ["TikTok", "Instagram", "YouTube Shorts", "YouTube", "YouTube Music", "SoundCloud", "X", "Twitch"]
     out.append(rule(0, W, 100.5))
     for i, n in enumerate(plats):
@@ -239,7 +239,8 @@ def sounds():
                 t(x, 172, "Reels" if n == "Instagram" else n, 13, 700 if i == 0 else 400, "RED" if i == 0 else "INK")]
     cmds = [("--music trend:3", "TikTok's 3rd trending song, here"), ("--music trend:us:1", "number one in the US"),
             ("--music spotify:1", "Spotify's number one today"), ("--music https://www.tiktok.com/…", "the sound of that TikTok"),
-            ("edits song clip.mp4", "names the song in any clip, Shazam built in"), ("edits trends us", "the chart itself")]
+            ("edits song clip.mp4", "names the song in any clip, Shazam built in"), ("--lyrics", "the song's real words, as they are sung"),
+            ("edits trends us", "the chart itself")]
     out.append(rule(0, W, 196.5, "HAIR"))
     for i, (cmd, what) in enumerate(cmds):
         y = 222 + i * 28
@@ -272,11 +273,14 @@ def steps():
     return out
 
 
-@page("features", 190, "Presets, trends, looks, agents, reads captions first, every frame size", "3.1")
+@page("features", 300, "Presets, trends, looks, agents, reads captions first, every frame size, stream VODs into clips, "
+      "captions in any language, the person cut out", "3.1")
 def features():
     cells = [("Presets", "62 real edits, as JSON", "an agent can change"), ("Trends", "TikTok's and Spotify's", "charts, one flag: trend:3"),
              ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server, 8 skills", "and skill packs to add"),
-             ("Reads first", "captions before video:", "downloads only the best"), ("Every frame", "9:16 to 21:9", "or any WxH")]
+             ("Reads first", "captions before video:", "downloads only the best"), ("Every frame", "9:16 to 21:9", "or any WxH"),
+             ("Streams", "a six-hour VOD in,", "the best moments out"), ("Any language", "captions translated,", "timed to the voice"),
+             ("Cut-outs", "a new background or", "huge words behind them")]
     out = []
     for i, (h, a, b) in enumerate(cells):
         r, c = divmod(i, 3)
@@ -286,15 +290,15 @@ def features():
     return out
 
 
-@page("fx", 250, "Everything an edit needs: speed ramps, freeze, face tracking, hits, captions, looks, LUTs, "
-      "music ducking, stabilize, ProRes", "3.2")
+@page("fx", 250, "Everything an edit needs: speed ramps, freeze, face tracking, facecam layouts, hits, captions, "
+      "song lyrics, captions in any language, looks, LUTs, music ducking, seamless loops, stabilize, ProRes", "3.2")
 def fx():
     out = head("Everything an edit needs", "From the editors you know, in one command.")
-    cols = [("Motion", ["velocity ramps", "speed 0.1x-8x", "freeze frame", "zoom punch", "face tracking", "reframe 9:16"]),
+    cols = [("Motion", ["velocity ramps", "speed 0.1x-8x", "freeze frame", "zoom punch", "face tracking", "facecam layouts"]),
             ("Hits", ["shake", "flash", "RGB split", "glitch", "negative", "blur hit"]),
-            ("Text", ["11 text styles", "word highlight", "hook title", "words on screen", "SRT"]),
+            ("Text", ["11 text styles", "word highlight", "hook title", "real song lyrics", "any language", "SRT"]),
             ("Colour and sound", ["40 looks", "your LUTs", "music ducking", "whoosh / boom", "denoise", "loudness"]),
-            ("Finish", ["stabilize", "smooth slow-mo", "H.265 / ProRes / AV1", "any frame size", "FCPXML / EDL"])]
+            ("Finish", ["seamless loops", "stabilize", "smooth slow-mo", "H.265 / ProRes / AV1", "FCPXML / EDL"])]
     for i, (h, items) in enumerate(cols):
         x = i * 192
         out += [rule(x, x + 176, 80.5), t(x, 104, h, 15, 700, "RED" if i == 1 else "INK")]
@@ -303,7 +307,7 @@ def fx():
 
 
 @page("basics", 562, "The basics, done for you: jump cuts, word-by-word captions, a hook on top, music ducked "
-      "under the voice, cuts on the beat, faces followed into 9:16", "3.3")
+      "under the voice, cuts on the beat, faces followed into 9:16, a stream's facecam over the game", "3.3")
 def basics():
     out = head("The basics, done for you", "Every talking clip gets these before you ask for anything.")
     rows = [("Jump cuts", "Pauses cut out, every other cut punches in."),
@@ -311,7 +315,7 @@ def basics():
             ("Hook", "A title on top for the first seconds."),
             ("Music bed", "The song under the voice, ducked while they talk."),
             ("Beat cuts", "Shots land on the song's beats."),
-            ("Face reframe", "Faces followed into 9:16, from any frame size.")]
+            ("Face reframe", "Faces followed into 9:16. A stream's facecam goes over the game.")]
     for i, (h, d) in enumerate(rows):
         y = 84 + i * 80
         x, y0 = C3, y + 16
