@@ -14,7 +14,8 @@ they ask. Every step is an `edits` command (see the edits skill); nothing is scr
 1. `edits check original.mp4`: length, frame size, loudness, cut count, average and longest shot, a contact sheet.
    These are the numbers the render must hit. Render at its size (`--size WxH` or `--aspect`).
 2. `edits learn original.mp4`: every cut (flashes kept apart), each flash, each shot's zoom, slide, turn and shake,
-   as a preset named after the file. `edits preset show NAME` and read it whole.
+   as a preset named after the file, and the song it uses (Shazam). `edits preset show NAME` and read it whole.
+   Render with `--music "Artist - Title"` from that line: the clean original, not the edit's own mix.
 3. `edits frames original.mp4 T+1 ...` at each cut, flash and big move, a second either side: what `learn` does
    not read is seen here. Speed ramps (a shot that rushes then slows), blur dips, colour splits, inversions,
    captions and their style, stickers, the grade.

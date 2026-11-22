@@ -204,10 +204,12 @@ Draw on it to point things out: an arrow, a ring, a cross, a burst, or your own 
 edits draw clip.mp4 "arrow@0.5-2.5:0.62,0.3,0.3~pop" "circle@3-5:0.5,0.4,0.6#ffffff" "question@8-10:0.75,0.2,0.2~slam"
 ```
 
-What is trending on TikTok:
+What is trending on TikTok (or Spotify), and which song plays in an edit you like:
 
 ```sh
 edits trends
+edits trends spotify
+edits song https://www.tiktok.com/@someone/video/123
 ```
 
 Colour looks, caption styles, hits and stickers, including 24 looks from Alight Motion colour packs:
@@ -354,13 +356,16 @@ server and preset JSON; no timeline to drag.
 | Animated titles (text presets) | `--anim pop`, `slam`, `slide`, `drop`, `blur`, `type`; one drawing its own with `~pop` |
 | Title safe margins | words stay above TikTok's and Reels' caption and buttons |
 | Lumetri: Auto | `--fix` brings dark, flat or dull footage up before the look |
-| Essential Sound: dialogue | `--denoise` (noise reduction, dialogue lift, loudness) |
+| Essential Sound: dialogue | `--denoise` (a voice line through DeepFilterNet: noise and score gone, song untouched) |
 | Auto-ducking | music ducks under the voice in every voice edit |
 | Parametric EQ, bass boost | `--bass DB` |
 | Pitch shifter | `--pitch N` semitones, tempo kept so cuts stay on the beat |
 | Reverb | `--reverb` |
 | Loudness normalisation | every edit lands at -14 LUFS; `edits study` learns yours |
 | Scene edit detection | `edits learn edit.mp4` finds every cut and flash and makes a preset of them |
+| Beat detection | cuts snap onto the kick itself, and come faster where the song gets loud |
+| Identify music (Shazam) | `edits song clip.mp4` names the song in any clip or link |
+| Trim without re-encoding | `edits cut video.mp4 1:05-1:12` (lossless, like LosslessCut) |
 | Export: H.264, HEVC, ProRes, AV1 | `--codec`, `--quality`, `--encoder nvenc` |
 | Export to other editors | `--export fcpxml,edl,srt,vtt` |
 
@@ -403,10 +408,18 @@ edits mcp install
 edits skills install
 ```
 
+More skills from other projects, fetched when you want them: Remotion (videos in React) and YouTube research
+(niches, titles, thumbnails, comments):
+
+```sh
+edits skills catalog
+edits skills add youtube-research
+```
+
 Any other client: command `edits`, args `["mcp"]`.
 
 Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_set`, `edits_preset_create`, `edits_learn`,
-`edits_check`, `edits_frames`, `edits_words`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
+`edits_check`, `edits_frames`, `edits_words`, `edits_song`, `edits_cut`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
 the footage, renders with it and measures the result; the output folder is always edits' own choice.
 
 </details>

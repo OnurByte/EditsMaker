@@ -40,12 +40,12 @@ pub fn contact_sheet(video: &Path, total: f64, sheet: &Path, cols: u32, rows: u3
 }
 
 /// "336", "336.5" or "5:36" as seconds.
-fn secs(s: &str) -> Option<f64> {
+pub fn secs(s: &str) -> Option<f64> {
     s.split(':').try_fold(0.0, |acc, p| p.trim().parse::<f64>().ok().map(|v| acc * 60.0 + v))
 }
 
 /// The footage behind a path or a video ID edits already fetched (~/.cache/edits/ID: hd.mp4, src.mp4 or v.mp4).
-fn footage(v: &str) -> Result<PathBuf, String> {
+pub fn footage(v: &str) -> Result<PathBuf, String> {
     let p = crate::fetch::reference(v)?;
     if p.is_file() {
         return Ok(p);
@@ -103,6 +103,43 @@ pub fn check(clip: &Path) -> Result<String, String> {
     ))
 }
 
+/// "12-20" or "1:05-1:12.5" as (from, to) seconds.
+fn span(s: &str) -> Option<(f64, f64)> {
+    let (a, b) = s.split_once('-')?;
+    let (a, b) = (secs(a)?, secs(b)?);
+    (b > a).then_some((a, b))
+}
+
+/// The last keyframe at or before `t` (a stream copy can only start on one); `t` itself when none is listed.
+fn keyframe_before(keys: &[f64], t: f64) -> f64 {
+    keys.iter().copied().filter(|k| *k <= t + 1e-3).reduce(f64::max).map_or(t, |k| k.min(t))
+}
+
+/// `edits cut VIDEO A-B...`: each stretch copied out without re-encoding, LosslessCut's way: no quality lost and done in
+/// a moment, the start moved back to the keyframe at or before A (where a copy can start), the end kept at B.
+pub fn cut(video: &str, spans: &[String], out: &Path) -> Result<Vec<PathBuf>, String> {
+    let src = footage(video)?;
+    let ext = src.extension().map(|e| e.to_string_lossy().into_owned()).unwrap_or_else(|| "mp4".into());
+    let stem = src.file_stem().unwrap_or_default().to_string_lossy().into_owned();
+    std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
+    let mut made = vec![];
+    for sp in spans {
+        let (a, b) = span(sp).ok_or(format!("not a stretch: {sp} (like 12-20 or 1:05-1:12)"))?;
+        let probe = crate::util::run(None, "ffprobe", &["-v", "error", "-select_streams", "v:0", "-skip_frame", "nokey", "-show_entries", "frame=pts_time", "-of", "csv=p=0",
+            "-read_intervals", &format!("{:.3}%{:.3}", (a - 12.0).max(0.0), a + 0.05), &src.to_string_lossy()]).unwrap_or_default();
+        let keys: Vec<f64> = probe.lines().filter_map(|l| l.trim().trim_end_matches(',').parse().ok()).collect();
+        let k = keyframe_before(&keys, a);
+        let to = out.join(format!("{stem} {}-{}.{ext}", crate::util::mmss(a).replace(':', "."), crate::util::mmss(b).replace(':', ".")));
+        crate::util::run(None, "ffmpeg", &["-v", "error", "-y", "-ss", &format!("{k:.3}"), "-i", &src.to_string_lossy(), "-t", &format!("{:.3}", b - k),
+            "-map", "0:v?", "-map", "0:a?", "-c", "copy", "-avoid_negative_ts", "make_zero", "-map_metadata", "0", &to.to_string_lossy()])?;
+        if k < a - 0.05 {
+            eprintln!("edits: {sp} starts at {k:.2}s, the keyframe before {a:.2}s (a lossless cut starts on one)");
+        }
+        made.push(to);
+    }
+    Ok(made)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -117,5 +154,16 @@ mod tests {
         assert_eq!(shots(&[1.5, 4.0], 10.0), [1.5, 2.5, 6.0]);
         assert_eq!(shots(&[], 10.0), [10.0]);
         assert_eq!((secs("336.5"), secs("5:36"), secs("1:00:00"), secs("x")), (Some(336.5), Some(336.0), Some(3600.0), None));
+    }
+
+    #[test]
+    fn lossless_spans_start_on_a_keyframe() {
+        assert_eq!(super::span("12-20"), Some((12.0, 20.0)));
+        assert_eq!(super::span("1:05-1:12.5"), Some((65.0, 72.5)));
+        assert_eq!(super::span("20-12"), None);
+        let keys = [0.0, 2.0, 4.0, 6.0];
+        assert_eq!(super::keyframe_before(&keys, 5.3), 4.0);
+        assert_eq!(super::keyframe_before(&keys, 4.0), 4.0);
+        assert_eq!(super::keyframe_before(&[], 5.3), 5.3);
     }
 }

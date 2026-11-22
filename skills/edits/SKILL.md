@@ -7,7 +7,8 @@ description: Make short viral edits (TikTok, Reels, Shorts) from a YouTube link,
 
 **Use the commands, never your own scripts.** Every step has one: `edits words` finds where a line is said (ready
 `--say ID@A-B`), `edits frames` shows footage, `edits check` measures a render, `edits preset set` changes a preset,
-`edits looks` / `edits library` list what there is. Do not write Python, shell loops, ffmpeg, whisper or yt-dlp
+`edits song` names the song in a clip, `edits cut` copies a stretch out losslessly, `edits looks` / `edits library` list
+what there is. Do not write Python, shell loops, ffmpeg, whisper or yt-dlp
 commands, not even to test a change: they are slower and break where these work, and in Claude Code `edits guard`
 refuses them. If no command does it, tell the user what is missing.
 
@@ -131,8 +132,9 @@ edits preset list                                   # what exists
 edits <link|channel|topic|file> --preset spin-slide-shake --music trend:3 --look tealorange -n 3
 ```
 
-- `--music`: a song link or file, `trend:N` (TikTok's Nth trending song, see the edits-trends skill), or leave it
-  out when the preset names its own song.
+- `--music`: a song link, file or title, `trend:N` (TikTok's Nth trending song) or `spotify:N` (Spotify's daily chart,
+  see the edits-trends skill), or leave it out when the preset names its own song. A reference edit's song:
+  `edits song ref.mp4` (Shazam), then `--music "Artist - Title"` for the clean original.
 - `--look`: colour (`edits looks`; furkancc-N and rajjcc-N are Alight colour packs). `--aspect 9:16|4:5|1:1|...` or `--size 1080x1350` for the frame.
 - `--intensity 0.5` calmer, `2` wilder. `--tag @name` signs it.
 - For a channel: `--videos 12 --use 4` reads every video's captions first and downloads only the best four.
@@ -183,6 +185,8 @@ Other kinds, when asked for:
   record scratch), `--intro-caption "avenox 🤡"`, `--outro edits` (the EditsMaker card with a bass hit). The .srt
   moves with the intro. MCP: `intro`, `intro_bed`, `intro_caption`, `outro`.
 - Finishing: `--stabilize`, `--denoise`, `--smooth`, `--fps 60`, `--codec h265|prores|av1`, `--quality master`.
+  `--denoise` on a `--say` edit runs the line through DeepFilterNet before the mix: a dizi line loses its score and
+  room noise, the song stays untouched.
 - Colour and sound over the whole edit: `--curves vintage` (or points `"0/0 0.4/0.3 1/1"`), `--pop red` (only red stays),
   `--bass 6` (phonk low end), `--pitch -2` (semitones, tempo kept), `--reverb` (slowed + reverb, sad edits).
 - `--anim pop|slam|slide|drop|blur|type`: how words and drawings come in (`slam` on a punchline, `type` for a quote);

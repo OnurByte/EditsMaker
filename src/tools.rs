@@ -116,6 +116,35 @@ fn ffmpeg_macos(tmp: &Path) -> Result<(), String> {
     Ok(())
 }
 
+/// DeepFilterNet's `deep-filter` (speech kept, noise and music under it removed), fetched on first use. Its releases
+/// publish no checksum list, so the hashes of the v0.5.6 builds are pinned here.
+pub fn deep_filter() -> Result<String, String> {
+    if have("deep-filter") {
+        return Ok("deep-filter".into());
+    }
+    let own = dir().join(exe("deep-filter"));
+    if own.is_file() {
+        return Ok(own.to_string_lossy().into_owned());
+    }
+    let (target, sha) = match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("linux", "x86_64") => ("x86_64-unknown-linux-musl", "70775e251eee44c0f2451a1e833326cf8bcbbe304d3e7cd12851e6fce72ef7da"),
+        ("linux", "aarch64") => ("aarch64-unknown-linux-gnu", "14e02a1c0028f3ca0bdf83b62b3336e56ba0556894ef295a95e8573f06557166"),
+        ("macos", "aarch64") => ("aarch64-apple-darwin", "4601e7f4e4c03e59a4c5b5000216ef3add3e808799cfccd95e14e83ea4611081"),
+        ("macos", "x86_64") => ("x86_64-apple-darwin", "d3be84003acb7c23e738ad7f70a158ec779a8d233a82e7fa3e717d112eb5b50f"),
+        ("windows", "x86_64") => ("x86_64-pc-windows-msvc.exe", "75e11fa16445f560cb6b021521ddb89e89270d13b83089705d98776f58fd7915"),
+        _ => return Err("no DeepFilterNet build for this machine".into()),
+    };
+    eprintln!("edits: downloading DeepFilterNet (once, ~35 MB)...");
+    let tmp = std::env::temp_dir().join(format!("edits-df-{}", std::process::id()));
+    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+    let file = tmp.join(exe("deep-filter"));
+    let res = get(&format!("https://github.com/Rikorose/DeepFilterNet/releases/download/v0.5.6/deep-filter-0.5.6-{target}"), &file)
+        .and_then(|_| check(&file, Some(sha.into())))
+        .and_then(|_| install(&file, "deep-filter"));
+    let _ = std::fs::remove_dir_all(&tmp);
+    res.map(|_| own.to_string_lossy().into_owned())
+}
+
 /// Downloads whichever of ffmpeg/ffprobe and yt-dlp this machine does not have; one it has is left alone.
 pub fn ensure() -> Result<(), String> {
     let need_ff = !have("ffmpeg") || !have("ffprobe");

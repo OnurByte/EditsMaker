@@ -86,8 +86,12 @@ fn tools() -> Value {
         {"name": "edits_looks", "description": "Everything to style an edit with: colour looks, caption styles, the beat hits for fx and the drawn graphics for svgs.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_library", "description": "The user's asset library from imported editing packs: sound effects, music, overlays, transitions, green screens, backgrounds, memes, images. Without arguments: how many of each kind. With `kind` and/or `words`: the matching files. Use a name with edits_make music, overlays, whoosh or boom; a meme or background path works as `input`.",
          "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["sfx", "music", "overlay", "transition", "greenscreen", "background", "meme", "video", "image"]}, "words": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
-        {"name": "edits_trends", "description": "What is trending on TikTok now in a country (two letters, default tr). Use one with music \"trend:N\".",
-         "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_song", "description": "Which song plays in a clip, file or link (Shazam): artist - title and where in the song the clip starts. Use the name as edits_make music. `at` listens from that time (seconds or m:ss).",
+         "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path, link, or a fetched video's ID"}, "at": {"type": "string"}}, "required": ["video"]}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_cut", "description": "Cut stretches out of a video without re-encoding (lossless, instant): each span like \"12-20\" or \"1:05-1:12\" becomes a file in a new output folder. A span starts on the keyframe at or before its start.",
+         "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path, link, or a fetched video's ID"}, "spans": {"type": "array", "items": {"type": "string"}}}, "required": ["video", "spans"]}},
+        {"name": "edits_trends", "description": "What is trending now in a country (two letters, default tr): TikTok's sounds, or with chart \"spotify\" the day's most streamed songs (country may be \"global\"). Use one with music \"trend:N\" or \"spotify:N\".",
+         "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}, "chart": {"type": "string", "enum": ["tiktok", "spotify"]}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_encoder", "description": "What renders the video, saved for every run: auto (NVIDIA GPU when it works, else CPU; the default), nvenc (GPU) or cpu. Without `use`: what it is now and whether the GPU works.",
          "inputSchema": {"type": "object", "properties": {"use": {"type": "string", "enum": ["auto", "nvenc", "cpu"]}}}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
@@ -137,6 +141,14 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             }
         }
         "edits_learn" => v.extend(["learn".into(), s("video").ok_or("video is needed")?]),
+        "edits_cut" => {
+            v.extend(["cut".into(), s("video").ok_or("video is needed")?]);
+            v.extend(a["spans"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from)));
+        }
+        "edits_song" => {
+            v.extend(["song".into(), s("video").ok_or("video is needed")?]);
+            v.extend(s("at"));
+        }
         "edits_doctor" => v.push("doctor".into()),
         "edits_encoder" => {
             v.push("encoder".into());
@@ -147,7 +159,13 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.extend(s("kind"));
             v.extend(s("words").iter().flat_map(|w| w.split_whitespace().map(String::from)));
         }
-        "edits_trends" => v.extend(["trends".into(), s("country").unwrap_or_else(|| crate::lang::system().1)]),
+        "edits_trends" => {
+            v.push("trends".into());
+            if s("chart").as_deref() == Some("spotify") {
+                v.push("spotify".into());
+            }
+            v.push(s("country").unwrap_or_else(|| crate::lang::system().1));
+        }
         "edits_make" => {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
@@ -235,7 +253,7 @@ fn reply(id: &Value, result: Value) -> Value {
 }
 
 /// Sent to the agent on connect: agents that script around the tools break things the tools already do.
-const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, ffprobe, whisper or yt-dlp yourself, not even to test: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
+const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, ffprobe, whisper or yt-dlp yourself, not even to test: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Name the song in a clip: edits_song. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
 
 pub fn handle(msg: &Value) -> Option<Value> {
     let id = msg.get("id")?.clone(); // notifications get no answer
@@ -430,7 +448,8 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 15);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 17);
+        assert_eq!(args_for("edits_song", &json!({"video": "a.mp4", "at": "0:30"})).unwrap(), ["song", "a.mp4", "0:30"]);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }
 

@@ -78,7 +78,7 @@ fn heat_frames(heat: &[(f64, f64, f64)], n: usize) -> Vec<f64> {
     }).collect()
 }
 
-fn fft(re: &mut [f64], im: &mut [f64]) {
+pub(crate) fn fft(re: &mut [f64], im: &mut [f64]) {
     let n = re.len();
     let mut j = 0;
     for i in 1..n {
@@ -202,6 +202,57 @@ pub fn track(env: &[f64], lag: usize) -> Vec<usize> {
     beats
 }
 
+/// The strongest attack within `r` frames of `f` (ties: the nearest, then the earlier).
+fn peak_near(env: &[f64], f: usize, r: usize) -> usize {
+    let (lo, hi) = (f.saturating_sub(r), (f + r).min(env.len().saturating_sub(1)));
+    (lo..=hi).min_by(|a, b| env[*b].total_cmp(&env[*a]).then(a.abs_diff(f).cmp(&b.abs_diff(f))).then(a.cmp(b))).unwrap_or(f)
+}
+
+/// Tracked beats tidied the way beatscope does it: a doubled beat dropped (the weaker of two closer than 55% of a beat),
+/// a single missed beat put back (a gap of 1.65-2.35 beats), then each nudged onto its attack (within 70 ms or 15% of
+/// a beat, never breaking order or tempo; after the repair, so a gap no longer blocks its neighbours). Cuts then land on the hit itself, not a few frames off it.
+pub fn refine(beats: &[usize], env: &[f64], lag: usize) -> Vec<usize> {
+    if beats.is_empty() || lag == 0 || env.is_empty() {
+        return beats.to_vec();
+    }
+    let p = lag as f64;
+    let sane = |gap: usize| (0.67..=1.5).contains(&(gap as f64 / p));
+    let radius = |k: f64| ((0.07 / hop_s()).min(k * p).round() as usize).max(1);
+    let support = |f: usize| env[f.saturating_sub(2)..(f + 3).min(env.len())].iter().sum::<f64>();
+    let mut kept: Vec<usize> = vec![];
+    for &f in beats {
+        match kept.last_mut() {
+            Some(l) if ((f - *l) as f64) < 0.55 * p => {
+                if support(f) > support(*l) {
+                    *l = f;
+                }
+            }
+            _ => kept.push(f),
+        }
+    }
+    let mut out: Vec<usize> = vec![];
+    for f in kept {
+        if let Some(&l) = out.last() {
+            let gap = (f - l) as f64 / p;
+            if gap > 1.65 && gap < 2.35 {
+                let t = peak_near(env, l + lag, radius(0.10));
+                if l < t && t < f && sane(t - l) && sane(f - t) {
+                    out.push(t);
+                }
+            }
+        }
+        out.push(f);
+    }
+    let mut snapped: Vec<usize> = vec![];
+    for (i, &f) in out.iter().enumerate() {
+        let c = peak_near(env, f, radius(0.15));
+        let next = out.get(i + 1).copied().unwrap_or(env.len());
+        let ok = c == f || (snapped.last().is_none_or(|&l| l < c && sane(c - l)) && c < next && (i + 1 == out.len() || sane(next - c)));
+        snapped.push(if ok { c } else { f });
+    }
+    snapped
+}
+
 /// Downloads (or takes) the song and finds its beats.
 pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
     let (file, title, heat) = if Path::new(src).is_file() {
@@ -227,7 +278,8 @@ pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
     let raw = run_bytes("ffmpeg", &["-v", "error", "-i", &file.to_string_lossy(), "-ac", "1", "-ar", &SR.to_string(), "-f", "f32le", "-"])?;
     let x: Vec<f32> = raw.as_chunks::<4>().0.iter().map(|b| f32::from_le_bytes(*b)).collect();
     let (env, loud, bass) = onsets(&x);
-    let frames = track(&env, tempo(&env));
+    let lag = tempo(&env);
+    let frames = refine(&track(&env, lag), &env, lag);
     if frames.len() < 4 {
         return Err(format!("could not find a beat in {title}"));
     }
@@ -297,7 +349,9 @@ pub fn windows(beats: &[f64], loud: &[f64], length: f64, n: usize) -> Vec<f64> {
 }
 
 /// Cut points from 0 to the end of the edit, relative to `start`: every k-th beat, k chosen so shots last ~`shot` s.
-pub fn cuts(beats: &[f64], start: f64, length: f64, shot: f64) -> Vec<f64> {
+/// With the song's loudness (`loud`, per analysis frame; empty for none) the pace follows the music as
+/// BeatSync-Engine does: twice as fast where it is much louder than the edit's average, half as fast where it breathes.
+pub fn cuts(beats: &[f64], loud: &[f64], start: f64, length: f64, shot: f64) -> Vec<f64> {
     let inside: Vec<f64> = beats.iter().filter(|b| **b >= start - 1e-6 && **b <= start + length + 1e-6).map(|b| b - start).collect();
     if inside.len() < 2 {
         return vec![0.0, length];
@@ -305,7 +359,19 @@ pub fn cuts(beats: &[f64], start: f64, length: f64, shot: f64) -> Vec<f64> {
     let mut gaps: Vec<f64> = inside.windows(2).map(|w| w[1] - w[0]).collect();
     let period = median(&mut gaps).unwrap_or(0.5);
     let k = ((shot / period).round() as usize).max(1);
-    let mut out: Vec<f64> = inside.iter().step_by(k).copied().collect();
+    let level = |a: f64, b: f64| {
+        let (i, j) = (((start + a) / hop_s()) as usize, (((start + b) / hop_s()) as usize).min(loud.len()));
+        if j > i { loud[i..j].iter().sum::<f64>() / (j - i) as f64 } else { 0.0 }
+    };
+    let whole = level(0.0, length);
+    let mut out: Vec<f64> = vec![];
+    let mut i = 0;
+    while i < inside.len() {
+        out.push(inside[i]);
+        let ahead = inside[(i + k).min(inside.len() - 1)];
+        let e = if whole > 0.0 { level(inside[i], ahead.max(inside[i] + period)) / whole } else { 1.0 };
+        i += if e > 1.3 { (k / 2).max(1) } else if e < 0.7 { k * 2 } else { k };
+    }
     if out[0] > 1e-6 {
         out.insert(0, 0.0);
     }
@@ -1025,6 +1091,16 @@ mod tests {
     }
 
     #[test]
+    fn beats_snap_onto_their_attacks() {
+        // attacks every 20 frames; the tracker is 2 frames late, doubled one beat and missed another
+        let mut env = vec![0.0; 200];
+        (0..10).for_each(|i| env[i * 20 + 5] = 1.0);
+        let got = refine(&[7, 27, 30, 47, 87, 107], &env, 20);
+        assert_eq!(got, vec![5, 25, 45, 65, 85, 105]);
+        assert_eq!(refine(&[], &env, 20), Vec::<usize>::new());
+    }
+
+    #[test]
     fn loudest_windows_and_cuts() {
         let beats: Vec<f64> = (0..60).map(|i| i as f64 * 0.5).collect();
         let mut loud = vec![0.1; (30.0 / hop_s()) as usize];
@@ -1034,9 +1110,15 @@ mod tests {
         assert_eq!(w.len(), 2);
         assert!(w[0] >= 20.0 && (w[0] - w[1]).abs() >= 6.0, "{w:?}");
         // shots of ~1.1 s on a 0.5 s beat -> every 2nd beat
-        let c = cuts(&beats, 10.0, 6.0, 1.1);
+        let c = cuts(&beats, &[], 10.0, 6.0, 1.1);
         assert_eq!(c, vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        assert_eq!(cuts(&[], 0.0, 6.0, 1.0), vec![0.0, 6.0]);
+        assert_eq!(cuts(&[], &[], 0.0, 6.0, 1.0), vec![0.0, 6.0]);
+        // 16-22 s quiet, 22-28 s loud: long holds, then cuts on every beat
+        let c = cuts(&beats, &loud, 16.0, 12.0, 1.1);
+        let before: Vec<f64> = c.iter().filter(|t| **t < 4.0).copied().collect();
+        let after: Vec<f64> = c.iter().filter(|t| **t > 7.0).copied().collect();
+        assert!(before.windows(2).all(|w| w[1] - w[0] >= 2.0), "{c:?}");
+        assert!(after.windows(2).all(|w| w[1] - w[0] <= 0.5 + 1e-9), "{c:?}");
     }
 
     #[test]
