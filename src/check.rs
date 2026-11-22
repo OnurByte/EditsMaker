@@ -16,7 +16,16 @@ fn lufs(log: &str) -> Option<f64> {
 
 /// Times of the cuts that `select=gt(scene,..),showinfo` printed.
 fn cut_times(log: &str) -> Vec<f64> {
-    log.lines().filter_map(|l| l.split("pts_time:").nth(1)?.split_whitespace().next()?.parse().ok()).collect()
+    let mut out: Vec<f64> = vec![];
+    let mut seen = f64::NEG_INFINITY;
+    for t in log.lines().filter_map(|l| l.split("pts_time:").nth(1)?.split_whitespace().next()?.parse::<f64>().ok()) {
+        // a flash is a jump into white and back out, a few frames apart: one cut, not two or three
+        if t - seen > 0.12 {
+            out.push(t);
+        }
+        seen = t;
+    }
+    out
 }
 
 /// Lengths of the shots between cuts, first to last.
@@ -195,6 +204,7 @@ mod tests {
         assert_eq!(lufs("nothing"), None);
         let c = "[Parsed_showinfo_1 @ 0x1] n: 0 pts: 1 pts_time:1.5 pos: 1\n[Parsed_showinfo_1 @ 0x1] n: 1 pts: 2 pts_time:4 pos: 2\n";
         assert_eq!(cut_times(c), [1.5, 4.0]);
+        assert_eq!(cut_times("pts_time:5.3 x\npts_time:5.37 x\npts_time:5.43 x\npts_time:7 x"), [5.3, 7.0]);
         assert_eq!(shots(&[1.5, 4.0], 10.0), [1.5, 2.5, 6.0]);
         assert_eq!(shots(&[], 10.0), [10.0]);
         assert_eq!((secs("336.5"), secs("5:36"), secs("1:00:00"), secs("x")), (Some(336.5), Some(336.0), Some(3600.0), None));
