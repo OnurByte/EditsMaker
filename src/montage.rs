@@ -1176,7 +1176,8 @@ pub fn whole_bars(cuts: &[f64], period: f64) -> Vec<f64> {
 }
 
 /// --loop: the last piece shows the footage that ran just before the first one, so the end runs into the start.
-/// `first` is (start, seconds it uses) of the first piece inside its shot (`shot_s`..`shot_e`); `need` what the last
+/// `first` is (start, seconds it uses) of the first piece inside its shot (from its start to where its scene ends,
+/// not the 3 s piece's end: a first piece longer than its shot runs on into the scene); `need` what the last
 /// piece uses. Returns (first's start, last's start), moving the first later inside its shot when `movable` (not when
 /// it is tied to a voice line) and there is no room before it. None when the shot has no room either way.
 pub fn seam(first: (f64, f64), shot: (f64, f64), need: f64, movable: bool) -> Option<(f64, f64)> {
@@ -1188,7 +1189,7 @@ pub fn seam(first: (f64, f64), shot: (f64, f64), need: f64, movable: bool) -> Op
 /// --loop when the first shot has no room before it: the best shot with room for both the first piece and the
 /// last one before it, among `shots[..usable]`.
 pub fn roomy(shots: &[Shot], usable: usize, need: f64) -> Option<usize> {
-    shots.iter().take(usable).enumerate().filter(|(_, x)| x.e - x.s >= need + 0.05).max_by(|a, b| a.1.score.total_cmp(&b.1.score)).map(|x| x.0)
+    shots.iter().take(usable).enumerate().filter(|(_, x)| x.scene_end.max(x.e) - x.s >= need + 0.05).max_by(|a, b| a.1.score.total_cmp(&b.1.score)).map(|x| x.0)
 }
 
 /// One finished edit. `picks` are (video file, source start, focus) per piece, `joins` one per cut.
@@ -1349,6 +1350,9 @@ mod tests {
         assert_eq!(roomy(&shots, 3, 3.0), Some(2));
         assert_eq!(roomy(&shots, 4, 3.0), Some(3));
         assert_eq!(roomy(&shots, 4, 20.0), None);
+        // a 3 s piece of a 12 s scene has room for the scene's rest
+        let long = vec![Shot { scene_end: 12.0, ..sh(0.0, 3.0, 1.0) }];
+        assert_eq!(roomy(&long, 1, 6.0), Some(0));
     }
 
     #[test]
