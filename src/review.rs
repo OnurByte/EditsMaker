@@ -37,8 +37,39 @@ pub fn describe(notes: &Value, cuts: &[f64]) -> String {
     out
 }
 
-/// Opens a link in the default browser; false when there is none to open it.
+/// Chromium-family browsers that open a page as an app window of its own (`--app`), no tabs or address bar.
+const APP_BROWSERS: &[&str] = &["chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "brave-browser", "brave", "helium-browser", "microsoft-edge-stable", "microsoft-edge", "vivaldi-stable"];
+const MAC_APP_BROWSERS: &[&str] = &["Google Chrome", "Microsoft Edge", "Brave Browser", "Chromium", "Helium", "Vivaldi"];
+
+/// How to open `url` as an app window on this machine (program, arguments), when a Chromium-family browser is
+/// installed; Edge comes with Windows.
+fn app_window(url: &str) -> Option<(String, Vec<String>)> {
+    let flags = [format!("--app={url}"), "--window-size=1280,860".to_string()];
+    if cfg!(target_os = "macos") {
+        let app = MAC_APP_BROWSERS.iter().find(|a| Path::new(&format!("/Applications/{a}.app")).is_dir())?;
+        let mut args = vec!["-na".to_string(), app.to_string(), "--args".into()];
+        args.extend(flags);
+        return Some(("open".into(), args));
+    }
+    if cfg!(windows) {
+        let mut args = vec!["/C".to_string(), "start".into(), String::new(), "msedge".into()];
+        args.extend(flags);
+        return Some(("cmd".into(), args));
+    }
+    let path = std::env::var_os("PATH")?;
+    let found = APP_BROWSERS.iter().find(|b| std::env::split_paths(&path).any(|d| d.join(b).is_file()))?;
+    Some((found.to_string(), flags.to_vec()))
+}
+
+/// Opens the page in a window of its own (a Chromium-family browser's app window), else in the default browser;
+/// false when nothing could open it.
 fn open(url: &str) -> bool {
+    // spawned, not waited on: a browser started for this window runs until the window is closed
+    if let Some((cmd, args)) = app_window(url) {
+        if std::process::Command::new(&cmd).args(&args).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn().is_ok() {
+            return true;
+        }
+    }
     let r = if cfg!(target_os = "macos") {
         std::process::Command::new("open").arg(url).status()
     } else if cfg!(windows) {
@@ -193,5 +224,13 @@ mod tests {
     #[test]
     fn the_page_takes_its_config() {
         assert!(PAGE.contains("/*CONFIG*/") && PAGE.contains("fetch('/notes'") && PAGE.contains("src=\"/video\""));
+    }
+
+    #[test]
+    fn an_app_window_when_a_browser_can_make_one() {
+        // on Linux: whichever Chromium-family browser is on PATH, as an --app window
+        if let Some((cmd, args)) = app_window("http://127.0.0.1:1/") {
+            assert!(args.iter().any(|a| a == "--app=http://127.0.0.1:1/"), "{cmd} {args:?}");
+        }
     }
 }

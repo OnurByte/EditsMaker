@@ -214,7 +214,7 @@ cuts from that part (the one people know from TikTok, often not the loudest); a 
 
 ## After rendering
 
-Show it to the user with `edits_review` (CLI: `edits review clip.mp4`): their browser opens the clip, they click a
+Show it to the user with `edits_review` (CLI: `edits review clip.mp4`): the clip opens in a window of its own, they click a
 moment, a shot or a spot in the frame and say what to change, and the notes come back with times, shot numbers and
 places. Change exactly those and render again. `saved: true` reads the last notes again.
 

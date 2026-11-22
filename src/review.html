@@ -163,7 +163,9 @@ document.getElementById('send').onclick = async () => {
     if (!r.ok) throw new Error(r.status);
     sent = true;
     document.getElementById('send').disabled = document.getElementById('here').disabled = true;
-    status.innerHTML = '<span class="sent">Sent to the agent.</span> You can close this tab.';
+    status.innerHTML = '<span class="sent">Sent to the agent.</span> You can close this window.';
+    // an app window of its own closes itself; a browser tab ignores this and stays
+    setTimeout(() => window.close(), 1500);
   } catch (err) {
     status.textContent = 'Could not send (' + err.message + '). Is edits still running?';
   }
