@@ -12,9 +12,11 @@ edits mcp install      # Claude Code, Codex, OpenCode, Cursor, Windsurf, Gemini 
 edits skills install   # the skills into each agent's skill folder
 ```
 
-`edits mcp install` (and every `edits update`) also adds a guard to Claude Code (`~/.claude/settings.json`, a
-Bash PreToolUse hook running `edits guard`): a shell command that does video work by hand is refused with what to
-use instead. `edits guard install` adds it alone.
+Optional, only when the user wants it: `edits guard install` adds a guard to Claude Code (`~/.claude/settings.json`,
+a Bash PreToolUse hook running `edits guard`): a shell command that does video work by hand is refused with what to
+use instead; `--ask` asks the user each time instead of refusing. `edits guard remove` takes it out, and nothing
+puts it back unasked (an update only points an installed guard at the new edits). Never install it for the user
+without asking: it changes how Claude Code works in every project.
 
 Restart the agent after. Any other client: command `edits` (full path if the client has no PATH), args `["mcp"]`.
 OpenCode 2: `opencode mcp list` can say "No MCP servers configured" on its first run while it starts; run it again.

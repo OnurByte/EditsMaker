@@ -366,8 +366,9 @@ pub fn install() -> Result<(), String> {
             None => eprintln!("edits: {name}: {} is not plain JSON, add it by hand: command {exe}, args [\"mcp\"]", file.display()),
         }
     }
-    if let Err(e) = guard_install(false) {
-        eprintln!("edits: {e}");
+    // the guard changes how Claude Code works everywhere: only when asked for (edits guard install)
+    if crate::util::home().join(".claude").is_dir() && !guarded() {
+        println!("edits: to stop Claude Code running ffmpeg, yt-dlp or whisper by hand: edits guard install (or --ask to be asked each time)");
     }
     if done.is_empty() {
         println!("no agents found; add it by hand: command {exe}, args [\"mcp\"]");
@@ -384,49 +385,108 @@ pub fn by_hand(cmd: &str) -> bool {
     re.is_match(cmd)
 }
 
-const RULE: &str = "edits: no ffmpeg, ffprobe, yt-dlp or whisper by hand, not even to test. Use edits: edits words (find a line), edits frames (look at footage or a render), edits check (measure a render), edits make (render). If edits cannot do it, tell the user what is missing instead of scripting around it.";
+const RULE: &str = "edits: no ffmpeg, ffprobe, yt-dlp or whisper by hand, not even to test. Use edits: edits words (find a line), edits frames (look at footage or a render), edits check (measure a render), edits make (render). If edits cannot do it, tell the user what is missing instead of scripting around it. (This rule is the user's choice, set with `edits guard install`; `edits guard remove` turns it off.)";
 
-/// `edits guard`: a Claude Code PreToolUse hook. Reads the tool call on stdin and refuses (exit 2) a Bash command
-/// that does video work by hand.
-pub fn guard() -> Result<(), String> {
+/// `edits guard [--ask]`: a Claude Code PreToolUse hook. Reads the tool call on stdin; a Bash command that does
+/// video work by hand is refused (exit 2, the reason goes to the agent), or with --ask put to the user to allow.
+pub fn guard(args: &[String]) -> Result<(), String> {
     let mut input = String::new();
     std::io::Read::read_to_string(&mut std::io::stdin(), &mut input).map_err(|e| e.to_string())?;
     let v: Value = serde_json::from_str(&input).unwrap_or_default();
     if by_hand(v["tool_input"]["command"].as_str().unwrap_or_default()) {
+        if args.iter().any(|a| a == "--ask") {
+            println!("{}", ask(RULE));
+            return Ok(());
+        }
         eprintln!("{RULE}");
         std::process::exit(2);
     }
     Ok(())
 }
 
-/// Puts the guard hook into a Claude Code settings.json, once, keeping everything else; None when it is not JSON.
-fn add_guard(text: &str, exe: &str) -> Option<String> {
+/// Claude Code's answer from a PreToolUse hook that leaves the call to the user.
+fn ask(why: &str) -> Value {
+    json!({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": why}})
+}
+
+/// Is this hook entry edits' guard?
+fn is_guard(e: &Value) -> bool {
+    e["hooks"].as_array().is_some_and(|h| h.iter().any(|x| x["command"].as_str().is_some_and(|c| c.contains("edits") && (c.ends_with(" guard") || c.ends_with(" guard --ask")))))
+}
+
+/// Claude Code's user settings.
+fn settings() -> PathBuf {
+    crate::util::home().join(".claude").join("settings.json")
+}
+
+/// Whether the guard is in Claude Code's user settings.
+pub fn guarded() -> bool {
+    std::fs::read_to_string(settings()).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .is_some_and(|v| v["hooks"]["PreToolUse"].as_array().is_some_and(|l| l.iter().any(is_guard)))
+}
+
+/// The guard hook in a Claude Code settings.json, keeping everything else: `exe` is edits' path, `ask` puts the
+/// call to the user instead of refusing it, `on` false takes it out. None when the text is not plain JSON.
+fn set_guard(text: &str, exe: &str, ask: bool, on: bool) -> Option<String> {
     let mut v: Value = if text.trim().is_empty() { json!({}) } else { serde_json::from_str(text).ok()? };
-    let pre = v.as_object_mut()?.entry("hooks").or_insert_with(|| json!({})).as_object_mut()?.entry("PreToolUse").or_insert_with(|| json!([]));
+    let hooks = v.as_object_mut()?.entry("hooks").or_insert_with(|| json!({}));
+    let pre = hooks.as_object_mut()?.entry("PreToolUse").or_insert_with(|| json!([]));
     let list = pre.as_array_mut()?;
-    // an older edits path is replaced, not added twice
-    list.retain(|e| !e["hooks"].as_array().is_some_and(|h| h.iter().any(|x| x["command"].as_str().is_some_and(|c| c.ends_with(" guard") && c.contains("edits")))));
-    list.push(json!({"matcher": "Bash", "hooks": [{"type": "command", "command": format!("\"{exe}\" guard")}]}));
+    // an older edits path or mode is replaced, not added twice
+    list.retain(|e| !is_guard(e));
+    if on {
+        list.push(json!({"matcher": "Bash", "hooks": [{"type": "command", "command": format!("\"{exe}\" guard{}", if ask { " --ask" } else { "" })}]}));
+    } else if list.is_empty() {
+        // nothing of edits' left behind
+        hooks.as_object_mut()?.remove("PreToolUse");
+        if hooks.as_object().is_some_and(|h| h.is_empty()) {
+            v.as_object_mut()?.remove("hooks");
+        }
+    }
     serde_json::to_string_pretty(&v).ok().map(|s| s + "\n")
 }
 
-/// `edits guard install`: the guard in Claude Code's user settings, when Claude Code is on this machine.
-pub fn guard_install(quiet: bool) -> Result<(), String> {
-    let dir = crate::util::home().join(".claude");
-    if !dir.is_dir() {
-        return Ok(());
-    }
+fn write_guard(ask: bool, on: bool) -> Result<bool, String> {
+    let file = settings();
     let exe = std::env::current_exe().map_err(|e| e.to_string())?.to_string_lossy().into_owned();
-    let file = dir.join("settings.json");
     let text = std::fs::read_to_string(&file).unwrap_or_default();
-    let out = add_guard(&text, &exe).ok_or(format!("{} is not plain JSON; add a Bash PreToolUse hook running \"{exe}\" guard by hand", file.display()))?;
-    if out != text {
-        std::fs::write(&file, out).map_err(|e| format!("{}: {e}", file.display()))?;
-        if !quiet {
-            println!("edits: Claude Code now refuses ffmpeg/yt-dlp/whisper by hand ({})", file.display());
+    let out = set_guard(&text, &exe, ask, on).ok_or(format!("{} is not plain JSON; change the edits guard hook by hand", file.display()))?;
+    if out == text {
+        return Ok(false);
+    }
+    std::fs::write(&file, out).map_err(|e| format!("{}: {e}", file.display()))?;
+    Ok(true)
+}
+
+/// `edits guard install [--ask]` and `edits guard remove`: only ever on the user's word.
+pub fn guard_cmd(args: &[String]) -> Result<(), String> {
+    let ask = args.iter().any(|a| a == "--ask");
+    match args.first().map(String::as_str) {
+        Some("install") => {
+            if !crate::util::home().join(".claude").is_dir() {
+                return Err("Claude Code is not on this machine (no ~/.claude)".into());
+            }
+            write_guard(ask, true)?;
+            println!("edits: Claude Code {} ffmpeg, yt-dlp and whisper run by hand ({}); edits guard remove takes it out",
+                if ask { "asks you before running" } else { "now refuses" }, settings().display());
         }
+        Some("refresh") => guard_refresh(),
+        Some("remove") => {
+            let changed = write_guard(false, false)?;
+            println!("edits: {}", if changed { format!("the guard is out of {}", settings().display()) } else { "there was no guard to remove".into() });
+        }
+        _ => return guard(args),
     }
     Ok(())
+}
+
+/// After an update: a guard the user installed points at the new edits, keeping its mode. Never adds one.
+pub fn guard_refresh() {
+    let text = std::fs::read_to_string(settings()).unwrap_or_default();
+    let ask = text.contains(" guard --ask");
+    if guarded() {
+        let _ = write_guard(ask, true);
+    }
 }
 
 /// The binary's path as the server started: once `edits update` replaces the file, Linux names the running one
@@ -445,8 +505,6 @@ pub fn serve() -> Result<(), String> {
     if let Ok(p) = std::env::current_exe() {
         let _ = EXE.set(p);
     }
-    // every agent session starts here, so people who updated from an edits without the guard get it too
-    let _ = guard_install(true);
     let mut running = vec![];
     for line in std::io::stdin().lock().lines() {
         let line = line.map_err(|e| e.to_string())?;
@@ -480,10 +538,17 @@ mod tests {
         assert!(add_to("", &["mcpServers"], json!({})).unwrap().contains("\"edits\""));
         assert!(add_to("// comments\n{}", &["mcpServers"], json!({})).is_none(), "JSONC is left alone");
         // the guard joins other hooks, and a moved edits replaces itself instead of piling up
-        let one = add_guard(r#"{"model": "x", "hooks": {"PreToolUse": [{"matcher": "Edit", "hooks": []}]}}"#, "/old/edits").unwrap();
-        let two: Value = serde_json::from_str(&add_guard(&one, "/new/edits").unwrap()).unwrap();
+        let one = set_guard(r#"{"model": "x", "hooks": {"PreToolUse": [{"matcher": "Edit", "hooks": []}]}}"#, "/old/edits", false, true).unwrap();
+        let two: Value = serde_json::from_str(&set_guard(&one, "/new/edits", true, true).unwrap()).unwrap();
         let pre = two["hooks"]["PreToolUse"].as_array().unwrap();
-        assert!(two["model"] == "x" && pre.len() == 2 && pre[1]["hooks"][0]["command"] == "\"/new/edits\" guard", "{two}");
+        assert!(two["model"] == "x" && pre.len() == 2 && pre[1]["hooks"][0]["command"] == "\"/new/edits\" guard --ask", "{two}");
+        // removed, the user's own hooks stay; with nothing else, nothing of edits' is left
+        let off: Value = serde_json::from_str(&set_guard(&two.to_string(), "/new/edits", false, false).unwrap()).unwrap();
+        assert!(off["hooks"]["PreToolUse"].as_array().unwrap().len() == 1 && off["model"] == "x", "{off}");
+        let bare: Value = serde_json::from_str(&set_guard(&set_guard("{\"a\": 1}", "/e/edits", false, true).unwrap(), "/e/edits", false, false).unwrap()).unwrap();
+        assert_eq!(bare, json!({"a": 1}));
+        assert!(set_guard("// jsonc\n{}", "/e/edits", false, true).is_none());
+        assert_eq!(ask("why")["hookSpecificOutput"]["permissionDecision"], "ask");
         for bad in ["ffmpeg -i a.mp4 b.png", "cd x && ffmpeg -y o.mp4", "nohup /usr/bin/yt-dlp URL", "whisper-cli -m m.bin", "X=1 ffprobe a.mp4", "a; timeout 60 ffmpeg -i x", "ls\nffmpeg -i x"] {
             assert!(by_hand(bad), "{bad}");
         }

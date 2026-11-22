@@ -43,12 +43,13 @@ const USAGE: &str = include_str!("usage.txt");
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    if !matches!(args.first().map(String::as_str), Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help") | None) {
+    // the guard runs before every shell command an agent makes: it checks nothing, fetches nothing
+    if !matches!(args.first().map(String::as_str), Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "guard") | None) {
         update::auto();
     }
     tools::add_to_path();
     // anything that cuts, measures or downloads gets ffmpeg and yt-dlp first, fetched if missing
-    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "setup" | "mcp" | "skills" | "looks" | "rate" | "trends"))
+    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "setup" | "mcp" | "skills" | "looks" | "rate" | "trends" | "guard"))
         || (args.first().map(String::as_str) == Some("preset") && args.get(1).map(String::as_str) != Some("create"));
     if !light {
         if let Err(e) = tools::ensure() {
@@ -78,8 +79,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("mcp") if args.get(1).is_some_and(|a| a == "install") => mcp::install(),
-        Some("guard") if args.get(1).is_some_and(|a| a == "install") => mcp::guard_install(false),
-        Some("guard") => mcp::guard(),
+        Some("guard") => mcp::guard_cmd(&args[1..]),
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
         Some("looks") => {

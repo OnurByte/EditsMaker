@@ -32,8 +32,9 @@ USAGE
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
   edits mcp install            add it to every agent here: Claude Code, Codex, OpenCode, Cursor, Windsurf,
-                               Gemini CLI, Claude Desktop, VS Code (and the guard below)
-  edits guard install          Claude Code refuses video work done by hand (a shell running the tools edits wraps)
+                               Gemini CLI, Claude Desktop, VS Code
+  edits guard install [--ask]  only if you want it: Claude Code refuses ffmpeg, yt-dlp and whisper run by hand
+                               (--ask: asks you each time instead); edits guard remove takes it out again
   edits skills [install]       agent skills for every command
   edits skills catalog | add PACK [SKILL...]   skill packs from other projects (Remotion, YouTube research), fetched from GitHub
   edits trends [spotify] [country]   what is trending on TikTok now (default tr), or Spotify's daily chart; use with --music trend:N / spotify:N
