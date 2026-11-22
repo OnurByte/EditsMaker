@@ -113,19 +113,9 @@ fn mask(clip: &Path, out: &Path) -> Result<(usize, Vec<f64>), String> {
     let fps = format!("{rate:.3}");
     let c = clip.to_string_lossy();
     let want = (crate::fetch::duration(clip).unwrap_or(0.0) * rate).round() as usize;
-    // one frame out per frame of the clip at its own rate, so the mask lines up with it frame for frame; `from` is
-    // where to start (seconds) when the frames stopped coming and are picked up again
-    let decode = |from: f64| -> Result<(std::process::Child, std::thread::JoinHandle<String>), String> {
-        let mut dec = Command::new("ffmpeg").args(["-v", "error", "-ss", &format!("{from:.4}"), "-i", &c, "-vf", &format!("scale={mw}:{mh},format=rgb24"), "-fps_mode", "cfr", "-r", &fps, "-f", "rawvideo", "-"])
-            .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().map_err(|e| format!("ffmpeg: {e}"))?;
-        let mut err = dec.stderr.take().ok_or("ffmpeg gave no messages")?;
-        let said = std::thread::spawn(move || {
-            let mut s = String::new();
-            let _ = std::io::Read::read_to_string(&mut err, &mut s);
-            s
-        });
-        Ok((dec, said))
-    };
+    // one frame out per frame of the clip at its own rate, so the mask lines up with it frame for frame
+    let mut dec = Command::new("ffmpeg").args(["-v", "error", "-i", &c, "-vf", &format!("scale={mw}:{mh},format=rgb24"), "-fps_mode", "cfr", "-r", &fps, "-f", "rawvideo", "-"])
+        .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null()).spawn().map_err(|e| format!("ffmpeg: {e}"))?;
     let mut enc = Command::new("ffmpeg").args(["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "gray", "-s", &format!("{mw}x{mh}"), "-r", &fps, "-i", "-", "-c:v", "ffv1", &out.to_string_lossy()])
         .stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::piped()).spawn().map_err(|e| format!("ffmpeg: {e}"))?;
     let n = (mw * mh) as usize;
@@ -134,68 +124,46 @@ fn mask(clip: &Path, out: &Path) -> Result<(usize, Vec<f64>), String> {
     let zero = [1i64, 1, 1, 1];
     let ratio_t = model.tensor(&mut ratio, &[1])?;
     let zeros = [model.tensor(&mut z1, &zero)?, model.tensor(&mut z2, &zero)?, model.tensor(&mut z3, &zero)?, model.tensor(&mut z4, &zero)?];
+    let mut input = BufReader::with_capacity(n * 3, dec.stdout.take().ok_or("ffmpeg gave no frames")?);
     let mut sink = enc.stdin.take().ok_or("ffmpeg took no mask")?;
     let mut frames = 0;
     let mut rows = vec![0f64; mh as usize];
-    // why the frames stopped coming, each time they did before the end
-    let mut stops: Vec<String> = vec![];
     // the model carries what it saw in four recurrent states from frame to frame: steady edges, no flicker
     let mut state: Option<Vec<crate::ort::Value>> = None;
     let res = (|| -> Result<(), String> {
-        loop {
-            let before = frames;
-            let (mut dec, said) = decode(frames as f64 / rate)?;
-            let mut input = BufReader::with_capacity(n * 3, dec.stdout.take().ok_or("ffmpeg gave no frames")?);
-            let read = loop {
-                if let Err(e) = input.read_exact(&mut rgb) {
-                    break e;
+        while input.read_exact(&mut rgb).is_ok() {
+            for i in 0..n {
+                for ch in 0..3 {
+                    src[ch * n + i] = rgb[i * 3 + ch] as f32 / 255.0;
                 }
-                for i in 0..n {
-                    for ch in 0..3 {
-                        src[ch * n + i] = rgb[i * 3 + ch] as f32 / 255.0;
-                    }
-                }
-                let frame = model.tensor(&mut src, &[1, 3, mh as i64, mw as i64])?;
-                let r: [&crate::ort::Value; 4] = match &state {
-                    Some(s) => [&s[1], &s[2], &s[3], &s[4]],
-                    None => [&zeros[0], &zeros[1], &zeros[2], &zeros[3]],
-                };
-                let outs = model.run(&[("src", &frame), ("r1i", r[0]), ("r2i", r[1]), ("r3i", r[2]), ("r4i", r[3]), ("downsample_ratio", &ratio_t)], &["pha", "r1o", "r2o", "r3o", "r4o"])?;
-                let (pha, _) = outs[0].floats()?;
-                if pha.len() != n {
-                    return Err(format!("the subject model gave {} values for a {mw}x{mh} frame", pha.len()));
-                }
-                pha.iter().zip(grey.iter_mut()).for_each(|(a, g)| *g = (a.clamp(0.0, 1.0) * 255.0).round() as u8);
-                grey.chunks(mw as usize).zip(rows.iter_mut()).for_each(|(r, sum)| *sum += r.iter().map(|&g| g as f64).sum::<f64>() / (255.0 * mw as f64));
-                sink.write_all(&grey).map_err(|e| format!("ffmpeg stopped taking the mask: {e}"))?;
-                drop(frame);
-                state = Some(outs);
-                frames += 1;
+            }
+            let frame = model.tensor(&mut src, &[1, 3, mh as i64, mw as i64])?;
+            let r: [&crate::ort::Value; 4] = match &state {
+                Some(s) => [&s[1], &s[2], &s[3], &s[4]],
+                None => [&zeros[0], &zeros[1], &zeros[2], &zeros[3]],
             };
-            let ended = dec.try_wait().ok().flatten();
-            let _ = dec.kill();
-            let _ = dec.wait();
-            if !short_mask(frames, want) {
-                return Ok(());
+            let outs = model.run(&[("src", &frame), ("r1i", r[0]), ("r2i", r[1]), ("r3i", r[2]), ("r4i", r[3]), ("downsample_ratio", &ratio_t)], &["pha", "r1o", "r2o", "r3o", "r4o"])?;
+            let (pha, _) = outs[0].floats()?;
+            if pha.len() != n {
+                return Err(format!("the subject model gave {} values for a {mw}x{mh} frame", pha.len()));
             }
-            let said = said.join().unwrap_or_default();
-            let words = said.lines().rev().take(3).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>().join(" | ");
-            stops.push(format!("at frame {frames}: {} ({read}{})", ended.map_or("ffmpeg still running".into(), |s| format!("ffmpeg {s}")), if words.is_empty() { String::new() } else { format!("; {words}") }));
-            // picked up again from where they stopped, as long as each try gets further
-            if frames == before || stops.len() >= 50 {
-                return Ok(());
-            }
+            pha.iter().zip(grey.iter_mut()).for_each(|(a, g)| *g = (a.clamp(0.0, 1.0) * 255.0).round() as u8);
+            grey.chunks(mw as usize).zip(rows.iter_mut()).for_each(|(r, sum)| *sum += r.iter().map(|&g| g as f64).sum::<f64>() / (255.0 * mw as f64));
+            sink.write_all(&grey).map_err(|e| format!("ffmpeg stopped taking the mask: {e}"))?;
+            drop(frame);
+            state = Some(outs);
+            frames += 1;
         }
+        Ok(())
     })();
     drop(sink);
+    let _ = dec.kill();
+    let _ = dec.wait();
     let done = enc.wait_with_output().map_err(|e| e.to_string())?;
     res?;
-    if !stops.is_empty() {
-        eprintln!("edits: the frames stopped coming {} time(s): {}", stops.len(), stops.join("; "));
-    }
-    // a mask that stops early freezes the person on its last frame for the rest of the clip: an error, not an edit
+    // the clip's picture ends before its sound: the person would freeze on the last frame for the rest
     if short_mask(frames, want) {
-        return Err(format!("the person was cut out of only {frames} of {want} frames"));
+        return Err(format!("the clip's picture stops after {frames} of {want} frames, before its sound; the person was not cut out"));
     }
     if !done.status.success() {
         return Err(format!("ffmpeg could not write the mask: {}", String::from_utf8_lossy(&done.stderr).trim()));
