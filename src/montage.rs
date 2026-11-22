@@ -1135,7 +1135,9 @@ pub fn sung(words: &[Word], start: f64, total: f64) -> Vec<(f64, f64, String)> {
     for (i, w) in inside.iter().enumerate() {
         run.push(w);
         let next = inside.get(i + 1);
-        if next.is_none_or(|n| n.s - w.e > 0.6) || run.len() == 4 || w.t.ends_with([',', '.', '?', '!', '\n']) {
+        // four words a line, five when the fifth ends the lyrics' line (no word left alone)
+        let full = run.len() >= 5 || (run.len() == 4 && !next.is_some_and(|n| n.t.ends_with('\n')));
+        if next.is_none_or(|n| n.s - w.e > 0.6) || full || w.t.ends_with([',', '.', '?', '!', '\n']) {
             let end = next.map_or(w.e + 0.4, |n| (w.e + 0.4).min(n.s - 0.02)).max(w.e).min(start + total);
             out.push((run[0].s - start, end - start, run.iter().map(|w| w.t.trim()).collect::<Vec<_>>().join(" ")));
             run.clear();
@@ -1355,7 +1357,13 @@ mod tests {
         // the lyrics' own lines: "çıkar bir de sen koy" then "Anlamıyorsun beni", not run together
         let lines = vec![(1.0, "çıkar bir de sen koy".to_string()), (3.0, "Anlamıyorsun beni,".into()), (6.0, "son".into())];
         let s = sung(&crate::lrc::words(&lines, 0.0), 0.0, 6.0);
-        assert_eq!(s.iter().map(|x| x.2.as_str()).collect::<Vec<_>>(), ["çıkar bir de sen", "koy", "Anlamıyorsun beni,"]);
+        assert_eq!(s.iter().map(|x| x.2.as_str()).collect::<Vec<_>>(), ["çıkar bir de sen koy", "Anlamıyorsun beni,"]);
+        let long = vec![(1.0, "You like a pretty boy with a pretty voice".to_string()), (6.0, "x".into())];
+        let s = sung(&crate::lrc::words(&long, 0.0), 0.0, 6.0);
+        assert_eq!(s.iter().map(|x| x.2.as_str()).collect::<Vec<_>>(), ["You like a pretty", "boy with a pretty voice"]);
+        let five = vec![(1.0, "You like a pretty boy".to_string()), (4.0, "With a pretty voice".into())];
+        let s = sung(&crate::lrc::words(&five, 0.0), 0.0, 6.0);
+        assert_eq!(s.iter().map(|x| x.2.as_str()).collect::<Vec<_>>(), ["You like a pretty boy", "With a pretty voice"]);
         // cut at 2.0 with no word: the beat at 1.5 has one; the cut at 3.0 already sits on a word
         let beats = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
         assert_eq!(on_words(&[0.0, 2.0, 3.0, 4.0], &beats, &[1.52, 3.0]), vec![0.0, 1.5, 3.0, 4.0]);
