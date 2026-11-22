@@ -22,23 +22,23 @@ pub fn clean(title: &str) -> String {
     out.split(|c: char| !c.is_alphanumeric() && c != '\'').filter(|w| !w.is_empty() && !noise.contains(w)).collect::<Vec<_>>().join(" ")
 }
 
-/// How far apart two clips' starts can be and still be the same part of the song (seconds).
-const NEAR: f64 = 2.5;
+/// How far apart two clips' starts can be and still be the same part of the song (seconds): people trim the same
+/// chorus a few seconds earlier or later (Lovers Rock's Shorts start at 0:27 and 0:32).
+const NEAR: f64 = 6.0;
 
-/// Offsets that agree within NEAR: the middle of the biggest group, when at least two clips found it.
+/// Offsets that agree, all within NEAR of the earliest of them: the middle of the biggest group (the earlier of
+/// the two middles, so the edit leads into the part), when at least two clips found it.
 pub fn agree(offsets: &[f64]) -> Option<f64> {
-    let mut best: Vec<f64> = vec![];
-    for &o in offsets {
-        let near: Vec<f64> = offsets.iter().copied().filter(|x| (x - o).abs() <= NEAR).collect();
-        if near.len() > best.len() {
-            best = near;
+    let mut sorted = offsets.to_vec();
+    sorted.sort_by(f64::total_cmp);
+    let mut best: &[f64] = &[];
+    for (i, &o) in sorted.iter().enumerate() {
+        let n = sorted[i..].iter().take_while(|x| **x - o <= NEAR).count();
+        if n > best.len() {
+            best = &sorted[i..i + n];
         }
     }
-    if best.len() < 2 {
-        return None;
-    }
-    best.sort_by(f64::total_cmp);
-    Some(best[best.len() / 2])
+    (best.len() >= 2).then(|| best[(best.len() - 1) / 2])
 }
 
 /// Words that mark another version of a song: its times differ from the record's.
@@ -69,7 +69,11 @@ pub fn find(title: &str, cache: &Path) -> Option<f64> {
     let mut known: serde_json::Map<String, serde_json::Value> = std::fs::read_to_string(&file).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
     if let Some(v) = known.get(&key) {
         let heard: Vec<f64> = v.as_array().into_iter().flatten().filter_map(|x| x.as_f64()).collect();
-        return agree(&heard);
+        let hook = agree(&heard);
+        if let Some(h) = hook {
+            eprintln!("edits: the part people use starts at {} (Shorts heard before)", crate::util::mmss(h));
+        }
+        return hook;
     }
     let heard = search(&key, cache)?;
     known.insert(key, serde_json::Value::from(heard.clone()));
@@ -102,13 +106,13 @@ fn place(key: &str, heard: Result<Option<crate::shazam::Found>, String>) -> Resu
 /// Where in the song each Short heard as it starts; None when too few were heard to be sure (no Shorts, Shazam
 /// refusing), so the song is searched again next time.
 fn search(key: &str, cache: &Path) -> Option<Vec<f64>> {
-    let Ok(out) = yt(&["--no-warnings", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &format!("ytsearch15:{key} #shorts")]) else {
+    let Ok(out) = yt(&["--no-warnings", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(webpage_url,url)s", "--", &format!("ytsearch25:{key} #shorts")]) else {
         eprintln!("edits: no hook for \"{key}\": the YouTube search failed; the most replayed or loudest part is used");
         return None;
     };
     // Shorts only: a full-length upload starts at the song's start and says nothing about the hook
     let found = out.lines().count();
-    let shorts: Vec<(String, String)> = out.lines().filter_map(short).take(6).collect();
+    let shorts: Vec<(String, String)> = out.lines().filter_map(short).take(8).collect();
     if shorts.len() < 2 {
         eprintln!("edits: no hook for \"{key}\": {} Shorts among {found} search results; the most replayed or loudest part is used", shorts.len());
         return None;
@@ -188,6 +192,10 @@ mod tests {
     #[test]
     fn the_hook_is_where_clips_agree() {
         assert_eq!(agree(&[42.1, 61.0, 43.0, 41.8]), Some(42.1));
+        // Lovers Rock: the same chorus trimmed 5 s apart; the earlier start leads into it
+        assert_eq!(agree(&[32.0, 27.0, 151.0]), Some(27.0));
+        // New Freezer: Shorts all over the song agree on nothing
+        assert_eq!(agree(&[91.0, 9.0, 0.0, 153.0]), None);
         assert_eq!(agree(&[10.0, 50.0, 90.0]), None);
         assert_eq!(agree(&[30.0]), None);
         assert_eq!(agree(&[]), None);

@@ -69,7 +69,7 @@ pub fn offset(lines: &[(f64, String)], words: &[Word]) -> Option<f64> {
 }
 
 /// The lines as words on the song's clock: each line's words spread from its time, at most half a second each,
-/// ending before the next line.
+/// ending before the next line. A line's last word ends in "\n", so the words on screen break where its lines do.
 pub fn words(lines: &[(f64, String)], shift: f64) -> Vec<Word> {
     let mut out = vec![];
     for (j, (t, text)) in lines.iter().enumerate() {
@@ -78,7 +78,7 @@ pub fn words(lines: &[(f64, String)], shift: f64) -> Vec<Word> {
         let d = ((next - t - 0.1) / ws.len().max(1) as f64).clamp(0.05, 0.5);
         out.extend(ws.iter().enumerate().map(|(k, w)| {
             let s = t + shift + k as f64 * d;
-            Word { s, e: s + d * 0.9, t: w.to_string() }
+            Word { s, e: s + d * 0.9, t: if k + 1 == ws.len() { format!("{w}\n") } else { w.to_string() } }
         }));
     }
     out

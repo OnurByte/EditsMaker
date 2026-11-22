@@ -42,7 +42,8 @@ USAGE
   edits stats <@channel|link> [N]   the last N posts (default 30) with views, likes, comments; which are edits made
                                here (matched by their sound) and which presets, songs and looks did best; talking
                                clips that did best and worst become liked/disliked examples in your taste file
-  edits review <clip.mp4> [--notes]   the clip in your browser: click a moment, a shot or a spot in the frame and
+  edits review <clip.mp4> [--notes]   the clip in a window of its own (Chrome, Edge, Brave or Chromium's app window,
+                               else a browser tab): click a moment, a shot or a spot in the frame and
                                say what to change; the notes come back (and are saved as clip.notes.json)
 
 OPTIONS
