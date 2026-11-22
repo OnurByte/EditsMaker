@@ -388,7 +388,7 @@ server and preset JSON; no timeline to drag.
 | Beat detection | cuts snap onto the kick itself, and come faster where the song gets loud |
 | Identify music (Shazam) | `edits song clip.mp4` names the song in any clip or link |
 | Trim without re-encoding | `edits cut video.mp4 1:05-1:12` (lossless, like LosslessCut) |
-| Export: H.264, HEVC, ProRes, AV1 | `--codec`, `--quality`, `--encoder nvenc` |
+| Export: H.264, HEVC, ProRes, AV1 | `--codec`, `--quality`, `--encoder` (NVIDIA NVENC, Apple VideoToolbox, or CPU) |
 | Export to other editors | `--export fcpxml,edl,srt,vtt` |
 
 Not there yet: free masks and rotoscoping, tracking a point other than a face, multicam sync, proxies, and

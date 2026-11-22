@@ -38,23 +38,29 @@ pub const QUALITIES: &[&str] = &["draft", "high", "master"];
 
 /// Encoder arguments and the file extension for a codec at a quality.
 pub fn encoder(codec: &str, quality: &str) -> (Vec<String>, &'static str) {
-    let q = |d: u32, h: u32, m: u32| match quality { "draft" => d, "master" => m, _ => h }.to_string();
-    let nv = crate::util::nvenc();
+    let q = |d: u32, h: u32, m: u32| match quality { "draft" => d, "master" => m, _ => h };
+    let (nv, vt) = (crate::util::gpu() == "nvenc", crate::util::gpu() == "videotoolbox");
     let v: Vec<&str> = match codec {
         "h265" if nv => vec!["-c:v", "hevc_nvenc", "-tag:v", "hvc1", "-preset", "p5", "-rc", "vbr", "-b:v", "0", "-cq"],
         "av1" if nv => vec!["-c:v", "av1_nvenc", "-preset", "p5", "-rc", "vbr", "-b:v", "0", "-cq"],
         "h264" | "" if nv => vec!["-c:v", "h264_nvenc", "-preset", if quality == "master" { "p7" } else { "p5" }, "-rc", "vbr", "-b:v", "0", "-cq"],
+        "h265" if vt => vec!["-c:v", "hevc_videotoolbox", "-tag:v", "hvc1", "-b:v"],
+        "h264" | "" if vt => vec!["-c:v", "h264_videotoolbox", "-profile:v", "high", "-b:v"],
         "h265" => vec!["-c:v", "libx265", "-tag:v", "hvc1", "-preset", "medium", "-crf"],
         "prores" => vec!["-c:v", "prores_ks", "-profile:v"],
         "av1" => vec!["-c:v", "libsvtav1", "-preset", "6", "-crf"],
         _ => vec!["-c:v", "libx264", "-preset", if quality == "master" { "slow" } else { "medium" }, "-crf"],
     };
     let mut a: Vec<String> = v.into_iter().map(String::from).collect();
+    let h264 = q(28, 20, 15);
     a.push(match codec {
-        "h265" => q(30, 23, 18),
-        "prores" => q(0, 2, 3), // proxy, standard, HQ
-        "av1" => q(40, 30, 22),
-        _ => q(28, 20, 15),
+        // VideoToolbox takes a bitrate: the one this quality's x264 crf stands for; HEVC needs about two thirds of it
+        "h265" if vt => crate::util::crf_bitrate(h264 as f64 + 6.0 * 1.5f64.log2()),
+        "h264" | "" if vt => crate::util::crf_bitrate(h264 as f64),
+        "h265" => q(30, 23, 18).to_string(),
+        "prores" => q(0, 2, 3).to_string(), // proxy, standard, HQ
+        "av1" => q(40, 30, 22).to_string(),
+        _ => h264.to_string(),
     });
     if codec != "prores" {
         a.extend(["-pix_fmt".into(), "yuv420p".into()]);
@@ -202,7 +208,14 @@ mod tests {
         assert_eq!(crate::mcp::args_for("edits_encoder", &serde_json::json!({"use": "cpu"})).unwrap(), ["encoder", "cpu"]);
         // the encoder is the GPU's when this machine has a working one (auto), else x264
         let h = encoder("h264", "draft").0.join(" ");
-        assert_eq!(h, if crate::util::nvenc() { "-c:v h264_nvenc -preset p5 -rc vbr -b:v 0 -cq 28 -pix_fmt yuv420p" } else { "-c:v libx264 -preset medium -crf 28 -pix_fmt yuv420p" });
+        assert_eq!(h, match crate::util::gpu() {
+            "nvenc" => "-c:v h264_nvenc -preset p5 -rc vbr -b:v 0 -cq 28 -pix_fmt yuv420p",
+            "videotoolbox" => "-c:v h264_videotoolbox -profile:v high -b:v 3780k -pix_fmt yuv420p",
+            _ => "-c:v libx264 -preset medium -crf 28 -pix_fmt yuv420p",
+        });
         assert!(encoder("h265", "high").0.contains(&"hvc1".to_string()));
+        // VideoToolbox's bitrate follows x264's quality ladder: crf 18 = 12 Mb/s, 6 steps halve it
+        assert_eq!((crate::util::crf_bitrate(18.0), crate::util::crf_bitrate(24.0), crate::util::crf_bitrate(12.0)), ("12000k".into(), "6000k".into(), "24000k".into()));
+        assert!(crate::util::set_encoder("metal").is_err());
     }
 }

@@ -40,27 +40,40 @@ pub fn now() -> Option<(String, String)> {
     Some((d.to_string(), t.to_string()))
 }
 
-static NVENC: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+static GPU: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
 
-/// The video encoder for this run (from --encoder, else EDITS_ENCODER, else `edits encoder`): auto (default: nvenc when it works), nvenc, or cpu.
+/// What `--encoder` and `edits encoder` take: auto (the default), a GPU's encoder, or cpu.
+pub const ENCODERS: &[&str] = &["auto", "nvenc", "videotoolbox", "cpu"];
+
+/// What renders when nothing is forced: Apple's VideoToolbox on a Mac, an NVIDIA GPU elsewhere, each only when a
+/// test encode works (the encoders are listed on machines that cannot run them), else the CPU. A GPU renders
+/// several times faster.
+pub fn auto_gpu() -> &'static str {
+    let hw = if cfg!(target_os = "macos") { "videotoolbox" } else { "nvenc" };
+    if works(&format!("h264_{hw}")) { hw } else { "cpu" }
+}
+
+fn pick(name: &str) -> &'static str {
+    match name {
+        "nvenc" => "nvenc",
+        "videotoolbox" => "videotoolbox",
+        "cpu" => "cpu",
+        _ => auto_gpu(),
+    }
+}
+
+/// The video encoder for this run (from --encoder, else EDITS_ENCODER, else `edits encoder`).
 pub fn set_encoder(name: &str) -> Result<(), String> {
-    let on = match name {
-        "cpu" => false,
-        "nvenc" => true,
-        "auto" => nvenc_works(),
-        _ => return Err("--encoder must be cpu, nvenc or auto".into()),
-    };
-    let _ = NVENC.set(on);
+    if !ENCODERS.contains(&name) {
+        return Err(format!("--encoder must be one of {}", ENCODERS.join(", ")));
+    }
+    let _ = GPU.set(pick(name));
     Ok(())
 }
 
-pub fn nvenc() -> bool {
-    *NVENC.get_or_init(|| match encoder_choice().as_str() {
-        "nvenc" => true,
-        "cpu" => false,
-        // a GPU renders several times faster; the test encode falls back to the CPU when it is missing or full
-        _ => nvenc_works(),
-    })
+/// What renders this run: "nvenc", "videotoolbox" or "cpu".
+pub fn gpu() -> &'static str {
+    GPU.get_or_init(|| pick(&encoder_choice()))
 }
 
 fn encoder_file() -> PathBuf {
@@ -71,41 +84,57 @@ fn encoder_file() -> PathBuf {
 fn encoder_choice() -> String {
     std::env::var("EDITS_ENCODER").ok()
         .or_else(|| std::fs::read_to_string(encoder_file()).ok())
-        .map(|s| s.trim().to_string()).filter(|s| matches!(s.as_str(), "auto" | "nvenc" | "cpu"))
+        .map(|s| s.trim().to_string()).filter(|s| ENCODERS.contains(&s.as_str()))
         .unwrap_or_else(|| "auto".into())
 }
 
-/// `edits encoder [auto|nvenc|cpu]`: what renders the video (GPU or CPU), saved for every run, or what it is now.
+pub fn describe(g: &str) -> &'static str {
+    match g {
+        "nvenc" => "NVIDIA GPU (h264_nvenc)",
+        "videotoolbox" => "Apple VideoToolbox (h264_videotoolbox)",
+        _ => "CPU (libx264)",
+    }
+}
+
+/// `edits encoder [auto|nvenc|videotoolbox|cpu]`: what renders the video (GPU or CPU), saved for every run, or what it is now.
 pub fn encoder_cmd(want: Option<&str>) -> Result<(), String> {
     if let Some(w) = want {
-        if !matches!(w, "auto" | "nvenc" | "cpu") {
-            return Err(format!("edits encoder: {w}? use auto (GPU when it works), nvenc (NVIDIA GPU) or cpu"));
+        if !ENCODERS.contains(&w) {
+            return Err(format!("edits encoder: {w}? use auto (the GPU when it works), nvenc (NVIDIA), videotoolbox (Apple) or cpu"));
         }
         let f = encoder_file();
-        std::fs::create_dir_all(f.parent().unwrap()).map_err(|e| e.to_string())?;
+        std::fs::create_dir_all(f.parent().unwrap_or(Path::new("."))).map_err(|e| e.to_string())?;
         std::fs::write(&f, w).map_err(|e| e.to_string())?;
     }
-    let gpu = nvenc_works();
-    let used = match encoder_choice().as_str() { "nvenc" => "NVIDIA GPU (h264_nvenc)", "cpu" => "CPU (libx264)", _ if gpu => "NVIDIA GPU (h264_nvenc)", _ => "CPU (libx264)" };
-    println!("edits encoder: {} -> renders on the {used}; a working NVIDIA GPU here: {}", encoder_choice(), if gpu { "yes" } else { "no" });
-    if encoder_choice() == "nvenc" && !gpu {
-        println!("edits: the GPU test encode fails here, renders will fail; edits encoder auto falls back to the CPU");
+    let (choice, here) = (encoder_choice(), auto_gpu());
+    println!("edits encoder: {choice} -> renders on the {}; hardware encoder that works here: {}", describe(pick(&choice)),
+        if here == "cpu" { "none" } else { describe(here) });
+    if !matches!(choice.as_str(), "auto" | "cpu") && choice != here {
+        println!("edits: the {choice} test encode fails here, renders will fail; edits encoder auto falls back to the CPU");
     }
     Ok(())
 }
 
-/// A tiny test encode: ffmpeg can list h264_nvenc without a usable NVIDIA GPU or driver.
-fn nvenc_works() -> bool {
-    run(None, "ffmpeg", &["-v", "error", "-f", "lavfi", "-i", "color=s=256x256:d=0.1", "-c:v", "h264_nvenc", "-f", "null", "-"]).is_ok()
+/// A tiny test encode: ffmpeg lists hardware encoders on machines that cannot run them.
+fn works(encoder: &str) -> bool {
+    run(None, "ffmpeg", &["-v", "error", "-f", "lavfi", "-i", "color=s=256x256:d=0.1", "-c:v", encoder, "-f", "null", "-"]).is_ok()
+}
+
+/// A bitrate standing for an x264-style quality `crf` on a vertical 1080p frame, for VideoToolbox (its constant
+/// quality mode exists only on Apple Silicon): 12 Mb/s at crf 18, halved every 6 steps as x264 roughly does.
+pub fn crf_bitrate(crf: f64) -> String {
+    format!("{:.0}k", 12000.0 * 2f64.powf((18.0 - crf) / 6.0))
 }
 
 /// H.264 arguments at an x264-style quality `crf` (lower = better), on the GPU when --encoder says so.
 pub fn h264(crf: u32) -> Vec<String> {
-    if nvenc() {
-        ["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr", "-cq"].iter().map(|s| s.to_string()).chain([crf.to_string(), "-b:v".into(), "0".into()]).collect()
-    } else {
-        ["-c:v", "libx264", "-preset", "medium", "-crf"].iter().map(|s| s.to_string()).chain([crf.to_string()]).collect()
-    }
+    let a: &[&str] = match gpu() {
+        "nvenc" => &["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr", "-b:v", "0", "-cq"],
+        "videotoolbox" => &["-c:v", "h264_videotoolbox", "-profile:v", "high", "-b:v"],
+        _ => &["-c:v", "libx264", "-preset", "medium", "-crf"],
+    };
+    let level = if gpu() == "videotoolbox" { crf_bitrate(crf as f64) } else { crf.to_string() };
+    a.iter().map(|s| s.to_string()).chain([level]).collect()
 }
 
 /// Like `run` without a working directory, for binary stdout (raw video frames).
