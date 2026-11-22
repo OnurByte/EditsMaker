@@ -55,7 +55,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/agents-dark.svg">
-  <img src="assets/readme/agents-light.svg" width="100%" alt="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, Cursor, Gemini CLI and any MCP client">
+  <img src="assets/readme/agents-light.svg" width="100%" alt="Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, ChatGPT, Cursor, Gemini CLI and any MCP client">
 </picture>
 
 <picture>
@@ -129,7 +129,7 @@ irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 
 ### Prompt Install
 
-No terminal needed. Paste this into Claude Code, Codex, Cursor or any agent and it installs EditsMaker, connects it and learns its skills.
+No terminal needed. Paste this into Claude Code, ChatGPT, Cursor or any agent and it installs EditsMaker, connects it and learns its skills.
 
 ```text
 Install EditsMaker from github.com/OnurByte/EditsMaker, then run "edits mcp install" and "edits skills install".
@@ -420,7 +420,7 @@ edits preset save my-preset.json
 <details>
 <summary><b>Agents</b></summary>
 
-The installer adds it to every agent it finds: Claude Code, Codex, OpenCode, Cursor, Windsurf, Gemini CLI, Claude
+The installer adds it to every agent it finds: Claude Code, ChatGPT (codex), OpenCode, Cursor, Windsurf, Gemini CLI, Claude
 Desktop and VS Code, with the skills in each one's skill folder; every update brings the new skills. Again after installing a new agent:
 
 ```sh

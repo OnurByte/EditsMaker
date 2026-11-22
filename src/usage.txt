@@ -35,7 +35,7 @@ USAGE
                                a style naming one this machine lacks fetches it by itself
   edits cube LOOK [out.cube]   an imported colour pack look as a .cube LUT for Premiere, Resolve, CapCut
   edits mcp                    serve every command to an AI agent (MCP over stdio)
-  edits mcp install            add it to every agent here: Claude Code, Codex, OpenCode, Cursor, Windsurf,
+  edits mcp install            add it to every agent here: Claude Code, ChatGPT (codex), OpenCode, Cursor, Windsurf,
                                Gemini CLI, Claude Desktop, VS Code
   edits guard install [--ask]  only if you want it: Claude Code refuses ffmpeg, yt-dlp and whisper run by hand
                                (--ask: asks you each time instead); edits guard remove takes it out again

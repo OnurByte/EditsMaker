@@ -37,6 +37,6 @@ echo "edits: installed $("$BIN/edits" --version) to $BIN/edits"
 case ":$PATH:" in *":$BIN:"*) ;; *) echo "edits: add $BIN to your PATH" ;; esac
 # ffmpeg and yt-dlp, if this machine lacks them: static builds into ~/.config/edits/bin, checksum checked
 "$BIN/edits" setup || echo "edits: ffmpeg/yt-dlp download failed; edits tries again on first use"
-# the MCP server and skills in every agent on this machine (Claude Code, Codex, OpenCode, Cursor, ...)
+# the MCP server and skills in every agent on this machine (Claude Code, ChatGPT, OpenCode, Cursor, ...)
 "$BIN/edits" mcp install || true
 "$BIN/edits" skills install || true

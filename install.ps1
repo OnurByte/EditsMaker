@@ -40,7 +40,7 @@ try {
     # ffmpeg and yt-dlp, if this machine lacks them: static builds into ~\.config\edits\bin, checksum checked
     & (Join-Path $InstallDir 'edits.exe') setup
     if ($LASTEXITCODE -ne 0) { Write-Host 'ffmpeg/yt-dlp download failed; edits tries again on first use.' }
-    # the MCP server and skills in every agent on this machine (Claude Code, Codex, OpenCode, Cursor, ...)
+    # the MCP server and skills in every agent on this machine (Claude Code, ChatGPT, OpenCode, Cursor, ...)
     & (Join-Path $InstallDir 'edits.exe') mcp install
     & (Join-Path $InstallDir 'edits.exe') skills install
 } finally {
