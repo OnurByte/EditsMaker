@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "environment"
+  ],
   "feeds": [
     {
       "name": "\"Human Nature\" Blog Feed",

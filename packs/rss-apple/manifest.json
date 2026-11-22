@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "apple"
+  ],
   "feeds": [
     {
       "name": "9to5Mac",

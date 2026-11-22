@@ -1,5 +1,5 @@
-//! Packs: a preset, an agent skill, an automation or some of each, in one folder with a manifest.json and a preview
-//! picture (PACKS.md is the standard). The packs in packs/ are built in (ids `edits.*`); community packs live in their
+//! Packs: a preset, an agent skill, an automation, RSS feeds or a source program, in one folder with a manifest.json
+//! and a cover picture (PACKS.md is the standard; the manifest follows Omarchy's plugin manifests). The packs in packs/ are built in (ids `edits.*`); community packs live in their
 //! own GitHub repositories, are listed in packs.json at the root of this repository (the marketplace), and are added
 //! into ~/.config/edits/packs/<id>, each in its own folder.
 use crate::preset::Preset;
@@ -8,9 +8,12 @@ use std::path::{Path, PathBuf};
 
 include!(concat!(env!("OUT_DIR"), "/built_in.rs"));
 
+/// The files a pack is made of, beside its programs and its cover.
+const PACK_FILES: &[&str] = &["manifest.json", "preset.json", "SKILL.md", "automation.js"];
+
 /// The community list `edits packs browse` reads: a pull request adding a line to packs.json is how a pack is listed.
 const REGISTRY: &str = "https://raw.githubusercontent.com/OnurByte/EditsMaker/main/packs.json";
-const PREVIEWS: &[&str] = &["preview.svg", "preview.png", "preview.jpg", "preview.jpeg", "preview.webp"];
+const PREVIEWS: &[&str] = &["preview.svg", "preview.png", "preview.jpg", "preview.jpeg", "preview.webp", "preview.gif"];
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,9 +38,37 @@ pub struct Manifest {
     /// for an automation: the one site its automation.js runs on
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub automation: Option<Automation>,
-    /// for a feed pack: the RSS or Atom feeds `edits news` and `edits follow` read, first one by default
+    /// for a feed pack: the RSS or Atom feeds `edits rss` and `edits follow` read, first one by default
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub feeds: Vec<Feed>,
+    /// for a source: the program edits runs, on its own, for new things to make (source.rs)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<Source>,
+    /// what the person can set, as Omarchy's plugin schema: `edits packs set ID KEY=VALUE`
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub settings: Vec<Setting>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Source {
+    /// the program beside the manifest, run with sh (a .sh or any script with its #! line) or as itself
+    pub run: String,
+    /// Windows' own (a .ps1 runs with PowerShell); without it the source is not run on Windows
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub windows: Option<String>,
+    /// whether it may reach the internet; nothing else is ever reachable
+    #[serde(default)]
+    pub network: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Setting {
+    pub key: String,
+    pub label: String,
+    #[serde(default)]
+    pub default: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub description: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -122,8 +153,21 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, automation: Op
             return Err(format!("{id}: kinds says {:?} but {file} is {}", m.kinds, if there { "there" } else { "missing" }));
         }
     }
-    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation", "feed"].contains(&k.as_str())) {
-        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", \"feed\", not {:?}", m.kinds));
+    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation", "feed", "source"].contains(&k.as_str())) {
+        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", \"feed\", \"source\", not {:?}", m.kinds));
+    }
+    if m.kinds.iter().any(|k| k == "source") != m.source.is_some() {
+        return Err(format!("{id}: kinds and the \"source\" block disagree"));
+    }
+    // a program and its settings stay inside the pack's folder: plain names, nothing like ../
+    let plain = |f: &str| !f.is_empty() && f.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c)) && !f.starts_with('.');
+    if let Some(src) = &m.source {
+        if !std::iter::once(&src.run).chain(src.windows.as_ref()).all(|f| plain(f) && !PACK_FILES.contains(&f.as_str())) {
+            return Err(format!("{id}: a source's program is a plain file name beside the manifest (source.sh)"));
+        }
+    }
+    if m.settings.iter().any(|s| !valid_id(&s.key) || s.label.trim().is_empty()) {
+        return Err(format!("{id}: each setting has a key (lowercase) and a label"));
     }
     if skill.is_none() {
         return Err(format!("{id}: every pack carries a SKILL.md (edits packs make drafts one)"));
@@ -181,22 +225,63 @@ fn trust_file(id: &str) -> PathBuf {
     dir().join(id).join(".trusted")
 }
 
-/// Whether an automation may run: built-in ones may; an added one only once the person read it and ran
-/// `edits packs trust ID`, and only while its automation.js is the one they read.
-pub fn trusted(p: &Pack) -> bool {
-    let id = &p.manifest.id;
-    id.starts_with("edits.") || crate::update::sha256(&dir().join(id).join("automation.js")).is_ok_and(|h| std::fs::read_to_string(trust_file(id)).is_ok_and(|t| t.trim() == h))
+/// The files of a pack that run: its automation.js and its source's programs.
+pub fn programs(m: &Manifest) -> Vec<String> {
+    let mut v: Vec<String> = m.automation.as_ref().map(|_| "automation.js".to_string()).into_iter().collect();
+    if let Some(s) = &m.source {
+        v.push(s.run.clone());
+        v.extend(s.windows.clone());
+    }
+    v
 }
 
-/// Lets an added automation run, as it is now.
+/// What the person read: the checksums of the pack's programs, one line each.
+fn fingerprint(id: &str, m: &Manifest) -> Result<String, String> {
+    programs(m).iter().map(|f| crate::update::sha256(&dir().join(id).join(f))).collect::<Result<Vec<_>, _>>().map(|v| v.join("\n"))
+}
+
+/// Whether a pack's programs may run: built-in ones may; an added one only once the person read them and ran
+/// `edits packs trust ID`, and only while they are the ones they read.
+pub fn trusted(p: &Pack) -> bool {
+    let id = &p.manifest.id;
+    id.starts_with("edits.") || programs(&p.manifest).is_empty()
+        || fingerprint(id, &p.manifest).is_ok_and(|h| std::fs::read_to_string(trust_file(id)).is_ok_and(|t| t.trim() == h.trim()))
+}
+
+/// Lets an added pack's programs run, as they are now.
 pub fn trust(id: &str) -> Result<PathBuf, String> {
     let p = read(&dir().join(id)).map_err(|_| format!("\"{id}\" is not an added pack (edits packs lists them)"))?;
-    if p.automation.is_none() {
-        return Err(format!("{id} has no automation to trust"));
+    let files = programs(&p.manifest);
+    let first = files.first().ok_or(format!("{id} runs nothing, so there is nothing to trust"))?;
+    std::fs::write(trust_file(id), fingerprint(id, &p.manifest)?).map_err(|e| e.to_string())?;
+    Ok(dir().join(id).join(first))
+}
+
+fn settings_file(id: &str) -> PathBuf {
+    crate::util::home().join(".config/edits/pack-settings").join(format!("{id}.json"))
+}
+
+/// A pack's settings: its defaults, with what the person set over them.
+pub fn settings(m: &Manifest) -> serde_json::Map<String, serde_json::Value> {
+    let set: serde_json::Map<String, serde_json::Value> = std::fs::read_to_string(settings_file(&m.id)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+    m.settings.iter().map(|s| (s.key.clone(), set.get(&s.key).cloned().unwrap_or_else(|| serde_json::Value::String(s.default.clone())))).collect()
+}
+
+/// `edits packs set ID KEY=VALUE...`
+pub fn set(id: &str, pairs: &[String]) -> Result<serde_json::Map<String, serde_json::Value>, String> {
+    let p = all().into_iter().find(|p| p.manifest.id == id).ok_or(format!("no pack \"{id}\" (edits packs lists them)"))?;
+    let f = settings_file(id);
+    let mut set: serde_json::Map<String, serde_json::Value> = std::fs::read_to_string(&f).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+    for kv in pairs {
+        let (k, v) = kv.split_once('=').ok_or(format!("{kv}: use KEY=VALUE"))?;
+        if !p.manifest.settings.iter().any(|s| s.key == k) {
+            return Err(format!("{id} has no setting {k}; it has: {}", p.manifest.settings.iter().map(|s| s.key.as_str()).collect::<Vec<_>>().join(", ")));
+        }
+        set.insert(k.to_string(), serde_json::Value::String(v.to_string()));
     }
-    let js = dir().join(id).join("automation.js");
-    std::fs::write(trust_file(id), crate::update::sha256(&js)?).map_err(|e| e.to_string())?;
-    Ok(js)
+    std::fs::create_dir_all(f.parent().unwrap_or(Path::new("."))).map_err(|e| e.to_string())?;
+    std::fs::write(&f, serde_json::to_string_pretty(&set).unwrap_or_default()).map_err(|e| e.to_string())?;
+    Ok(settings(&p.manifest))
 }
 
 /// The community packs added here. A broken one is said and skipped.
@@ -206,8 +291,93 @@ pub fn added() -> Vec<Pack> {
     dirs.iter().filter_map(|d| read(d).map_err(|e| eprintln!("edits: {e}")).ok()).collect()
 }
 
-pub fn all() -> Vec<Pack> {
+/// Every pack here, on or off.
+pub fn every() -> Vec<Pack> {
     built_in().into_iter().chain(added()).collect()
+}
+
+/// The packs that are on: what presets, skills, feeds and automations come from.
+pub fn all() -> Vec<Pack> {
+    let off = disabled();
+    every().into_iter().filter(|p| !off.contains(&p.manifest.id)).collect()
+}
+
+/// Where a pack came from: built into edits, added from the community, or made here.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Origin {
+    BuiltIn,
+    Community,
+    Local,
+}
+
+impl Origin {
+    pub fn name(self) -> &'static str {
+        match self {
+            Origin::BuiltIn => "built-in",
+            Origin::Community => "community",
+            Origin::Local => "local",
+        }
+    }
+}
+
+/// An added pack remembers its repository in .from; one without it was made here.
+pub fn origin(id: &str) -> Origin {
+    if id.starts_with("edits.") {
+        Origin::BuiltIn
+    } else if dir().join(id).join(".from").is_file() {
+        Origin::Community
+    } else {
+        Origin::Local
+    }
+}
+
+fn disabled_file() -> PathBuf {
+    crate::util::home().join(".config/edits/packs-off.json")
+}
+
+/// The packs turned off.
+pub fn disabled() -> Vec<String> {
+    std::fs::read_to_string(disabled_file()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+}
+
+/// Turns a pack on or off; any pack, built in too. An off pack's preset, skill, feeds and automation are not used.
+pub fn enable(id: &str, on: bool) -> Result<Pack, String> {
+    let p = every().into_iter().find(|p| p.manifest.id == id).ok_or(format!("no pack \"{id}\" (edits packs lists them)"))?;
+    let mut off = disabled();
+    off.retain(|x| x != id);
+    if !on {
+        off.push(id.to_string());
+    }
+    let f = disabled_file();
+    std::fs::create_dir_all(f.parent().unwrap_or(Path::new("."))).map_err(|e| e.to_string())?;
+    std::fs::write(&f, serde_json::to_string_pretty(&off).unwrap_or_default()).map_err(|e| e.to_string())?;
+    Ok(p)
+}
+
+/// A pack made here, packed up to share: a .tgz of its own files, and the GitHub issue page to attach it to.
+pub fn share(id: &str) -> Result<(PathBuf, String), String> {
+    if origin(id) == Origin::BuiltIn {
+        return Err(format!("{id} is built in already"));
+    }
+    let d = dir().join(id);
+    let p = read(&d)?;
+    let out = crate::util::home().join(".cache/edits/share");
+    std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
+    let tgz = out.join(format!("{id}.tgz"));
+    let files: Vec<String> = PACK_FILES.iter().map(|f| f.to_string()).chain(programs(&p.manifest)).chain(p.manifest.preview.clone()).filter(|f| d.join(f).is_file()).collect();
+    let mut args = vec!["-czf".to_string(), tgz.to_string_lossy().into_owned(), "-C".into(), d.parent().unwrap_or(&d).to_string_lossy().into_owned()];
+    args.extend(files.iter().map(|f| format!("{id}/{f}")));
+    crate::util::run(None, "tar", &args.iter().map(String::as_str).collect::<Vec<_>>())?;
+    let m = &p.manifest;
+    let body = format!("A pack for the marketplace. The .tgz is attached below (drag it in).\n\n- id: `{}`\n- name: {}\n- what it is: {}\n- kinds: {}\n- tags: {}\n",
+        m.id, m.name, m.description, m.kinds.join(", "), m.tags.join(", "));
+    let url = format!("https://github.com/OnurByte/EditsMaker/issues/new?labels=pack&title={}&body={}", encode(&format!("Pack: {}", m.name)), encode(&body));
+    Ok((tgz, url))
+}
+
+/// Percent-encoding for a URL's query.
+fn encode(s: &str) -> String {
+    s.bytes().map(|b| if b.is_ascii_alphanumeric() || b"-_.~".contains(&b) { (b as char).to_string() } else { format!("%{b:02X}") }).collect()
 }
 
 /// A line of packs.json.
@@ -283,29 +453,42 @@ pub fn add(what: &str) -> Result<Pack, String> {
         let to = dir().join(&pack.manifest.id);
         let _ = std::fs::remove_dir_all(&to);
         std::fs::create_dir_all(&to).map_err(|e| e.to_string())?;
-        for f in ["manifest.json", "preset.json", "SKILL.md", "automation.js"].iter().copied().chain(pack.manifest.preview.as_deref()) {
+        let programs = programs(&pack.manifest);
+        for f in PACK_FILES.iter().map(|f| f.to_string()).chain(programs).chain(pack.manifest.preview.clone()) {
+            let f = f.as_str();
             let src = top.join(f);
+            // the cover can be as big as it likes (a GIF); what runs or is read stays small
+            let cover = Some(f) == pack.manifest.preview.as_deref();
             match std::fs::symlink_metadata(&src) {
-                Ok(m) if m.is_file() && m.len() <= 20 << 20 => std::fs::copy(&src, to.join(f)).map(|_| ()).map_err(|e| e.to_string())?,
+                Ok(m) if m.is_file() && (cover || m.len() <= 20 << 20) => std::fs::copy(&src, to.join(f)).map(|_| ()).map_err(|e| e.to_string())?,
                 Ok(m) if m.is_file() => return Err(format!("{repo}: {f} is over 20 MB")),
                 Ok(_) => return Err(format!("{repo}: {f} is not a plain file")),
                 Err(_) => {}
             }
         }
+        // where it came from: a community pack, not one made here
+        std::fs::write(to.join(".from"), format!("https://github.com/{repo}\n")).map_err(|e| e.to_string())?;
         read(&to)
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     res
 }
 
-/// Takes an added pack away. Built-in packs stay.
+/// Takes a pack away, made here or added. Built-in packs stay (turn them off instead).
 pub fn remove(id: &str) -> Result<Pack, String> {
-    if !valid_id(id) || id.starts_with("edits.") {
-        return Err(format!("\"{id}\" is not an added pack (edits packs lists them)"));
+    if id.starts_with("edits.") {
+        return Err(format!("{id} is built in: it cannot be deleted, only turned off (edits packs off {id})"));
+    }
+    if !valid_id(id) {
+        return Err(format!("\"{id}\" is not a pack here (edits packs lists them)"));
     }
     let d = dir().join(id);
     let pack = read(&d).map_err(|_| format!("\"{id}\" is not added (edits packs lists them)"))?;
     std::fs::remove_dir_all(&d).map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(settings_file(id));
+    if disabled().iter().any(|x| x == id) {
+        let _ = enable(id, true);
+    }
     Ok(pack)
 }
 
@@ -317,6 +500,13 @@ pub fn draft_skill(m: &Manifest, p: Option<&Preset>) -> String {
     let (about, body) = if let Some(a) = m.automation.as_ref().filter(|_| has("automation")) {
         (format!("Post finished clips to {} from the person's own signed-in account with edits ({}). Use when the user wants an edit posted on {}.", a.site, m.name, a.site),
          format!("```sh\nedits connect {0}                     # once: sign in, in a window of its own\nedits post clip.mp4 --to {0} --caption \"...\"\nedits follow <channel|feed> --post {0}   # every new video, made and posted\n```\n\nIt runs only on {0}, from the person's own account. Ask before posting anything they did not ask to post.\n", a.site))
+    } else if has("source") {
+        let short = m.id.rsplit('.').next().unwrap_or(&m.id);
+        let set: Vec<String> = m.settings.iter().map(|x| format!("{}={}", x.key, if x.default.is_empty() { "..." } else { &x.default })).collect();
+        (format!("Make videos from what the {} source finds, with edits: its program runs on its own and gives videos or headlines. Use when the user wants {} videos or that source on autopilot.", m.name, m.name),
+         format!("```sh\nedits source {short} --list        # what it finds now (--json for programs)\nedits source {short} -n 3          # a video for each of the 3 first\n{}edits follow {short} --post tiktok  # as it finds new things: made and posted\n```\n\nIts program runs alone: its own folder, {}. Added from someone else, it runs only after the person reads it and runs edits packs trust {}.\n",
+            if set.is_empty() { String::new() } else { format!("edits packs set {} {}\n", m.id, set.join(" ")) },
+            if m.source.as_ref().is_some_and(|x| x.network) { "the internet" } else { "no internet" }, m.id))
     } else if has("feed") {
         let short = m.id.strip_prefix("edits.rss-").unwrap_or(&m.id);
         let some: Vec<&str> = m.feeds.iter().take(3).map(|f| f.name.as_str()).collect();
@@ -349,14 +539,16 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path
     let listed = opml.map(|f| std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display())).and_then(|x| crate::rss::opml(&x))).transpose()?;
     let feeds = listed.as_ref().map(|l| l.1.clone()).or(old.as_ref().map(|m| m.feeds.clone())).unwrap_or_default();
     let group = listed.and_then(|l| l.0);
-    if p.is_none() && skill.is_none() && automation.is_none() && feeds.is_empty() {
+    if p.is_none() && skill.is_none() && automation.is_none() && feeds.is_empty() && old.as_ref().is_none_or(|m| m.source.is_none()) {
         return Err(format!("{}: put a preset.json, a SKILL.md or an automation.js in it (or feeds in its manifest.json), or give --preset NAME", d.display()));
     }
     let folder = d.canonicalize().ok().and_then(|c| c.file_name().map(|n| n.to_string_lossy().into_owned())).unwrap_or_else(|| "pack".into());
     let about = skill.as_deref().and_then(|s| front(s, "description")).map(String::from);
     let id = id.map(String::from).or(old.as_ref().map(|m| m.id.clone())).unwrap_or_else(|| crate::preset::slug(&folder));
     // a SKILL.md is drafted when there is none, so every pack has one
-    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", true), ("automation", automation.is_some()), ("feed", !feeds.is_empty())].iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
+    let has_source = old.as_ref().is_some_and(|m| m.source.is_some());
+    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", true), ("automation", automation.is_some()), ("feed", !feeds.is_empty()), ("source", has_source)]
+        .iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
     let own_picture = old.as_ref().and_then(|m| m.preview.clone()).filter(|f| f != "preview.svg" && d.join(f).is_file());
     let m = Manifest {
         schema_version: 1,
@@ -370,6 +562,8 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path
         preview: Some(own_picture.clone().unwrap_or_else(|| "preview.svg".into())),
         tags: old.as_ref().map(|m| m.tags.clone()).filter(|t| !t.is_empty()).unwrap_or_else(|| p.as_ref().map(|p| p.tags().iter().map(|t| t.to_string()).collect()).unwrap_or_default()),
         license: old.as_ref().and_then(|m| m.license.clone()),
+        source: old.as_ref().and_then(|m| m.source.clone()),
+        settings: old.as_ref().map(|m| m.settings.clone()).unwrap_or_default(),
         automation: old.and_then(|m| m.automation),
         feeds,
         id,
@@ -540,6 +734,13 @@ mod tests {
     }
 
     const SKILL: &str = "---\nname: x\ndescription: x\n---\n";
+
+    #[test]
+    fn share_links_carry_the_pack() {
+        assert_eq!(encode("Pack: Sad rain/ü"), "Pack%3A%20Sad%20rain%2F%C3%BC");
+        assert_eq!(origin("edits.akis-whip"), Origin::BuiltIn);
+        assert!(remove("edits.akis-whip").err().is_some_and(|e| e.contains("cannot be deleted")));
+    }
 
     #[test]
     fn every_pack_needs_a_skill() {

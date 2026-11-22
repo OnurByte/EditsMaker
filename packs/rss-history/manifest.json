@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "history"
+  ],
   "feeds": [
     {
       "name": "30 for 30 Podcasts",

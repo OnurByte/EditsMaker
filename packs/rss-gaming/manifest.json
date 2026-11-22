@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "gaming"
+  ],
   "feeds": [
     {
       "name": "Eurogamer.net Latest Articles Feed",

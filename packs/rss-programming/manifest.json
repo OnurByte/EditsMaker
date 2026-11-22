@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "programming"
+  ],
   "feeds": [
     {
       "name": "Better Programming - Medium",

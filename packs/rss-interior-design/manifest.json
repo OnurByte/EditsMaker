@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "interior-design"
+  ],
   "feeds": [
     {
       "name": "BLOG - decor8",

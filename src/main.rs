@@ -30,6 +30,7 @@ mod review;
 mod rss;
 mod shazam;
 mod social;
+mod source;
 mod signals;
 mod stats;
 mod study;
@@ -77,6 +78,7 @@ fn main() -> ExitCode {
         Some("app") => app(),
         Some("settings") => settings(),
         Some("rss") => rss::cmd(&args[1..]),
+        Some("source") => source::cmd(&args[1..]),
         Some("encoder") => util::encoder_cmd(args.get(1).map(String::as_str)),
         Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
@@ -1914,8 +1916,9 @@ fn packs_cmd(args: &[String]) -> Result<(), String> {
     let words: Vec<&String> = args.iter().filter(|a| *a != "--json").collect();
     match (words.first().map(|w| w.as_str()), words.get(1).copied()) {
         (Some("list") | None, _) if args.iter().any(|a| a == "--json") => {
-            // what the app's marketplace shows: every pack here, with its picture
-            let v: Vec<serde_json::Value> = packs::all().iter().map(|p| {
+            // what the app's marketplace shows: every pack here, on or off, with its picture
+            let off = packs::disabled();
+            let v: Vec<serde_json::Value> = packs::every().iter().map(|p| {
                 let m = &p.manifest;
                 let built_in = m.id.starts_with("edits.");
                 let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok());
@@ -1923,14 +1926,21 @@ fn packs_cmd(args: &[String]) -> Result<(), String> {
                 serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
                     "kinds": m.kinds, "tags": m.tags, "builtIn": built_in, "trusted": p.automation.is_none() || packs::trusted(p),
                     "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name), "feeds": m.feeds,
+                    "enabled": !off.contains(&m.id), "origin": packs::origin(&m.id).name(), "source": m.source.is_some(),
+                    // when it came here, for "newest first": the folder's time for an added pack
+                    "added": std::fs::metadata(packs::dir().join(&m.id)).and_then(|x| x.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_secs()),
                     "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset.as_ref())) } else { None }})
             }).collect();
             println!("{}", serde_json::Value::Array(v));
             Ok(())
         }
         (Some("list") | None, _) => {
-            for p in packs::all() {
+            let off = packs::disabled();
+            for p in packs::every() {
                 let m = &p.manifest;
+                if off.contains(&m.id) {
+                    print!("(off) ");
+                }
                 println!("{:<34} {:<12} {}", m.id, kinds(&m.kinds), m.description.chars().take(90).collect::<String>());
             }
             println!("
@@ -1972,8 +1982,30 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             }
             Ok(())
         }
-        (Some("trust"), Some(id)) => packs::trust(id).map(|js| println!("{id}: its automation ({}) may run now; a changed one asks again", js.display())),
-        (Some("remove"), Some(id)) => {
+        (Some("trust"), Some(id)) => packs::trust(id).map(|f| println!("{id}: its program ({}) may run now; a changed one asks again", f.display())),
+        (Some(w @ ("on" | "off")), Some(id)) => {
+            let p = packs::enable(id, w == "on")?;
+            // an off pack's skill leaves the agents' skill folders; on, it comes back
+            if let (Some(name), Some(text)) = (p.skill_name(), p.skill.as_deref()) {
+                for dir in &skill_dirs(None) {
+                    if w == "on" {
+                        std::fs::create_dir_all(dir.join(name)).map_err(|e| e.to_string())?;
+                        std::fs::write(dir.join(name).join("SKILL.md"), text).map_err(|e| e.to_string())?;
+                    } else {
+                        let _ = std::fs::remove_dir_all(dir.join(name));
+                    }
+                }
+            }
+            println!("{id} is {w}");
+            Ok(())
+        }
+        (Some("set"), Some(id)) => packs::set(id, &args[2..]).map(|v| println!("{id}: {}", serde_json::Value::Object(v))),
+        (Some("share"), Some(id)) => {
+            let (tgz, url) = packs::share(id)?;
+            println!("{}\nattach it to the issue: {url}", tgz.display());
+            util::open_url(&url)
+        }
+        (Some("remove" | "delete"), Some(id)) => {
             let p = packs::remove(id)?;
             if let Some(name) = p.skill_name() {
                 for dir in &skill_dirs(None) {
@@ -1998,12 +2030,18 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             Ok(())
         }
         (Some("make"), Some(dir)) => {
-            let m = packs::make(Path::new(dir), opt("--preset"), opt("--id"), opt("--opml").map(Path::new))?;
+            let mut m = packs::make(Path::new(dir), opt("--preset"), opt("--id"), opt("--opml").map(Path::new))?;
+            // --tag a,b: the tags it is found by, then made again so its picture shows them
+            if let Some(t) = opt("--tag") {
+                m.tags = t.split(',').map(|x| x.trim().to_lowercase()).filter(|x| !x.is_empty()).collect();
+                std::fs::write(Path::new(dir).join("manifest.json"), serde_json::to_string_pretty(&m).map_err(|e| e.to_string())? + "\n").map_err(|e| e.to_string())?;
+                m = packs::make(Path::new(dir), None, None, None)?;
+            }
             println!("{}: {} {} ({}), picture {}", dir, m.id, m.version, kinds(&m.kinds), m.preview.unwrap_or_default());
             Ok(())
         }
         (Some("gallery"), Some(dir)) => packs::gallery(Path::new(dir)).map(|n| println!("{dir}/README.md: {n} packs")),
-        _ => Err("usage: edits packs [--json] [browse [--json] | add ID|LINK | trust ID | remove ID | create VIDEO [--name N] [--like A,B] [--length S] | make DIR [--preset NAME] [--id ID] [--opml FILE] | gallery DIR]".into()),
+        _ => Err("usage: edits packs [--json] [browse [--json] | add ID|LINK | trust ID | remove ID | create VIDEO [--name N] [--like A,B] [--length S] | make DIR [--preset NAME] [--id ID] [--opml FILE] [--tag A,B] | on|off ID | set ID KEY=VALUE | share ID | gallery DIR]".into()),
     }
 }
 

@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "cyber-security"
+  ],
   "feeds": [
     {
       "name": "Blackhat Library: Hacking techniques and research",

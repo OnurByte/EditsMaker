@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "memes"
+  ],
   "feeds": [
     {
       "name": "/r/Memes the original since 2008",

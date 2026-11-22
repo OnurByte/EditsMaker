@@ -56,6 +56,12 @@ USAGE
                                from presets, saved with your packs (edits preset create does the same); PACKS.md
   edits packs make DIR [--preset NAME] [--id ID] [--opml FILE]   make a folder a pack: manifest.json, SKILL.md and
                                preview.svg written for you; --opml takes an RSS reader's list as its feeds
+  edits source <pack> [--list|--json] [-n N] [edit options]   a source pack's own program, run alone (bubblewrap on
+                               Linux, sandbox-exec on macOS), finds what to make: each video it gives, or headline
+  edits packs on|off ID        turn a pack off (its preset, skill, feeds, program unused) or on; built-in ones too
+  edits packs remove ID        delete a pack made here or added; built-in ones are only turned off
+  edits packs share ID         a pack made here, packed up, and a GitHub issue to send it to the marketplace
+  edits packs set ID KEY=VALUE a pack's settings (a source's search, say)
   edits rss <pack|feed> [--list|--json] [--feed NAME|all] [-n N] [edit options]   videos from RSS: each new post's
                                headline searched for footage and put on screen, in the pack's look (edits packs lists
                                the RSS packs: news, football, gaming, tech...); --list gives the posts as data

@@ -80,6 +80,10 @@ pub struct Market {
     pub listed: Option<Result<Vec<Listed>, String>>,
     /// the pack an add, remove or trust is running on
     pub busy: Option<String>,
+    /// built-in, community, local, or all
+    pub origin: Option<&'static str>,
+    pub tag: Option<String>,
+    pub newest: bool,
 }
 
 pub struct Review {
@@ -254,7 +258,7 @@ impl Workspace {
         .detach();
     }
 
-    /// `edits packs add|remove|trust ID`, then the marketplace again, and a word on how it went.
+    /// `edits packs add|remove|trust|on|off|share ID`, then the marketplace again, and a word on how it went.
     pub fn pack_action(&mut self, verb: &'static str, id: String, window: &mut Window, cx: &mut Context<Self>) {
         self.market.busy = Some(id.clone());
         cx.notify();
@@ -267,7 +271,7 @@ impl Workspace {
             let _ = this.update_in(cx, |this, window, cx| {
                 this.market.busy = None;
                 let note = match r {
-                    Ok(_) => Notification::success(format!("{id}: {}", match verb { "add" => "added", "remove" => "removed", _ => "trusted" })),
+                    Ok(_) => Notification::success(format!("{id}: {}", match verb { "add" => "added", "remove" => "deleted", "on" => "on", "off" => "off", "share" => "packed up; attach it to the GitHub issue that opened", _ => "trusted" })),
                     Err(e) => Notification::error(e).title(format!("{verb} {id}")),
                 };
                 window.push_notification(note, cx);

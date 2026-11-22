@@ -11,6 +11,8 @@ pub struct Item {
     pub link: String,
     pub summary: String,
     pub image: Option<String>,
+    /// a video the item carries (an enclosure, or a source's video): made from it, not from the headline
+    pub video: Option<String>,
 }
 
 /// An RSS, Atom or RDF feed's items, in the feed's order (newest first).
@@ -33,9 +35,11 @@ pub fn items(xml: &str) -> Option<Vec<Item>> {
             "content" | "enclosure" => c.attribute("type").is_none_or(|t| t.starts_with("image/")) && c.attribute("medium").is_none_or(|m| m == "image"),
             _ => false,
         }).and_then(|c| c.attribute("url")).map(str::to_string);
+        let video = n.descendants().find(|c| matches!(c.tag_name().name(), "enclosure" | "content") && c.attribute("type").is_some_and(|t| t.starts_with("video/")))
+            .and_then(|c| c.attribute("url")).map(str::to_string);
         let summary = text(n, "description").or_else(|| text(n, "summary")).unwrap_or_default();
         let id = text(n, "guid").or_else(|| text(n, "id")).unwrap_or_else(|| link.clone());
-        Some(Item { id, title: strip(&title), link, summary: strip(&summary), image })
+        Some(Item { id, title: strip(&title), link, summary: strip(&summary), image, video })
     }).collect())
 }
 
@@ -87,6 +91,11 @@ pub fn fetch(url: &str) -> Result<Vec<Item>, String> {
 pub fn args_for(title: &str) -> Vec<String> {
     let line: String = title.replace('@', " ").chars().take(90).collect();
     vec![line.clone(), "--caption".into(), format!("{line}@0-4")]
+}
+
+/// What makes an item an edit: its video when it has one, else its headline.
+pub fn args_of(item: &Item) -> Vec<String> {
+    item.video.clone().map(|v| vec![v]).unwrap_or_else(|| args_for(&item.title))
 }
 
 /// `edits rss <pack|feed> [--list] [--json] [--feed NAME|all] [-n N] [edit options...]`
@@ -151,7 +160,7 @@ pub fn cmd(args: &[String]) -> Result<(), String> {
     let mut made: Vec<PathBuf> = vec![];
     for (_, item) in got.iter().take(n) {
         eprintln!("edits: {}", item.title);
-        made.extend(crate::follow::make_from(&[args_for(&item.title), rest.clone()].concat())?);
+        made.extend(crate::follow::make_from(&[args_of(item), rest.clone()].concat())?);
     }
     made.iter().for_each(|c| println!("{}", c.display()));
     Ok(())

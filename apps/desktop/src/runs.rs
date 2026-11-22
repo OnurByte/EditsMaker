@@ -46,13 +46,22 @@ pub struct Pack {
     pub author: String,
     pub description: String,
     pub kinds: Vec<String>,
-    pub built_in: bool,
     /// an automation runs only once trusted; the rest always are
     pub trusted: bool,
     /// the preset it carries, by name
     pub preset: Option<String>,
     #[serde(default)]
     pub feeds: Vec<FeedRef>,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default = "yes")]
+    pub enabled: bool,
+    /// built-in, community or local (made here)
+    #[serde(default)]
+    pub origin: String,
+    /// when it came here (seconds), 0 for a built-in one
+    #[serde(default)]
+    pub added: u64,
     pub preview_file: Option<PathBuf>,
     pub preview_svg: Option<String>,
 }
@@ -65,6 +74,10 @@ pub struct Listed {
     pub description: String,
     pub kinds: Vec<String>,
     pub added: bool,
+}
+
+fn yes() -> bool {
+    true
 }
 
 impl Pack {

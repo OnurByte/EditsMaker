@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "movies"
+  ],
   "feeds": [
     {
       "name": "/Film",

@@ -318,6 +318,12 @@ pub fn write_private(path: &Path, text: &str) -> Result<(), String> {
     o.open(path).and_then(|mut f| f.write_all(text.as_bytes())).map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// Opens a web address in the person's own browser.
+pub fn open_url(url: &str) -> Result<(), String> {
+    let (cmd, args): (&str, Vec<&str>) = if cfg!(target_os = "macos") { ("open", vec![url]) } else if cfg!(windows) { ("cmd", vec!["/C", "start", "", url]) } else { ("xdg-open", vec![url]) };
+    std::process::Command::new(cmd).args(args).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn().map(drop).map_err(|e| format!("{cmd}: {e}"))
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

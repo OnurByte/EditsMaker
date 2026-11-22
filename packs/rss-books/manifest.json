@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "books"
+  ],
   "feeds": [
     {
       "name": "A year of reading the world",

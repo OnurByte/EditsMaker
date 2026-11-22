@@ -1,7 +1,8 @@
 # The pack standard
 
 Version 1 (`"schemaVersion": 1`). This is what `edits` reads, checks and refuses; anything that follows it can be shared
-as a pack, made by hand, by `edits` or by an agent.
+as a pack, made by hand, by `edits` or by an agent. The manifest follows Omarchy's plugin manifests: an id, kinds,
+the files that run, and settings the person can change.
 
 ## A pack is a folder
 
@@ -12,11 +13,24 @@ sad-rain/
   preset.json     an edit's shape: shots, moves, flashes, look   (kind "preset")
   automation.js   a script that does a job on one website        (kind "automation")
                   RSS feeds, in manifest.json                    (kind "feed")
-  preview.svg     its picture: .svg, .png, .jpg, .jpeg or .webp
+  source.sh       a program that finds things to make            (kind "source")
+  preview.gif     its cover: .gif, .svg, .png, .jpg, .jpeg or .webp, any size
 ```
 
+## Built in, community, yours
+
+| | Where | Turn off | Delete | Share |
+| --- | --- | --- | --- | --- |
+| Built in | inside `edits` (`edits.*`) | yes | no | |
+| Community | added from the marketplace | yes | yes | |
+| Yours | made here (`edits packs create`, `make`) | yes | yes | yes |
+
+`edits packs off ID` turns any pack off (its preset, skill, feeds and programs are not used; its skill leaves the
+agents' folders) and `on` back; `edits packs remove ID` deletes one; `edits packs share ID` packs yours up and opens
+a GitHub issue to send it to the marketplace. The app has the same buttons on each pack.
+
 Nothing else is read. When a pack is added, only these files are copied into a folder of its own
-(`~/.config/edits/packs/<id>/`); each must be a plain file (no links) under 20 MB. A pack never reaches into another
+(`~/.config/edits/packs/<id>/`); each must be a plain file (no links), under 20 MB except the cover. A pack never reaches into another
 pack's folder, and removing it removes all of it.
 
 ## manifest.json
@@ -45,10 +59,12 @@ pack's folder, and removing it removes all of it.
 | `author` | yes | Who made it. Keep the original maker's name when you rebuild someone's preset. |
 | `description` | yes | One or two sentences on how the edit feels or what the skill does. |
 | `kinds` | yes | `"skill"` and some of `"preset"`, `"automation"`, `"feed"`: exactly what is there. |
-| `preview` | no | One of `preview.svg`, `preview.png`, `preview.jpg`, `preview.jpeg`, `preview.webp`. Leave it out and `edits` draws one. |
-| `tags` | no | Short words to find it by: pace, moves, frame (`fast`, `zoom`, `9:16`). |
+| `preview` | no | Its cover: `preview.gif` (it moves in the app), `.svg`, `.png`, `.jpg`, `.jpeg` or `.webp`, any size. Leave it out and `edits` draws one. |
+| `tags` | no | Short words to find it by: pace, moves, frame, topic (`fast`, `zoom`, `9:16`, `football`), as many as it needs. `edits packs make DIR --tag a,b`; the app filters by them. |
 | `license` | no | An SPDX name (`MIT`, `CC-BY-4.0`). |
 | `automation` | for an automation | Where its script runs; see below. |
+| `source` | for a source | Its program; see below. |
+| `settings` | no | What the person can change, Omarchy's schema: `[{"key": "query", "label": "Search for", "default": "rust"}]`. `edits packs set ID query=gaming`. |
 | `feeds` | for a feed pack | Its RSS or Atom feeds, `[{"name": "BBC Türkçe", "url": "https://feeds.bbci.co.uk/turkce/rss.xml"}]`; see below. |
 
 Fields are camelCase. Unknown fields are ignored, so a newer pack still opens in an older `edits`.
@@ -136,6 +152,32 @@ edits follow football --post tiktok # as posts come: RSS in, video made, posted 
 come from [awesome-rss-feeds](https://github.com/plenaryapp/awesome-rss-feeds) (CC0), and `edits.rss-turkiye` from
 Anadolu Ajansı, TRT Haber and BBC Türkçe.
 
+## Sources
+
+A program that finds things to make, run alone. `edits source PACK` runs it; `edits follow PACK --post tiktok` runs it
+every few minutes and posts what it finds.
+
+```json
+"source": {"run": "source.sh", "windows": "source.ps1", "network": true},
+"settings": [{"key": "query", "label": "Search for", "default": "rust"}]
+```
+
+It reads `{"settings": {...}}` on stdin and prints one JSON object a line:
+
+```json
+{"id": "t3_1abc", "title": "A clip worth cutting", "video": "https://youtu.be/...", "image": "https://...", "link": "https://..."}
+```
+
+A line with a `video` is made from that video; one without, from its `title`, as RSS is. `run` is a plain file name
+beside the manifest: a `.sh` runs with `sh`, anything else as itself (its `#!` line); `windows` is Windows' own (a
+`.ps1` runs with PowerShell).
+
+**Alone.** Its own data folder as home, a clean environment, two minutes and 4 MB of output at most. On Linux it runs
+inside [bubblewrap](https://github.com/containers/bubblewrap): the pack's folder read-only, its data folder, the
+system, nothing of your home, and the internet only with `"network": true`. On macOS inside `sandbox-exec`, the same
+rules. Windows has no such box: there it gets the clean environment only. One you add runs only after you read it and
+run `edits packs trust ID`; changed, it asks again.
+
 ## Making one
 
 ```sh
@@ -148,6 +190,9 @@ They write `manifest.json`, `SKILL.md` (when there is none) and `preview.svg` fo
 `~/.config/edits/packs/<id>/`, next to the ones you added, and their presets work with `--preset` at once.
 
 ## Sharing one
+
+The quick way: `edits packs share ID` (or Share in the app) packs yours up as a `.tgz` and opens a GitHub issue for the
+marketplace; drag the file into it. Or, to keep it in your own repository:
 
 1. A public GitHub repository with the pack at its root, a README and a license.
 2. Check it: `edits packs add https://github.com/you/repo`.

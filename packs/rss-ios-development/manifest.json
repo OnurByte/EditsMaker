@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "ios-development"
+  ],
   "feeds": [
     {
       "name": "Alberto De Bortoli",

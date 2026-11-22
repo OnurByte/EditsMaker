@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "football"
+  ],
   "feeds": [
     {
       "name": "BBC Sport",

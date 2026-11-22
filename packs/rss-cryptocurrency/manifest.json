@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "cryptocurrency"
+  ],
   "feeds": [
     {
       "name": "Bitcoin & Crypto Trading: Ledger Cast",

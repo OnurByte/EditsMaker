@@ -10,6 +10,10 @@
     "feed"
   ],
   "preview": "preview.svg",
+  "tags": [
+    "rss",
+    "science"
+  ],
   "feeds": [
     {
       "name": "60-Second Science",

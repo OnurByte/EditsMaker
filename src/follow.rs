@@ -79,6 +79,11 @@ type Found = (String, String, String);
 
 /// The source's latest videos, newest first.
 pub fn latest(source: &str) -> Result<Vec<Found>, String> {
+    // a source pack's program: what it found, a video or (empty) a headline to make
+    if let Some(id) = source.strip_prefix("pack:") {
+        let items = crate::source::run(&crate::source::find(id)?)?;
+        return Ok(items.into_iter().map(|i| (i.id, i.video.unwrap_or_default(), i.title)).collect());
+    }
     let s = source.trim_end_matches('/');
     if let Some(slug) = s.strip_prefix("https://kick.com/").or(s.strip_prefix("https://www.kick.com/")).filter(|x| !x.contains('/')) {
         let (code, body) = curl(&[("url", &format!("https://kick.com/api/v2/channels/{slug}/videos")), ("header", "accept: application/json"), ("user-agent", "Mozilla/5.0")])?;
@@ -130,7 +135,10 @@ pub fn add(args: &[String]) -> Result<(), String> {
     let given = args.first().filter(|a| !a.starts_with('-')).ok_or("usage: edits follow <YouTube channel | Kick channel | RSS/Atom feed | feed pack> [--feed NAME] [--titles] [--every MINUTES] [--post ACCOUNT,...|all] [--private] [edit options: --preset, --music, -n ...]")?;
     let mut f = Follow { source: given.clone(), every: 60, ..Default::default() };
     // a feed pack: one of its feeds, its items made from their headlines, in the pack's look
-    if !given.contains("://") {
+    if !given.contains("://") && crate::rss::resolve(given).is_err() {
+        // a source pack: its program is run each check
+        f.source = format!("pack:{}", crate::source::find(given)?.manifest.id);
+    } else if !given.contains("://") {
         let (feeds, preset) = crate::rss::resolve(given)?;
         let want = args.iter().position(|a| a == "--feed").and_then(|i| args.get(i + 1)).map(|w| w.to_lowercase());
         let feed = feeds.iter().find(|x| want.as_ref().is_none_or(|w| x.name.to_lowercase().contains(w))).ok_or("no feed like that in the pack")?;
@@ -235,7 +243,8 @@ fn check(f: &mut Follow) -> Result<(), String> {
     let new: Vec<Found> = found.into_iter().filter(|x| !f.seen.contains(&x.0)).collect::<Vec<_>>().into_iter().rev().take(PER_CHECK).collect();
     for (id, url, title) in new {
         log(&format!("{}: new video {}", f.source, if title.is_empty() { &url } else { &title }));
-        let made = if f.titles { make_from(&[crate::rss::args_for(&title), f.args.clone()].concat()) } else { make(&url, &f.args) };
+        // an article (or a source's item without a video) is made from its headline
+        let made = if f.titles || url.is_empty() { make_from(&[crate::rss::args_for(&title), f.args.clone()].concat()) } else { make(&url, &f.args) };
         match made {
             Ok(clips) => {
                 f.seen.push(id.clone());
