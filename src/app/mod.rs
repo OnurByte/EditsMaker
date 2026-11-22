@@ -8,10 +8,11 @@ mod icons;
 mod marketplace;
 mod review;
 mod runs;
-mod settings;
+pub mod settings;
 mod sidebar;
 mod theme;
 mod ui;
+mod welcome;
 mod workspace;
 
 use gpui_kit::*;
@@ -92,6 +93,9 @@ pub fn run(args: &[String]) {
                 w.open_settings(at, cx);
                 // settings ai add: t3code's Add provider, open
                 w.ai_adding = args_.iter().any(|a| a == "add");
+            }
+            if args_.iter().any(|a| a == "welcome") {
+                w.welcome = true;
             }
             w
         })).expect("could not open the window");

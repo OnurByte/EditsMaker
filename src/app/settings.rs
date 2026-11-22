@@ -14,14 +14,21 @@ use gpui_kit::component::WindowExt;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
-const SECTIONS: &[(Section, &str)] = &[
-    (Section::General, "General"),
-    (Section::Ai, "AI"),
-    (Section::Accounts, "Accounts"),
-    (Section::Agents, "Agents"),
-    (Section::Appearance, "Appearance"),
-    (Section::About, "About"),
+/// The sections, their icons, and the words search finds them by (what their rows are about).
+const SECTIONS: &[(Section, &str, Icon, &str)] = &[
+    (Section::General, "General", Icon::Settings, "folder where edits go output videos encoder gpu graphics card render updates"),
+    (Section::Ai, "AI", Icon::Sparkles, "ai provider model claude codex cursor grok gemini antigravity kiro opencode pi acp openai anthropic openrouter ollama key api"),
+    (Section::Accounts, "Accounts", Icon::User, "accounts connect sign in tiktok youtube instagram bluesky facebook post"),
+    (Section::Agents, "Agents", Icon::Terminal, "agents mcp server skills claude code chatgpt cursor tools"),
+    (Section::Appearance, "Appearance", Icon::Palette, "appearance theme dark light system omarchy accent colour color chat width text size font"),
+    (Section::About, "About", Icon::Info, "about version github check doctor ffmpeg yt-dlp whisper"),
 ];
+
+/// The sections a search finds, all of them for none.
+pub fn found(q: &str) -> Vec<Section> {
+    let q = q.trim().to_lowercase();
+    SECTIONS.iter().filter(|s| q.is_empty() || s.1.to_lowercase().contains(&q) || q.split_whitespace().all(|w| s.3.contains(w))).map(|s| s.0).collect()
+}
 
 /// A SettingsRow: title and description on the left, the control on the right.
 fn row(title: &str, about: impl Into<SharedString>, control: impl IntoElement, first: bool, b: &Brand) -> impl IntoElement {
@@ -341,10 +348,12 @@ impl Workspace {
     /// The settings window, over the app.
     pub fn settings_window(&self, at: Section, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let b = brand(cx);
-        let nav = SECTIONS.iter().map(|&(s, label)| {
+        let shown = found(&self.settings_search.read(cx).value());
+        let nav = SECTIONS.iter().filter(|x| shown.contains(&x.0)).map(|&(s, label, i, _)| {
             let on = s == at;
             let (bg, hover) = (if on { b.accent.opacity(0.14) } else { transparent_black() }, b.hair);
-            div().id(label).h(px(32.)).px(px(8.)).flex().items_center().rounded(SMALL).cursor_pointer().bg(bg).hover(move |st| st.bg(hover))
+            div().id(label).h(px(32.)).px(px(8.)).flex().items_center().gap(px(8.)).rounded(SMALL).cursor_pointer().bg(bg).hover(move |st| st.bg(hover))
+                .child(icon(i, if on { b.accent } else { b.gray }).size(px(16.)))
                 .child(text(label, 14., FontWeight::NORMAL, if on { b.ink } else { b.gray }))
                 .on_click(cx.listener(move |this, _, _, cx| {
                     this.settings_open = Some(s);
@@ -371,7 +380,9 @@ impl Workspace {
                 .on_click(|_, _, cx| cx.stop_propagation())
                 .child(div().w(px(200.)).flex_none().p(px(16.)).flex().flex_col().gap(px(2.))
                     .child(div().px(px(8.)).pb(px(16.)).flex().items_center().gap(px(8.)).child(icon(Icon::Settings, b.gray).size(px(16.))).child(text("Settings", 15., BOLD, b.ink)))
-                    .children(nav))
+                    .child(div().pb(px(8.)).child(Input::new(&self.settings_search).prefix(icon(Icon::Search, b.gray).size(px(14.)))))
+                    .children(nav)
+                    .when(shown.is_empty(), |d| d.child(text("Nothing like that", 13., LIGHT, b.gray).px(px(8.)))))
                 .child(div().flex_1().min_w_0().flex().flex_col()
                     .child(div().h(px(52.)).flex_none().px(px(24.)).flex().items_center().gap(px(8.))
                         .child(text(title, 19., BOLD, b.ink).flex_1())
@@ -385,5 +396,18 @@ impl Workspace {
                     .child(div().id("settings-body").flex_1().min_h_0().overflow_y_scroll()
                         .child(div().px(px(24.)).pb(px(24.)).flex().flex_col().gap(px(24.)).children(body))))
                 .children(add))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn search_finds_the_section_a_setting_is_in() {
+        use super::{found, Section};
+        assert_eq!(found("omarchy"), [Section::Appearance]);
+        assert_eq!(found("tiktok"), [Section::Accounts]);
+        assert!(found("claude").contains(&Section::Ai) && found("claude").contains(&Section::Agents));
+        assert_eq!(found("").len(), 6);
+        assert!(found("zzz").is_empty());
     }
 }

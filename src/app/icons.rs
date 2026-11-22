@@ -5,7 +5,7 @@ use gpui_kit::component::Icon as Glyph;
 use gpui_kit::{img, Hsla, Image, ImageFormat, Img, Rgba, Styled};
 use std::sync::{Arc, LazyLock};
 
-gpui_kit::assets::icon_assets!(pub Extra, [Trash, Rss, Film, Package, Download, Share2, Zap, Store, SquarePen, SlidersHorizontal, KeyRound]);
+gpui_kit::assets::icon_assets!(pub Extra, [Trash, Rss, Film, Package, Download, Share2, Zap, Store, SquarePen, SlidersHorizontal, KeyRound, Sparkles]);
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Icon {
@@ -19,6 +19,12 @@ pub enum Icon {
     Download,
     Eye,
     Plus,
+    Attach,
+    Sparkles,
+    User,
+    Terminal,
+    Info,
+    Search,
     Done,
     Failed,
     Running,
@@ -46,6 +52,12 @@ fn name(i: Icon) -> IconName {
         Icon::Download => IconName::Download,
         Icon::Eye => IconName::Eye,
         Icon::Plus => IconName::SquarePen,
+        Icon::Attach => IconName::Plus,
+        Icon::Sparkles => IconName::Sparkles,
+        Icon::User => IconName::User,
+        Icon::Terminal => IconName::SquareTerminal,
+        Icon::Info => IconName::Info,
+        Icon::Search => IconName::Search,
         Icon::Done => IconName::CircleCheck,
         Icon::Failed => IconName::CircleX,
         Icon::Running => IconName::LoaderCircle,

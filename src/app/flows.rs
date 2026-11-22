@@ -1,5 +1,5 @@
-//! Flows, as in n8n but in one line each: a source (an RSS pack's feed, a channel), made into edits, posted to
-//! accounts. Each is an `edits follow`; `edits watch` (or the background service) runs them.
+//! Flows, as in n8n but in one line each: a topic (the news on it, from a topic pack) or a channel, made into edits,
+//! posted to accounts. Each is an `edits follow`; `edits watch` (or the background service) runs them.
 use crate::app::icons::{icon, Icon};
 use crate::app::runs::Flow;
 use crate::app::theme::{Brand, BOLD, LIGHT};
@@ -30,14 +30,14 @@ impl Workspace {
     fn flow_row(&self, i: usize, f: &Flow, b: &Brand, cx: &mut Context<Self>) -> impl IntoElement {
         let preset = f.args.iter().position(|a| a == "--preset").and_then(|k| f.args.get(k + 1)).cloned();
         let made = match (f.titles, preset) {
-            (true, Some(p)) => format!("Headline, {p}"),
-            (true, None) => "From the headline".into(),
+            (true, Some(p)) => format!("Each story, {p}"),
+            (true, None) => "Each new story".into(),
             (false, Some(p)) => p,
             (false, None) => "Edits".into(),
         };
         let source = f.source.clone();
         div().py(px(8.)).flex().items_center().gap(px(8.)).flex_wrap().when(i > 0, |d| d.border_t_1().border_color(b.hair))
-            .child(step(Icon::Workflow, self.source_name(&f.source), b))
+            .child(step(Icon::Rss, self.source_name(&f.source), b))
             .child(arrow(b))
             .child(step(Icon::Film, made, b))
             .child(arrow(b))
@@ -53,7 +53,7 @@ impl Workspace {
         let list: AnyElement = match &self.flows {
             None => text("Reading the flows...", 14., FontWeight::NORMAL, b.gray).into_any_element(),
             Some(Err(e)) => text(e.clone(), 14., FontWeight::NORMAL, b.red_text).into_any_element(),
-            Some(Ok(l)) if l.is_empty() => text("No flows yet. Make one below: a source, the edit, where it goes.", 14., LIGHT, b.gray).into_any_element(),
+            Some(Ok(l)) if l.is_empty() => text("No flows yet. Make one below: a topic, the edit, where it goes.", 14., LIGHT, b.gray).into_any_element(),
             Some(Ok(l)) => card(b).children(l.iter().enumerate().map(|(i, f)| self.flow_row(i, f, b, cx))).into_any_element(),
         };
         let accounts: Vec<String> = self.settings.as_ref().and_then(|s| s.as_ref().ok()).map(|s| s.accounts.iter().map(|a| a.name.clone()).collect()).unwrap_or_default();
@@ -78,10 +78,10 @@ impl Workspace {
                 cx.notify();
             }))
         }));
-        let source = self.picker_pill("flow-source", Icon::Workflow, self.flow_source.clone().unwrap_or_else(|| "Pick an RSS source".into()), Picker::FlowSource, b, cx);
+        let source = self.picker_pill("flow-source", Icon::Workflow, self.flow_source.clone().unwrap_or_else(|| "Pick a topic".into()), Picker::FlowSource, b, cx);
         let label = |s: &'static str| text(s, 13., BOLD, b.ink).w(px(96.)).flex_none();
         let new = card(b).gap(px(16.))
-            .child(div().flex().items_center().gap(px(16.)).child(label("From")).child(source))
+            .child(div().flex().items_center().gap(px(16.)).child(label("About")).child(source))
             .when(self.picker == Some(Picker::FlowSource), |d| d.child(self.picker_list(Picker::FlowSource, b, cx)))
             .child(div().flex().items_center().gap(px(16.)).child(label("Made with")).child(text(self.preset.clone().unwrap_or_else(|| "the composer's preset (none now)".into()), 13., FontWeight::NORMAL, b.gray)))
             .child(div().flex().items_center().gap(px(16.)).child(label("Posted to")).child(post))
@@ -102,7 +102,7 @@ impl Workspace {
                     .on_click(cx.listener(|this, _, window, cx| this.change(vec!["service".into(), "install".into()], window, cx)))));
         div().flex().flex_col().gap(px(16.))
             .child(text("Flows", 19., BOLD, b.ink))
-            .child(text("RSS in, video made, posted out: each new post becomes an edit and goes to your accounts. They run while the app's background service does (Keep them running).", 15., LIGHT, b.gray))
+            .child(text("Pick a topic and where to post: each new story on it becomes an edit and goes to your accounts, by itself. They run while edits runs in the background (Keep them running).", 15., LIGHT, b.gray))
             .child(list)
             .child(new)
     }

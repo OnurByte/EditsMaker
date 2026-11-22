@@ -24,7 +24,7 @@ pub enum Route {
 }
 
 /// t3code's settings sections, as edits has them.
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Section {
     General,
     Ai,
@@ -34,43 +34,21 @@ pub enum Section {
     About,
 }
 
-/// What the composer makes: edits from a link, a channel, a topic or a file; a pack from a video; or videos from an
-/// RSS pack's newest posts.
-#[derive(Clone, Copy, PartialEq)]
-pub enum Mode {
-    Edit,
-    Pack,
-    Rss,
-}
-
 /// The list open above the composer, or in a new flow.
 #[derive(Clone, Copy, PartialEq)]
 pub enum Picker {
     Preset,
-    Source,
     FlowSource,
 }
 
-/// The `edits` commands the composer runs: one per attached file (or one for what is typed), with the chosen
-/// preset, RSS source and count.
-pub fn commands(mode: Mode, text: &str, files: &[PathBuf], preset: Option<&str>, source: Option<&str>, count: usize) -> Vec<Vec<String>> {
+/// The `edits` commands the composer runs: one per attached file (or one for what is typed), in the chosen style.
+pub fn commands(text: &str, files: &[PathBuf], preset: Option<&str>) -> Vec<Vec<String>> {
     let words = runs::split_args(text);
-    let mut extra: Vec<String> = vec![];
-    if let Some(p) = preset.filter(|_| mode != Mode::Pack && !words.iter().any(|w| w == "--preset")) {
-        extra.extend(["--preset".to_string(), p.to_string()]);
+    let style: Vec<String> = preset.filter(|_| !words.iter().any(|w| w == "--preset")).map(|p| vec!["--preset".to_string(), p.to_string()]).unwrap_or_default();
+    if files.is_empty() {
+        return if words.is_empty() { vec![] } else { vec![[words, style].concat()] };
     }
-    if count > 1 && mode != Mode::Pack {
-        extra.extend(["-n".to_string(), count.to_string()]);
-    }
-    match mode {
-        Mode::Rss => source.map(|s| [vec!["rss".to_string(), s.to_string()], words, extra].concat()).into_iter().collect(),
-        Mode::Pack => {
-            let head = |input: String| [vec!["packs".into(), "create".into(), input], words.clone()].concat();
-            if files.is_empty() { words.first().map(|_| [vec!["packs".to_string(), "create".to_string()], words.clone()].concat()).into_iter().collect() } else { files.iter().map(|f| head(f.display().to_string())).collect() }
-        }
-        Mode::Edit if files.is_empty() => if words.is_empty() { vec![] } else { vec![[words, extra].concat()] },
-        Mode::Edit => files.iter().map(|f| [vec![f.display().to_string()], words.clone(), extra.clone()].concat()).collect(),
-    }
+    files.iter().map(|f| [vec![f.display().to_string()], words.clone(), style.clone()].concat()).collect()
 }
 
 #[derive(Default)]
@@ -99,13 +77,9 @@ pub struct Review {
 
 pub struct Workspace {
     pub input: Entity<TextareaState>,
-    pub mode: Mode,
     /// files dropped or picked, each made on its own
     pub files: Vec<PathBuf>,
     pub preset: Option<String>,
-    /// the RSS pack, by its short name
-    pub source: Option<String>,
-    pub count: usize,
     pub picker: Option<Picker>,
     pub flows: Option<Result<Vec<Flow>, String>>,
     /// a new flow: its source, the accounts it posts to, minutes between checks
@@ -127,6 +101,10 @@ pub struct Workspace {
     pub ai_models: Option<Result<Vec<String>, String>>,
     /// t3code's Add provider window, and whether it shows every provider
     pub ai_adding: bool,
+    /// t3code's settings search
+    pub settings_search: Entity<InputState>,
+    /// the first time: the welcome page instead of the app
+    pub welcome: bool,
     pub ai_more: bool,
     /// what `edits doctor` said, in About
     pub doctor: Option<String>,
@@ -141,8 +119,9 @@ pub struct Workspace {
 impl Workspace {
     pub fn new(review: Option<PathBuf>, window: &mut Window, cx: &mut Context<Self>) -> Self {
         theme::apply(Some(window), cx);
+        let settings_search = cx.new(|cx| InputState::new(window, cx).placeholder("Search settings"));
         let input = cx.new(|cx| TextareaState::new(window, cx).auto_grow(1, 6).submit_on_enter(true)
-            .placeholder("A link, a channel or a topic, or drop a video. Enter sends, Shift+Enter is a new line"));
+            .placeholder("Paste a link, name a topic, or drop a video"));
         let subscriptions = vec![
             cx.subscribe_in(&input, window, |this, _, e: &InputEvent, window, cx| {
                 if let InputEvent::PressEnter { .. } = e {
@@ -151,6 +130,20 @@ impl Workspace {
             }),
             cx.observe_window_appearance(window, |_, window, cx| theme::apply(Some(window), cx)),
         ];
+        let mut subscriptions = subscriptions;
+        // the settings search: the sections it finds, the first of them shown
+        subscriptions.push(cx.subscribe(&settings_search, |this: &mut Self, s, e: &InputEvent, cx| {
+            if let InputEvent::Change = e {
+                let q = s.read(cx).value().to_string();
+                let first = crate::app::settings::found(&q).first().copied();
+                if let (Some(at), Some(f)) = (this.settings_open, first) {
+                    if !crate::app::settings::found(&q).contains(&at) {
+                        this.settings_open = Some(f);
+                    }
+                }
+                cx.notify();
+            }
+        }));
         let ai_key = cx.new(|cx| InputState::new(window, cx).masked(true).placeholder("API key"));
         let ai_endpoint = cx.new(|cx| InputState::new(window, cx).placeholder("http://127.0.0.1:11434/v1"));
         // following Omarchy: when its theme changes, so does the app's
@@ -171,9 +164,12 @@ impl Workspace {
             }
         })
         .detach();
-        let mut this = Self { input, mode: Mode::Edit, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, files: vec![], preset: None, source: None, count: 1, picker: None, flows: None,
+        let mut this = Self { input, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, settings_search, welcome: review.is_none() && !theme::prefs().onboarded, files: vec![], preset: None, picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
             market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(), _subscriptions: subscriptions };
+        if this.welcome {
+            this.load_settings(cx);
+        }
         if let Some(clip) = review {
             this.open_review(clip, window, cx);
         } else {
@@ -198,13 +194,12 @@ impl Workspace {
         cx.notify();
     }
 
-    /// Runs what the composer holds: edits, a pack, or videos from RSS.
+    /// Runs what the composer holds.
     pub fn start(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let text = self.input.read(cx).value().to_string();
-        let list = commands(self.mode, &text, &self.files, self.preset.as_deref(), self.source.as_deref(), self.count);
+        let list = commands(&text, &self.files, self.preset.as_deref());
         if list.is_empty() {
-            let what = if self.mode == Mode::Rss { "Pick an RSS source first" } else { "Type a link or a topic, or drop a video" };
-            window.push_notification(Notification::info(what), cx);
+            window.push_notification(Notification::info("Paste a link, name a topic, or drop a video"), cx);
             return;
         }
         for args in list {
@@ -216,7 +211,21 @@ impl Workspace {
         cx.notify();
     }
 
-    fn launch(&mut self, args: Vec<String>, window: &mut Window, cx: &mut Context<Self>) {
+    /// A pack made from a video the person picks: its rhythm, moves borrowed from the presets.
+    pub fn make_pack(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let paths = cx.prompt_for_paths(PathPromptOptions { files: true, directories: false, multiple: false, prompt: Some("A video to make a pack from".into()) });
+        cx.spawn_in(window, async move |this, cx| {
+            if let Ok(Ok(Some(paths))) = paths.await {
+                if let Some(p) = paths.first() {
+                    let args = vec!["packs".to_string(), "create".into(), p.display().to_string()];
+                    let _ = this.update_in(cx, |this, window, cx| this.launch(args, window, cx));
+                }
+            }
+        })
+        .detach();
+    }
+
+    pub fn launch(&mut self, args: Vec<String>, window: &mut Window, cx: &mut Context<Self>) {
         self.jobs.push(Job::start(args));
         let i = self.jobs.len() - 1;
         self.route = Route::Job(i);
@@ -255,9 +264,6 @@ impl Workspace {
     pub fn put(&mut self, path: &Path, window: &mut Window, cx: &mut Context<Self>) {
         if !self.files.iter().any(|f| f == path) {
             self.files.push(path.to_path_buf());
-        }
-        if self.mode == Mode::Rss {
-            self.mode = Mode::Edit;
         }
         self.input.update(cx, |s, cx| s.focus(window, cx));
         if !matches!(self.route, Route::New | Route::Job(_) | Route::Run(_)) {
@@ -401,6 +407,10 @@ impl Render for Workspace {
             _ => self.chat_view(window, cx).into_any_element(),
         };
         let settings = self.settings_open.map(|at| self.settings_window(at, window, cx));
+        if self.welcome {
+            return div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
+                .child(self.welcome(window, cx)).children(settings);
+        }
         div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
             .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
                 if let Some(p) = paths.paths().first() {
@@ -416,7 +426,7 @@ impl Render for Workspace {
 #[cfg(test)]
 mod tests {
     // not super::*: gpui_kit's own `test` attribute would come with it
-    use super::{commands, Mode};
+    use super::commands;
     use std::path::PathBuf;
 
     fn s(v: &[&str]) -> Vec<String> {
@@ -424,14 +434,12 @@ mod tests {
     }
 
     #[test]
-    fn the_composer_runs_one_edit_per_file_with_its_choices() {
+    fn the_composer_runs_one_edit_per_file_in_its_style() {
         let files = [PathBuf::from("/v/a b.mp4"), PathBuf::from("/v/c.mp4")];
-        assert_eq!(commands(Mode::Edit, "--music trend:1", &files, Some("akis-whip"), None, 3),
-            [s(&["/v/a b.mp4", "--music", "trend:1", "--preset", "akis-whip", "-n", "3"]), s(&["/v/c.mp4", "--music", "trend:1", "--preset", "akis-whip", "-n", "3"])]);
-        assert_eq!(commands(Mode::Edit, "https://youtu.be/x --preset mine", &[], Some("akis-whip"), None, 1), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
-        assert!(commands(Mode::Edit, "  ", &[], None, None, 1).is_empty());
-        assert_eq!(commands(Mode::Rss, "", &[], None, Some("football"), 3), [s(&["rss", "football", "-n", "3"])]);
-        assert!(commands(Mode::Rss, "x", &[], None, None, 1).is_empty(), "no source picked");
-        assert_eq!(commands(Mode::Pack, "--name mine", &files[..1], Some("x"), None, 3), [s(&["packs", "create", "/v/a b.mp4", "--name", "mine"])]);
+        assert_eq!(commands("--music trend:1", &files, Some("akis-whip")),
+            [s(&["/v/a b.mp4", "--music", "trend:1", "--preset", "akis-whip"]), s(&["/v/c.mp4", "--music", "trend:1", "--preset", "akis-whip"])]);
+        assert_eq!(commands("https://youtu.be/x --preset mine", &[], Some("akis-whip")), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
+        assert!(commands("  ", &[], None).is_empty());
     }
+
 }

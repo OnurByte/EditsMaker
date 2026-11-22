@@ -39,7 +39,7 @@ fn folder(id: &str) -> std::path::PathBuf {
 }
 
 fn kind_label(p: &Pack) -> &'static str {
-    if p.is("automation") { "Automation" } else if p.is("source") { "Source" } else if p.is("feed") { "RSS" } else { "Pack" }
+    if p.is("automation") { "Automation" } else if p.is("source") { "Source" } else if p.is("feed") { "Topic" } else { "Pack" }
 }
 
 /// A click that runs `edits packs VERB ID`.
@@ -110,7 +110,8 @@ impl Workspace {
         }));
         // the tags most packs here carry
         let mut count: Vec<(String, usize)> = vec![];
-        for t in list.iter().flat_map(|p| &p.tags) {
+        // "rss" says how, not what: the topics' own tags say what
+        for t in list.iter().flat_map(|p| &p.tags).filter(|t| *t != "rss") {
             match count.iter_mut().find(|x| &x.0 == t) {
                 Some(x) => x.1 += 1,
                 None => count.push((t.clone(), 1)),
@@ -160,12 +161,14 @@ impl Workspace {
         let (i, title, about) = if automations {
             (Icon::Workflow, "Automations", "Packs that run something: an automation on its one site (posting a clip), or a source's own program finding what to make. Each runs alone; one you add runs after you read it and trust it.")
         } else {
-            (Icon::Store, "Marketplace", "Packs: an edit's shape, RSS to make videos from, the instructions an agent follows. Built in, from the community, or yours: turn any off, delete the ones you added, share the ones you made.")
+            (Icon::Store, "Marketplace", "Packs: a style for your edits, a topic to make videos about as news comes, what an agent knows. Built in, from the community, or yours: turn any off, delete the ones you added, share the ones you made.")
         };
         div().size_full().flex().flex_col()
             .child(div().h(HEADER).flex_none().px(px(24.)).flex().items_center().gap(px(8.)).border_b_1().border_color(b.hair)
                 .child(icon(i, b.gray).size(px(16.)))
-                .child(text(title, 14., BOLD, b.ink).flex_1()))
+                .child(text(title, 14., BOLD, b.ink).flex_1())
+                .when(!automations, |d| d.child(pill("make-pack", Some(Icon::Package), "Make a pack from a video", false, &b)
+                    .on_click(cx.listener(|this, _, window, cx| this.make_pack(window, cx))))))
             .child(div().id("market").flex_1().min_h_0().overflow_y_scroll()
                 .child(div().w_full().max_w(px(960.)).mx_auto().p(px(24.)).flex().flex_col().gap(px(24.))
                     .child(text(about, 15., LIGHT, b.gray))

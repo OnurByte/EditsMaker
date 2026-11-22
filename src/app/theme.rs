@@ -50,6 +50,9 @@ pub struct Prefs {
     pub font_size: f32,
     #[serde(default = "red")]
     pub accent: String,
+    /// the welcome page was seen
+    #[serde(default)]
+    pub onboarded: bool,
 }
 
 fn red() -> String {
@@ -58,7 +61,7 @@ fn red() -> String {
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { mode: "system".into(), width: "normal".into(), font_size: 15., accent: red() }
+        Prefs { mode: "system".into(), width: "normal".into(), font_size: 15., accent: red(), onboarded: false }
     }
 }
 
