@@ -209,10 +209,23 @@ pub fn music(spec: &str) -> Result<String, String> {
 
 /// A song by name: the YouTube result whose title matches it best (the first result alone varies between calls).
 pub fn find_song(title: &str) -> Result<String, String> {
-    let out = yt(&["--no-warnings", "--flat-playlist", "--print", "%(title)s\t%(webpage_url,url)s", "--", &format!("ytsearch8:{title}")])?;
-    let found: Vec<(String, String)> = out.lines().filter_map(|l| l.split_once('\t')).map(|(t, u)| (t.to_string(), u.to_string())).collect();
+    let out = yt(&["--no-warnings", "--flat-playlist", "--print", "%(title)s\t%(duration)s\t%(webpage_url,url)s", "--", &format!("ytsearch8:{title}")])?;
+    let found = song_results(&out);
     let titles: Vec<String> = found.iter().map(|f| f.0.clone()).collect();
     best_title(title, &titles).map(|i| found[i].1.clone()).ok_or(format!("no song found for \"{title}\""))
+}
+
+/// Search lines (title, seconds, link) as (title, link), song-length ones only when there are any: a 20-minute
+/// "1 hour loop" or a whole album shares the song's title but not its clock.
+fn song_results(out: &str) -> Vec<(String, String)> {
+    let all: Vec<(String, Option<f64>, String)> = out.lines().filter_map(|l| {
+        let mut f = l.split('\t');
+        let (t, d, u) = (f.next()?, f.next()?, f.next()?);
+        Some((t.to_string(), d.trim().parse().ok(), u.trim().to_string()))
+    }).collect();
+    let song = |d: &Option<f64>| d.is_none_or(|d| d <= 600.0);
+    let keep = all.iter().any(|x| song(&x.1));
+    all.into_iter().filter(|x| !keep || song(&x.1)).map(|(t, _, u)| (t, u)).collect()
 }
 
 pub fn local(file: &Path, cache: &Path) -> Result<Source, String> {
@@ -407,6 +420,14 @@ mod tests {
         let titles = t(&["Raya (Slowed)", "NUEKI, Mc Menor Do Alvorada - MONTAGEM ROYAL (SLOWED)", "MONTAGEM ROYAL (slowed + reverb)"]);
         assert_eq!(best_title("Montagem Royal - Slowed & Reverb", &titles), Some(2));
         assert_eq!(best_title("x", &[]), None);
+    }
+
+    #[test]
+    fn a_song_is_song_length() {
+        let out = "Umrumdışı - Mabel Matiz\t1214\thttps://y/a\nMabel Matiz - Umrumdışı\t221\thttps://y/b\nUmrumdışı (canlı)\tNA\thttps://y/c\n";
+        assert_eq!(song_results(out), vec![("Mabel Matiz - Umrumdışı".into(), "https://y/b".into()), ("Umrumdışı (canlı)".into(), "https://y/c".into())]);
+        // only long ones: better one of them than none
+        assert_eq!(song_results("Album\t3000\thttps://y/d\n").len(), 1);
     }
 
     #[test]
