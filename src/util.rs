@@ -126,12 +126,20 @@ pub fn crf_bitrate(crf: f64) -> String {
     format!("{:.0}k", 12000.0 * 2f64.powf((18.0 - crf) / 6.0))
 }
 
+static FAST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// --preview: encoders trade a little size for speed.
+pub fn set_fast() {
+    FAST.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
 /// H.264 arguments at an x264-style quality `crf` (lower = better), on the GPU when --encoder says so.
 pub fn h264(crf: u32) -> Vec<String> {
+    let fast = FAST.load(std::sync::atomic::Ordering::Relaxed);
     let a: &[&str] = match gpu() {
-        "nvenc" => &["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr", "-b:v", "0", "-cq"],
+        "nvenc" => &["-c:v", "h264_nvenc", "-preset", if fast { "p1" } else { "p5" }, "-tune", "hq", "-rc", "vbr", "-b:v", "0", "-cq"],
         "videotoolbox" => &["-c:v", "h264_videotoolbox", "-profile:v", "high", "-b:v"],
-        _ => &["-c:v", "libx264", "-preset", "medium", "-crf"],
+        _ => &["-c:v", "libx264", "-preset", if fast { "veryfast" } else { "medium" }, "-crf"],
     };
     let level = if gpu() == "videotoolbox" { crf_bitrate(crf as f64) } else { crf.to_string() };
     a.iter().map(|s| s.to_string()).chain([level]).collect()
@@ -252,6 +260,18 @@ pub fn zscores(v: &[f64]) -> Vec<f64> {
     let var = v.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / v.len() as f64;
     let sd = if var.sqrt() < 1e-9 { 1.0 } else { var.sqrt() };
     v.iter().map(|x| (x - mean) / sd).collect()
+}
+
+/// CRC-32 (IEEE), as zip and Shazam's signatures use it.
+pub fn crc32(data: &[u8]) -> u32 {
+    let mut c = !0u32;
+    for &b in data {
+        c ^= b as u32;
+        for _ in 0..8 {
+            c = if c & 1 != 0 { (c >> 1) ^ 0xedb8_8320 } else { c >> 1 };
+        }
+    }
+    !c
 }
 
 pub fn mmss(t: f64) -> String {

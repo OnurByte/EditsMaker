@@ -19,6 +19,26 @@ pub struct Timeline {
     pub captions: Vec<(f64, f64, String)>,
     /// the spoken line alone, (start, end, text): drawn on the picture with --say-text
     pub said: Vec<(f64, f64, String)>,
+    /// (time on the timeline, name): the song's beats, its drop, where the voice comes in
+    pub markers: Vec<(f64, String)>,
+}
+
+/// Markers for an edit of `total` s: every beat (times on the edit's own clock), the drop and the voice line's start.
+pub fn markers(beats: &[f64], total: f64, drop: Option<f64>, voice: Option<f64>) -> Vec<(f64, String)> {
+    let mut m: Vec<(f64, String)> = beats.iter().filter(|b| (0.0..total).contains(*b)).map(|b| (*b, "beat".to_string())).collect();
+    m.extend(drop.filter(|d| (0.0..total).contains(d)).map(|d| (d, "drop".to_string())));
+    m.extend(voice.filter(|v| (0.0..total).contains(v)).map(|v| (v, "voice".to_string())));
+    m.sort_by(|a, b| a.0.total_cmp(&b.0));
+    m
+}
+
+/// Resolve's EDL marker colour for a marker name.
+fn colour(name: &str) -> &'static str {
+    match name {
+        "drop" => "RED",
+        "voice" => "GREEN",
+        _ => "BLUE",
+    }
 }
 
 fn frames(t: f64) -> u64 {
@@ -82,13 +102,19 @@ impl Timeline {
             let a = assets.iter().position(|x| x == f).unwrap_or(0);
             let _ = write!(s, "            <asset-clip ref=\"a{a}\" name=\"shot {}\" offset=\"{}\" start=\"{}\" duration=\"{}\" format=\"r0\"",
                 k + 1, rt(at), rt(*inp), rt(*len));
+            let mut inner = String::new();
             // the song rides on the first clip, as a connected clip under the whole edit
-            match (&self.music, k) {
-                (Some((_, from)), 0) => {
-                    let _ = write!(s, ">\n              <asset-clip ref=\"music\" lane=\"-1\" name=\"music\" offset=\"{}\" start=\"{}\" duration=\"{}\"/>\n            </asset-clip>\n",
-                        rt(*inp), rt(*from), rt(total));
-                }
-                _ => s.push_str("/>\n"),
+            if let (Some((_, from)), 0) = (&self.music, k) {
+                let _ = writeln!(inner, "              <asset-clip ref=\"music\" lane=\"-1\" name=\"music\" offset=\"{}\" start=\"{}\" duration=\"{}\"/>", rt(*inp), rt(*from), rt(total));
+            }
+            // a marker sits in the shot it falls in, on that shot's own clock
+            for (t, name) in self.markers.iter().filter(|m| m.0 >= at && m.0 < at + len) {
+                let _ = writeln!(inner, "              <marker start=\"{}\" duration=\"1/30s\" value=\"{}\"/>", rt(inp + t - at), esc(name));
+            }
+            if inner.is_empty() {
+                s.push_str("/>\n");
+            } else {
+                let _ = write!(s, ">\n{inner}            </asset-clip>\n");
             }
             at += len;
         }
@@ -103,7 +129,12 @@ impl Timeline {
         for (k, (f, inp, len)) in self.clips.iter().enumerate() {
             let reel = format!("AX{:03}", k + 1);
             let _ = writeln!(s, "{:03}  {reel:<8} AA/V  C        {} {} {} {}", k + 1, tc(*inp), tc(inp + len), tc(at), tc(at + len));
-            let _ = writeln!(s, "* FROM CLIP NAME: {}\n* SOURCE FILE: {}\n", f.file_name().unwrap_or_default().to_string_lossy(), f.to_string_lossy());
+            let _ = writeln!(s, "* FROM CLIP NAME: {}\n* SOURCE FILE: {}", f.file_name().unwrap_or_default().to_string_lossy(), f.to_string_lossy());
+            // Resolve and Avid read LOC lines as markers
+            for (t, name) in self.markers.iter().filter(|m| m.0 >= at && m.0 < at + len) {
+                let _ = writeln!(s, "* LOC: {} {} {name}", tc(*t), colour(name));
+            }
+            s.push('\n');
             at += len;
         }
         if let Some((m, from)) = &self.music {
@@ -163,6 +194,7 @@ mod tests {
             music: Some(("/m/song.wav".into(), 30.0)),
             captions: vec![(0.0, 1.2, "Merhaba dünya".into())],
             said: vec![],
+            markers: vec![],
         }
     }
 
@@ -186,6 +218,20 @@ mod tests {
         assert!(x.contains("project name=\"test &amp; co\""));
         // it parses as XML
         roxmltree::Document::parse(&x.replace("<!DOCTYPE fcpxml>\n", "")).unwrap();
+    }
+
+    #[test]
+    fn markers_land_in_their_shot() {
+        let m = markers(&[0.5, 1.0, 2.0, 9.0], 3.5, Some(2.0), Some(1.0));
+        assert_eq!(m.iter().map(|x| (x.0, x.1.as_str())).collect::<Vec<_>>(), [(0.5, "beat"), (1.0, "beat"), (1.0, "voice"), (2.0, "beat"), (2.0, "drop")]);
+        let t = Timeline { markers: m, ..tl() };
+        let x = t.fcpxml();
+        // 0.5 s into shot 1 (in point 10 s) is 10.5 s of its source; 2.0 s is 0.5 s into shot 2 (in point 3 s)
+        assert!(x.contains("<marker start=\"315/30s\" duration=\"1/30s\" value=\"beat\"/>") && x.contains("<marker start=\"105/30s\" duration=\"1/30s\" value=\"drop\"/>"), "{x}");
+        assert!(x.contains("name=\"shot 2\" offset=\"45/30s\" start=\"90/30s\" duration=\"60/30s\" format=\"r0\">"), "{x}");
+        roxmltree::Document::parse(&x.replace("<!DOCTYPE fcpxml>\n", "")).unwrap();
+        let e = t.edl();
+        assert!(e.contains("* LOC: 00:00:02:00 RED drop") && e.contains("* LOC: 00:00:01:00 GREEN voice") && e.contains("* LOC: 00:00:00:15 BLUE beat"), "{e}");
     }
 
     #[test]

@@ -53,6 +53,7 @@ fn tools() -> Value {
             "lut": {"type": "string", "description": "a .cube LUT file over the picture"},
             "fit": {"type": "boolean", "description": "keep the whole frame over a blurred copy instead of cropping around faces"},
             "join": {"type": "boolean", "description": "also join all clips into joined.mp4"},
+            "preview": {"type": "boolean", "description": "one edit at half size, encoded fast: check it, then render again without"},
             "no_jumpcuts": {"type": "boolean"}, "no_sfx": {"type": "boolean", "description": "no made whoosh/boom (use for quiet, emotional edits)"},
             "no_hook": {"type": "boolean"}, "no_captions": {"type": "boolean"}, "no_llm": {"type": "boolean", "description": "pick moments from viewer signals only"},
             "tag": {"type": "string"},
@@ -69,12 +70,14 @@ fn tools() -> Value {
         {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure/hue curves, contrast, kelvin, vignette, grain, glow, sharpen, pixelate, lens, trails, flip, letterbox, split, mirror, strobe, comic, scanlines, leak, fade_in, fade_out ([time 0..1 of the shot, value, easing]) plus flashes; mark one shot \"drop\": true and a say line ends as it starts. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
-        {"name": "edits_preset_set", "description": "Change a preset field by field, no script: changes are KEY=VALUE like total=12, shots.0.zoom=1.3, shots.*.speed=2 or look=\"bw\" (lists count from 0, * is every shot; a value is JSON, else text). `as` saves it under a new name.",
-         "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "changes": {"type": "array", "items": {"type": "string"}}, "as": {"type": "string"}}, "required": ["name", "changes"]}},
+        {"name": "edits_preset_set", "description": "Change a preset field by field, no script: changes are KEY=VALUE like total=12, shots.0.zoom=1.3, shots.*.speed=2 or look=\"bw\" (lists count from 0, * is every shot; a value is JSON, else text). `as` saves it under a new name. `revision`: the one edits_preset_get's log gave; the change is refused if the preset changed since. edits_preset_undo takes a change back.",
+         "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "changes": {"type": "array", "items": {"type": "string"}}, "as": {"type": "string"}, "revision": {"type": "string"}}, "required": ["name", "changes"]}},
         {"name": "edits_words", "description": "What a video says, line by line with times, each line as a ready say spec (ID@A-B) for edits_make say. Use it to find a line instead of transcribing yourself. `input`: a link, a YouTube ID or a file; `range` \"60-90\" seconds; `find` keeps the lines with those words.",
          "inputSchema": {"type": "object", "properties": {"input": {"type": "string"}, "range": {"type": "string"}, "find": {"type": "string"}, "lang": {"type": "string"}}, "required": ["input"]}, "annotations": {"readOnlyHint": true}},
-        {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name.",
-         "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}}, "required": ["preset"]}},
+        {"name": "edits_preset_save", "description": "Save a preset (a whole preset object). Saved presets replace a built-in one with the same name. `revision` (from edits_preset_get's log) refuses the save if the preset changed since.",
+         "inputSchema": {"type": "object", "properties": {"preset": {"type": "object"}, "revision": {"type": "string"}}, "required": ["preset"]}},
+        {"name": "edits_preset_undo", "description": "Take a preset back one change: the version a save or set replaced, or the built-in one when the first change was over it. Each call goes one step further back.",
+         "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}},
         {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes, or its X/TikTok/Instagram/YouTube link) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path or link of the edit"}}, "required": ["video"]}},
         {"name": "edits_preset_create", "description": "Make a new preset from scratch for a video: the video sets the rhythm (its cuts, extra cuts where it moves most) and which shots hit hardest; the moves, flashes and look are borrowed from other presets (`like`: names from edits_presets, default the three with the closest shot length). Saved like any preset; read it with edits_preset_get, change it, then edits_make preset.",
@@ -105,13 +108,18 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
     match name {
         "edits_presets" => v.extend(["preset".into(), "list".into()]),
         "edits_preset_get" => v.extend(["preset".into(), "show".into(), s("name").ok_or("name is needed")?]),
-        "edits_preset_save" => v.extend(["preset".into(), "save".into(), "-".into()]),
+        "edits_preset_save" => {
+            v.extend(["preset".into(), "save".into(), "-".into()]);
+            v.extend(s("revision").into_iter().flat_map(|r| ["--if".into(), r]));
+        }
+        "edits_preset_undo" => v.extend(["preset".into(), "undo".into(), s("name").ok_or("name is needed")?]),
         "edits_preset_set" => {
             v.extend(["preset".into(), "set".into(), s("name").ok_or("name is needed")?]);
             v.extend(a["changes"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from)));
             if let Some(n) = s("as") {
                 v.extend(["--as".into(), n]);
             }
+            v.extend(s("revision").into_iter().flat_map(|r| ["--if".into(), r]));
         }
         "edits_words" => {
             v.extend(["words".into(), s("input").ok_or("input is needed")?]);
@@ -207,7 +215,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             for t in a["flash_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--flash-text".into(), t.into()]);
             }
-            for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
+            for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("preview", "--preview"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
                 ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math"), ("reverb", "--reverb"), ("fix", "--fix")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
@@ -467,7 +475,9 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 17);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 18);
+        assert_eq!(args_for("edits_preset_set", &json!({"name": "x", "changes": ["total=12"], "revision": "ab12cd34"})).unwrap(), ["preset", "set", "x", "total=12", "--if", "ab12cd34"]);
+        assert_eq!(args_for("edits_preset_undo", &json!({"name": "x"})).unwrap(), ["preset", "undo", "x"]);
         assert_eq!(args_for("edits_song", &json!({"video": "a.mp4", "at": "0:30"})).unwrap(), ["song", "a.mp4", "0:30"]);
         assert_eq!(handle(&json!({"jsonrpc": "2.0", "id": 3, "method": "nope"})).unwrap()["error"]["code"], -32601);
     }

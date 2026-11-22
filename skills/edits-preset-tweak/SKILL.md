@@ -16,6 +16,10 @@ edits preset save p.json                 # or keep it (same name replaces the bu
 
 Over MCP: `edits_preset_get` → change → `edits_make` with `preset_json`, or `edits_preset_save`.
 
+Every save keeps the version it replaced: `edits preset undo NAME` (`edits_preset_undo`) takes a change back, one
+step per call, down to the built-in preset. `edits preset show` logs the preset's revision; pass it as `--if REV`
+(MCP `revision`) to `set` or `save`, and a change someone made meanwhile is never overwritten.
+
 ## What is in it
 
 - `w`, `h`: frame. `total`: seconds. `song`: `{title, from}` (searched on YouTube by title).
