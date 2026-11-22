@@ -133,9 +133,9 @@ def sites():
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 44, "MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites")
+@page("badges", 44, "MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, 1,700+ sites")
 def badges():
-    cells = ["MCP server", "8 agent skills", "62 presets", "40 looks", "TikTok trends", "1,700+ sites"]
+    cells = ["MCP server", "8 agent skills", "62 presets", "40 looks", "TikTok + Spotify charts", "1,700+ sites"]
     widths = [len(c) * 8 + 36 for c in cells]
     x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
@@ -225,8 +225,9 @@ def size():
     return out
 
 
-@page("sounds", 324, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
-      "takes its sound, or ask for TikTok's trending songs in any country with --music trend:3", "1.4")
+@page("sounds", 380, "Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker "
+      "takes its sound, ask for TikTok's or Spotify's chart in any country with --music trend:3, or let it name the "
+      "song in any clip with edits song", "1.4")
 def sounds():
     out = head("Any sound,\nany trend", "Paste a TikTok, Reel, Short or SoundCloud link and edits takes its sound. "
                "Or ask for trend:3: TikTok's 3rd song this week, cut on the part people replay most.", 2)
@@ -237,11 +238,12 @@ def sounds():
         out += [logo(n, x, 120, 30, "RED" if i == 0 else "INK"),
                 t(x, 172, "Reels" if n == "Instagram" else n, 13, 700 if i == 0 else 400, "RED" if i == 0 else "INK")]
     cmds = [("--music trend:3", "TikTok's 3rd trending song, here"), ("--music trend:us:1", "number one in the US"),
-            ("--music https://www.tiktok.com/…", "the sound of that TikTok"), ("edits trends us", "the chart itself")]
+            ("--music spotify:1", "Spotify's number one today"), ("--music https://www.tiktok.com/…", "the sound of that TikTok"),
+            ("edits song clip.mp4", "names the song in any clip, Shazam built in"), ("edits trends us", "the chart itself")]
     out.append(rule(0, W, 196.5, "HAIR"))
     for i, (cmd, what) in enumerate(cmds):
         y = 222 + i * 28
-        out += [t(0, y, cmd, 13, 400, "RED" if "trend:" in cmd else "INK", font=MONO), t(C2, y, what, 14, 300)]
+        out += [t(0, y, cmd, 13, 400, "RED" if "trend:" in cmd or cmd.startswith("edits song") else "INK", font=MONO), t(C2, y, what, 14, 300)]
     return out
 
 
@@ -272,8 +274,8 @@ def steps():
 
 @page("features", 190, "Presets, trends, looks, agents, reads captions first, every frame size", "3.1")
 def features():
-    cells = [("Presets", "50 real edits, as JSON", "an agent can change"), ("Trends", "TikTok's chart,", "one flag: trend:3"),
-             ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server", "and 8 skills"),
+    cells = [("Presets", "62 real edits, as JSON", "an agent can change"), ("Trends", "TikTok's and Spotify's", "charts, one flag: trend:3"),
+             ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server, 8 skills", "and skill packs to add"),
              ("Reads first", "captions before video:", "downloads only the best"), ("Every frame", "9:16 to 21:9", "or any WxH")]
     out = []
     for i, (h, a, b) in enumerate(cells):
@@ -367,22 +369,22 @@ def presets():
     return out + [t(0, 268, js, 12, 400, font=MONO, raw=True)]
 
 
-@page("encoder", 250, "Renders on your GPU: NVIDIA GPUs by default, or in software on any CPU (Intel, AMD, Apple). "
-      "One command switches: edits encoder", "3.5")
+@page("encoder", 250, "Renders on your GPU: an NVIDIA GPU or a Mac's own VideoToolbox, picked by itself, or in software "
+      "on any CPU (Intel, AMD). One command switches: edits encoder", "3.5")
 def encoder():
-    out = head("GPU or CPU,\nyour call", "An NVIDIA GPU renders the video when it works. No GPU? It renders in "
-               "software on any CPU. One command switches, and it stays.")
-    cols = [("GPU", "RED", ["NVIDIA"], ["NVIDIA GeForce and RTX", "hardware encoder (NVENC)", "picked by itself"]),
-            ("Software", "INK", ["Intel", "AMD", "Apple"], ["any processor", "x264, nothing to install", "the fallback, always there"])]
+    out = head("GPU or CPU,\nyour call", "An NVIDIA GPU or a Mac's own hardware encoder renders the video when it "
+               "works. Neither? It renders in software on any CPU. One command switches, and it stays.")
+    cols = [("GPU", "RED", ["NVIDIA", "Apple"], ["NVIDIA GeForce and RTX: NVENC", "every Mac: VideoToolbox", "picked by itself"]),
+            ("Software", "INK", ["Intel", "AMD"], ["any processor", "x264, nothing to install", "the fallback, always there"])]
     for i, (h, c, brands, lines) in enumerate(cols):
         x = i * 320
         out += [rule(x, x + 296, 120.5), t(x, 152, h, 19, 700, c, ls=-0.3)]
-        out += [logo(b, x + 120 + k * 40, 134, 24, c if b == "NVIDIA" else "INK") for k, b in enumerate(brands)]
+        out += [logo(b, x + 120 + k * 40, 134, 24, c) for k, b in enumerate(brands)]
         out += [t(x, 180 + j * 21, s, 15) for j, s in enumerate(lines)]
     x = C3
     out += [rule(x, W, 120.5), t(x, 152, "Switch", 19, 700, ls=-0.3)]
     out += [t(x, 180 + j * 21, s, 14, 400, font=MONO, raw=True) for j, s in enumerate(
-        ['edits encoder <tspan fill="%RED%">auto</tspan>', "edits encoder nvenc", "edits encoder cpu"])]
+        ['edits encoder <tspan fill="%RED%">auto</tspan>', "edits encoder nvenc", "edits encoder videotoolbox", "edits encoder cpu"])]
     return out
 
 

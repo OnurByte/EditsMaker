@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="44" viewBox="0 0 960 44" role="img" aria-label="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
-<rect x="74.0" y="2" width="116" height="40" rx="20" fill="#F6F4EF"/>
-<text x="132.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">MCP server</text>
-<rect x="202.0" y="2" width="148" height="40" rx="20" fill="#F6F4EF"/>
-<text x="276.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">8 agent skills</text>
-<rect x="362.0" y="2" width="116" height="40" rx="20" fill="#F6F4EF"/>
-<text x="420.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">62 presets</text>
-<rect x="490.0" y="2" width="100" height="40" rx="20" fill="#F6F4EF"/>
-<text x="540.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">40 looks</text>
-<rect x="602.0" y="2" width="140" height="40" rx="20" fill="#C8261E"/>
-<text x="672.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">TikTok trends</text>
-<rect x="754.0" y="2" width="132" height="40" rx="20" fill="#F6F4EF"/>
-<text x="820.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">1,700+ sites</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="44" viewBox="0 0 960 44" role="img" aria-label="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, 1,700+ sites">
+<rect x="34.0" y="2" width="116" height="40" rx="20" fill="#F6F4EF"/>
+<text x="92.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">MCP server</text>
+<rect x="162.0" y="2" width="148" height="40" rx="20" fill="#F6F4EF"/>
+<text x="236.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">8 agent skills</text>
+<rect x="322.0" y="2" width="116" height="40" rx="20" fill="#F6F4EF"/>
+<text x="380.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">62 presets</text>
+<rect x="450.0" y="2" width="100" height="40" rx="20" fill="#F6F4EF"/>
+<text x="500.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">40 looks</text>
+<rect x="562.0" y="2" width="220" height="40" rx="20" fill="#C8261E"/>
+<text x="672.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">TikTok + Spotify charts</text>
+<rect x="794.0" y="2" width="132" height="40" rx="20" fill="#F6F4EF"/>
+<text x="860.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">1,700+ sites</text>
 </svg>
