@@ -1,9 +1,12 @@
 #![recursion_limit = "512"]
+mod ai;
+mod browser;
 mod capcut;
 mod check;
 mod create;
 mod face;
 mod fetch;
+mod follow;
 mod fonts;
 mod finish;
 mod fx;
@@ -24,6 +27,7 @@ mod presets;
 mod render;
 mod review;
 mod shazam;
+mod social;
 mod signals;
 mod stats;
 mod study;
@@ -105,6 +109,23 @@ fn main() -> ExitCode {
         Some("study") if args.len() > 1 => study::study(Path::new(&args[1])),
         Some("stats") if args.len() > 1 => stats::cmd(&args[1..]),
         Some("review") if args.len() > 1 => review::cmd(&args[1..]),
+        Some("ai") => ai::cmd(&args[1..]),
+        Some("clean") => clean(&args[1..]),
+        Some("connect") if args.len() > 1 => social::connect(&args[1..]),
+        Some("accounts") => {
+            social::list();
+            Ok(())
+        }
+        Some("disconnect") if args.len() > 1 => social::disconnect(&args[1]),
+        Some("post") if args.len() > 1 => social::cmd(&args[1..]),
+        Some("follow") if args.len() > 1 => follow::add(&args[1..]),
+        Some("follows") => {
+            follow::list();
+            Ok(())
+        }
+        Some("unfollow") if args.len() > 1 => follow::remove(&args[1]),
+        Some("watch") => follow::watch(&args[1..]),
+        Some("service") => follow::service(&args[1..]),
         // a command named without what it needs says so, instead of searching YouTube for the word
         Some(cmd) if USAGE_OF.iter().any(|u| u.0 == cmd) => Err(format!("usage: {}", USAGE_OF.iter().find(|u| u.0 == cmd).map_or("", |u| u.1))),
         Some(_) => make(&args),
@@ -130,6 +151,11 @@ const USAGE_OF: &[(&str, &str)] = &[
     ("frames", "edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)"),
     ("study", "edits study <folder of edits you like>"),
     ("review", "edits review <clip.mp4> [--notes]   the clip in the browser: point at moments and spots, the notes come back"),
+    ("connect", "edits connect instagram|tiktok|youtube | bluesky HANDLE | facebook PAGE_ID   connect an account to post to"),
+    ("disconnect", "edits disconnect ACCOUNT   forget an account and its sign-in"),
+    ("post", "edits post <clip.mp4>... [--to ACCOUNT,...|all] [--caption TEXT] [--private]"),
+    ("follow", "edits follow <YouTube channel | Kick channel | RSS/Atom feed> [--every MIN] [--post ACCOUNT,...] [--private] [edit options]"),
+    ("unfollow", "edits unfollow N|SOURCE   (edits follows lists them)"),
     ("stats", "edits stats <@channel | channel or profile link> [N]   which posted edits worked, and what made them"),
 ];
 
@@ -153,6 +179,34 @@ fn library_add(srcs: &[String]) -> Result<(), String> {
         import.extend(library::walk(&root).iter().map(|f| f.to_string_lossy().into_owned()).filter(|f| f.to_lowercase().contains(".prfpset")));
         preset_cmd(&import)?;
     }
+    Ok(())
+}
+
+/// `edits clean [--all] [--dry-run]`: frees the disk the downloaded videos take, as Tehom's cleanup does. Transcripts
+/// and video info stay, so a video used again downloads but is not transcribed again; files used in the last day stay
+/// unless --all (a render may be using them).
+fn clean(args: &[String]) -> Result<(), String> {
+    let (all, dry) = (args.iter().any(|a| a == "--all"), args.iter().any(|a| a == "--dry-run"));
+    let day = std::time::Duration::from_secs(86_400);
+    let mut stack = vec![util::home().join(".cache/edits")];
+    let (mut n, mut bytes) = (0u64, 0u64);
+    while let Some(d) = stack.pop() {
+        for e in std::fs::read_dir(&d).into_iter().flatten().flatten() {
+            let (p, m) = (e.path(), match e.metadata() { Ok(m) => m, Err(_) => continue });
+            if m.is_dir() {
+                stack.push(p);
+                continue;
+            }
+            let media = p.extension().is_some_and(|x| ["mp4", "m4a", "webm", "mkv", "mov", "wav", "mp3", "opus", "part"].contains(&x.to_string_lossy().to_lowercase().as_str()));
+            let old = m.modified().ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age > day);
+            if media && (all || old) && (dry || std::fs::remove_file(&p).is_ok()) {
+                n += 1;
+                bytes += m.len();
+            }
+        }
+    }
+    println!("{} {n} downloaded file(s), {:.1} GB{}", if dry { "would delete" } else { "deleted" }, bytes as f64 / 1e9,
+        if all { "" } else { " (files used in the last day stay; --all takes them too)" });
     Ok(())
 }
 
@@ -664,7 +718,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
     }
     let focus = if opts.layout == "fill" { face::center_x(&video, seek, m.end - m.start, w, h) } else { None };
     // the subtitle file is per clip: clips render at the same time
-    let work = a.src.work.join(out.file_stem().unwrap_or_default());
+    let work = a.src.work.join(fetch::safe(&out.file_stem().unwrap_or_default().to_string_lossy()));
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
     // nobody to frame on (screen recordings, graphics): cropping would cut content at random, so keep the whole frame
     if opts.layout == "fill" && focus.is_none() && wide {
@@ -730,11 +784,12 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
 }
 
 /// Where a run's clips go without --out: one folder per run, the same place whoever starts edits (the CLI in any
-/// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then "HH.MM what it was made from".
+/// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then what it was made from (every run on
+/// the same footage that day sits together), then the run's "HH.MM".
 fn auto_out(input: &str) -> PathBuf {
     let base = std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"));
     let (day, time) = util::now().unwrap_or(("undated".into(), "00.00".into()));
-    let dir = base.join(day).join(format!("{time} {}", folder_name(&subject(input))));
+    let dir = base.join(day).join(folder_name(&subject(input))).join(time);
     // a second run in the same minute on the same footage gets its own folder, never overwrites
     (1..).map(|k| if k == 1 { dir.clone() } else { PathBuf::from(format!("{} ({k})", dir.display())) }).find(|d| !d.exists()).unwrap()
 }
@@ -745,11 +800,25 @@ fn subject(input: &str) -> String {
     if p.is_file() {
         return p.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
     }
-    if input.starts_with("http://") || input.starts_with("https://") {
-        let title = util::yt(&["--no-warnings", "--flat-playlist", "--playlist-items", "1", "--print", "%(playlist_title,title)s", "--", input]);
+    // a bare video ID: the title saved when it was fetched, else YouTube's; never the ID itself as a folder
+    let is_id = input.len() == 11 && input.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    if is_id {
+        if let Some(t) = cached_title(input) {
+            return t;
+        }
+    }
+    let url = if is_id { format!("https://www.youtube.com/watch?v={input}") } else { input.to_string() };
+    if url.starts_with("http://") || url.starts_with("https://") {
+        let title = util::yt(&["--no-warnings", "--flat-playlist", "--playlist-items", "1", "--print", "%(playlist_title,title)s", "--", &url]);
         return title.ok().and_then(|t| t.lines().next().map(str::to_string)).filter(|t| !t.trim().is_empty() && t != "NA").unwrap_or_else(|| input.to_string());
     }
     input.to_string()
+}
+
+/// A fetched video's title, from the info yt-dlp left in the cache.
+fn cached_title(id: &str) -> Option<String> {
+    let t = std::fs::read_to_string(util::home().join(".cache/edits").join(fetch::safe(id)).join("src.info.json")).ok()?;
+    serde_json::from_str::<serde_json::Value>(&t).ok()?.get("title")?.as_str().map(str::to_string)
 }
 
 /// A title as a folder name: words kept (any alphabet), path and shell characters dropped, at most 60 characters.
@@ -856,7 +925,7 @@ fn make(args: &[String]) -> Result<(), String> {
     } else { c.n };
     best.truncate(n);
     let jobs: Vec<(PathBuf, &Analysed, &pick::Moment)> = best.iter().enumerate()
-        .map(|(k, (a, m))| (c.out.join(format!("{:02}-{}.mp4", k + 1, fetch::safe(&a.src.id))), *a, *m)).collect();
+        .map(|(k, (a, m))| (c.out.join(format!("{:02} {}.mp4", k + 1, folder_name(if m.title.is_empty() { &a.src.title } else { &m.title }))), *a, *m)).collect();
     let mut clips: Vec<PathBuf> = vec![];
     for batch in jobs.chunks(4) {
         let done: Vec<_> = std::thread::scope(|s| {
@@ -1867,7 +1936,7 @@ fn moments_cmd(args: &[String]) -> Result<(), String> {
     eprintln!("edits: {} ({}): words from {from}, {} chat messages, {} windows of {:.0} s", src.title, util::mmss(src.duration), chat.len(), ws.len(), vod::WINDOW);
     let cands: Vec<pick::Moment> = vod::best(&ws, if use_llm { (n * 2).min(40) } else { n }).iter().map(vod::moment).collect();
     let judged = if use_llm && !cands.is_empty() {
-        match util::run_stdin(&pick::llm_cmd(), &vod::rubric_prompt(&src.title, &cands, &lines, &chat, n)).and_then(|r| vod::judged(&r, &cands)) {
+        match crate::ai::ask(&vod::rubric_prompt(&src.title, &cands, &lines, &chat, n)).and_then(|r| vod::judged(&r, &cands)) {
             Ok(j) if !j.is_empty() => Some(j),
             Ok(_) => { eprintln!("edits: the model kept none of the candidates; the scores decide"); None }
             Err(e) => { eprintln!("edits: {e}; the scores decide"); None }
@@ -2111,8 +2180,7 @@ fn doctor() -> Result<(), String> {
     let model = transcribe::model();
     check(model.is_some(), &format!("whisper model{}", model.map(|m| format!(": {}", m.display())).unwrap_or_default()),
         "put a ggml-*.bin in ~/.local/share/edits/models or set EDITS_WHISPER_MODEL (ggml-large-v3-turbo is best for Turkish)", false);
-    let llm = pick::llm_cmd();
-    check(util::have(llm.split_whitespace().next().unwrap_or("")), &format!("LLM command: {llm}"), "set EDITS_LLM to a command that reads a prompt on stdin; without it cuts follow viewer signals only", false);
+    check(ai::ready(), &format!("AI: {}", ai::describe()), "choose one with `edits ai` (a CLI, an API key or a local server); without it cuts follow viewer signals only", false);
     println!("taste file: {}", pick::taste_path().display());
     if missing > 0 {
         return Err(format!("{missing} required tool(s) missing"));
@@ -2225,9 +2293,9 @@ mod tests {
         let base = std::env::temp_dir().join(format!("edits-out-test-{}", std::process::id()));
         std::env::set_var("EDITS_OUT", &base);
         let first = auto_out("sad cats");
-        assert!(first.starts_with(&base) && first.to_string_lossy().ends_with(" sad cats"));
+        assert!(first.starts_with(&base) && first.parent().unwrap().ends_with("sad cats"));
         std::fs::create_dir_all(&first).unwrap();
-        assert!(auto_out("sad cats").to_string_lossy().ends_with(" sad cats (2)"));
+        assert!(auto_out("sad cats").to_string_lossy().ends_with(" (2)"));
         std::fs::remove_dir_all(&base).unwrap();
         assert!(parse(&args("x"), None).unwrap().out.as_os_str().is_empty(), "no --out means the automatic folder");
     }

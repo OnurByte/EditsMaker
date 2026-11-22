@@ -6,7 +6,12 @@ USAGE
   edits encoder [auto|nvenc|videotoolbox|cpu]  what renders the video (GPU or CPU), saved for every run
   edits setup                  fetch ffmpeg and yt-dlp if missing (also done on first use)
   edits info                   version, updates, the author's GitHub and X
-  edits update [check|on|off]  install the newest release now; on by default once a day (EDITS_AUTO_UPDATE=0 stops it)
+  edits update [check|on|off|rollback]  install the newest release now; on by default once a day (EDITS_AUTO_UPDATE=0
+                               stops it); rollback goes back to the version the last update replaced
+  edits clean [--all] [--dry-run]   delete downloaded videos from the cache (transcripts stay)
+  edits ai [PROVIDER [MODEL]]  the AI that picks moments: claude-code (default), codex, openai, anthropic, gemini,
+                               openrouter, or one on this computer: ollama, lmstudio, llamacpp, vllm (--endpoint URL);
+                               edits ai key PROVIDER saves an API key, edits ai models lists the models
   edits rate <clip.mp4> +|-    teach your taste: liked / disliked
   edits preset list | show NAME           presets are JSON: read one in full
   edits preset save FILE.json|- [--if REV]   save a changed preset (your folder wins over the built-in one)
@@ -46,6 +51,15 @@ USAGE
   edits stats <@channel|link> [N]   the last N posts (default 30) with views, likes, comments; which are edits made
                                here (matched by their sound) and which presets, songs and looks did best; talking
                                clips that did best and worst become liked/disliked examples in your taste file
+  edits connect instagram|tiktok|youtube   sign in to post there, in a browser window of its own (edits never sees
+                               the password); unofficial routes: use an account you can afford to lose
+  edits connect bluesky HANDLE | facebook PAGE_ID   with an app password / a Page token (official APIs)
+  edits accounts | disconnect NAME   the connected accounts
+  edits post <clip.mp4>... [--to ACCOUNT,...|all] [--caption TEXT] [--private]   post clips (caption: the one edits wrote)
+  edits follow <YouTube channel | Kick channel | RSS/Atom feed> [--every MIN] [--post ACCOUNT,...] [--private]
+                               [edit options]   every new video becomes clips made with those options, and posted
+  edits follows | unfollow N   what is followed and what happened; edits watch [--once] does the checking,
+                               edits service install|remove keeps it running in the background from login
   edits review <clip.mp4> [--notes]   the clip in a window of its own (Chrome, Edge, Brave or Chromium's app window,
                                else a browser tab): click a moment, a shot or a spot in the frame and
                                say what to change; the notes come back (and are saved as clip.notes.json)
@@ -136,7 +150,7 @@ OPTIONS
       --no-llm        pick moments from viewer signals only
 
 ENVIRONMENT
-  EDITS_LLM            command that reads a prompt on stdin (default: claude -p)
+  EDITS_LLM            command that reads a prompt on stdin; wins over edits ai
   EDITS_WHISPER_MODEL  path to a ggml whisper model
 
 Your taste lives in ~/.config/edits/taste.md. Edit it freely.

@@ -38,7 +38,7 @@ pub fn describe(notes: &Value, cuts: &[f64]) -> String {
 }
 
 /// Chromium-family browsers that open a page as an app window of its own (`--app`), no tabs or address bar.
-const APP_BROWSERS: &[&str] = &["chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "brave-browser", "brave", "helium-browser", "microsoft-edge-stable", "microsoft-edge", "vivaldi-stable"];
+pub(crate) const APP_BROWSERS: &[&str] = &["chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "brave-browser", "brave", "helium-browser", "microsoft-edge-stable", "microsoft-edge", "vivaldi-stable"];
 const MAC_APP_BROWSERS: &[&str] = &["Google Chrome", "Microsoft Edge", "Brave Browser", "Chromium", "Helium", "Vivaldi"];
 
 /// How to open `url` as an app window on this machine (program, arguments), when a Chromium-family browser is

@@ -75,8 +75,29 @@ fn install(tag: &str) -> Result<(), String> {
         // bsdtar opens the zip too (it is tar.exe on Windows 10 and later)
         run(None, "tar", &["-xf", &file.to_string_lossy(), "-C", &tmp.to_string_lossy()])?;
         let bin = tmp.join(if cfg!(windows) { "edits.exe" } else { "edits" });
+        // the version being replaced is kept, for `edits update rollback`
+        let _ = std::fs::create_dir_all(dir());
+        let _ = std::fs::copy(&exe, previous());
+        put(&bin, &exe)
+    })();
+    let _ = std::fs::remove_dir_all(&tmp);
+    if res.is_ok() {
+        // the new edits brings its skills; a guard the user installed points at it (none is added unasked)
+        let _ = run(None, &exe.to_string_lossy(), &["guard", "refresh"]);
+        let _ = run(None, &exe.to_string_lossy(), &["skills", "install"]);
+    }
+    res
+}
+
+fn previous() -> PathBuf {
+    dir().join(if cfg!(windows) { "previous.exe" } else { "previous" })
+}
+
+/// Puts `bin` where the running edits is, safely: never a moment with no edits at all.
+fn put(bin: &Path, exe: &Path) -> Result<(), String> {
+    {
         let next = exe.with_extension("new");
-        std::fs::copy(&bin, &next).map_err(|e| format!("{}: {e}", next.display()))?;
+        std::fs::copy(bin, &next).map_err(|e| format!("{}: {e}", next.display()))?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -96,14 +117,7 @@ fn install(tag: &str) -> Result<(), String> {
             let _ = std::fs::remove_file(&next);
             e.to_string()
         })
-    })();
-    let _ = std::fs::remove_dir_all(&tmp);
-    if res.is_ok() {
-        // the new edits brings its skills; a guard the user installed points at it (none is added unasked)
-        let _ = run(None, &exe.to_string_lossy(), &["guard", "refresh"]);
-        let _ = run(None, &exe.to_string_lossy(), &["skills", "install"]);
     }
-    res
 }
 
 fn off_file() -> PathBuf {
@@ -122,6 +136,14 @@ pub fn cmd(args: &[String]) -> Result<(), String> {
         Some("on") => {
             let _ = std::fs::remove_file(off_file());
             println!("edits: automatic updates on (checked once a day)");
+            Ok(())
+        }
+        Some("rollback") => {
+            if !previous().is_file() {
+                return Err("no earlier version kept here yet (one is kept from the next update on)".into());
+            }
+            put(&previous(), &std::env::current_exe().map_err(|e| e.to_string())?)?;
+            println!("edits: back to the version before the last update (edits update off keeps it there)");
             Ok(())
         }
         Some("check") => {

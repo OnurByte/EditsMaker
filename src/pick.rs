@@ -1,7 +1,7 @@
 //! Chooses the moments: viewer signals + transcript go to an LLM with the taste file; signals alone are the fallback.
 use crate::signals::{peaks, Hit};
 use crate::transcribe::{Line, Word};
-use crate::util::{home, mmss, run_stdin};
+use crate::util::{home, mmss};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -161,7 +161,7 @@ pub fn choose_passages(cands: &[(String, Moment, String)], n: usize, use_llm: bo
         p.push_str(&part("passages", "item", &[("i", i.to_string()), ("secs", format!("{:.0}", m.end - m.start)), ("title", title.clone()), ("text", text.clone())]));
     }
     p.push_str(&part("passages", "tail", &[("n", n.to_string())]));
-    let picked = run_stdin(&llm_cmd(), &p).ok().and_then(|r| {
+    let picked = crate::ai::ask(&p).ok().and_then(|r| {
         let (a, b) = (r.find('[')?, r.rfind(']')?);
         serde_json::from_str::<Vec<usize>>(r.get(a..=b)?).ok()
     });
@@ -178,13 +178,9 @@ pub fn choose_passages(cands: &[(String, Moment, String)], n: usize, use_llm: bo
     }
 }
 
-pub fn llm_cmd() -> String {
-    std::env::var("EDITS_LLM").unwrap_or_else(|_| "claude -p".into())
-}
-
 pub fn pick(title: &str, lines: &[Line], curve: &[f64], hits: &[Hit], n: usize, dur: f64, use_llm: bool) -> Vec<Moment> {
     if use_llm && !lines.is_empty() {
-        match run_stdin(&llm_cmd(), &prompt(&taste(), title, lines, curve, hits, n)).and_then(|r| parse(&r)) {
+        match crate::ai::ask(&prompt(&taste(), title, lines, curve, hits, n)).and_then(|r| parse(&r)) {
             Ok(m) => {
                 let m = refine(m, lines, dur);
                 if !m.is_empty() {

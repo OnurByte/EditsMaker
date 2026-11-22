@@ -279,6 +279,41 @@ pub fn mmss(t: f64) -> String {
     format!("{}:{:02}", s / 60, s % 60)
 }
 
+/// A request through curl, given as curl config lines (`url`, `header`, `data-binary`, `request`, ...) on stdin, so
+/// tokens and keys never show on a command line. Returns the HTTP status and the body.
+pub fn curl(opts: &[(&str, &str)]) -> Result<(u16, String), String> {
+    let q = |v: &str| v.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n").replace('\r', "\\r").replace('\t', "\\t");
+    let mut cfg: String = opts.iter().map(|(k, v)| if v.is_empty() { format!("{k}\n") } else { format!("{k} = \"{}\"\n", q(v)) }).collect();
+    cfg.push_str("silent\nshow-error\nlocation\nmax-time = 900\nwrite-out = \"\\n%{http_code}\"\n");
+    let out = run_stdin("curl -K -", &cfg)?;
+    let (body, code) = out.rsplit_once('\n').unwrap_or(("", &out));
+    Ok((code.trim().parse().unwrap_or(0), body.to_string()))
+}
+
+/// curl's answer as JSON, an error unless it is a 2xx.
+pub fn curl_json(opts: &[(&str, &str)]) -> Result<serde_json::Value, String> {
+    let (code, body) = curl(opts)?;
+    let v: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+    if !(200..300).contains(&code) {
+        let why = [&v["error"]["message"], &v["message"], &v["error"]].iter().find_map(|x| x.as_str().map(str::to_string))
+            .unwrap_or_else(|| body.chars().take(200).collect());
+        return Err(format!("HTTP {code}: {why}"));
+    }
+    Ok(v)
+}
+
+/// A file only this user can read (keys, tokens).
+pub fn write_private(path: &Path, text: &str) -> Result<(), String> {
+    if let Some(d) = path.parent() {
+        std::fs::create_dir_all(d).map_err(|e| e.to_string())?;
+    }
+    let mut o = std::fs::OpenOptions::new();
+    o.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut o, 0o600);
+    o.open(path).and_then(|mut f| f.write_all(text.as_bytes())).map_err(|e| format!("{}: {e}", path.display()))
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
