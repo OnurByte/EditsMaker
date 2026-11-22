@@ -900,8 +900,10 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         if i > 0 && joins[i].kind == "fadewhite" {
             tone.push_str(&crate::fx::hit(&look.hits, w, h));
         }
+        // each piece runs on 0.2 s past its length (its last frame held): xfade ends the whole picture when the piece
+        // before a transition stops even a frame short of the transition's end, and the spare is never shown
         g.push_str(&format!(
-            "[{i}:v]setpts=(PTS-STARTPTS)/{speed},fps=30,{},zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30{smear}{tone},setsar=1,trim=duration={len:.3},setpts=PTS-STARTPTS,settb=AVTB[v{i}];",
+            "[{i}:v]setpts=(PTS-STARTPTS)/{speed},fps=30,{},zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps=30{smear}{tone},setsar=1,trim=duration={len:.3},setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=0.2,settb=AVTB[v{i}];",
             shape(&Opts { layout: "fill".into(), ..o.clone() }, *f)
         ));
     }
@@ -1608,6 +1610,31 @@ mod tests {
         let plain = color_hits(&spans, &joins, false);
         assert!(plain.starts_with(",hue=s=0:enable='between(t,5.070,5.300)'"), "{plain}");
         assert_eq!(color_hits(&spans, &[CUT; 4], false), "");
+    }
+
+    #[test]
+    fn the_picture_runs_to_the_end() {
+        let Ok(_) = std::process::Command::new("ffmpeg").arg("-version").output() else { return };
+        // a real music edit's cuts whose picture stopped at 3.07 s (92 of 501 frames): the piece before a transition
+        // ended a frame short of it
+        let cuts = [0.0, 1.033, 2.009, 3.088, 4.656, 5.155, 5.666, 7.221, 8.278, 9.288, 10.344, 11.355, 12.411, 13.444, 14.454, 15.523, 16.718];
+        let mut js = vec![CUT; cuts.len() - 1];
+        for i in [6, 9, 12] {
+            js[i] = Join { kind: "fadewhite", dur: 0.3, motion: None };
+        }
+        let o = Opts { w: 64, h: 64, grade: "dark".into(), captions: false, layout: "fill".into(), lufs: -12.0 };
+        let look = Look { sad: false, punch: true, length: 16.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false };
+        let spans = pieces(&cuts, &js);
+        let g = filter_graph(&o, &look, &vec![0.5; spans.len()], &spans, &js, &[], 16.718, None, false, None);
+        let mut args: Vec<String> = vec!["-v".into(), "error".into()];
+        for _ in &spans {
+            args.extend(["-f", "lavfi", "-i", "testsrc=s=96x96:d=3:r=30"].map(String::from));
+        }
+        args.extend(["-f", "lavfi", "-i", "anullsrc=d=17", "-filter_complex", &g, "-map", "[vout]", "-map", "[aout]", "-t", "16.718", "-fps_mode", "cfr", "-r", "30", "-f", "framecrc", "-"].map(String::from));
+        let out = std::process::Command::new("ffmpeg").args(&args).output().unwrap();
+        assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        let frames = String::from_utf8_lossy(&out.stdout).lines().filter(|l| l.starts_with("0,")).count();
+        assert!(frames >= 500, "{frames} frames of 501");
     }
 
     #[test]
