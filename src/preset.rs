@@ -326,7 +326,7 @@ fn is_one(v: &f64) -> bool {
     *v == 1.0
 }
 
-fn is_zero(v: &f64) -> bool {
+pub fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 

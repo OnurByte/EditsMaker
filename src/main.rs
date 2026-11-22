@@ -64,28 +64,10 @@ fn main() -> ExitCode {
         Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
         Some("info") => update::info(),
-        Some("trends") => {
-            // edits trends [spotify] [country]
-            let spotify = args.get(1).is_some_and(|a| a == "spotify");
-            let (kind, tag) = if spotify { ("spotify", "spotify") } else { ("trend", "trend") };
-            let cc = args.get(if spotify { 2 } else { 1 }).cloned().unwrap_or_else(|| lang::system().1);
-            fetch::trends(kind, &cc).map(|list| {
-                list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
-                println!("\nuse one: --music {tag}:N  (another country: --music {tag}:us:N)");
-            })
-        }
+        Some("trends") => trends(&args[1..]),
         Some("rate") => rate(&args[1..]),
         Some("preset") => preset_cmd(&args[1..]),
-        Some("library") if args.get(1).is_some_and(|a| a == "add") && args.len() > 2 => (|| {
-            // the pack's media into the library, then its presets (Alight projects, Premiere moves) like preset import
-            for src in &args[2..] {
-                let root = library::add(Path::new(src))?;
-                let mut import = vec!["import".to_string(), root.to_string_lossy().into_owned()];
-                import.extend(library::walk(&root).iter().map(|f| f.to_string_lossy().into_owned()).filter(|f| f.to_lowercase().contains(".prfpset")));
-                preset_cmd(&import)?;
-            }
-            Ok(())
-        })(),
+        Some("library") if args.get(1).is_some_and(|a| a == "add") && args.len() > 2 => library_add(&args[2..]),
         Some("library") => {
             library::list(&args[1..]);
             Ok(())
@@ -96,80 +78,25 @@ fn main() -> ExitCode {
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
         Some("looks") => {
-            println!("colour (--look):");
-            looks::LOOKS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
-            grades::all().iter().for_each(|g| println!("  {:<12} {}", g.name, g.about));
-            println!("\ncaptions (--captions):");
-            talk::styles().iter().for_each(|st| println!("  {:<12} {}", st.name, st.about));
-            println!("\nbeat hits (--fx a,b,...): {}", fx::HITS.join(", "));
-            println!("\ndrawn graphics (--svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], or your own .svg):");
-            svg::STICKERS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
+            looks();
             Ok(())
         }
-        Some("learn") if args.len() > 1 => (|| {
-            // --into DIR writes elsewhere; default: your preset folder
-            let into = args.iter().position(|a| a == "--into").and_then(|i| args.get(i + 1)).map(PathBuf::from).unwrap_or_else(presets::user_dir);
-            std::fs::create_dir_all(&into).map_err(|e| e.to_string())?;
-            for v in args[1..].iter().filter(|a| a.as_str() != "--into" && Path::new(a) != into) {
-                let path = &fetch::reference(v)?;
-                let name = path.file_stem().unwrap_or_default().to_string_lossy().into_owned();
-                let p = learn::learn(path, &name)?;
-                let file = into.join(format!("{}.json", preset::slug(&name)));
-                std::fs::write(&file, preset::pretty(&p)).map_err(|e| e.to_string())?;
-                println!("{}: {} ({:.1}s) -> --preset {}", file.display(), p.about, p.total, preset::slug(&name));
-                if let Ok(Some(f)) = shazam::recognize(path, None) {
-                    println!("  its song: {} - {} (--music \"{} - {}\")", f.artist, f.title, f.artist, f.title);
-                }
-            }
-            Ok(())
-        })(),
+        Some("learn") if args.len() > 1 => learn_cmd(&args[1..]),
         Some("font") if args.len() > 1 => args[1..].iter().try_for_each(|f| {
             let fresh = fonts::add(f)?;
             println!("{f}: {}", if fresh { "installed from Google Fonts" } else { "already here" });
             Ok(())
         }),
-        Some("cube") => match (args.get(1).and_then(|n| grades::find(n)), args.get(2)) {
-            (Some(g), out) => (|| {
-                let tmp = std::env::temp_dir().join("edits-cube");
-                let made = grades::lut(&g, &tmp)?;
-                let to = out.map(PathBuf::from).unwrap_or_else(|| PathBuf::from(format!("{}.cube", g.name)));
-                std::fs::copy(made.trim_start_matches(",lut3d=file="), &to).map_err(|e| e.to_string())?;
-                println!("{}", to.display());
-                Ok(())
-            })(),
-            _ => Err("usage: edits cube <look from an Alight cc pack> [out.cube]   (edits looks lists them)".into()),
-        },
-        Some("draw") => match (args.get(1), args.len() > 2) {
-            (Some(v), true) => (|| {
-                // "--overlay SPEC" items are library clips, the rest drawn graphics
-                let over: Vec<usize> = (2..args.len()).filter(|&i| args[i - 1] == "--overlay").collect();
-                let ov = over.iter().map(|&i| library::parse(&args[i])).collect::<Result<Vec<_>, _>>()?;
-                let st = (2..args.len()).filter(|i| !over.contains(i) && args[*i] != "--overlay").map(|i| svg::parse(&args[i])).collect::<Result<Vec<_>, _>>()?;
-                let src = Path::new(v);
-                let out = src.with_file_name(format!("{}-drawn.mp4", src.file_stem().unwrap_or_default().to_string_lossy()));
-                std::fs::copy(src, &out).map_err(|e| format!("{v}: {e}"))?;
-                svg::apply(&out, &st)?;
-                library::apply(&out, &ov)?;
-                println!("{}", out.display());
-                Ok(())
-            })(),
-            _ => Err("usage: edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ... [--overlay NAME[@FROM[-TO]][:OPACITY]] ...".into()),
-        },
-        Some("check") => match args.get(1) {
-            Some(clip) => fetch::reference(clip).and_then(|p| check::check(&p)).map(|s| println!("{s}")),
-            None => Err("usage: edits check <clip.mp4>   length, loudness, cut rhythm and a contact sheet to look at".into()),
-        },
+        Some("cube") => cube(&args[1..]),
+        Some("draw") if args.len() > 2 => draw(&args[1], &args[2..]),
+        Some("check") if args.len() > 1 => fetch::reference(&args[1]).and_then(|p| check::check(&p)).map(|s| println!("{s}")),
         Some("words") if args.len() > 1 => words(&args[1..]),
         Some("song") if args.len() > 1 => shazam::cmd(&args[1..]),
         Some("cut") if args.len() > 2 => check::cut(&args[1], &args[2..], &auto_out(&args[1])).map(|v| v.iter().for_each(|f| println!("{}", f.display()))),
-        Some("frames") => match args.get(1) {
-            Some(v) if args.len() > 2 => check::frames(v, &args[2..]).map(|s| println!("{s}")),
-            _ => Err("usage: edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)".into()),
-        },
-        Some("study") => match args.get(1) {
-            Some(dir) => study::study(Path::new(dir)),
-            None => Err("usage: edits study <folder of edits you like>".into()),
-        },
+        Some("frames") if args.len() > 2 => check::frames(&args[1], &args[2..]).map(|s| println!("{s}")),
+        Some("study") if args.len() > 1 => study::study(Path::new(&args[1])),
+        // a command named without what it needs says so, instead of searching YouTube for the word
+        Some(cmd) if USAGE_OF.iter().any(|u| u.0 == cmd) => Err(format!("usage: {}", USAGE_OF.iter().find(|u| u.0 == cmd).map_or("", |u| u.1))),
         Some(_) => make(&args),
     };
     match res {
@@ -179,6 +106,98 @@ fn main() -> ExitCode {
             ExitCode::FAILURE
         }
     }
+}
+
+/// How each command that needs more is called, said when it is given too little.
+const USAGE_OF: &[(&str, &str)] = &[
+    ("learn", "edits learn <edit.mp4|link>... [--into DIR]   an edit you like into a preset"),
+    ("font", "edits font NAME...   a Google Fonts family for caption styles"),
+    ("draw", "edits draw <video> NAME[@FROM-TO][:X,Y,SIZE][#COLOUR] ... [--overlay NAME[@FROM[-TO]][:OPACITY]] ..."),
+    ("check", "edits check <clip.mp4|link>   length, loudness, cut rhythm and a contact sheet to look at"),
+    ("words", "edits words <link|ID|file> [A-B] [--find TEXT]   what it says, line by line"),
+    ("song", "edits song <video|link|ID> [AT]   which song plays there"),
+    ("cut", "edits cut <video|link|ID> A-B...   stretches copied out without re-encoding"),
+    ("frames", "edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)"),
+    ("study", "edits study <folder of edits you like>"),
+];
+
+/// `edits trends [spotify] [country]`
+fn trends(args: &[String]) -> Result<(), String> {
+    let spotify = args.first().is_some_and(|a| a == "spotify");
+    let kind = if spotify { "spotify" } else { "trend" };
+    let cc = args.get(usize::from(spotify)).cloned().unwrap_or_else(|| lang::system().1);
+    let list = fetch::trends(kind, &cc)?;
+    list.iter().enumerate().take(30).for_each(|(i, s)| println!("{:>2}. {s}", i + 1));
+    println!("\nuse one: --music {kind}:N  (another country: --music {kind}:us:N)");
+    Ok(())
+}
+
+/// `edits library add <zip|folder>...`: the pack's media into the library, then its presets (Alight projects,
+/// Premiere moves) like preset import.
+fn library_add(srcs: &[String]) -> Result<(), String> {
+    for src in srcs {
+        let root = library::add(Path::new(src))?;
+        let mut import = vec!["import".to_string(), root.to_string_lossy().into_owned()];
+        import.extend(library::walk(&root).iter().map(|f| f.to_string_lossy().into_owned()).filter(|f| f.to_lowercase().contains(".prfpset")));
+        preset_cmd(&import)?;
+    }
+    Ok(())
+}
+
+/// `edits looks`: everything an edit can be styled with.
+fn looks() {
+    println!("colour (--look):");
+    looks::LOOKS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
+    grades::all().iter().for_each(|g| println!("  {:<12} {}", g.name, g.about));
+    println!("\ncaptions (--captions):");
+    talk::styles().iter().for_each(|st| println!("  {:<12} {}", st.name, st.about));
+    println!("\nbeat hits (--fx a,b,...): {}", fx::HITS.join(", "));
+    println!("\ndrawn graphics (--svg NAME[@FROM-TO][:X,Y,SIZE][#COLOUR], or your own .svg):");
+    svg::STICKERS.iter().for_each(|(n, about, _)| println!("  {n:<12} {about}"));
+}
+
+/// `edits learn <edit|link>... [--into DIR]`: each edit as a preset (default: your preset folder), and its song.
+fn learn_cmd(args: &[String]) -> Result<(), String> {
+    let at = args.iter().position(|a| a == "--into");
+    let into = at.and_then(|i| args.get(i + 1)).map(PathBuf::from).unwrap_or_else(presets::user_dir);
+    std::fs::create_dir_all(&into).map_err(|e| e.to_string())?;
+    for (_, v) in args.iter().enumerate().filter(|(i, _)| at.is_none_or(|a| *i != a && *i != a + 1)) {
+        let path = &fetch::reference(v)?;
+        let name = path.file_stem().unwrap_or_default().to_string_lossy().into_owned();
+        let p = learn::learn(path, &name)?;
+        let file = into.join(format!("{}.json", preset::slug(&name)));
+        std::fs::write(&file, preset::pretty(&p)).map_err(|e| e.to_string())?;
+        println!("{}: {} ({:.1}s) -> --preset {}", file.display(), p.about, p.total, preset::slug(&name));
+        if let Ok(Some(f)) = shazam::recognize(path, None) {
+            println!("  its song: {} - {} (--music \"{} - {}\")", f.artist, f.title, f.artist, f.title);
+        }
+    }
+    Ok(())
+}
+
+/// `edits cube LOOK [out.cube]`: an imported colour pack look as a .cube LUT.
+fn cube(args: &[String]) -> Result<(), String> {
+    let g = args.first().and_then(|n| grades::find(n)).ok_or("usage: edits cube <look from an Alight cc pack> [out.cube]   (edits looks lists them)")?;
+    let made = grades::lut(&g, &std::env::temp_dir().join("edits-cube"))?;
+    let to = args.get(1).map(PathBuf::from).unwrap_or_else(|| PathBuf::from(format!("{}.cube", g.name)));
+    std::fs::copy(made.trim_start_matches(",lut3d=file="), &to).map_err(|e| e.to_string())?;
+    println!("{}", to.display());
+    Ok(())
+}
+
+/// `edits draw <video> SPEC... [--overlay SPEC]...`: graphics and library clips over a finished clip, as NAME-drawn.mp4.
+fn draw(v: &str, specs: &[String]) -> Result<(), String> {
+    // "--overlay SPEC" items are library clips, the rest drawn graphics
+    let over: Vec<usize> = (1..specs.len()).filter(|&i| specs[i - 1] == "--overlay").collect();
+    let ov = over.iter().map(|&i| library::parse(&specs[i])).collect::<Result<Vec<_>, _>>()?;
+    let st = (0..specs.len()).filter(|i| !over.contains(i) && specs[*i] != "--overlay").map(|i| svg::parse(&specs[i])).collect::<Result<Vec<_>, _>>()?;
+    let src = Path::new(v);
+    let out = src.with_file_name(format!("{}-drawn.mp4", src.file_stem().unwrap_or_default().to_string_lossy()));
+    std::fs::copy(src, &out).map_err(|e| format!("{v}: {e}"))?;
+    svg::apply(&out, &st)?;
+    library::apply(&out, &ov)?;
+    println!("{}", out.display());
+    Ok(())
 }
 
 struct Cli {
@@ -451,6 +470,27 @@ struct Analysed {
 
 /// Everything about one video up to "which moments": transcript, signals, the pick.
 /// `clips`: also pick talking-clip moments (music edits pick whole passages themselves).
+/// The videos named by `--say ID@A-B`, each once.
+fn say_ids(c: &Cli) -> Vec<&str> {
+    let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).collect();
+    ids.sort();
+    ids.dedup();
+    ids
+}
+
+/// Each video's words and passages, fetched side by side: the input file when the id is its name (it speaks only
+/// then), any other id a YouTube video. A video that fails is reported and left out.
+fn analyse_ids(ids: &[&str], c: &Cli, cache: &Path) -> Vec<Analysed> {
+    let input = Path::new(&c.input);
+    std::thread::scope(|s| {
+        let jobs: Vec<_> = ids.iter().map(|&id| s.spawn(move || {
+            let src = if input.is_file() && input.file_stem().is_some_and(|s| s == id) { fetch::local(input, cache) } else { fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache) };
+            src.map(|src| analyse(src, c, false))
+        })).collect();
+        jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect()
+    })
+}
+
 fn analyse(src: fetch::Source, c: &Cli, clips: bool) -> Analysed {
     // no captions and no speech model is fine: the cut then rests on the other signals, without burned-in text
     let t = transcribe::transcript(&src.work, &src.wav, &c.lang, &src.language).unwrap_or_else(|e| {
@@ -806,20 +846,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         (n, true) => quote_lines(&videos, cache, c, n * c.n),
     };
     // --say over a preset: the speaker's own words, whole, from the video they were said in
-    // the input file speaks only when the line is named after it; any other id is a YouTube video (silent footage, voice from the channel)
-    let input = Path::new(&c.input);
-    let local = |id: &str| input.is_file() && input.file_stem().is_some_and(|s| s == id);
-    let spoken: Vec<Analysed> = std::thread::scope(|s| {
-        let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).collect();
-        ids.sort();
-        ids.dedup();
-        let jobs: Vec<_> = ids.into_iter().map(|id| s.spawn(move || {
-            let src = if local(id) { fetch::local(input, cache) } else { fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache) };
-            src.map(|src| analyse(src, c, false))
-        })).collect();
-        jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect()
-    });
-    let mut spoken = spoken;
+    let mut spoken = analyse_ids(&say_ids(c), c, cache);
     let mut voices: Vec<(usize, pick::Moment)> = vec![];
     for w in &c.say {
         match joined_say(w, &spoken, cache) {
@@ -1189,9 +1216,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     } else if local {
         // the input file's own words, plus any --say line named by a YouTube id (silent footage, voice from the channel)
         let stem = Path::new(&c.input).file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-        let mut ids: Vec<&str> = c.say.iter().filter_map(|w| w.rsplit_once('@').map(|x| x.0)).filter(|id| !id.is_empty() && *id != stem).collect();
-        ids.sort();
-        ids.dedup();
+        let ids: Vec<&str> = say_ids(c).into_iter().filter(|id| !id.is_empty() && *id != stem).collect();
         // silent footage has no words of its own: then the voice must come from a named video
         let mut out = match fetch::local(Path::new(&c.input), cache) {
             Ok(src) => vec![analyse(src, c, false)],
@@ -1201,20 +1226,10 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
             }
             Err(e) => return Err(e),
         };
-        out.extend(std::thread::scope(|s| {
-            let jobs: Vec<_> = ids.into_iter().map(|id| s.spawn(move || {
-                fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache).map(|src| analyse(src, c, false))
-            })).collect();
-            jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect::<Vec<_>>()
-        }));
+        out.extend(analyse_ids(&ids, c, cache));
         out
     } else {
-        std::thread::scope(|s| {
-            let jobs: Vec<_> = videos.iter().map(|(id, _)| s.spawn(move || {
-                fetch::remote(id, &format!("https://www.youtube.com/watch?v={id}"), cache).map(|src| analyse(src, c, false))
-            })).collect();
-            jobs.into_iter().filter_map(|j| j.join().ok()?.map_err(|e| eprintln!("edits: no voice from a video: {e}")).ok()).collect()
-        })
+        analyse_ids(&videos.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), c, cache)
     };
     let reach = template.as_ref().map_or(40.0, |t| t.cuts.last().unwrap() - 1.4).max(6.0);
     let mut cands: Vec<(usize, pick::Moment)> = spoken.iter().enumerate()

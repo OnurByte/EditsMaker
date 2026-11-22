@@ -72,11 +72,7 @@ pub fn change(a: &[u8], b: &[u8]) -> f64 {
 }
 
 fn median(v: &mut [f64]) -> f64 {
-    if v.is_empty() {
-        return 0.0;
-    }
-    v.sort_by(|a, b| a.total_cmp(b));
-    v[v.len() / 2]
+    crate::face::median(v).unwrap_or(0.0)
 }
 
 /// Frame numbers where a new shot starts, and frames that flash (bright for a moment, then back).

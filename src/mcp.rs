@@ -226,12 +226,14 @@ fn call(name: &str, a: &Value) -> Result<String, String> {
         stdin = Some(a["preset"].to_string());
     }
     // a changed preset for this edit only: written to a file and named by path
-    let tmp = std::env::temp_dir().join(format!("edits-mcp-{}.json", std::process::id()));
+    // calls run side by side: each changed preset gets its own file
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let tmp = std::env::temp_dir().join(format!("edits-mcp-{}-{}.json", std::process::id(), N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
     if name == "edits_make" && a["preset_json"].is_object() {
         std::fs::write(&tmp, a["preset_json"].to_string()).map_err(|e| e.to_string())?;
         args.extend(["--preset".into(), tmp.to_string_lossy().into_owned()]);
     }
-    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let exe = EXE.get().cloned().map_or_else(std::env::current_exe, Ok).map_err(|e| e.to_string())?;
     let mut child = std::process::Command::new(exe).args(&args)
         .stdin(if stdin.is_some() { std::process::Stdio::piped() } else { std::process::Stdio::null() })
         .stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped())
@@ -395,23 +397,36 @@ pub fn guard_install(quiet: bool) -> Result<(), String> {
     Ok(())
 }
 
+/// The binary's path as the server started: once `edits update` replaces the file, Linux names the running one
+/// ".../edits (deleted)", and tool calls must start the new edits at the old path instead.
+static EXE: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+
+fn send(answer: Option<Value>) {
+    if let Some(a) = answer {
+        // one line per message, never interleaved: the lock holds stdout for the whole line
+        let mut out = std::io::stdout().lock();
+        let _ = writeln!(out, "{a}").and_then(|_| out.flush());
+    }
+}
+
 pub fn serve() -> Result<(), String> {
+    if let Ok(p) = std::env::current_exe() {
+        let _ = EXE.set(p);
+    }
     // every agent session starts here, so people who updated from an edits without the guard get it too
     let _ = guard_install(true);
-    let stdin = std::io::stdin();
-    let mut stdout = std::io::stdout();
-    for line in stdin.lock().lines() {
+    for line in std::io::stdin().lock().lines() {
         let line = line.map_err(|e| e.to_string())?;
         if line.trim().is_empty() {
             continue;
         }
-        let answer = match serde_json::from_str::<Value>(&line) {
-            Ok(m) => handle(&m),
-            Err(e) => Some(json!({"jsonrpc": "2.0", "id": null, "error": {"code": -32700, "message": e.to_string()}})),
-        };
-        if let Some(a) = answer {
-            writeln!(stdout, "{a}").map_err(|e| e.to_string())?;
-            stdout.flush().map_err(|e| e.to_string())?;
+        match serde_json::from_str::<Value>(&line) {
+            // a render takes minutes: it runs beside the rest, so pings, lists and other calls are answered meanwhile
+            Ok(m) if m["method"] == "tools/call" => {
+                std::thread::spawn(move || send(handle(&m)));
+            }
+            Ok(m) => send(handle(&m)),
+            Err(e) => send(Some(json!({"jsonrpc": "2.0", "id": null, "error": {"code": -32700, "message": e.to_string()}}))),
         }
     }
     Ok(())

@@ -567,7 +567,7 @@ pub fn assign(shots: &[Shot], used: &mut [bool], needs: &[f64], prefer: Option<(
         let hook = pick[0];
         let mut queues: Vec<Vec<usize>> = vec![];
         let mut rest: Vec<usize> = pick[1..].to_vec();
-        rest.sort_by(|a, b| (shots[*a].video, shots[*a].s).partial_cmp(&(shots[*b].video, shots[*b].s)).unwrap());
+        rest.sort_by(|a, b| shots[*a].video.cmp(&shots[*b].video).then(shots[*a].s.total_cmp(&shots[*b].s)));
         for i in rest {
             match queues.iter_mut().find(|q| shots[q[0]].video == shots[i].video) {
                 Some(q) => q.push(i),
