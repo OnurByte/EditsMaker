@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.punch-zoom-60s",
+  "name": "punch-zoom-60s",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "81 fast shots (0.7 s), each punching in at 1.5x and easing out; CapCut draft from github.com/Davidb-2107/capcut-cli-david (MIT)",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "9:16",
+    "zoom"
+  ]
+}

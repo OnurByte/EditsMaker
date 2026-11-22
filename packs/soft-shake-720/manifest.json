@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.soft-shake-720",
+  "name": "soft-shake-720",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Alight Motion project \"valzyprst - 362\"",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "9:16",
+    "zoom",
+    "slide",
+    "shake"
+  ]
+}

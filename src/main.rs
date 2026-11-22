@@ -22,6 +22,7 @@ mod montage;
 mod ort;
 mod pick;
 mod premiere;
+mod packs;
 mod preset;
 mod presets;
 mod render;
@@ -55,7 +56,7 @@ fn main() -> ExitCode {
     }
     tools::add_to_path();
     // anything that cuts, measures or downloads gets ffmpeg and yt-dlp first, fetched if missing
-    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "setup" | "mcp" | "skills" | "looks" | "rate" | "trends" | "guard"))
+    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "setup" | "mcp" | "skills" | "packs" | "looks" | "rate" | "trends" | "guard"))
         || (args.first().map(String::as_str) == Some("preset") && args.get(1).map(String::as_str) != Some("create"));
     if !light {
         if let Err(e) = tools::ensure() {
@@ -88,6 +89,7 @@ fn main() -> ExitCode {
         Some("guard") => mcp::guard_cmd(&args[1..]),
         Some("mcp") => mcp::serve(),
         Some("skills") => skills(&args[1..]),
+        Some("packs") => packs_cmd(&args[1..]),
         Some("looks") => {
             looks();
             Ok(())
@@ -1763,16 +1765,10 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     Ok(())
 }
 
-const SKILLS: &[(&str, &str)] = &[
-    ("edits", include_str!("../skills/edits/SKILL.md")),
-    ("edits-preset-tweak", include_str!("../skills/edits-preset-tweak/SKILL.md")),
-    ("edits-trends", include_str!("../skills/edits-trends/SKILL.md")),
-    ("edits-presets-import", include_str!("../skills/edits-presets-import/SKILL.md")),
-    ("edits-mcp", include_str!("../skills/edits-mcp/SKILL.md")),
-    ("edits-preset-create", include_str!("../skills/edits-preset-create/SKILL.md")),
-    ("edits-tricks", include_str!("../skills/edits-tricks/SKILL.md")),
-    ("edits-reverse", include_str!("../skills/edits-reverse/SKILL.md")),
-];
+/// (name, SKILL.md) of every pack with a skill: the built-in ones, then the added ones.
+fn skill_list() -> Vec<(String, String)> {
+    packs::all().into_iter().filter_map(|p| Some((p.skill_name()?.to_string(), p.skill?))).collect()
+}
 
 /// Skill packs from other projects, fetched from GitHub when asked for instead of built in: the binary stays small and
 /// a pack is as new as its repository. (name, repository, folder of skills in it, what it is for)
@@ -1815,13 +1811,14 @@ fn skills(args: &[String]) -> Result<(), String> {
     match args.first().map(String::as_str) {
         Some("install") => {
             // a folder given, or Claude's and every other agent's skill folder that exists
+            let list = skill_list();
             for dir in &skill_dirs(args.get(1)) {
-                for (name, text) in SKILLS {
+                for (name, text) in &list {
                     let d = dir.join(name);
                     std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
                     std::fs::write(d.join("SKILL.md"), text).map_err(|e| e.to_string())?;
                 }
-                println!("installed {} skills in {}", SKILLS.len(), dir.display());
+                println!("installed {} skills in {}", list.len(), dir.display());
             }
             Ok(())
         }
@@ -1829,11 +1826,11 @@ fn skills(args: &[String]) -> Result<(), String> {
             for (name, repo, _, about) in CATALOG {
                 println!("{name:<18} {about}\n{:<18} github.com/{repo}", "");
             }
-            println!("\nadd one: edits skills add PACK [SKILL...]   (all of its skills, or only those named)");
+            println!("\nadd one: edits skills add SET [SKILL...]   (all of its skills, or only those named)");
             Ok(())
         }
         Some("add") => {
-            let pack = args.get(1).ok_or("usage: edits skills add PACK [SKILL...] [--into DIR]   (edits skills catalog lists them)")?;
+            let pack = args.get(1).ok_or("usage: edits skills add SET [SKILL...] [--into DIR]   (edits skills catalog lists them)")?;
             let &(_, repo, folder, _) = CATALOG.iter().find(|c| c.0 == pack).ok_or(format!("no pack \"{pack}\" (edits skills catalog lists them)"))?;
             let want: Vec<&String> = args[2..].iter().take_while(|a| *a != "--into").collect();
             let tmp = std::env::temp_dir().join(format!("edits-skills-{}", std::process::id()));
@@ -1862,14 +1859,75 @@ fn skills(args: &[String]) -> Result<(), String> {
             res
         }
         _ => {
-            for (name, text) in SKILLS {
+            for (name, text) in skill_list() {
                 let about = text.lines().find_map(|l| l.strip_prefix("description: ")).unwrap_or("");
                 println!("{name:<22} {}", about.chars().take(110).collect::<String>());
             }
             println!("\ninstall them: edits skills install [DIR]   (default ~/.claude/skills)");
-            println!("more from other projects (Remotion, YouTube research): edits skills catalog");
+            println!("more from other projects (Remotion, YouTube research): edits skills catalog; community packs: edits packs browse");
             Ok(())
         }
+    }
+}
+
+/// `edits packs`: the packs here (built in and added); `browse` the community list; `add ID|LINK`, `remove ID`;
+/// `make DIR [--preset NAME] [--id ID]` makes a folder a pack; `gallery DIR` writes the picture page of a packs folder.
+fn packs_cmd(args: &[String]) -> Result<(), String> {
+    let opt = |k: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).map(String::as_str);
+    let kinds = |k: &[String]| k.join("+");
+    match (args.first().map(String::as_str), args.get(1)) {
+        (Some("list") | None, _) => {
+            for p in packs::all() {
+                let m = &p.manifest;
+                println!("{:<34} {:<12} {}", m.id, kinds(&m.kinds), m.description.chars().take(90).collect::<String>());
+            }
+            println!("
+community packs: edits packs browse; added ones live in {}", packs::dir().display());
+            Ok(())
+        }
+        (Some("browse"), _) => {
+            let have: Vec<String> = packs::added().into_iter().map(|p| p.manifest.id).collect();
+            let list = packs::registry()?;
+            for e in &list {
+                println!("{:<34} {:<12} {}{}\n{:<34} {}", e.id, kinds(&e.kinds), e.name, if have.contains(&e.id) { "  (added)" } else { "" }, "", e.description.chars().take(100).collect::<String>());
+            }
+            println!("\n{} community pack(s). add one: edits packs add ID. list yours: a pull request to packs.json", list.len());
+            Ok(())
+        }
+        (Some("add"), Some(what)) => {
+            let p = packs::add(what)?;
+            let m = &p.manifest;
+            println!("added {} {} ({}) in {}", m.id, m.version, kinds(&m.kinds), packs::dir().join(&m.id).display());
+            if let Some(preset) = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok()) {
+                println!("  its preset: --preset {}", preset.name);
+            }
+            if let (Some(name), Some(text)) = (p.skill_name(), p.skill.as_deref()) {
+                // a skill is instructions an agent follows: say so, and where it went
+                for dir in &skill_dirs(None) {
+                    std::fs::create_dir_all(dir.join(name)).map_err(|e| e.to_string())?;
+                    std::fs::write(dir.join(name).join("SKILL.md"), text).map_err(|e| e.to_string())?;
+                    println!("  its skill {name} (instructions your agent will follow; read it) in {}", dir.display());
+                }
+            }
+            Ok(())
+        }
+        (Some("remove"), Some(id)) => {
+            let p = packs::remove(id)?;
+            if let Some(name) = p.skill_name() {
+                for dir in &skill_dirs(None) {
+                    let _ = std::fs::remove_dir_all(dir.join(name));
+                }
+            }
+            println!("removed {id}");
+            Ok(())
+        }
+        (Some("make"), Some(dir)) => {
+            let m = packs::make(Path::new(dir), opt("--preset"), opt("--id"))?;
+            println!("{}: {} {} ({}), picture {}", dir, m.id, m.version, kinds(&m.kinds), m.preview.unwrap_or_default());
+            Ok(())
+        }
+        (Some("gallery"), Some(dir)) => packs::gallery(Path::new(dir)).map(|n| println!("{dir}/README.md: {n} packs")),
+        _ => Err("usage: edits packs [browse | add ID|LINK | remove ID | make DIR [--preset NAME] [--id ID] | gallery DIR]".into()),
     }
 }
 
@@ -2085,7 +2143,7 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             save_preset(serde_json::from_value(v).map_err(|e| format!("not a valid preset after that: {e}"))?, expect)
         }
         (Some("import"), Some(_)) => {
-            // --into DIR writes elsewhere (presets/ to build them in); default: your preset folder
+            // --into DIR writes elsewhere; default: your preset folder (edits packs make turns one into a pack)
             let (into, sources): (PathBuf, Vec<&String>) = match args.iter().position(|a| a == "--into") {
                 Some(i) => (PathBuf::from(args.get(i + 1).ok_or("--into needs a folder")?), args[1..].iter().enumerate().filter(|(k, _)| *k + 1 != i && *k + 1 != i + 1).map(|x| x.1).collect()),
                 None => (presets::user_dir(), args[1..].iter().collect()),

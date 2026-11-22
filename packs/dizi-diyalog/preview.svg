@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(294,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(294,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">dizi-diyalog</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">learned: series dialogue edit: shot-reverse-shot, moving cuts,</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">one flash (28 shots (21 moving), 1 flashes)</text>
+<rect x="542.9" y="28" width="65.1" height="64" rx="6" fill="none" stroke="hsl(294,70%,64%)" stroke-width="2"/>
+<rect x="359.1" y="206" width="2.0" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="32.0" y="296" width="53.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="87.9" y="296" width="81.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="171.8" y="296" width="26.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="200.7" y="296" width="1.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="203.5" y="296" width="1.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="206.3" y="296" width="26.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="234.2" y="296" width="39.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="275.3" y="296" width="22.2" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="299.5" y="296" width="22.2" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="323.7" y="296" width="35.3" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="361.0" y="296" width="9.2" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="372.2" y="296" width="14.8" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="389.0" y="296" width="12.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="403.9" y="296" width="15.7" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="421.6" y="296" width="15.7" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="439.3" y="296" width="1.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="442.1" y="296" width="12.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="457.0" y="296" width="7.3" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="466.3" y="296" width="20.4" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="488.7" y="296" width="13.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="504.5" y="296" width="8.3" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="514.8" y="296" width="11.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="527.8" y="296" width="11.1" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="540.9" y="296" width="13.9" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="556.7" y="296" width="1.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="559.5" y="296" width="12.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<rect x="573.5" y="296" width="11.0" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.95"/>
+<rect x="586.6" y="296" width="19.4" height="20" rx="3" fill="hsl(294,70%,64%)" fill-opacity="0.55"/>
+<polyline points="32.0,284.0 42.4,281.7 53.8,291.5 65.2,291.2 76.5,292.9 87.9,294.7 87.9,284.0 103.9,286.1 120.9,292.9 137.9,291.7 154.8,298.5 171.8,304.3 171.8,284.0 177.6,285.2 183.4,286.6 189.1,286.6 194.9,291.0 200.7,296.6 200.7,284.0 203.5,284.0 203.5,284.0 206.3,284.0 206.3,284.0 234.2,284.0 234.2,284.0 241.9,282.8 250.5,279.3 258.1,277.7 266.7,274.0 275.3,269.8 275.3,284.0 280.1,277.0 285.0,274.7 289.8,274.9 294.7,274.9 299.5,275.1 299.5,284.0 304.3,284.7 309.2,285.9 314.0,290.3 318.9,290.5 323.7,290.3 323.7,284.0 361.0,284.0 361.0,284.0 363.1,293.8 365.1,300.3 367.1,301.0 369.2,305.0 372.2,296.6 372.2,284.0 389.0,284.0 389.0,284.0 392.0,287.0 394.9,291.7 397.9,297.8 400.9,302.2 403.9,302.2 403.9,284.0 406.8,284.5 410.8,284.0 413.7,285.2 417.6,288.2 421.6,291.2 421.6,284.0 439.3,284.0 439.3,284.0 442.1,284.0 442.1,284.0 457.0,284.0 457.0,284.0 458.0,286.1 460.1,289.8 462.2,293.6 464.3,297.1 466.3,298.9 466.3,284.0 488.7,284.0 488.7,284.0 491.7,289.1 494.6,293.3 497.6,292.2 500.6,287.5 504.5,274.4 504.5,284.0 506.6,277.0 508.6,273.0 510.7,260.9 512.8,257.6 514.8,251.3 514.8,284.0 527.8,284.0 527.8,284.0 529.8,302.0 532.9,304.3 534.9,305.0 537.9,305.0 540.9,305.0 540.9,284.0 556.7,284.0 556.7,284.0 559.5,284.0 559.5,284.0 573.5,284.0 573.5,284.0 586.6,284.0 586.6,284.0 608.0,284.0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">medium  1:1  zoom  slide  shake</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">28 shots  20.6s</text>
+</svg>

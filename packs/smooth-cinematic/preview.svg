@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(88,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(88,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">smooth-cinematic</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">genre: twixtor-style smooth - 0.5x slow motion, long push-ins,</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">cuts under a blur dip, teal/orange, cinema bars</text>
+<rect x="572.0" y="28" width="36.0" height="64" rx="6" fill="none" stroke="hsl(88,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="96.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="160.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="224.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="288.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="352.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="416.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="480.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="544.0" y="296" width="62.0" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<polyline points="32.0,284.0 96.0,265.3 96.0,284.0 160.0,265.3 160.0,284.0 224.0,265.3 224.0,284.0 288.0,265.3 288.0,284.0 352.0,265.3 352.0,284.0 416.0,265.3 416.0,284.0 480.0,265.3 480.0,284.0 544.0,265.3 544.0,284.0 608.0,265.3" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">slow  9:16  zoom  slide  blur  cinema</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">9 shots  23.4s</text>
+</svg>

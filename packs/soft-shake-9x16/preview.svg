@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(310,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(310,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">soft-shake-9x16</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Alight Motion project &quot;rapp admin amprem&quot;</text>
+<rect x="572.0" y="28" width="36.0" height="64" rx="6" fill="none" stroke="hsl(310,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="302.0" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="335.5" y="296" width="10.8" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="347.9" y="296" width="5.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="355.2" y="296" width="12.1" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="368.9" y="296" width="5.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="376.1" y="296" width="11.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="376.1" y="296" width="11.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="389.4" y="296" width="11.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="402.6" y="296" width="5.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="409.9" y="296" width="11.2" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="422.7" y="296" width="5.3" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="429.5" y="296" width="11.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="429.5" y="296" width="63.3" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="481.1" y="296" width="11.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="494.4" y="296" width="10.8" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="506.7" y="296" width="5.7" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="514.0" y="296" width="10.3" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<rect x="525.9" y="296" width="4.8" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.55"/>
+<rect x="532.2" y="296" width="12.1" height="20" rx="3" fill="hsl(310,70%,64%)" fill-opacity="0.95"/>
+<polyline points="260.9,243.1 305.2,214.0 335.8,284.0 335.7,258.7 348.3,284.0 347.9,258.7 355.6,284.0 355.2,258.7 369.3,284.0 368.9,258.7 376.6,284.0 376.1,258.7 389.6,284.0 376.4,258.6 389.8,284.0 389.4,258.6 403.1,284.0 402.6,258.6 410.3,284.0 409.9,258.6 423.1,284.0 422.7,258.6 430.0,284.0 429.5,258.6 443.0,284.0 429.5,265.6 442.4,241.3 470.2,284.0 493.9,265.6 481.1,284.0 494.8,284.0 494.4,284.0 507.1,284.0 506.7,284.0 514.4,284.0 514.0,284.0 526.3,284.0 525.9,284.0 532.7,284.0 532.2,284.0 546.4,284.0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">slow  9:16  zoom  slide  shake</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">19 shots  21.0s</text>
+</svg>

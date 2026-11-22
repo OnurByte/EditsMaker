@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.slide-transition-pack",
+  "name": "slide-transition-pack",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Alight Motion project \"Transition Pack © AzeenEditz01 \"",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "1:1"
+  ]
+}

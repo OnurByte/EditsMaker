@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(78,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(78,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">loop-push</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">trick: replay loop - a single slow push-in across every cut</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">that returns to the opening framing on the last shot, so th...</text>
+<rect x="572.0" y="28" width="36.0" height="64" rx="6" fill="none" stroke="hsl(78,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="73.1" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<rect x="114.3" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="155.4" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<rect x="196.6" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="237.7" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<rect x="278.9" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="320.0" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<rect x="361.1" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="402.3" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<rect x="443.4" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="484.6" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<rect x="525.7" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.95"/>
+<rect x="566.9" y="296" width="39.1" height="20" rx="3" fill="hsl(78,70%,64%)" fill-opacity="0.55"/>
+<polyline points="32.0,284.0 73.1,280.7 73.1,280.7 114.3,277.3 114.3,277.3 155.4,274.0 155.4,274.0 196.6,270.7 196.6,270.7 237.7,267.3 237.7,267.3 278.9,264.0 278.9,264.0 320.0,260.7 320.0,260.7 361.1,257.3 361.1,257.3 402.3,254.0 402.3,254.0 443.4,250.7 443.4,250.7 484.6,247.3 484.6,247.3 525.7,244.0 525.7,244.0 566.9,240.7 566.9,240.7 608.0,284.0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">slow  9:16  zoom</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">14 shots  15.4s</text>
+</svg>

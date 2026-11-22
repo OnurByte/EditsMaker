@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, stream VODs into clips">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 70 built-in packs, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips">
 </picture>
 
 <p align="center">
@@ -86,7 +86,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/features-dark.svg">
-  <img src="assets/readme/features-light.svg" width="100%" alt="Presets, trends, looks, agents, reads captions first, every frame size, stream VODs into clips, captions in any language, the person cut out">
+  <img src="assets/readme/features-light.svg" width="100%" alt="Packs, trends, looks, agents, reads captions first, every frame size, stream VODs into clips, captions in any language, the person cut out">
 </picture>
 
 <picture>
@@ -283,7 +283,7 @@ edits cube rajjcc-4
 ```
 
 Speaking another language? Set it once (it also picks the country for `trend:N`); the words for each language live
-in `presets/lang.json`, the model prompts in `presets/prompts.json`:
+in `data/lang.json`, the model prompts in `data/prompts.json`:
 
 ```sh
 export EDITS_LANG=tr
@@ -398,7 +398,7 @@ opening a `.prproj`.
 <summary><b>Presets</b></summary>
 
 50 edits (anime and 9:16 community edits made in Alight Motion and CapCut, and ones learned from real edits) and 178
-cut moves (Premiere transitions), kept as JSON in [`presets/`](presets) and built into the binary. Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
+cut moves (Premiere transitions), kept as JSON in [`packs/`](packs) (each a pack with a `manifest.json` and a picture) and built into the binary. Nothing is fixed: print one whole, change shots, speed, zooms, shakes, flashes,
 look or song, then use the file for one edit or save it. With another song, cuts move onto its beats.
 Each is named for what it does (`shake-zoom-rush`, `punch-zoom-60s`, `slow-reveal-anime`), and `edits preset list`
 tags it by pace, frame and moves; the name of the project it came from still works with `--preset`.

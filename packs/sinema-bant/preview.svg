@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(88,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(88,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">sinema-bant</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">made for edits: a film trailer on a phone - black cinema bars,</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">long push-ins, a warm light leak drifting through, each sho...</text>
+<rect x="572.0" y="28" width="36.0" height="64" rx="6" fill="none" stroke="hsl(88,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="70.8" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="104.8" y="296" width="58.6" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="165.4" y="296" width="58.6" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="226.0" y="296" width="46.5" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="274.5" y="296" width="46.5" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="323.0" y="296" width="70.8" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="395.8" y="296" width="58.6" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<rect x="456.4" y="296" width="58.6" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.55"/>
+<rect x="517.1" y="296" width="88.9" height="20" rx="3" fill="hsl(88,70%,64%)" fill-opacity="0.95"/>
+<polyline points="32.0,284.0 104.8,260.7 104.8,284.0 165.4,260.7 165.4,284.0 226.0,260.7 226.0,284.0 274.5,260.7 274.5,284.0 323.0,260.7 323.0,284.0 395.8,260.7 395.8,284.0 456.4,260.7 456.4,284.0 517.1,260.7 517.1,284.0 608.0,260.7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">slow  9:16  zoom  slide  retro  cinema  fade</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">9 shots  19.0s</text>
+</svg>

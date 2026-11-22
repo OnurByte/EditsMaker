@@ -9,7 +9,7 @@ use crate::util::run;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-/// A caption look. Kept in presets/captions.json, so it can be changed like any preset.
+/// A caption look. Kept in data/captions.json, so it can be changed like any preset.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CaptionStyle {
     pub name: String,

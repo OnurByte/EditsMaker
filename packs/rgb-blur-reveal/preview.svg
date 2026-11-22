@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(287,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(287,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">rgb-blur-reveal</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Alight Motion project &quot;Obito Face Revealed Edit&quot;</text>
+<rect x="550.4" y="28" width="57.6" height="64" rx="6" fill="none" stroke="hsl(287,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="286.2" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="306.4" y="296" width="11.3" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="319.8" y="296" width="16.6" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="319.8" y="296" width="16.6" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="337.9" y="296" width="14.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="353.3" y="296" width="16.6" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="371.4" y="296" width="14.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="386.9" y="296" width="14.5" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="402.9" y="296" width="15.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="419.4" y="296" width="14.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="434.9" y="296" width="15.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="451.4" y="296" width="16.6" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="451.4" y="296" width="16.6" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="469.5" y="296" width="12.9" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="483.9" y="296" width="15.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="500.4" y="296" width="14.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="515.9" y="296" width="15.6" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="532.9" y="296" width="15.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<rect x="549.4" y="296" width="16.1" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.95"/>
+<rect x="567.0" y="296" width="15.0" height="20" rx="3" fill="hsl(287,70%,64%)" fill-opacity="0.55"/>
+<polyline points="32.0,284.0 320.2,284.0 306.4,305.0 319.8,284.0 319.8,281.1 329.6,223.3 338.4,284.0 319.8,284.0 338.4,270.9 337.9,251.5 346.1,284.0 353.8,253.5 353.3,284.0 363.2,214.0 371.9,280.8 371.4,239.1 379.7,284.0 387.4,239.1 386.9,281.1 395.7,227.6 403.4,284.0 402.9,249.6 412.2,284.0 419.9,243.9 419.4,249.6 427.7,284.0 435.3,241.0 434.9,250.6 444.2,284.0 451.6,244.9 451.4,281.1 461.2,223.3 470.0,284.0 451.4,284.0 470.0,270.9 469.5,251.5 477.2,284.0 484.4,253.5 483.9,284.0 492.9,214.0 500.9,280.8 500.4,239.1 508.7,284.0 516.4,239.1 515.9,281.1 525.2,227.6 533.4,284.0 532.9,249.6 542.2,284.0 549.9,243.9 549.4,249.6 558.8,284.0 567.5,241.0 567.0,250.6 576.3,284.0 583.8,244.9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">medium  4:5  zoom  slide  shake  blur  rgb  velocity  song</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">20 shots  18.0s</text>
+</svg>

@@ -45,7 +45,10 @@ USAGE
   edits guard install [--ask]  only if you want it: Claude Code refuses ffmpeg, yt-dlp and whisper run by hand
                                (--ask: asks you each time instead); edits guard remove takes it out again
   edits skills [install]       agent skills for every command
-  edits skills catalog | add PACK [SKILL...]   skill packs from other projects (Remotion, YouTube research), fetched from GitHub
+  edits skills catalog | add SET [SKILL...]   skill sets from other projects (Remotion, YouTube research), fetched from GitHub
+  edits packs                  the packs here: a preset, an agent skill or both, each with a manifest.json and a picture
+  edits packs browse           community packs (packs.json); edits packs add ID|GITHUB-LINK, edits packs remove ID
+  edits packs make DIR [--preset NAME] [--id ID]   make a folder a pack: manifest.json and preview.svg written for you
   edits trends [spotify] [country]   what is trending on TikTok now (default tr), or Spotify's daily chart; use with --music trend:N / spotify:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
   edits stats <@channel|link> [N]   the last N posts (default 30) with views, likes, comments; which are edits made
@@ -100,7 +103,7 @@ OPTIONS
       --lut FILE      a .cube LUT over the picture
       --encoder E     auto (default: Apple VideoToolbox on a Mac, an NVIDIA GPU elsewhere, when it works, else libx264),
                       nvenc, videotoolbox or cpu; edits encoder E (or EDITS_ENCODER) sets it for every run
-      --lang L        spoken language (default: $EDITS_LANG, else the system's); its words are in presets/lang.json
+      --lang L        spoken language (default: $EDITS_LANG, else the system's); its words are in data/lang.json
   -o, --out DIR       output folder (default: a new folder per run in $EDITS_OUT or ~/Videos/edits, by day and title)
       --join          also join all clips into joined.mp4
       --preview       one edit at half size, encoded fast: check timing and shots, then render without it

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.edits-reverse",
+  "name": "edits-reverse",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Rebuild an edit someone made (a TikTok, Reel or Short) as an `edits` preset and render it again, checked against the original cut by cut. Use to reverse, recreate, remake, replicate or copy an edit, \"bunun aynısını yap\", or to put new footage into an edit's exact shape.",
+  "kinds": [
+    "skill"
+  ],
+  "preview": "preview.svg"
+}

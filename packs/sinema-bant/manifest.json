@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.sinema-bant",
+  "name": "sinema-bant",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: a film trailer on a phone - black cinema bars, long push-ins, a warm light leak drifting through, each shot fading up from and down to black. Epic or dark songs",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "9:16",
+    "zoom",
+    "slide",
+    "retro",
+    "cinema",
+    "fade"
+  ]
+}

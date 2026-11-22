@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.edits-trends",
+  "name": "edits-trends",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Find what is trending on TikTok (or Spotify) right now and cut an edit to it with `edits`. Use when the user wants a trending or viral song, a trend, the current TikTok sound, or a chart hit for an edit.",
+  "kinds": [
+    "skill"
+  ],
+  "preview": "preview.svg"
+}

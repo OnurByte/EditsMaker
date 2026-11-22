@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.half-spin-square",
+  "name": "half-spin-square",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Alight Motion project \"likenya woi\"",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "1:1",
+    "slide",
+    "spin"
+  ]
+}

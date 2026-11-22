@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="44" viewBox="0 0 960 44" role="img" aria-label="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, stream VODs into clips">
-<rect x="38.0" y="2" width="116" height="40" rx="20" fill="#161B22"/>
-<text x="96.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">MCP server</text>
-<rect x="166.0" y="2" width="148" height="40" rx="20" fill="#161B22"/>
-<text x="240.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">8 agent skills</text>
-<rect x="326.0" y="2" width="116" height="40" rx="20" fill="#161B22"/>
-<text x="384.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">62 presets</text>
-<rect x="454.0" y="2" width="100" height="40" rx="20" fill="#161B22"/>
-<text x="504.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">40 looks</text>
-<rect x="566.0" y="2" width="220" height="40" rx="20" fill="#C8261E"/>
-<text x="676.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">TikTok + Spotify charts</text>
-<rect x="798.0" y="2" width="124" height="40" rx="20" fill="#161B22"/>
-<text x="860.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">VOD → clips</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="44" viewBox="0 0 960 44" role="img" aria-label="MCP server, 70 built-in packs, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips">
+<rect x="42.0" y="2" width="116" height="40" rx="20" fill="#161B22"/>
+<text x="100.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">MCP server</text>
+<rect x="170.0" y="2" width="100" height="40" rx="20" fill="#161B22"/>
+<text x="220.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">70 packs</text>
+<rect x="282.0" y="2" width="156" height="40" rx="20" fill="#161B22"/>
+<text x="360.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">community packs</text>
+<rect x="450.0" y="2" width="100" height="40" rx="20" fill="#161B22"/>
+<text x="500.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">40 looks</text>
+<rect x="562.0" y="2" width="220" height="40" rx="20" fill="#C8261E"/>
+<text x="672.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">TikTok + Spotify charts</text>
+<rect x="794.0" y="2" width="124" height="40" rx="20" fill="#161B22"/>
+<text x="856.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#F4F1EA" text-anchor="middle" letter-spacing="0">VOD → clips</text>
 </svg>

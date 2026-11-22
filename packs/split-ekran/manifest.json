@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.split-ekran",
+  "name": "split-ekran",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: split screen on the beat - full shots punch in, then the same shot splits into 4 and 9 tiles on the hits, then back. Fast songs, crowds, dances, sport",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "9:16",
+    "zoom",
+    "shake",
+    "split",
+    "flash"
+  ]
+}
