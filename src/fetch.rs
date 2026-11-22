@@ -110,9 +110,9 @@ pub fn best_title(want: &str, titles: &[String]) -> Option<usize> {
     titles.iter().enumerate().max_by(|(_, a), (_, b)| {
         let score = |t: &String| {
             let tw = words(t);
-            (w.iter().filter(|x| tw.contains(x)).count() as f64, -(tw.len() as f64))
+            (w.iter().filter(|x| tw.contains(x)).count(), std::cmp::Reverse(tw.len()))
         };
-        score(a).partial_cmp(&score(b)).unwrap()
+        score(a).cmp(&score(b))
     }).map(|x| x.0)
 }
 

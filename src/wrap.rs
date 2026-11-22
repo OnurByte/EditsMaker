@@ -28,7 +28,7 @@ pub fn parse_flash(s: &str) -> Result<(f64, String), String> {
     Ok((t, text.trim().to_string()))
 }
 
-fn esc(s: &str) -> String {
+pub fn esc(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
 }
 

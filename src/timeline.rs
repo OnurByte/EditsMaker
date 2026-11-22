@@ -49,9 +49,7 @@ fn url(p: &Path) -> String {
     if enc.starts_with('/') { format!("file://{enc}") } else { format!("file:///{enc}") }
 }
 
-fn esc(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
-}
+use crate::wrap::esc;
 
 impl Timeline {
     pub fn total(&self) -> f64 {

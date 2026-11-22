@@ -43,10 +43,10 @@ pub struct CaptionStyle {
     #[serde(default)]
     pub pop: bool,
     /// a soft glow in the outline colour, this many pixels wide (0: none)
-    #[serde(default, skip_serializing_if = "is_zero")]
+    #[serde(default, skip_serializing_if = "crate::preset::is_zero")]
     pub glow: f64,
     /// room between letters, as a fraction of the text height
-    #[serde(default, skip_serializing_if = "is_zero")]
+    #[serde(default, skip_serializing_if = "crate::preset::is_zero")]
     pub spacing: f64,
     /// how lines on screen come in
     #[serde(default)]
@@ -82,9 +82,6 @@ impl Default for Reveal {
     }
 }
 
-fn is_zero(x: &f64) -> bool {
-    *x == 0.0
-}
 
 impl CaptionStyle {
     /// Letter spacing in pixels for a text height of `px`.
