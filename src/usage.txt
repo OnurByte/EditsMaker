@@ -81,7 +81,8 @@ OPTIONS
                       itself when one is found) or inset (the facecam small on top of the game)
       --translate L   talking clips: captions, hook and .srt in that language (tr, en, es...), the voice as said
       --look L       colour: none, bw, noir, dark, teal, tealorange, warm, cold, faded, vintage, sepia, bleach,
-                      neon, matrix, sunset, pop
+                      neon, matrix, sunset, pop; lighting: lightning, moonlight, nightglow, daylight, cyberpunk,
+                      redalarm, greenglow, flash, violet
       --lut FILE      a .cube LUT over the picture
       --encoder E     auto (default: Apple VideoToolbox on a Mac, an NVIDIA GPU elsewhere, when it works, else libx264),
                       nvenc, videotoolbox or cpu; edits encoder E (or EDITS_ENCODER) sets it for every run

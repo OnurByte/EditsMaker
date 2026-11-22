@@ -18,6 +18,16 @@ pub const LOOKS: &[(&str, &str, &str)] = &[
     ("matrix", "green screen-world", ",colorbalance=rs=-0.1:gs=0.08:bs=-0.06:rm=-0.08:gm=0.08:bm=-0.05,eq=saturation=0.9:contrast=1.15"),
     ("sunset", "red-orange sky", ",colorbalance=rs=0.12:gs=-0.02:bs=-0.08:rm=0.1:bm=-0.06,eq=saturation=1.2:contrast=1.08"),
     ("pop", "loud colour", ",eq=saturation=1.5:contrast=1.15"),
+    // lighting looks: a grade plus an off-centre vignette standing in for where the light comes from
+    ("lightning", "a distant lightning flash: cold white-blue from high on one side, the rest in deep shadow", ",colorbalance=rs=-0.1:bs=0.12:rm=-0.06:bm=0.08:rh=-0.02:bh=0.06,eq=saturation=0.6:contrast=1.4:brightness=-0.04:gamma=0.9,vignette=angle=PI/3:x0=w*0.85:y0=h*0.1"),
+    ("moonlight", "blue moonlight from the side, deep shadows, a faint amber glint", ",colorbalance=rs=-0.12:gs=-0.02:bs=0.16:rm=-0.08:bm=0.1:rh=0.05:gh=0.02:bh=-0.03,eq=saturation=0.75:contrast=1.3:brightness=-0.08:gamma=0.85,vignette=angle=PI/3:x0=w*0.1:y0=h*0.35"),
+    ("nightglow", "cool cinematic night: dark base, blue and purple light, warm accents", ",colorbalance=rs=-0.04:bs=0.14:rm=0.04:gm=-0.05:bm=0.1:rh=0.06:bh=-0.02,eq=saturation=1.15:contrast=1.3:brightness=-0.06:gamma=0.9,vignette=PI/4.5"),
+    ("daylight", "bright cool daylight for action: crisp, clear, the subject pops", ",colorbalance=rs=-0.02:bs=0.04:rh=0.03:gh=0.02,eq=saturation=1.12:contrast=1.15:brightness=0.03,unsharp=5:5:0.6"),
+    ("cyberpunk", "neon night: cyan shadows, hot magenta highlights", ",colorbalance=rs=-0.15:gs=0.05:bs=0.15:rm=0.1:gm=-0.1:bm=0.08:rh=0.15:gh=-0.06:bh=0.08,eq=saturation=1.45:contrast=1.25:brightness=-0.05"),
+    ("redalarm", "red emergency light from high on one side, pitch-black shadows", ",colorbalance=rs=0.25:gs=-0.1:bs=-0.1:rm=0.3:gm=-0.12:bm=-0.12:rh=0.15:gh=-0.05:bh=-0.05,eq=saturation=1.2:contrast=1.4:brightness=-0.06:gamma=0.85,vignette=angle=PI/3:x0=w*0.85:y0=h*0.1"),
+    ("greenglow", "eerie sci-fi green lighting the face from below", ",colorbalance=rs=-0.15:gs=0.15:bs=-0.08:rm=-0.15:gm=0.2:bm=-0.05:rh=-0.05:gh=0.1,eq=saturation=1.1:contrast=1.35:brightness=-0.05:gamma=0.9,vignette=angle=PI/3:x0=w/2:y0=h*0.95"),
+    ("flash", "direct camera flash at night: hard white, punchy, the background falls to black", ",eq=saturation=0.95:contrast=1.35:brightness=0.04:gamma=1.05,unsharp=5:5:0.8,vignette=PI/3.2"),
+    ("violet", "fantasy violet: purple-blue shadows, a magenta glow from the side", ",colorbalance=rs=0.02:gs=-0.06:bs=0.18:rm=0.14:gm=-0.12:bm=0.14:rh=0.12:gh=-0.04:bh=0.08,eq=saturation=1.25:contrast=1.3:brightness=-0.05,vignette=angle=PI/3.5:x0=w*0.1:y0=h*0.55"),
 ];
 
 pub fn names() -> Vec<&'static str> {
