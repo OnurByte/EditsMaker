@@ -992,7 +992,9 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             Ok(_) => {
                 tl.captions = talk::lines_srt(&quotes, p.total);
                 let beats: Vec<f64> = song.beats.iter().map(|b| b - song_from).collect();
-                tl.markers = timeline::markers(&beats, p.total, p.slots.iter().find(|s| s.drop).map(|s| s.start), voice.as_ref().map(|v| v.2.at));
+                // the drop: the shot the preset marks, else where the voice line ends (it is placed to end on the hardest cut)
+                let drop = p.slots.iter().find(|s| s.drop).map(|s| s.start).or(voice.as_ref().map(|v| v.2.at + v.2.len));
+                tl.markers = timeline::markers(&beats, p.total, drop, voice.as_ref().map(|v| v.2.at));
                 if let Some((a, m, v)) = &voice {
                     tl.said = voice_cues(&a.words, m, v.at);
                     tl.captions.extend(tl.said.clone());
