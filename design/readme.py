@@ -79,7 +79,7 @@ def mark(x, y, s, theme_id):
             f'<g clip-path="url(#r{theme_id})"><path d="{e}" fill="%RED%" transform="translate(0,7)"/></g></g>')
 
 
-# Logos, one colour each (name -> [grid, path]): Simple Icons (CC0), LobeHub icons (MIT) for Codex and
+# Logos, one colour each (name -> [grid, path]): Simple Icons (CC0), LobeHub icons (MIT) for ChatGPT and
 # CapCut, HyperFrames' own favicon. Brands with no free icon (Adobe asked Simple Icons to drop theirs) get
 # their initials, set in the type: the manual's way of naming without borrowing artwork.
 LOGOS = json.loads((ROOT / "design/logos.json").read_text())
@@ -146,7 +146,7 @@ def badges():
     return out
 
 
-@page("agents", 300, "Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, Codex, "
+@page("agents", 300, "Your AI agent edits for you: EditsMaker is an MCP server for Claude Code, ChatGPT, "
       "Cursor, Gemini CLI and any MCP client", "1.2")
 def agents():
     out = head("Your AI agent\nedits for you", "EditsMaker is an MCP server. Ask in plain words; the "
@@ -158,7 +158,7 @@ def agents():
     tools = ["edits_make", "edits_moments", "edits_check", "edits_preset_get", "edits_preset_save", "edits_trends", "edits_looks"]
     for i, s in enumerate(tools):
         out.append(t(C2, 150 + i * 22, s, 14, 400, "RED" if i == 0 else "INK", font=MONO))
-    for i, s in enumerate(["Claude Code", "Codex", "Cursor", "Gemini CLI", "any MCP client"]):
+    for i, s in enumerate(["Claude Code", "ChatGPT", "Cursor", "Gemini CLI", "any MCP client"]):
         y = 154 + i * 34
         if s in LOGOS:
             out.append(logo(s, C3, y - 19, 24))

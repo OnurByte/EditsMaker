@@ -1,6 +1,6 @@
 ---
 name: edits-mcp
-description: Connect the `edits` video editor to an AI agent as an MCP server. Use when setting up edits for Claude Code, Codex, OpenCode, Cursor, Windsurf, Gemini CLI, Claude Desktop, VS Code or another MCP client, or when its tools do not show up.
+description: Connect the `edits` video editor to an AI agent as an MCP server. Use when setting up edits for Claude Code, ChatGPT (Codex), OpenCode, Cursor, Windsurf, Gemini CLI, Claude Desktop, VS Code or another MCP client, or when its tools do not show up.
 ---
 
 # edits over MCP
@@ -8,7 +8,7 @@ description: Connect the `edits` video editor to an AI agent as an MCP server. U
 `edits mcp` serves every command over stdio. Add it to every agent on this machine at once:
 
 ```sh
-edits mcp install      # Claude Code, Codex, OpenCode, Cursor, Windsurf, Gemini CLI, Claude Desktop, VS Code
+edits mcp install      # Claude Code, ChatGPT (codex), OpenCode, Cursor, Windsurf, Gemini CLI, Claude Desktop, VS Code
 edits skills install   # the skills into each agent's skill folder
 ```
 

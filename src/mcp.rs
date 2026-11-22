@@ -330,7 +330,7 @@ pub fn handle(msg: &Value) -> Option<Value> {
 }
 
 /// Where each agent keeps its MCP servers, as a JSON file: (client, file, key holding the servers, the entry).
-/// Clients whose config is not plain JSON (Claude Code's ~/.claude.json is live state, Codex is TOML) are added
+/// Clients whose config is not plain JSON (Claude Code's ~/.claude.json is live state, ChatGPT's codex is TOML) are added
 /// through their own CLI instead.
 fn json_clients(exe: &str) -> Vec<(&'static str, PathBuf, &'static [&'static str], Value)> {
     let h = crate::util::home();
@@ -365,7 +365,7 @@ pub fn install() -> Result<(), String> {
     // their own CLIs; removed first so a moved binary is picked up again
     for (name, cli, rm, add) in [
         ("Claude Code", "claude", vec!["mcp", "remove", "-s", "user", "edits"], vec!["mcp", "add", "-s", "user", "edits", "--", &exe, "mcp"]),
-        ("Codex", "codex", vec!["mcp", "remove", "edits"], vec!["mcp", "add", "edits", "--", &exe, "mcp"]),
+        ("ChatGPT (codex)", "codex", vec!["mcp", "remove", "edits"], vec!["mcp", "add", "edits", "--", &exe, "mcp"]),
     ] {
         if crate::util::have(cli) {
             let _ = crate::util::run(None, cli, &rm);
