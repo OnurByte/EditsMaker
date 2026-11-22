@@ -122,7 +122,8 @@ pub fn cuts(clip: &Path) -> Vec<f64> {
 /// Below this, the last frame runs into the first without a visible jump.
 const LOOPS: f64 = 0.12;
 
-/// How far apart a clip's last and first frames are, 0 (the same) to 1: small, grey, compared pixel by pixel.
+/// How far apart a clip's last and first frames are, 0 (the same) to 1: small, grey, compared pixel by pixel. None
+/// when it starts from black (a fade in: not made to loop, and black next to a faded-out black end says nothing).
 fn seam_apart(clip: &Path) -> Option<f64> {
     let c = clip.to_string_lossy();
     let frame = |at: &[&str]| -> Option<Vec<u8>> {
@@ -134,7 +135,13 @@ fn seam_apart(clip: &Path) -> Option<f64> {
     // every frame of the last second, the last of them taken: a point just before the end can fall past the
     // picture when the sound runs a little longer
     let tail = frame_all(&c, &["-sseof", "-1"])?;
-    Some(apart(&tail[tail.len() - 36 * 64..], &frame(&[])?))
+    let first = frame(&[])?;
+    (!dark(&first)).then(|| apart(&tail[tail.len() - 36 * 64..], &first))
+}
+
+/// A frame that is all but black (mean under 4 %).
+fn dark(f: &[u8]) -> bool {
+    f.iter().map(|&x| x as f64).sum::<f64>() / (255.0 * f.len().max(1) as f64) < 0.04
 }
 
 /// Every frame from `at` on as 36x64 grey, back to back.
@@ -195,6 +202,12 @@ mod tests {
     fn frames_apart() {
         assert_eq!(apart(&[10, 20, 30], &[10, 20, 30]), 0.0);
         assert!((apart(&[0, 0], &[255, 0]) - 0.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn a_fade_from_black_is_no_loop() {
+        assert!(dark(&[0, 3, 5, 2]));
+        assert!(!dark(&[0, 120, 200, 40]));
     }
 
     #[test]
