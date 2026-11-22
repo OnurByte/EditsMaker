@@ -25,15 +25,19 @@ pub struct Look {
     pub pace: f64,
     /// effects on the hardest cuts (--fx)
     pub hits: Vec<String>,
+    /// --loop: no fades, the song's bar before the start comes in under the end, so the edit plays round seamlessly
+    pub looped: bool,
+    /// --corecore: unrelated footage, desaturated and grainy, dips and long dissolves, glimpses between shots
+    pub core: bool,
 }
 
 impl Look {
     /// seconds a shot should last; rounded to whole beats
     pub fn shot(&self) -> f64 {
-        if self.sad { 2.4 } else { 1.1 }
+        if self.sad { 2.4 } else if self.core { 1.6 } else { 1.1 }
     }
     pub fn speed(&self) -> f64 {
-        (if self.sad { 0.8 } else { 1.0 }) * if self.pace > 0.0 { self.pace } else { 1.0 }
+        (if self.sad { 0.8 } else if self.core { 0.9 } else { 1.0 }) * if self.pace > 0.0 { self.pace } else { 1.0 }
     }
 }
 
@@ -58,12 +62,47 @@ pub struct Song {
     pub loud: Vec<f64>,
     /// YouTube "most replayed" per analysis frame, empty when the song has none
     pub heat: Vec<f64>,
+    /// where the part people use on TikTok and Shorts starts (seconds), when they agree on one
+    pub hook: Option<f64>,
 }
 
 impl Song {
     /// What a song's stretch is chosen by: where people replay it most, else where it is loudest.
     pub fn stretch(&self) -> &[f64] {
         if self.heat.is_empty() { &self.loud } else { &self.heat }
+    }
+
+    /// The hook counts as the most replayed part for 20 s, so drops inside it win too.
+    pub fn set_hook(&mut self, at: f64) {
+        self.hook = Some(at);
+        if self.heat.is_empty() {
+            self.heat = vec![0.0; self.loud.len()];
+        }
+        let (a, b) = ((at / hop_s()) as usize, (((at + 20.0) / hop_s()) as usize).min(self.heat.len()));
+        self.heat.iter_mut().take(b).skip(a).for_each(|h| *h = h.max(1.0));
+    }
+
+    /// Starts of `n` stretches of `length` s, none overlapping: the hook first (from its beat, moved back as little as
+    /// needed for the stretch to fit before the song ends), then the most replayed or loudest parts.
+    pub fn starts(&self, length: f64, n: usize) -> Vec<f64> {
+        let end = self.loud.len() as f64 * hop_s();
+        let mut out: Vec<f64> = vec![];
+        if let Some(h) = self.hook {
+            let fit = (end - length).max(0.0);
+            if let Some(b) = self.beats.iter().rev().find(|b| **b <= h.min(fit) + 0.15) {
+                out.push(*b);
+            }
+        }
+        for w in windows(&self.beats, self.stretch(), length, n + 1) {
+            if out.len() >= n {
+                break;
+            }
+            if out.iter().all(|o| (o - w).abs() >= length) {
+                out.push(w);
+            }
+        }
+        out.truncate(n.max(1));
+        out
     }
 }
 
@@ -253,8 +292,38 @@ pub fn refine(beats: &[usize], env: &[f64], lag: usize) -> Vec<usize> {
     snapped
 }
 
-/// Downloads (or takes) the song and finds its beats.
+/// Downloads (or takes) the song and finds its beats, and where the part people use starts. A TikTok, Reel or Short
+/// given as the song becomes its record, whole and clean, from where the clip starts (a sped-up sound stays as it is).
 pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
+    let mut s = beats_of(src, cache)?;
+    if Path::new(src).is_file() {
+        return Ok(s);
+    }
+    if (s.loud.len() as f64 * hop_s()) < 75.0 {
+        if let Ok(Some(f)) = crate::shazam::recognize(&s.file, None) {
+            let name = format!("{} - {}", f.artist, f.title);
+            if f.skew < 0.02 && !f.title.is_empty() {
+                match crate::fetch::find_song(&name).and_then(|u| beats_of(&u, cache)) {
+                    Ok(mut whole) => {
+                        eprintln!("edits: the sound is {name}: the record from {}, where the clip starts", crate::util::mmss(f.offset.max(0.0)));
+                        whole.set_hook(f.offset.max(0.0));
+                        return Ok(whole);
+                    }
+                    Err(e) => eprintln!("edits: the sound is {name}, but its record was not found ({e}); the clip's own sound is used"),
+                }
+            } else if f.skew >= 0.02 {
+                eprintln!("edits: the sound is a sped-up {name}; kept as it is");
+            }
+        }
+        return Ok(s);
+    }
+    if let Some(h) = crate::hook::find(&s.title, cache) {
+        s.set_hook(h);
+    }
+    Ok(s)
+}
+
+fn beats_of(src: &str, cache: &Path) -> Result<Song, String> {
     let (file, title, heat) = if Path::new(src).is_file() {
         let title = Path::new(src).file_stem().unwrap_or_default().to_string_lossy().into_owned();
         // an edit (it has a picture) brings its own dialogue: keep only its music
@@ -288,7 +357,7 @@ pub fn song(src: &str, cache: &Path) -> Result<Song, String> {
     let strength = frames.iter().map(|&f| 0.5 * peak(&env, f) + 0.5 * peak(&bass, f)).collect();
     let beats = frames.into_iter().map(|f| f as f64 * hop_s()).collect();
     let heat = heat_frames(&heat, loud.len());
-    Ok(Song { file, title, beats, strength, loud, heat })
+    Ok(Song { file, title, beats, strength, loud, heat, hook: None })
 }
 
 /// Strength of the beat nearest to `t` seconds.
@@ -663,6 +732,38 @@ pub fn joins(hits: &[f64], sad: bool) -> Vec<Join> {
     out
 }
 
+/// --corecore: glimpses (a flicker of three shots) every fourth shot that is long enough, the first 0.12 s of it
+/// split into two quick pieces of other footage.
+pub fn glimpses(cuts: &[f64]) -> Vec<f64> {
+    let mut out = vec![];
+    for (i, w) in cuts.windows(2).enumerate() {
+        out.push(w[0]);
+        if i % 4 == 2 && w[1] - w[0] >= 1.0 {
+            out.extend([w[0] + 0.12, w[0] + 0.24]);
+        }
+    }
+    out.extend(cuts.last());
+    out
+}
+
+/// --corecore joins: hard cuts into and out of glimpses, otherwise dips to black and long dissolves between pieces
+/// long enough to carry them, cuts between.
+pub fn joins_core(cuts: &[f64]) -> Vec<Join> {
+    let n = cuts.len();
+    let len = |i: usize| if i + 1 < n { cuts[i + 1] - cuts[i] } else { 0.0 };
+    (0..n).map(|i| {
+        if i == 0 || i + 1 >= n || len(i - 1) < 1.2 || len(i) < 1.2 {
+            CUT
+        } else if i % 5 == 0 {
+            Join { kind: "dissolve", dur: 0.8, motion: None }
+        } else if i % 3 == 0 {
+            Join { kind: "fadeblack", dur: 0.5, motion: None }
+        } else {
+            CUT
+        }
+    }).collect()
+}
+
 /// Puts Premiere camera moves on the cuts the music hits: the hardest hits (white flashes) get the biggest moves,
 /// the next ones (zooms) a move instead of the zoom. `k` varies the choice between edits.
 pub fn add_moves(joins: &mut [Join], k: usize) {
@@ -750,13 +851,14 @@ pub fn captions(words: &[Word], m: Option<&Moment>, offset: f64, text: &str, sad
 
 #[allow(clippy::too_many_arguments)]
 /// `beats` are the music's beats on the edit's timeline.
-pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], joins: &[Join], beats: &[f64], total: f64, voice: Option<&Voice>, subs: bool) -> String {
+/// `pre`: with --loop, seconds of song from before the start, its own last input, crossfaded in under the end.
+pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], joins: &[Join], beats: &[f64], total: f64, voice: Option<&Voice>, subs: bool, pre: Option<f64>) -> String {
     let (w, h, speed) = (o.w, o.h, look.speed());
     let mut g = String::new();
     for (i, (f, (_, len))) in focus.iter().zip(spans).enumerate() {
         // every shot drifts in; fast edits also land each cut with a quick punch and a little motion smear
         // every shot drifts in and kicks on each beat that falls inside it; the first kick is the cut itself
-        let kick = if look.punch { 0.08 } else if look.sad { 0.025 } else { 0.05 };
+        let kick = if look.punch { 0.08 } else if look.sad { 0.025 } else if look.core { 0.015 } else { 0.05 };
         let (s0, _) = spans[i];
         let pulses: String = beats.iter().map(|b| b - s0).filter(|t| *t >= -0.01 && *t < *len).take(40)
             .map(|t| format!("+{kick}*max(0,1-(it-{:.3})*6)*gte(it,{:.3})", t.max(0.0), t.max(0.0))).collect();
@@ -788,6 +890,9 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         }
         let mut tone = if look.sad {
             ",hue=s=0,eq=contrast=1.22:brightness=-0.05,vignette=PI/4.2,noise=alls=5:allf=t".to_string()
+        } else if look.core {
+            // found footage: colour mostly gone, crushed a little, heavy grain
+            format!("{},hue=s=0.3,eq=contrast=1.12:brightness=-0.04:gamma=0.95,vignette=PI/4,noise=alls=16:allf=t", grade(&o.grade))
         } else {
             format!("{},eq=contrast=1.08,vignette=PI/5", grade(&o.grade))
         };
@@ -808,7 +913,9 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
     }
     // one clean 30 fps clock after the transitions, or the encoder drops frames it takes for duplicates
     g.push_str(&format!("[{last}]settb=1/30,fps=30{}", color_hits(spans, joins, voice.is_some() && !look.sad)));
-    g.push_str(&format!(",fade=t=in:d=0.4,fade=t=out:st={:.3}:d=1.2", (total - 1.2).max(0.0)));
+    if !look.looped {
+        g.push_str(&format!(",fade=t=in:d=0.4,fade=t=out:st={:.3}:d=1.2", (total - 1.2).max(0.0)));
+    }
     if subs {
         g.push_str(",ass=cap.ass");
     }
@@ -816,7 +923,12 @@ pub fn filter_graph(o: &Opts, look: &Look, focus: &[f64], spans: &[(f64, f64)], 
         g.push_str(&format!(",drawtext=text='{}':font=Adwaita Sans:fontsize=h*0.024:fontcolor=white@0.7:x=(w-tw)/2:y=h*0.93", look.tag));
     }
     let m = spans.len();
-    g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=in:d=0.3,afade=t=out:st={:.3}:d=1.5", (total - 1.5).max(0.0)));
+    g.push_str(",format=yuv420p[vout];");
+    match (look.looped, pre) {
+        (true, Some(d)) => g.push_str(&splice(m, m + 1 + usize::from(voice.is_some()), total, d)),
+        (true, None) => g.push_str(&format!("[{m}:a]anull")),
+        _ => g.push_str(&format!("[{m}:a]afade=t=in:d=0.3,afade=t=out:st={:.3}:d=1.5", (total - 1.5).max(0.0))),
+    }
     if let Some(v) = voice {
         g.push_str(&duck(m + 1, v));
     }
@@ -979,6 +1091,100 @@ pub fn color_hits(spans: &[(f64, f64)], joins: &[Join], story: bool) -> String {
     f
 }
 
+// ---------------------------------------------------------------- lyrics
+
+/// The song's sung words with their times (whisper, any language), cached beside the song; empty without a speech
+/// model or when nothing is sung. Instrumental marks ("[Music]", "♪") are left out.
+pub fn lyrics(song: &Song, cache: &Path) -> Vec<Word> {
+    let dir = cache.join("music").join(format!("lyrics-{}", safe(&song.file.file_stem().unwrap_or_default().to_string_lossy())));
+    let wav = dir.join("a.wav");
+    let made = std::fs::create_dir_all(&dir).map_err(|e| e.to_string())
+        .and_then(|_| if wav.is_file() { Ok(String::new()) } else { run(None, "ffmpeg", &["-v", "error", "-y", "-i", &song.file.to_string_lossy(), "-vn", "-ar", "16000", "-ac", "1", &wav.to_string_lossy()]) })
+        .and_then(|_| crate::transcribe::transcript(&dir, &wav, "auto", ""));
+    match made {
+        Ok(t) => t.words.into_iter().filter(|w| !w.t.contains(['♪', '[', ']', '(', ')', '*']) && !w.t.trim().is_empty()).collect(),
+        Err(e) => {
+            eprintln!("edits: no lyrics for {} ({e})", song.title);
+            vec![]
+        }
+    }
+}
+
+/// Sung words from `start` for `total` s as lines on the edit's clock: a line breaks at a pause, a comma or four words.
+pub fn sung(words: &[Word], start: f64, total: f64) -> Vec<(f64, f64, String)> {
+    let inside: Vec<&Word> = words.iter().filter(|w| w.s >= start && w.s < start + total - 0.2).collect();
+    let mut out: Vec<(f64, f64, String)> = vec![];
+    let mut run: Vec<&Word> = vec![];
+    for (i, w) in inside.iter().enumerate() {
+        run.push(w);
+        let next = inside.get(i + 1);
+        if next.is_none_or(|n| n.s - w.e > 0.6) || run.len() == 4 || w.t.ends_with([',', '.', '?', '!']) {
+            let end = next.map_or(w.e + 0.4, |n| (w.e + 0.4).min(n.s - 0.02)).max(w.e).min(start + total);
+            out.push((run[0].s - start, end - start, run.iter().map(|w| w.t.trim()).collect::<Vec<_>>().join(" ")));
+            run.clear();
+        }
+    }
+    out
+}
+
+/// --lyrics: a cut that is not on a sung word moves to the nearest beat within 0.75 s that is, when it keeps 0.35 s
+/// from its neighbours, so the words land on the cuts. `cuts`, `beats` and `onsets` share the edit's clock.
+pub fn on_words(cuts: &[f64], beats: &[f64], onsets: &[f64]) -> Vec<f64> {
+    let sung = |t: f64| onsets.iter().any(|o| (o - t).abs() <= 0.09);
+    let mut out = cuts.to_vec();
+    for i in 1..out.len().saturating_sub(1) {
+        let c = out[i];
+        if sung(c) {
+            continue;
+        }
+        let (prev, next) = (out[i - 1], out[i + 1]);
+        if let Some(b) = beats.iter().copied().filter(|b| (b - c).abs() > 1e-6 && (b - c).abs() <= 0.75 && sung(*b) && b - prev >= 0.35 && next - b >= 0.35)
+            .min_by(|x, y| (x - c).abs().total_cmp(&(y - c).abs())) {
+            out[i] = b;
+        }
+    }
+    out
+}
+
+// ---------------------------------------------------------------- loops
+
+/// --loop: how much song from before the edit's start comes in under its end (one bar, at most a third of the edit),
+/// so the last second leads into the first as the song itself does; None when the edit starts at the song's start.
+pub fn preroll(beats: &[f64], song_start: f64, total: f64) -> Option<f64> {
+    let d = (4.0 * beat_period(beats)).min(song_start).min(total / 3.0);
+    (d >= 0.5).then_some(d)
+}
+
+/// The song (input `song`, `total` s from the start) with its `d` s before the start (input `pre`) crossfaded in under
+/// its end: played round, the end runs into the start as the record does. A chain left open, like the fades it replaces.
+pub fn splice(song: usize, pre: usize, total: f64, d: f64) -> String {
+    format!("[{song}:a]atrim=0:{:.3},asetpts=PTS-STARTPTS[s0];[{pre}:a]asetpts=PTS-STARTPTS[s1];[s0][s1]acrossfade=d=0.15:c1=tri:c2=tri", total - d + 0.15)
+}
+
+/// --loop: an edit's length cut back to whole bars (four beats of `period`), so the song's rhythm carries on round
+/// the loop; at least one bar. `cuts` keep their order and end on the new length.
+pub fn whole_bars(cuts: &[f64], period: f64) -> Vec<f64> {
+    let total = *cuts.last().unwrap_or(&0.0);
+    let bar = 4.0 * period;
+    if bar <= 0.0 || total < bar {
+        return cuts.to_vec();
+    }
+    let end = (total / bar + 1e-6).floor() * bar;
+    let mut out: Vec<f64> = cuts.iter().copied().filter(|c| *c < end - 0.3).collect();
+    out.push(end);
+    out
+}
+
+/// --loop: the last piece shows the footage that ran just before the first one, so the end runs into the start.
+/// `first` is (start, seconds it uses) of the first piece inside its shot (`shot_s`..`shot_e`); `need` what the last
+/// piece uses. Returns (first's start, last's start), moving the first later inside its shot when `movable` (not when
+/// it is tied to a voice line) and there is no room before it. None when the shot has no room either way.
+pub fn seam(first: (f64, f64), shot: (f64, f64), need: f64, movable: bool) -> Option<(f64, f64)> {
+    let ((from, uses), (s, e)) = (first, shot);
+    let from = if from - need >= s - 0.01 { from } else if movable { s + need } else { return None };
+    (from + uses <= e + 0.05).then_some((from, from - need))
+}
+
 /// One finished edit. `picks` are (video file, source start, focus) per piece, `joins` one per cut.
 /// `work` is the folder ffmpeg runs in; `subs` is the ASS text written there as cap.ass.
 #[allow(clippy::too_many_arguments)]
@@ -998,8 +1204,12 @@ pub fn render(picks: &[(PathBuf, f64, f64)], cuts: &[f64], joins: &[Join], beats
     if let Some(v) = voice {
         args.extend(["-ss".into(), format!("{:.3}", v.start), "-t".into(), format!("{:.3}", v.len), "-i".into(), abs(&v.file)?]);
     }
+    let pre = if look.looped { preroll(beats, song_start, total) } else { None };
+    if let Some(d) = pre {
+        args.extend(["-ss".into(), format!("{:.3}", song_start - d), "-t".into(), format!("{d:.3}"), "-i".into(), abs(song)?]);
+    }
     let focus: Vec<f64> = picks.iter().map(|p| p.2).collect();
-    args.extend(["-filter_complex".into(), filter_graph(o, look, &focus, &spans, joins, beats, total, voice, has_subs), "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
+    args.extend(["-filter_complex".into(), filter_graph(o, look, &focus, &spans, joins, beats, total, voice, has_subs, pre), "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
     args.extend(["-t".into(), format!("{total:.3}"), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
     args.extend(crate::util::h264(22));
     args.extend(["-maxrate", "6M", "-bufsize", "12M",
@@ -1098,6 +1308,76 @@ mod tests {
         let got = refine(&[7, 27, 30, 47, 87, 107], &env, 20);
         assert_eq!(got, vec![5, 25, 45, 65, 85, 105]);
         assert_eq!(refine(&[], &env, 20), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn corecore_flickers_and_dips() {
+        let c = glimpses(&[0.0, 1.6, 3.2, 4.8, 6.4, 6.9]);
+        let want = [0.0, 1.6, 3.2, 3.32, 3.44, 4.8, 6.4, 6.9];
+        assert!(c.len() == want.len() && c.iter().zip(want).all(|(a, b)| (a - b).abs() < 1e-9), "{c:?}");
+        let j = joins_core(&[0.0, 1.6, 3.2, 4.8, 6.4, 8.0, 8.12, 8.24, 9.6, 11.2]);
+        assert_eq!(j[3].kind, "fadeblack");
+        assert!(j[5..8].iter().all(|x| *x == CUT) && j[0] == CUT && j[9] == CUT, "{j:?}");
+    }
+
+    #[test]
+    fn lyrics_on_the_edit() {
+        let w = |s: f64, e: f64, t: &str| Word { s, e, t: t.into() };
+        let words = vec![w(9.0, 9.4, "early"), w(10.2, 10.5, "I"), w(10.5, 10.9, "keep"), w(10.9, 11.3, "running,"), w(11.4, 11.8, "every"), w(11.8, 12.1, "night"), w(14.0, 14.6, "away")];
+        let s = sung(&words, 10.0, 5.0);
+        assert_eq!(s.len(), 3, "{s:?}");
+        assert_eq!(s[0].2, "I keep running,");
+        assert!((s[0].0 - 0.2).abs() < 1e-9 && (s[1].1 - 2.5).abs() < 1e-9 && s[2].2 == "away" && (s[2].1 - 5.0).abs() < 1e-9, "{s:?}");
+        // cut at 2.0 with no word: the beat at 1.5 has one; the cut at 3.0 already sits on a word
+        let beats = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+        assert_eq!(on_words(&[0.0, 2.0, 3.0, 4.0], &beats, &[1.52, 3.0]), vec![0.0, 1.5, 3.0, 4.0]);
+        // too close to its neighbour: stays
+        assert_eq!(on_words(&[0.0, 1.8, 2.0, 4.0], &beats, &[1.5]), vec![0.0, 1.5, 2.0, 4.0]);
+        assert_eq!(on_words(&[0.0, 1.6, 1.8, 4.0], &beats, &[1.5]), vec![0.0, 1.6, 1.8, 4.0]);
+    }
+
+    #[test]
+    fn loops_play_round() {
+        let beats: Vec<f64> = (0..40).map(|i| i as f64 * 0.5).collect();
+        // one bar of 2 s before a start 10 s in; a start at 0.3 s has no song before it
+        assert_eq!(preroll(&beats, 10.0, 18.0), Some(2.0));
+        assert_eq!(preroll(&beats, 0.3, 18.0), None);
+        assert_eq!(preroll(&beats, 10.0, 3.0), Some(1.0));
+        let sp = splice(6, 8, 16.0, 2.0);
+        assert!(sp.starts_with("[6:a]atrim=0:14.150") && sp.contains("[8:a]asetpts") && sp.ends_with("acrossfade=d=0.15:c1=tri:c2=tri"), "{sp}");
+        // 17.3 s of cuts on a 0.5 s beat: 16 s, whole bars of 2 s
+        assert_eq!(whole_bars(&[0.0, 5.0, 15.8, 17.3], 0.5), vec![0.0, 5.0, 16.0]);
+        assert_eq!(whole_bars(&[0.0, 1.0], 0.5), vec![0.0, 1.0]);
+        // the first piece at 12 s in a 10-20 s shot, 1.5 s before it for the last piece
+        assert_eq!(seam((12.0, 1.0), (10.0, 20.0), 1.5, false), Some((12.0, 10.5)));
+        // no room before it: moved later in its shot, unless a voice line holds it
+        assert_eq!(seam((10.2, 1.0), (10.0, 20.0), 1.5, true), Some((11.5, 10.0)));
+        assert_eq!(seam((10.2, 1.0), (10.0, 20.0), 1.5, false), None);
+        assert_eq!(seam((10.2, 1.0), (10.0, 12.0), 1.5, true), None);
+        let look = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: true, core: false };
+        let o = Opts { w: 1080, h: 1920, grade: "none".into(), captions: true, layout: "fill".into(), lufs: -14.0 };
+        let js = vec![CUT, CUT];
+        let g = filter_graph(&o, &look, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, &[], 2.0, None, false, Some(0.5));
+        assert!(!g.contains("fade=t=") && !g.contains("afade") && g.contains("[2:a]atrim=0:1.650") && g.contains("[3:a]asetpts"), "{g}");
+    }
+
+    #[test]
+    fn the_hook_comes_first() {
+        let beats: Vec<f64> = (0..120).map(|i| i as f64 * 0.5).collect();
+        let mut loud = vec![0.1; (60.0 / hop_s()) as usize];
+        let n = loud.len();
+        loud[(40.0 / hop_s()) as usize..n].iter_mut().for_each(|v| *v = 1.0);
+        let mut s = Song { file: PathBuf::new(), title: String::new(), beats, strength: vec![], loud, heat: vec![], hook: None };
+        assert!(s.starts(10.0, 1)[0] >= 40.0, "{:?}", s.starts(10.0, 1));
+        // TikTok uses 12.3 s in: the beat at it, then the loudest part
+        s.set_hook(12.3);
+        let st = s.starts(10.0, 2);
+        assert_eq!(st[0], 12.0);
+        assert!(st[1] >= 22.0, "{st:?}");
+        assert!(s.heat[(15.0 / hop_s()) as usize] >= 1.0 && s.heat[(50.0 / hop_s()) as usize] == 0.0);
+        // a hook near the end moves back so the stretch still fits
+        s.set_hook(57.0);
+        assert_eq!(s.starts(10.0, 1), vec![50.0]);
     }
 
     #[test]
@@ -1300,16 +1580,16 @@ mod tests {
     #[test]
     fn graph_shapes() {
         let o = Opts { w: 1080, h: 1080, grade: "dark".into(), captions: false, layout: "fit".into(), lufs: -12.0 };
-        let sad = Look { sad: true, punch: false, length: 6.0, tag: "@me".into(), text: String::new(), pace: 1.0, hits: vec![] };
+        let sad = Look { sad: true, punch: false, length: 6.0, tag: "@me".into(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false };
         let cuts = [0.0, 2.0, 4.0];
         let js = joins(&[1.0, 5.0, 1.0], true);
-        let g = filter_graph(&o, &sad, &[0.5, 0.4], &pieces(&cuts, &js), &js, &[], 4.0, None, false);
+        let g = filter_graph(&o, &sad, &[0.5, 0.4], &pieces(&cuts, &js), &js, &[], 4.0, None, false, None);
         assert!(g.contains("[0:v]setpts=(PTS-STARTPTS)/0.8,fps=30,crop=") && g.contains("[v0][v1]xfade=transition=fadeblack:duration=0.700:offset=1.650[x1];[x1]settb=1/30,fps=30,fade=t=in"), "{g}");
         assert!(g.contains("drawtext=text='@me'") && g.contains("[2:a]afade") && g.contains("loudnorm=I=-12.0") && !g.contains("ass="), "{g}");
-        let hype = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] };
+        let hype = Look { sad: false, punch: true, length: 6.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false };
         let js = joins(&[0.0, 1.0, 0.0], false);
         let v = Voice { file: "a.m4a".into(), start: 30.0, len: 1.5, at: 0.5 };
-        let g = filter_graph(&o, &hype, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, &[0.0, 0.5, 1.0, 1.5], 2.0, Some(&v), true);
+        let g = filter_graph(&o, &hype, &[0.5, 0.5], &pieces(&[0.0, 1.0, 2.0], &js), &js, &[0.0, 0.5, 1.0, 1.5], 2.0, Some(&v), true, None);
         // beats kick the picture: piece 1 (from 0.85 s) kicks at 0.15 s and 0.65 s into itself
         assert!(g.contains("[1:v]") && g.contains("+0.08*max(0,1-(it-0.150)*6)*gte(it,0.150)+0.08*max(0,1-(it-0.650)*6)"), "{g}");
         assert!(g.contains("tmix=frames=2") && g.contains("xfade=transition=fadewhite") && g.contains(",ass=cap.ass") && !g.contains("drawtext"), "{g}");

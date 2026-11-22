@@ -138,6 +138,8 @@ pub struct Talk {
     pub frames: Vec<crate::montage::Frame>,
     /// filters on the source frame before the crop (blurs)
     pub pre: String,
+    /// the captions are written to cap.ass but not burned in (they go on after the person is cut out)
+    pub defer_subs: bool,
 }
 
 /// atempo takes 0.5..2 per stage: chain stages for anything beyond.
@@ -379,6 +381,32 @@ pub fn cues_ass(cues: &[(f64, f64, String)], flashes: &[(f64, String)], st: &Cap
     s
 }
 
+/// Two ASS scripts as one: `b`'s styles and lines added to `a` (their style names differ: H, C, W, T, L, F).
+pub fn merge_ass(a: &str, b: &str) -> String {
+    if !b.contains("Dialogue:") {
+        return a.to_string();
+    }
+    if !a.contains("Dialogue:") {
+        return b.to_string();
+    }
+    let styles: String = b.lines().filter(|l| l.starts_with("Style:")).map(|l| format!("{l}\n")).collect();
+    let events: String = b.lines().filter(|l| l.starts_with("Dialogue:")).map(|l| format!("{l}\n")).collect();
+    let mut out = String::new();
+    let mut put = false;
+    let lines: Vec<&str> = a.lines().collect();
+    for (i, l) in lines.iter().enumerate() {
+        out.push_str(l);
+        out.push('\n');
+        // after a's last style line
+        if !put && l.starts_with("Style:") && !lines.get(i + 1).is_some_and(|n| n.starts_with("Style:")) {
+            out.push_str(&styles);
+            put = true;
+        }
+    }
+    out.push_str(&events);
+    out
+}
+
 pub fn lines_srt(lines: &[String], total: f64) -> Vec<(f64, f64, String)> {
     lines.iter().zip(line_spans(lines.len(), total)).map(|(l, (a, b))| (a, b, l.clone())).collect()
 }
@@ -440,8 +468,8 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
     }
     let n = segs.len();
     (0..n).for_each(|i| g.push_str(&format!("[v{i}][a{i}]")));
-    g.push_str(&format!("concat=n={n}:v=1:a=1[vc][ac];[vc]settb=1/30,fps=30{},eq=contrast=1.06,vignette=PI/6,ass=cap.ass,fade=t=in:d=0.12,fade=t=out:st={:.3}:d=0.25,format=yuv420p[vout];",
-        grade(&o.grade), (total - 0.25).max(0.0)));
+    g.push_str(&format!("concat=n={n}:v=1:a=1[vc][ac];[vc]settb=1/30,fps=30{},eq=contrast=1.06,vignette=PI/6{},fade=t=in:d=0.12,fade=t=out:st={:.3}:d=0.25,format=yuv420p[vout];",
+        grade(&o.grade), if t.defer_subs { "" } else { ",ass=cap.ass" }, (total - 0.25).max(0.0)));
     // the sound: voice, then the cut whooshes and the punchline boom, then the music bed ducked under the voice
     let mut mix = vec!["[voice]".to_string()];
     g.push_str("[ac]asplit=2[voice][key];");
@@ -485,6 +513,19 @@ pub fn render(video: &Path, seek: f64, m: &Moment, words: &[Word], o: &Opts, t: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn two_scripts_become_one() {
+        let st = style("karaoke").unwrap();
+        let a = cues_ass(&[(1.0, 2.0, "said".into())], &[], &st, 1080, 1920);
+        let b = "[Script Info]\nPlayResX: 1080\n\n[V4+ Styles]\nFormat: Name\nStyle: W,Sans,80\nStyle: T,Sans,90\n\n[Events]\nFormat: Layer\nDialogue: 0,0:00:00.00,0:00:01.00,W,,0,0,0,,HEY\n";
+        let m = merge_ass(&a, b);
+        let styles: Vec<&str> = m.lines().filter(|l| l.starts_with("Style:")).collect();
+        assert_eq!(styles.len(), 4, "{m}");
+        assert!(m.find("Style: T,Sans,90").unwrap() < m.find("[Events]").unwrap() && m.contains("}said\n") && m.ends_with(",W,,0,0,0,,HEY\n"), "{m}");
+        assert_eq!(merge_ass(&a, ""), a);
+        assert_eq!(merge_ass("", b), b);
+    }
 
     fn w(s: f64, e: f64, t: &str) -> Word {
         Word { s, e, t: t.into() }

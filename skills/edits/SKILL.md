@@ -156,6 +156,14 @@ edits <link|channel> -n 3 --aspect 9:16 --captions hormozi --bed trend:7
 Other kinds, when asked for:
 - Music montage with no preset: `--music SONG` (add `--sad` for slow, black-and-white, dissolves).
 - A speaker's line over the edit: `--voice`, or `--say VIDEO@FROM-TO` to choose it. These rarely beat preset edits.
+- Corecore (a topic's unrelated clips, faded and grainy, dips and long dissolves, glimpses, headlines from the
+  videos' own words): `edits "loneliness" --corecore --music "slow sad song"`. It reads 12 videos and uses 8.
+- Over a minute for TikTok's Creator Rewards (only videos over 1:00 earn): `--long`. Talking clips are joined into
+  `long.mp4`, music edits run 64 s, a preset plays round on one song.
+
+The song's hook: for a song by name, `trend:N` or a link, edits asks Shazam where YouTube Shorts using it start and
+cuts from that part (the one people know from TikTok, often not the loudest); a TikTok, Reel or Short given as
+`--music` becomes the clean record from where the clip starts (a sped-up sound stays as it is). The log says which.
 
 ## Make it hit harder
 
@@ -195,8 +203,23 @@ Other kinds, when asked for:
 - `--pip FILE[@FROM-TO][:X,Y,SIZE]`: another video small in a white frame (a reaction, a source, a flashback).
 - `--transition circleopen|dissolve|wipeleft|slideup|pixelize|...`: music edits, every soft cut uses it.
 - Shots are spread over every downloaded video; do not settle for an edit cut from one video.
+- `--loop`: the end runs into the start, picture and song (the last shot is what ran just before the first, the
+  song's bar before the start comes in under the end, no fades). Rewatches count; use it on short music and preset
+  edits. `edits_check` says how far apart the last and first frames are ("plays round seamlessly" under 12%).
+- `--lyrics`: the song's words on screen as sung, and music edits move cuts onto sung words. Needs a whisper model.
+- The person cut out (people, not anime; the model is fetched once): `--bg blur|black|#ff2a6d|picture|video`,
+  `--behind "RUN@1-4"` (huge words between the background and the person), `--outline white` (a glowing edge).
+  Captions go on after, on top.
 
 ## After rendering
+
+Show it to the user with `edits_review` (CLI: `edits review clip.mp4`): their browser opens the clip, they click a
+moment, a shot or a spot in the frame and say what to change, and the notes come back with times, shot numbers and
+places. Change exactly those and render again. `saved: true` reads the last notes again.
+
+Before choosing a preset or song for a channel that already posts edits, run `edits_stats` with it ("@name" or a
+TikTok link): every edit edits made is in a render log with its sound, the posts are matched to them, and each
+preset, song and look is ranked by median views. Prefer what that channel's viewers watched.
 
 edits picks the output folder itself, one per run: `~/Videos/edits/DAY/HH.MM <video or topic title>/` (or `$EDITS_OUT`), with a `.json` beside each clip; the log's last line names it. Never choose a folder yourself (no `--out`, no `work/`): the automatic one is where the user looks. Look at frames before calling it done: `edits_check` writes the clip's sheet. If a preset does not suit
 the footage, change the preset (edits-preset-tweak skill) rather than giving up on it.

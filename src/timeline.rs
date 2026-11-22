@@ -21,6 +21,10 @@ pub struct Timeline {
     pub said: Vec<(f64, f64, String)>,
     /// (time on the timeline, name): the song's beats, its drop, where the voice comes in
     pub markers: Vec<(f64, String)>,
+    /// words drawn on the picture whatever --say-text says, (start, end, text): sung lyrics, headlines
+    pub drawn: Vec<(f64, f64, String)>,
+    /// the render's own captions (ASS) left to burn after the person is cut out (--bg, --behind, --outline)
+    pub ass: String,
 }
 
 /// Markers for an edit of `total` s: every beat (times on the edit's own clock), the drop and the voice line's start.
@@ -195,6 +199,7 @@ mod tests {
             captions: vec![(0.0, 1.2, "Merhaba dünya".into())],
             said: vec![],
             markers: vec![],
+            ..Default::default()
         }
     }
 

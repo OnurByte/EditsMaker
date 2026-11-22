@@ -65,7 +65,14 @@ fn tools() -> Value {
             "intro": {"type": "string", "description": "a short piece before the edit: VIDEOID@FROM-TO[/PICTURE_FROM] (that video's words from FROM to TO, its picture from PICTURE_FROM), or a video file"},
             "intro_bed": {"type": "string", "description": "a song under the intro (library name, file), quiet, stopped by a record scratch"},
             "intro_caption": {"type": "string", "description": "words over the intro, emoji allowed"},
-            "outro": {"type": "string", "description": "after the edit: \"edits\" for the EditsMaker card, or a video file or library clip"}},
+            "outro": {"type": "string", "description": "after the edit: \"edits\" for the EditsMaker card, or a video file or library clip"},
+            "loop": {"type": "boolean", "description": "the end runs into the start (picture and song), no fades: plays round seamlessly; rewatches count. Music and preset edits; edits_check reports how far apart the last and first frames are"},
+            "long": {"type": "boolean", "description": "one edit over a minute, what TikTok's Creator Rewards pays for: talking clips joined into long.mp4, music edits 64 s, a preset played round on one song"},
+            "lyrics": {"type": "boolean", "description": "the song's words on screen as they are sung (whisper), and music edits cut on the sung words"},
+            "corecore": {"type": "boolean", "description": "corecore: many unrelated videos of a topic, faded and grainy, dips and long dissolves, glimpses, headlines from their own words; needs music (slow, sad)"},
+            "bg": {"type": "string", "description": "the person cut out (Robust Video Matting, people only) with another background: blur, a colour (black, #ff2a6d), or a picture/video file or library background"},
+            "behind": {"type": "array", "items": {"type": "string"}, "description": "huge words between the background and the person, TEXT or TEXT@FROM-TO seconds"},
+            "outline": {"type": "string", "description": "a glowing outline around the person, a colour: white, #00e5ff"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure/hue curves, contrast, kelvin, vignette, grain, glow, sharpen, pixelate, lens, trails, flip, letterbox, split, mirror, strobe, comic, scanlines, leak, fade_in, fade_out ([time 0..1 of the shot, value, easing]) plus flashes; mark one shot \"drop\": true and a say line ends as it starts. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
@@ -97,6 +104,10 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"country": {"type": "string"}, "chart": {"type": "string", "enum": ["tiktok", "spotify"]}}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_encoder", "description": "What renders the video, saved for every run: auto (the default: Apple VideoToolbox on a Mac, an NVIDIA GPU elsewhere, when its test encode works, else the CPU), nvenc, videotoolbox or cpu. Without `use`: what it is now and which hardware encoder works here.",
          "inputSchema": {"type": "object", "properties": {"use": {"type": "string", "enum": ["auto", "nvenc", "videotoolbox", "cpu"]}}}},
+        {"name": "edits_stats", "description": "How posted edits did: a channel's or profile's latest posts (\"@name\" is a YouTube channel's Shorts; TikTok links work) with views, likes and comments, which of them are edits made with edits (matched by their sound against the render log) and each preset, song and look ranked by median views. Talking clips that did best and worst become taste examples. Use it before choosing a preset or song for that channel.",
+         "inputSchema": {"type": "object", "properties": {"channel": {"type": "string"}, "n": {"type": "integer", "minimum": 1, "maximum": 200, "description": "posts to read (default 30)"}}, "required": ["channel"]}},
+        {"name": "edits_review", "description": "Show a finished clip to the user in their browser and wait (up to 20 minutes) for their notes: they click a moment, a shot or a spot in the frame and say what to change. Returns each note with its time, shot number and place in the frame; change exactly that and render again. `saved`: true returns the last notes without opening the page.",
+         "inputSchema": {"type": "object", "properties": {"clip": {"type": "string"}, "saved": {"type": "boolean"}}, "required": ["clip"]}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}}
     ])
 }
@@ -158,6 +169,16 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.extend(s("at"));
         }
         "edits_doctor" => v.push("doctor".into()),
+        "edits_stats" => {
+            v.extend(["stats".into(), s("channel").ok_or("channel is needed")?]);
+            v.extend(a["n"].as_u64().map(|n| n.to_string()));
+        }
+        "edits_review" => {
+            v.extend(["review".into(), s("clip").ok_or("clip is needed")?]);
+            if a["saved"].as_bool() == Some(true) {
+                v.push("--notes".into());
+            }
+        }
         "edits_encoder" => {
             v.push("encoder".into());
             v.extend(s("use"));
@@ -178,7 +199,7 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.push(s("input").ok_or("input is needed")?);
             for (key, flag) in [("preset", "--preset"), ("music", "--music"), ("look", "--look"), ("aspect", "--aspect"), ("size", "--size"), ("tag", "--tag"),
                 ("fx", "--fx"), ("captions", "--captions"), ("bed", "--bed"), ("whoosh", "--whoosh"), ("boom", "--boom"), ("blur_box", "--blur-box"), ("codec", "--codec"), ("quality", "--quality"), ("encoder", "--encoder"), ("export", "--export"),
-                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop"), ("anim", "--anim")] {
+                ("lang", "--lang"), ("like", "--like"), ("text", "--text"), ("lut", "--lut"), ("intro", "--intro"), ("intro_bed", "--intro-bed"), ("intro_caption", "--intro-caption"), ("outro", "--outro"), ("bg", "--bg"), ("outline", "--outline"), ("transition", "--transition"), ("curves", "--curves"), ("pop", "--pop"), ("anim", "--anim")] {
                 if let Some(x) = s(key) {
                     v.extend([flag.into(), x]);
                 }
@@ -215,8 +236,11 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             for t in a["flash_texts"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
                 v.extend(["--flash-text".into(), t.into()]);
             }
+            for t in a["behind"].as_array().into_iter().flatten().filter_map(|x| x.as_str()) {
+                v.extend(["--behind".into(), t.into()]);
+            }
             for (key, flag) in [("fit", "--fit"), ("join", "--join"), ("preview", "--preview"), ("no_jumpcuts", "--no-jumpcuts"), ("no_sfx", "--no-sfx"), ("no_hook", "--no-hook"), ("no_captions", "--no-captions"), ("no_llm", "--no-llm"),
-                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math"), ("reverb", "--reverb"), ("fix", "--fix")] {
+                ("sad", "--sad"), ("voice", "--voice"), ("velocity", "--velocity"), ("blur_faces", "--blur-faces"), ("stabilize", "--stabilize"), ("denoise", "--denoise"), ("smooth", "--smooth"), ("say_text", "--say-text"), ("math", "--math"), ("reverb", "--reverb"), ("fix", "--fix"), ("loop", "--loop"), ("long", "--long"), ("lyrics", "--lyrics"), ("corecore", "--corecore")] {
                 if a[key].as_bool() == Some(true) {
                     v.push(flag.into());
                 }
@@ -263,7 +287,7 @@ fn reply(id: &Value, result: Value) -> Value {
 }
 
 /// Sent to the agent on connect: agents that script around the tools break things the tools already do.
-const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, ffprobe, whisper or yt-dlp yourself, not even to test: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Name the song in a clip: edits_song. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
+const INSTRUCTIONS: &str = "Every editing job has a command here. Never write Python, shell loops, ffmpeg, ffprobe, whisper or yt-dlp yourself, not even to test: they break where these work. Find where a line is said: edits_words. Look at footage: edits_frames. Measure a render: edits_check. Show a render to the user and get their notes: edits_review. See what worked on a channel: edits_stats. Name the song in a clip: edits_song. Change a preset: edits_preset_set (or get, change, edits_preset_save). Render: edits_make. If no tool does what you need, say so to the user instead of scripting around it.";
 
 pub fn handle(msg: &Value) -> Option<Value> {
     let id = msg.get("id")?.clone(); // notifications get no answer
@@ -475,7 +499,7 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 18);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 20);
         assert_eq!(args_for("edits_preset_set", &json!({"name": "x", "changes": ["total=12"], "revision": "ab12cd34"})).unwrap(), ["preset", "set", "x", "total=12", "--if", "ab12cd34"]);
         assert_eq!(args_for("edits_preset_undo", &json!({"name": "x"})).unwrap(), ["preset", "undo", "x"]);
         assert_eq!(args_for("edits_song", &json!({"video": "a.mp4", "at": "0:30"})).unwrap(), ["song", "a.mp4", "0:30"]);
@@ -497,6 +521,10 @@ mod tests {
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "say": ["abc@10-40"], "lang": "tr", "length": 20.5, "no_sfx": true, "fit": false})).unwrap(), ["a.mp4", "--lang", "tr", "--length", "20.5", "--say", "abc@10-40", "--no-sfx"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "outro": "edits", "intro": "x@1-3", "captions_at": ["hi 🗿@0-2"], "flash_texts": ["3:yo"], "math": true, "say_text": true})).unwrap(),
             ["a.mp4", "--intro", "x@1-3", "--outro", "edits", "--caption", "hi 🗿@0-2", "--flash-text", "3:yo", "--say-text", "--math"]);
+        assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "music": "trend", "bg": "blur", "outline": "white", "behind": ["RUN@1-3"], "loop": true, "long": true, "lyrics": true, "corecore": true})).unwrap(),
+            ["a.mp4", "--music", "trend", "--bg", "blur", "--outline", "white", "--behind", "RUN@1-3", "--loop", "--long", "--lyrics", "--corecore"]);
+        assert_eq!(args_for("edits_stats", &json!({"channel": "@x", "n": 20})).unwrap(), ["stats", "@x", "20"]);
+        assert_eq!(args_for("edits_review", &json!({"clip": "a.mp4", "saved": true})).unwrap(), ["review", "a.mp4", "--notes"]);
         assert!(args_for("edits_make", &json!({})).is_err() && args_for("nope", &json!({})).is_err());
     }
 }

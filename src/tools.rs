@@ -145,6 +145,60 @@ pub fn deep_filter() -> Result<String, String> {
     res.map(|_| own.to_string_lossy().into_owned())
 }
 
+const ORT: &str = "1.31.0";
+
+/// ONNX Runtime's library (the CPU build, ~8 MB), fetched on first use from the builds sherpa-onnx uses
+/// (github.com/csukuangfj/onnxruntime-libs), which publish no checksum list: the hashes are pinned here.
+pub fn onnxruntime() -> Result<PathBuf, String> {
+    let (asset, sha, lib) = match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("linux", "x86_64") => (format!("onnxruntime-linux-x64-glibc2_17-MinSizeRel-{ORT}.zip"), "2f1bd0a4da08bc7e2bae84f8cb973327c6984c2e2dfe945cf7f8c8e400820503", "libonnxruntime.so"),
+        ("linux", "aarch64") => (format!("onnxruntime-linux-aarch64-glibc2_17-MinSizeRel-{ORT}.zip"), "0769ed211d2aa5f86ff839b7e9fd81c19bb0880628882be7854182001567e90d", "libonnxruntime.so"),
+        ("macos", "aarch64") => (format!("onnxruntime-osx-arm64-{ORT}.zip"), "60a558189937147849ffc90240f57444198d3f57d7c7cf290e07b2dabd5d90a0", "libonnxruntime.dylib"),
+        ("macos", "x86_64") => (format!("onnxruntime-osx-x86_64-{ORT}.zip"), "759b64ee4124b347c41b17e7f89e029b42ef6d5ca881f8d008832daba21cc4d2", "libonnxruntime.dylib"),
+        // MT: the C runtime built in, nothing else to install
+        ("windows", "x86_64") => (format!("onnxruntime-win-x64-MT-MinSizeRel-{ORT}.tar.bz2"), "03f36b5bb1cf2cef278573d8be26067ae3183851063a1d531a2bc3a41d195f6e", "onnxruntime.dll"),
+        _ => return Err("no ONNX Runtime build for this machine".into()),
+    };
+    let home_dir = dir().join(format!("onnxruntime-{ORT}"));
+    let found = |d: &Path| crate::library::walk(d).into_iter().find(|p| p.file_name().is_some_and(|n| n == lib));
+    if let Some(f) = found(&home_dir) {
+        return Ok(f);
+    }
+    eprintln!("edits: downloading ONNX Runtime (once, ~8 MB)...");
+    let tmp = std::env::temp_dir().join(format!("edits-ort-{}", std::process::id()));
+    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+    let file = tmp.join(&asset);
+    let res = get(&format!("https://github.com/csukuangfj/onnxruntime-libs/releases/download/v{ORT}/{asset}"), &file)
+        .and_then(|_| check(&file, Some(sha.into())))
+        // tar opens .zip and .tar.bz2 on Linux, macOS and Windows 10+ (bsdtar); unzip when tar cannot
+        .and_then(|_| {
+            std::fs::create_dir_all(&home_dir).map_err(|e| e.to_string())?;
+            run(None, "tar", &["-xf", &file.to_string_lossy(), "-C", &home_dir.to_string_lossy()]).map(|_| ())
+                .or_else(|e| if asset.ends_with(".zip") { crate::util::unzip(&file, &home_dir) } else { Err(e) })
+        });
+    let _ = std::fs::remove_dir_all(&tmp);
+    res?;
+    found(&home_dir).ok_or(format!("{lib} was not in the ONNX Runtime download"))
+}
+
+/// Robust Video Matting (MobileNetV3, 14 MB): who is in front, frame by frame, with soft edges and hair.
+pub fn matting_model() -> Result<PathBuf, String> {
+    let file = home().join(".local/share/edits/models/rvm_mobilenetv3_fp32.onnx");
+    if file.is_file() {
+        return Ok(file);
+    }
+    eprintln!("edits: downloading the subject model (once, 14 MB)...");
+    std::fs::create_dir_all(file.parent().unwrap()).map_err(|e| e.to_string())?;
+    let part = file.with_extension("part");
+    let res = get("https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0/rvm_mobilenetv3_fp32.onnx", &part)
+        .and_then(|_| check(&part, Some("88d4531297118f595bf2fd60f6f566aec2e559393802d1f436c380f0cbbd2828".into())))
+        .and_then(|_| std::fs::rename(&part, &file).map_err(|e| e.to_string()));
+    if res.is_err() {
+        let _ = std::fs::remove_file(&part);
+    }
+    res.map(|_| file)
+}
+
 /// Downloads whichever of ffmpeg/ffprobe and yt-dlp this machine does not have; one it has is left alone.
 pub fn ensure() -> Result<(), String> {
     let need_ff = !have("ffmpeg") || !have("ffprobe");

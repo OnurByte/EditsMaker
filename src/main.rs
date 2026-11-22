@@ -8,20 +8,25 @@ mod fonts;
 mod finish;
 mod fx;
 mod grades;
+mod hook;
 mod lang;
 mod learn;
 mod library;
 mod looks;
 mod mcp;
 mod montage;
+mod ort;
 mod pick;
 mod premiere;
 mod preset;
 mod presets;
 mod render;
+mod review;
 mod shazam;
 mod signals;
+mod stats;
 mod study;
+mod subject;
 mod svg;
 mod talk;
 mod timeline;
@@ -95,6 +100,8 @@ fn main() -> ExitCode {
         Some("cut") if args.len() > 2 => check::cut(&args[1], &args[2..], &auto_out(&args[1])).map(|v| v.iter().for_each(|f| println!("{}", f.display()))),
         Some("frames") if args.len() > 2 => check::frames(&args[1], &args[2..]).map(|s| println!("{s}")),
         Some("study") if args.len() > 1 => study::study(Path::new(&args[1])),
+        Some("stats") if args.len() > 1 => stats::cmd(&args[1..]),
+        Some("review") if args.len() > 1 => review::cmd(&args[1..]),
         // a command named without what it needs says so, instead of searching YouTube for the word
         Some(cmd) if USAGE_OF.iter().any(|u| u.0 == cmd) => Err(format!("usage: {}", USAGE_OF.iter().find(|u| u.0 == cmd).map_or("", |u| u.1))),
         Some(_) => make(&args),
@@ -119,6 +126,8 @@ const USAGE_OF: &[(&str, &str)] = &[
     ("cut", "edits cut <video|link|ID> A-B...   stretches copied out without re-encoding"),
     ("frames", "edits frames <video|ID> AT[+LEN]...   rows of frames at those seconds (336, 5:36, 336+4)"),
     ("study", "edits study <folder of edits you like>"),
+    ("review", "edits review <clip.mp4> [--notes]   the clip in the browser: point at moments and spots, the notes come back"),
+    ("stats", "edits stats <@channel | channel or profile link> [N]   which posted edits worked, and what made them"),
 ];
 
 /// `edits trends [spotify] [country]`
@@ -278,7 +287,22 @@ struct Cli {
     flash_texts: Vec<(f64, String)>,
     /// an intro before the edit and an outro after it
     around: wrap::Around,
+    /// --loop: the end runs into the start (picture and song), no fades
+    looped: bool,
+    /// the colour look as asked for (opts.grade becomes a LUT filter for imported looks), for the render log
+    look_name: String,
+    /// the person cut out: another background, words behind them, an outline
+    subject: subject::Subject,
+    /// --lyrics: the song's words on screen as they are sung, cuts on sung words
+    lyrics: bool,
+    /// --long: one edit over a minute, what TikTok's Creator Rewards pays for
+    long: bool,
+    /// --corecore: many unrelated videos, faded and grainy, headlines from their own words
+    corecore: bool,
 }
+
+/// --long: TikTok's Creator Rewards pays for videos over a minute; a second of margin over it.
+const LONG: f64 = 61.0;
 
 fn size(aspect: &str) -> Option<(u32, u32)> {
     study::ASPECTS.iter().find(|a| a.0 == aspect).map(|a| (a.1, a.2))
@@ -294,7 +318,7 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
         transition: None,
         input: String::new(), n: 3, videos: 5, lang: lang::code().into(), out: PathBuf::new(),
         opts: render::Opts { w, h, grade, captions: true, layout: "fill".into(), lufs: style.lufs.clamp(-30.0, -5.0) },
-        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, preview: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![] },
+        llm: true, join: false, music: None, like: None, preset: None, lut: None, sized: false, preview: false, looked: false, intensity: None, use_videos: 4, voice: false, say: vec![], shots: vec![], caption_style: "hormozi".into(), captions_given: false, speed: 1.0, velocity: false, hits: vec![], blur_faces: false, blur_box: None, svgs: vec![], overlays: vec![], whoosh: None, boom: None, lines: 0, line_texts: vec![], export: vec![], finish: finish::Finish::default(), jumpcuts: true, sfx: style.sfx, hook: style.hook, bed: None, captions_at: vec![], say_text: false, math: false, formulas: vec![], flash_texts: vec![], around: wrap::Around::default(), looped: false, look_name: String::new(), subject: subject::Subject::default(), lyrics: false, long: false, corecore: false, look: montage::Look { sad: false, punch: true, length: 0.0, tag: String::new(), text: String::new(), pace: 1.0, hits: vec![], looped: false, core: false },
     };
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -444,6 +468,22 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
             "--no-llm" => c.llm = false,
             "--join" => c.join = true,
             "--preview" => c.preview = true,
+            "--bg" => c.subject.bg = Some(subject::parse_bg(&val("--bg")?)?),
+            "--behind" => c.subject.behind.push(subject::parse_behind(&val("--behind")?)?),
+            "--outline" => {
+                let v = val("--outline")?;
+                c.subject.outline = Some(subject::colour(&v).ok_or(format!("--outline {v}: give a colour, like white or #ff2a6d"))?);
+            }
+            "--lyrics" => c.lyrics = true,
+            "--long" => c.long = true,
+            "--corecore" => {
+                c.corecore = true;
+                c.look.core = true;
+            }
+            "--loop" => {
+                c.looped = true;
+                c.look.looped = true;
+            }
             s if s.starts_with('-') => return Err(format!("unknown option {s}; see `edits --help`")),
             s if c.input.is_empty() => c.input = s.to_string(),
             s => {
@@ -456,11 +496,50 @@ fn parse(args: &[String], style: Option<study::Style>) -> Result<Cli, String> {
     if c.input.is_empty() {
         return Err("give a YouTube link, a topic or a video file".into());
     }
+    if c.corecore {
+        if c.music.is_none() {
+            return Err("--corecore needs a song: --music (slow and sad works best)".into());
+        }
+        // many sources, little from each
+        if !args.iter().any(|a| a == "--videos") {
+            c.videos = 12;
+        }
+        if !args.iter().any(|a| a == "--use") {
+            c.use_videos = 8;
+        }
+        // headlines from the videos' own words, in boxes like a news ticker
+        if c.lines == 0 && c.opts.captions {
+            c.lines = 3;
+        }
+        if !c.captions_given {
+            c.caption_style = "box".into();
+            c.captions_given = true;
+        }
+    }
+    if c.long {
+        if c.look.length > 0.0 && c.look.length < LONG {
+            return Err(format!("--long makes edits over a minute: drop --length, or give {LONG:.0}-90"));
+        }
+        if c.look.length == 0.0 {
+            c.look.length = LONG + 3.0;
+        }
+        // talking clips: enough moments to choose a minute from (music and preset edits make one long edit each)
+        if c.music.is_none() && c.like.is_none() && c.preset.is_none() && !args.iter().any(|a| a == "-n" || a == "--moments") {
+            c.n = 10;
+        }
+    }
+    c.look_name = c.lut.as_ref().map_or(c.opts.grade.clone(), |l| l.file_stem().unwrap_or_default().to_string_lossy().into_owned());
     if c.look.length == 0.0 {
         c.look.length = if c.look.sad { 24.0 } else { 18.0 };
     }
     if c.preview {
         c.n = 1;
+    }
+    if c.looped && (c.around.intro.is_some() || c.around.outro.is_some()) {
+        return Err("--loop plays round: it takes no --intro or --outro".into());
+    }
+    if c.looped && c.music.is_none() && c.like.is_none() && c.preset.is_none() {
+        return Err("--loop is for music and preset edits (--music, --like or --preset)".into());
     }
     Ok(c)
 }
@@ -573,6 +652,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
             }
             pre
         },
+        defer_subs: c.subject.any(),
     };
     let segs = talk::render(&video, seek, m, &a.words, &opts, &t, focus.unwrap_or(0.5), cache, &work, out)?;
     let tl = timeline::Timeline {
@@ -583,12 +663,12 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
             .filter_map(|l| Some((talk::remap(l.s, &segs)? / c.speed, talk::remap(l.e, &segs).unwrap_or(talk::remap(l.s, &segs)? + 1.0) / c.speed, l.text.clone()))).collect(),
         said: vec![],
         markers: vec![],
+        drawn: vec![],
+        ass: if c.subject.any() { std::fs::read_to_string(work.join("cap.ass")).unwrap_or_default() } else { String::new() },
     };
     let out = &deliver(c, out, &tl)?;
     let text = a.lines.iter().filter(|l| l.s >= m.start - 0.5 && l.e <= m.end + 0.5).map(|l| l.text.as_str()).collect::<Vec<_>>().join(" ");
-    let side = serde_json::json!({ "clip": out, "source": a.src.title, "id": a.src.id, "moment": m, "text": text, "framed_on_faces": focus.is_some() });
-    std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
-    Ok(side)
+    keep(c, out, serde_json::json!({ "clip": out, "kind": "clip", "source": a.src.title, "id": a.src.id, "moment": m, "text": text, "seconds": fetch::duration(out).ok(), "framed_on_faces": focus.is_some() }))
 }
 
 /// Where a run's clips go without --out: one folder per run, the same place whoever starts edits (the CLI in any
@@ -696,7 +776,7 @@ fn make(args: &[String]) -> Result<(), String> {
         Some(b) => Some(montage::song(&fetch::music(b)?, cache)?),
         None => None,
     };
-    let bed_track = bed_song.as_ref().map(|s| (s.file.clone(), montage::windows(&s.beats, s.stretch(), 60.0, 1).first().copied().unwrap_or(0.0)));
+    let bed_track = bed_song.as_ref().map(|s| (s.file.clone(), s.starts(60.0, 1).first().copied().unwrap_or(0.0)));
     let bed = bed_track.as_ref();
     // only the best moments overall get their picture downloaded and rendered, four at a time
     let mut best: Vec<(&Analysed, &pick::Moment)> = analysed.iter().flat_map(|a| a.moments.iter().map(move |m| (a, m))).collect();
@@ -711,7 +791,12 @@ fn make(args: &[String]) -> Result<(), String> {
         new
     });
     let mut best: Vec<_> = firsts.into_iter().chain(rest).collect();
-    best.truncate(c.n);
+    // --long: as many of the best as it takes to pass a minute together (pauses cut take ~15% off)
+    let n = if c.long {
+        let mut sum = 0.0;
+        best.iter().take_while(|(_, m)| { let more = sum < LONG + 3.0; sum += (m.end - m.start) * 0.85 / c.speed; more }).count().clamp(1, 20)
+    } else { c.n };
+    best.truncate(n);
     let jobs: Vec<(PathBuf, &Analysed, &pick::Moment)> = best.iter().enumerate()
         .map(|(k, (a, m))| (c.out.join(format!("{:02}-{}.mp4", k + 1, fetch::safe(&a.src.id))), *a, *m)).collect();
     let mut clips: Vec<PathBuf> = vec![];
@@ -735,10 +820,18 @@ fn make(args: &[String]) -> Result<(), String> {
     if clips.is_empty() {
         return Err("found nothing worth cutting".into());
     }
-    if c.join && clips.len() > 1 {
-        let out = c.out.join("joined.mp4");
+    if (c.join || c.long) && clips.len() > 1 {
+        let out = c.out.join(if c.long { "long.mp4" } else { "joined.mp4" });
         render::join(&clips, cache, &out)?;
-        eprintln!("edits: joined {} clips into {}", clips.len(), out.display());
+        let secs = fetch::duration(&out).unwrap_or(0.0);
+        eprintln!("edits: joined {} clips into {} ({secs:.1}s)", clips.len(), out.display());
+        if c.long {
+            if secs < LONG {
+                eprintln!("edits: {secs:.0}s is under a minute: give a channel or topic with more to cut (--videos), or more moments");
+            }
+            let side = keep(c, &out, serde_json::json!({ "clip": out, "kind": "long", "seconds": secs, "parts": clips }))?;
+            println!("{side}");
+        }
     }
     Ok(())
 }
@@ -805,6 +898,8 @@ fn footage(c: &Cli, cache: &Path) -> Footage {
 /// blurs and flashes, with its own song (found by name) unless --music says otherwise.
 fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     let p = preset::load(name)?;
+    // --long: the preset played round until it passes a minute, as one edit on one song
+    let p = if c.long { let n = ((LONG + 1.0) / p.total.max(0.5)).ceil() as usize; p.clone().repeated(n.max(2)) } else { p };
     lap(&format!("preset {}: {} shots in {:.1}s, {}x{}, {} flashes{}", p.name, p.slots.len(), p.total, p.w, p.h, p.flashes.len(),
         p.song.as_ref().map(|s| format!(", song \"{}\"", s.title)).unwrap_or_default()));
     let music = match (&c.music, &p.song) {
@@ -827,8 +922,12 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     let song_from = match (&c.music, &p.song) {
         (None, Some(s)) => s.from,
         _ => marked.and_then(|d| montage::drop_at(&song.beats, &song.strength, &song.loud, &song.heat, d, p.total - d).map(|b| b - d))
-            .unwrap_or_else(|| montage::windows(&song.beats, song.stretch(), p.total, 1).first().copied().unwrap_or(0.0)),
+            .unwrap_or_else(|| song.starts(p.total, 1).first().copied().unwrap_or(0.0)),
     };
+    let end = song.loud.len() as f64 * montage::hop_s();
+    if song_from + p.total > end + 0.5 {
+        eprintln!("edits: the song ends {:.0}s before the edit does; give a longer one with --music", song_from + p.total - end);
+    }
     // the preset bends to the moment: its own intensity (or --intensity), and with another song its cuts on that song's beats
     let mut p = p.clone().with_intensity(c.intensity.unwrap_or(p.intensity));
     if c.music.is_some() && p.fit_beats {
@@ -881,6 +980,7 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
     if voices.len() != c.say.len() {
         return Err("--say: give VIDEO@FROM-TO with the video's id (or the file's name) and seconds where it speaks".into());
     }
+    let lyrics = if c.lyrics { montage::lyrics(&song, cache) } else { vec![] };
     let cut_starts: Vec<f64> = spans.iter().map(|(a, _)| *a).collect();
     // the line ends on the drop: the cut where the song gets loudest relative to the 1 s before (a drop comes out of a gap; a stab 2 s back must not hide it), beat strength breaking ties
     let mean = |a: f64, b: f64| {
@@ -926,6 +1026,20 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
             eprintln!("edits: not enough usable shots for edit {}", k + 1);
             break;
         }
+        let mut picks = picks;
+        // --loop: the last shot is what ran just before the first, so the end runs into the start
+        if c.looped && picks.len() > 1 {
+            let last = picks.len() - 1;
+            let (sh, from) = picks[0];
+            let need = slots[last].source_len(spans[last].1 - spans[last].0);
+            match montage::seam((from, needs[0]), (shots[sh].s, shots[sh].e), need, sh < hand_from) {
+                Some((a, b)) => {
+                    picks[0].1 = a;
+                    picks[last] = (sh, b);
+                }
+                None => eprintln!("edits: edit {}: the first shot has no footage before it; the loop shows a cut where it starts again", k + 1),
+            }
+        }
         let out = c.out.join(format!("{}-{:02}.mp4", fetch::safe(&p.name), k + 1));
         let work = cache.join("renders").join(format!("{}-{:02}", fetch::safe(&p.name), k + 1));
         std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
@@ -962,17 +1076,25 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         // each edit its own lines when there are enough, else they repeat
         let quotes: Vec<String> = if pool.is_empty() { vec![] } else { (0..c.lines.min(pool.len())).map(|j| pool[(k * c.lines + j) % pool.len()].clone()).collect() };
         let subs = talk::lines_ass(&quotes, p.total, &line_style(c)?, opts.w, opts.h);
-        let has_subs = subs.contains("Dialogue:");
+        // with the person cut out, the words go on after it (in deliver), not under the new background
+        let has_subs = subs.contains("Dialogue:") && !c.subject.any();
         if has_subs {
             std::fs::write(work.join("cap.ass"), &subs).map_err(|e| e.to_string())?;
         }
         (0..m).for_each(|i| g.push_str(&format!("[v{i}]")));
-        g.push_str(&format!("concat=n={m}:v=1:a=0,settb=1/30,fps=30{}{}{},fade=t=out:st={:.3}:d=0.5", render::grade(&opts.grade), preset::flashes(&p),
-            if has_subs { ",ass=cap.ass" } else { "" }, (p.total - 0.5).max(0.0)));
+        let fade_out = if c.looped { String::new() } else { format!(",fade=t=out:st={:.3}:d=0.5", (p.total - 0.5).max(0.0)) };
+        g.push_str(&format!("concat=n={m}:v=1:a=0,settb=1/30,fps=30{}{}{}{fade_out}", render::grade(&opts.grade), preset::flashes(&p),
+            if has_subs { ",ass=cap.ass" } else { "" }));
         if !c.look.tag.is_empty() {
             g.push_str(&format!(",drawtext=text='{}':font=Adwaita Sans:fontsize=h*0.022:fontcolor=white@0.7:x=(w-tw)/2:y=h*0.94", c.look.tag));
         }
-        g.push_str(&format!(",format=yuv420p[vout];[{m}:a]afade=t=out:st={:.3}:d=0.6", (p.total - 0.6).max(0.0)));
+        let pre = if c.looped { montage::preroll(&song.beats, song_from, p.total) } else { None };
+        g.push_str(",format=yuv420p[vout];");
+        match (c.looped, pre) {
+            (true, Some(d)) => g.push_str(&montage::splice(m, m + 1 + usize::from(voice.is_some()), p.total, d)),
+            (true, None) => g.push_str(&format!("[{m}:a]anull")),
+            _ => g.push_str(&format!("[{m}:a]afade=t=out:st={:.3}:d=0.6", (p.total - 0.6).max(0.0))),
+        }
         if let Some((_, _, v)) = &voice {
             g.push_str(&montage::duck(m + 1, v));
         }
@@ -980,6 +1102,9 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         args.extend(["-ss".into(), format!("{song_from:.3}"), "-t".into(), format!("{:.3}", p.total), "-i".into(), song.file.to_string_lossy().into_owned()]);
         if let Some((_, _, v)) = &voice {
             args.extend(["-ss".into(), format!("{:.3}", v.start), "-t".into(), format!("{:.3}", v.len), "-i".into(), v.file.to_string_lossy().into_owned()]);
+        }
+        if let Some(d) = pre {
+            args.extend(["-ss".into(), format!("{:.3}", song_from - d), "-t".into(), format!("{d:.3}"), "-i".into(), song.file.to_string_lossy().into_owned()]);
         }
         args.extend(["-filter_complex".into(), g, "-map".into(), "[vout]".into(), "-map".into(), "[aout]".into()]);
         args.extend(["-t".into(), format!("{:.3}", p.total), "-fps_mode".into(), "cfr".into(), "-r".into(), "30".into()]);
@@ -991,20 +1116,25 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
         match util::run(Some(&work), "ffmpeg", &args) {
             Ok(_) => {
                 tl.captions = talk::lines_srt(&quotes, p.total);
+                if c.subject.any() {
+                    tl.ass = subs.clone();
+                }
                 let beats: Vec<f64> = song.beats.iter().map(|b| b - song_from).collect();
                 // the drop: the shot the preset marks, else where the voice line ends (it is placed to end on the hardest cut)
                 let drop = p.slots.iter().find(|s| s.drop).map(|s| s.start).or(voice.as_ref().map(|v| v.2.at + v.2.len));
                 tl.markers = timeline::markers(&beats, p.total, drop, voice.as_ref().map(|v| v.2.at));
+                tl.drawn = montage::sung(&lyrics, song_from, p.total).into_iter().filter(|x| voice.as_ref().is_none_or(|(_, _, v)| x.0 >= v.at + v.len)).collect();
+                tl.captions.extend(tl.drawn.clone());
                 if let Some((a, m, v)) = &voice {
                     tl.said = voice_cues(&a.words, m, v.at);
                     tl.captions.extend(tl.said.clone());
                     tl.captions.sort_by(|x, y| x.0.total_cmp(&y.0));
                 }
                 let fin = deliver(c, &out, &tl)?;
-                let side = serde_json::json!({ "clip": fin, "preset": p.name, "song": song.title, "song_from": song_from, "seconds": p.total, "lines": quotes,
+                let side = serde_json::json!({ "clip": fin, "kind": "preset", "preset": p.name, "song": song.title, "song_from": song_from, "seconds": fetch::duration(&fin).unwrap_or(p.total), "lines": quotes,
                     "voice": voice.as_ref().map(|(a, m, v)| serde_json::json!({ "video": a.src.id, "moment": m, "at": v.at, "text": said(a, m) })),
                     "shots": picks.iter().map(|(i, st)| serde_json::json!({ "video": videos[shots[*i].video].0, "from": st })).collect::<Vec<_>>() });
-                std::fs::write(fin.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
+                let side = keep(c, &fin, side)?;
                 println!("{side}");
                 made += 1;
             }
@@ -1020,11 +1150,15 @@ fn make_preset(c: &Cli, name: &str, cache: &Path, lap: &dyn Fn(&str)) -> Result<
 
 /// The last pass (stabilise, clean the voice, frame rate, codec) and the timelines for other editors.
 fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, String> {
-    // words drawn as stickers (--caption, emoji in colour); the spoken line and the flashes in the caption style
+    // the person cut out first, so every word and drawing goes on top of the rebuilt picture
+    subject::apply(out, &c.subject)?;
+    // words drawn as stickers (--caption, emoji in colour); the spoken line, lyrics, headlines and the flashes in the caption style
     let words = wrap::text_stickers(out, &c.captions_at, 0.11, 0.09, "cap")?;
-    let said: &[(f64, f64, String)] = if c.say_text { &tl.said } else { &[] };
+    let mut said: Vec<(f64, f64, String)> = if c.say_text { tl.said.clone() } else { vec![] };
+    said.extend(tl.drawn.iter().cloned());
+    said.sort_by(|a, b| a.0.total_cmp(&b.0));
     let (w, h) = fetch::dims(out);
-    let styled = talk::cues_ass(said, &c.flash_texts, &line_style(c)?, w, h);
+    let styled = talk::merge_ass(&talk::cues_ass(&said, &c.flash_texts, &line_style(c)?, w, h), &tl.ass);
     let mut st = c.svgs.clone();
     st.extend(words.iter().map(|w| w.0.clone()));
     st.iter_mut().filter(|s| s.anim.is_empty()).for_each(|s| s.anim = c.anim.clone());
@@ -1051,6 +1185,15 @@ fn deliver(c: &Cli, out: &Path, tl: &timeline::Timeline) -> Result<PathBuf, Stri
         }
     }
     Ok(fin)
+}
+
+/// The sidecar beside a finished clip, also kept in the render log that `edits stats` matches posted videos against.
+fn keep(c: &Cli, fin: &Path, mut side: serde_json::Value) -> Result<serde_json::Value, String> {
+    side["look"] = serde_json::json!(c.look_name);
+    side["made_from"] = serde_json::json!(c.input);
+    std::fs::write(fin.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
+    stats::record(fin, &side);
+    Ok(side)
 }
 
 /// The caption style for words on screen: --captions when given, else a quiet one.
@@ -1203,7 +1346,14 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
             t.joins.iter().filter(|j| j.kind == "fadewhite").count(), t.joins.iter().filter(|j| j.kind == "fadeblack").count(), t.grade, t.aspect));
     }
     preview_size(c, &mut opts);
-    let look = montage::Look { punch: !c.look.sad && template.is_none(), pace: c.speed, hits: c.hits.clone(), ..c.look.clone() };
+    if c.long && template.is_some() {
+        eprintln!("edits: --long does not stretch a copied edit (--like): it keeps the reference's length");
+    }
+    let look = montage::Look { punch: !c.look.sad && !c.corecore && template.is_none(), pace: c.speed, hits: c.hits.clone(), ..c.look.clone() };
+    // corecore grades itself; a --look given goes under its grain
+    if c.corecore && !c.looked {
+        opts.grade = "none".into();
+    }
     let music = match (&template, &c.music) {
         (Some(t), _) => t.music.to_string_lossy().into_owned(),
         (None, Some(m)) => fetch::music(m)?,
@@ -1234,6 +1384,16 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         return Err("no footage to cut".into());
     }
     lap(&format!("song \"{}\": {} beats; {} video(s)", song.title, song.beats.len(), videos.len()));
+    let lyrics = if c.lyrics { montage::lyrics(&song, cache) } else { vec![] };
+    if c.lyrics {
+        lap(&format!("{} sung words", lyrics.len()));
+    }
+    // words on screen (--lines, --line, corecore's headlines): the videos' most quotable sentences
+    let pool = match (c.lines, c.line_texts.is_empty()) {
+        (0, _) => vec![],
+        (_, false) => c.line_texts.clone(),
+        (n, true) => quote_lines(&videos, cache, c, n * c.n),
+    };
 
     // the speaker's words, and the whole passages worth putting over music
     let spoken: Vec<Analysed> = if !c.voice {
@@ -1286,6 +1446,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
     lap(&format!("{} shots", shots.len()));
     let mut used = vec![false; shots.len()];
     let kind = match (&c.like, c.look.sad, c.voice) {
+        _ if c.corecore => "corecore".into(),
         (Some(r), _, _) => format!("like-{}", fetch::safe(&Path::new(r).file_stem().unwrap_or_default().to_string_lossy())),
         (None, true, true) => "sad-voice".into(),
         (None, true, false) => "sad".into(),
@@ -1306,7 +1467,8 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 let (lead, vlen) = (0.6, m.end - m.start);
                 // the drop needs 2.5 s of song after it; a short song gets a shorter montage
                 let end = song.loud.len() as f64 * montage::hop_s();
-                let want = (c.look.length * 0.45).clamp(4.0, 9.0).min(end - lead - vlen - 0.2).max(2.5);
+                // --long: the montage after the drop carries the edit past a minute
+                let want = if c.long { (c.look.length - lead - vlen).max(4.0) } else { (c.look.length * 0.45).clamp(4.0, 9.0) }.min(end - lead - vlen - 0.2).max(2.5);
                 let Some(drop) = montage::drop_at(&song.beats, &song.strength, &song.loud, &song.heat, lead + vlen, want)
                     .or_else(|| montage::drop_at(&song.beats, &song.strength, &song.loud, &song.heat, lead + vlen, 2.5)) else {
                     eprintln!("edits: the song is too short for line {} ({vlen:.0}s)", k + 1);
@@ -1336,15 +1498,29 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                 (0.0, t.cuts.clone(), at)
             }
             (None, None) => {
-                let wins = montage::windows(&song.beats, song.stretch(), c.look.length, k + 1);
+                let wins = song.starts(c.look.length, k + 1);
                 let start = *wins.get(k).or(wins.last())?;
-                (start, montage::cuts(&song.beats, &song.loud, start, c.look.length, look.shot()), 0.0)
+                let mut cuts = montage::cuts(&song.beats, &song.loud, start, c.look.length, look.shot());
+                if c.corecore {
+                    cuts = montage::glimpses(&cuts);
+                }
+                // --lyrics: the words land on the cuts
+                if !lyrics.is_empty() {
+                    let rel = |v: &mut dyn Iterator<Item = f64>| v.map(|t| t - start).filter(|t| (0.0..=c.look.length).contains(t)).collect::<Vec<f64>>();
+                    cuts = montage::on_words(&cuts, &rel(&mut song.beats.iter().copied()), &rel(&mut lyrics.iter().map(|w| w.s)));
+                }
+                (start, cuts, 0.0)
             }
         };
+        // a loop is whole bars long, so the song's rhythm carries on round it (a copied edit keeps its own length)
+        if c.looped && template.is_none() {
+            cuts = montage::whole_bars(&cuts, montage::beat_period(&song.beats));
+        }
         let total = *cuts.last()?;
         let beats: Vec<f64> = song.beats.iter().map(|b| b - start).filter(|b| *b >= 0.0 && *b <= total).collect();
         let mut joins = match &template {
             Some(t) => t.joins.clone(),
+            None if c.corecore => montage::joins_core(&cuts),
             None => montage::joins(&cuts.iter().map(|t| montage::hit_at(&song.beats, &song.strength, start + t)).collect::<Vec<_>>(), c.look.sad),
         };
         if template.is_none() && voice.is_some() && joins.len() > 2 {
@@ -1354,7 +1530,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         if template.is_none() && voice.is_none() {
             cuts.dedup();
         }
-        if template.is_none() && !c.look.sad {
+        if template.is_none() && !c.look.sad && !c.corecore {
             montage::add_moves(&mut joins, k);
         }
         if let Some(t) = c.transition {
@@ -1372,12 +1548,26 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
         }
         picks.iter().for_each(|(i, _)| used[*i] = true);
         files.extend(picks.iter().map(|(i, st)| (videos[shots[*i].video].1.clone(), *st, shots[*i].focus.unwrap_or(0.5))));
+        // --loop: the last piece is what ran just before the first, so the end runs into the start
+        if c.looped && files.len() > 1 {
+            let (first, last) = (files[0].clone(), spans.len() - 1);
+            let speed = look.speed();
+            let shot = videos.iter().position(|(_, f)| *f == first.0)
+                .and_then(|v| shots.iter().find(|x| x.video == v && x.s <= first.1 + 0.01 && first.1 < x.e));
+            match shot.and_then(|x| montage::seam((first.1, spans[0].1 * speed), (x.s, x.e), spans[last].1 * speed, voice.is_none())) {
+                Some((a, b)) => {
+                    files[0].1 = a;
+                    files[last] = (first.0.clone(), b, first.2);
+                }
+                None => eprintln!("edits: edit {}: the first shot has no footage before it; the loop shows a cut where it starts again", k + 1),
+            }
+        }
         let labels = files.iter().map(|(f, st, _)| (videos.iter().find(|(_, p)| p == f).map(|x| x.0.clone()).unwrap_or_default(), *st)).collect();
         Some(Plan { k, start, cuts, joins, beats, files, labels, voice, at })
     }).collect();
     let made: Vec<_> = std::thread::scope(|s| {
         let jobs: Vec<_> = plans.iter().map(|p| {
-            let (song, kind, look, opts) = (&song, &kind, &look, &opts);
+            let (song, kind, look, opts, lyrics, pool) = (&song, &kind, &look, &opts, &lyrics, &pool);
             s.spawn(move || {
                 let out = c.out.join(format!("{kind}-{:02}.mp4", p.k + 1));
                 let work = cache.join("renders").join(format!("{kind}-{:02}", p.k + 1));
@@ -1389,7 +1579,8 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                     _ => (&[][..], None),
                 };
                 let subs = montage::captions(words, line, p.at, &look.text, !look.punch, *p.cuts.last().unwrap(), opts);
-                montage::render(&p.files, &p.cuts, &p.joins, &p.beats, &song.file, p.start, v.as_ref(), &subs, look, opts, &work, &out)?;
+                let burn = if c.subject.any() { "" } else { subs.as_str() };
+                montage::render(&p.files, &p.cuts, &p.joins, &p.beats, &song.file, p.start, v.as_ref(), burn, look, opts, &work, &out)?;
                 let tl = timeline::Timeline {
                     name: format!("{kind}-{:02}", p.k + 1), w: opts.w, h: opts.h,
                     clips: p.files.iter().zip(p.cuts.windows(2)).map(|((f, from, _), w)| (f.clone(), *from, w[1] - w[0])).collect(),
@@ -1398,15 +1589,24 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
                     said: p.voice.map(|(a, m)| voice_cues(&a.words, m, p.at)).unwrap_or_default(),
                     // a music edit's drop comes as the voice line ends
                     markers: timeline::markers(&p.beats, *p.cuts.last().unwrap(), p.voice.map(|(_, m)| p.at + m.end - m.start), p.voice.map(|_| p.at)),
+                    // the song's words once the voice line is over
+                    drawn: montage::sung(lyrics, p.start, *p.cuts.last().unwrap()).into_iter().filter(|x| p.voice.is_none_or(|(_, m)| x.0 >= p.at + m.end - m.start)).collect(),
+                    ass: if c.subject.any() { subs.clone() } else { String::new() },
                 };
+                let mut tl = tl;
+                // lines on screen, each edit its own when there are enough (after the voice line, like the lyrics)
+                let quotes: Vec<String> = (0..c.lines.min(pool.len())).map(|j| pool[(p.k * c.lines + j) % pool.len()].clone()).collect();
+                let from = p.voice.map_or(0.0, |(_, m)| p.at + m.end - m.start);
+                tl.drawn.extend(talk::lines_srt(&quotes, *p.cuts.last().unwrap() - from).into_iter().map(|(a, b, t)| (a + from, b + from, t)));
+                tl.captions.extend(tl.drawn.clone());
+                tl.captions.sort_by(|x, y| x.0.total_cmp(&y.0));
                 let out = deliver(c, &out, &tl)?;
                 let side = serde_json::json!({
-                    "clip": out, "song": song.title, "song_from": p.start, "seconds": p.cuts.last(),
+                    "clip": out, "kind": kind, "song": song.title, "lines": tl.drawn.iter().map(|x| x.2.clone()).collect::<Vec<_>>(), "song_from": p.start, "seconds": fetch::duration(&out).ok().or(p.cuts.last().copied()),
                     "voice": p.voice.map(|(a, m)| serde_json::json!({ "video": a.src.id, "moment": m, "at": p.at, "text": said(a, m) })),
                     "shots": p.labels.iter().map(|(v, st)| serde_json::json!({ "video": v, "from": st })).collect::<Vec<_>>(),
                 });
-                std::fs::write(out.with_extension("json"), serde_json::to_string_pretty(&side).unwrap()).map_err(|e| e.to_string())?;
-                Ok::<_, String>(side)
+                keep(c, &out, side)
             })
         }).collect();
         jobs.into_iter().map(|j| j.join().unwrap_or_else(|_| Err("render thread crashed".into()))).collect()
@@ -1723,8 +1923,8 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
 
 /// `edits rate clip.mp4 +|-` appends the clip's text to the taste file as a liked or disliked example.
 fn rate(args: &[String]) -> Result<(), String> {
-    let (clip, mark) = match args {
-        [clip, m] if m == "+" || m == "-" => (Path::new(clip), lang::prompt("notes", if m == "+" { "liked" } else { "disliked" }, &[])),
+    let (clip, mark_liked) = match args {
+        [clip, m] if m == "+" || m == "-" => (Path::new(clip), m == "+"),
         _ => return Err("usage: edits rate <clip.mp4> +|-".into()),
     };
     let side = std::fs::read_to_string(clip.with_extension("json")).map_err(|_| format!("no {} next to the clip", clip.with_extension("json").display()))?;
@@ -1733,9 +1933,7 @@ fn rate(args: &[String]) -> Result<(), String> {
     if text.is_empty() {
         return Err("that clip has no transcript to learn from".into());
     }
-    let mut taste = pick::taste();
-    taste.push_str(&format!("- {mark}: \"{text}\"\n"));
-    std::fs::write(pick::taste_path(), taste).map_err(|e| e.to_string())?;
+    stats::note(text, mark_liked)?;
     println!("edits: noted in {}", pick::taste_path().display());
     Ok(())
 }
