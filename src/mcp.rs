@@ -415,6 +415,7 @@ pub fn serve() -> Result<(), String> {
     }
     // every agent session starts here, so people who updated from an edits without the guard get it too
     let _ = guard_install(true);
+    let mut running = vec![];
     for line in std::io::stdin().lock().lines() {
         let line = line.map_err(|e| e.to_string())?;
         if line.trim().is_empty() {
@@ -423,12 +424,15 @@ pub fn serve() -> Result<(), String> {
         match serde_json::from_str::<Value>(&line) {
             // a render takes minutes: it runs beside the rest, so pings, lists and other calls are answered meanwhile
             Ok(m) if m["method"] == "tools/call" => {
-                std::thread::spawn(move || send(handle(&m)));
+                running.retain(|t: &std::thread::JoinHandle<()>| !t.is_finished());
+                running.push(std::thread::spawn(move || send(handle(&m))));
             }
             Ok(m) => send(handle(&m)),
             Err(e) => send(Some(json!({"jsonrpc": "2.0", "id": null, "error": {"code": -32700, "message": e.to_string()}}))),
         }
     }
+    // the client closed its end: calls still running finish and answer before the server goes
+    running.into_iter().for_each(|t| { let _ = t.join(); });
     Ok(())
 }
 
