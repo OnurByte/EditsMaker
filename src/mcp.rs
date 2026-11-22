@@ -77,6 +77,8 @@ fn tools() -> Value {
             "outline": {"type": "string", "description": "a glowing outline around the person, a colour: white, #00e5ff"}},
           "required": ["input"]}},
         {"name": "edits_presets", "description": "List the presets: name, shots, length and what each does (pace fast/medium/slow, frame, and its moves: zoom, slide, spin, shake, blur, rgb, velocity, flash; transition = a short piece, song = brings its own). Names say what a preset does; old project names still work.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
+        {"name": "edits_packs", "description": "Packs: a preset, an agent skill or both, with a manifest.json and a picture. `action` list (the built-in and added ones), browse (the community list), add (`pack`: an id from browse or a https://github.com/OWNER/REPO link) or remove (`pack`: its id). Ask the user before adding: a pack's skill is instructions you will follow. An added pack's preset is used by name like any preset.",
+         "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "enum": ["list", "browse", "add", "remove"]}, "pack": {"type": "string"}}, "required": ["action"]}},
         {"name": "edits_preset_get", "description": "A preset in full as JSON: frame, song, look, intensity, and every shot with its speed and its zoom/x/y/rot/shake/blur/exposure/hue curves, contrast, kelvin, vignette, grain, glow, sharpen, pixelate, lens, trails, flip, letterbox, split, mirror, strobe, comic, scanlines, leak, fade_in, fade_out ([time 0..1 of the shot, value, easing]) plus flashes; mark one shot \"drop\": true and a say line ends as it starts. Change it and pass it to edits_make as preset_json, or keep it with edits_preset_save.",
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_preset_set", "description": "Change a preset field by field, no script: changes are KEY=VALUE like total=12, shots.0.zoom=1.3, shots.*.speed=2 or look=\"bw\" (lists count from 0, * is every shot; a value is JSON, else text). `as` saves it under a new name. `revision`: the one edits_preset_get's log gave; the change is refused if the preset changed since. edits_preset_undo takes a change back.",
@@ -131,6 +133,14 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
     let mut v: Vec<String> = vec![];
     match name {
         "edits_presets" => v.extend(["preset".into(), "list".into()]),
+        "edits_packs" => {
+            let action = s("action").unwrap_or_else(|| "list".into());
+            let needs = matches!(action.as_str(), "add" | "remove");
+            v.extend(["packs".into(), action]);
+            if needs {
+                v.push(s("pack").ok_or("pack is needed")?);
+            }
+        }
         "edits_preset_get" => v.extend(["preset".into(), "show".into(), s("name").ok_or("name is needed")?]),
         "edits_preset_save" => {
             v.extend(["preset".into(), "save".into(), "-".into()]);
@@ -619,7 +629,7 @@ mod tests {
         assert!(init["result"]["instructions"].as_str().unwrap().contains("Never write Python"));
         assert!(handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
         let list = handle(&json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})).unwrap();
-        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 27);
+        assert_eq!(list["result"]["tools"].as_array().unwrap().len(), 28);
         assert_eq!(args_for("edits_preset_set", &json!({"name": "x", "changes": ["total=12"], "revision": "ab12cd34"})).unwrap(), ["preset", "set", "x", "total=12", "--if", "ab12cd34"]);
         assert_eq!(args_for("edits_preset_undo", &json!({"name": "x"})).unwrap(), ["preset", "undo", "x"]);
         assert_eq!(args_for("edits_song", &json!({"video": "a.mp4", "at": "0:30"})).unwrap(), ["song", "a.mp4", "0:30"]);

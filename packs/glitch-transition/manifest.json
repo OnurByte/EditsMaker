@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.glitch-transition",
+  "name": "glitch-transition",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Alight Motion project \"Threshold Glitch Transition 💀🔥. Rajj Editz©\"",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "1:1",
+    "shake",
+    "transition"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.blur-shake-rush",
+  "name": "blur-shake-rush",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Alight Motion project \"CelzPredet🍁9:16\"",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "fast",
+    "9:16",
+    "zoom",
+    "shake",
+    "blur"
+  ]
+}

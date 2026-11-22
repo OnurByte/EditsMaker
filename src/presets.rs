@@ -1,18 +1,24 @@
-//! The presets: JSON files built into the binary from presets/, and your own in ~/.config/edits/presets
-//! (a saved preset with the same name replaces the built-in one). `moves.json` holds the cut moves.
+//! The presets: the built-in packs' (packs/*/preset.json), the added packs', and your own in ~/.config/edits/presets
+//! (a saved preset with the same name replaces the others). data/ holds the files beside them: `moves.json` the cut
+//! moves, captions, grades, languages, prompts.
 use crate::preset::{Motion, Preset};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-include!(concat!(env!("OUT_DIR"), "/built_in.rs"));
+/// (file name, contents) of every built-in file: the data files, then each pack's preset as FOLDER.json.
+fn built_in_files() -> Vec<(String, String)> {
+    let data = crate::packs::DATA_FILES.iter().map(|(n, t)| (n.to_string(), t.to_string()));
+    data.chain(crate::packs::BUILT_IN_PACKS.iter().filter_map(|(d, _, p, _)| Some((format!("{d}.json"), (*p)?.to_string())))).collect()
+}
 
 pub fn user_dir() -> PathBuf {
     crate::util::home().join(".config/edits/presets")
 }
 
-/// (file name, contents) of every preset file: built in first, then saved ones over them.
+/// (file name, contents) of every preset file: built in first, then the added packs', then saved ones over them.
 fn files() -> Vec<(String, String)> {
-    let mut all: Vec<(String, String)> = BUILT_IN.iter().map(|(n, t)| (n.to_string(), t.to_string())).collect();
+    let mut all = built_in_files();
+    all.extend(crate::packs::added().into_iter().filter_map(|p| Some((format!("{}/preset.json", p.manifest.id), p.preset?))));
     let mut saved: Vec<PathBuf> = std::fs::read_dir(user_dir()).map(|d| d.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "json")).collect()).unwrap_or_default();
     saved.sort();
     for p in saved {
@@ -31,8 +37,10 @@ pub fn revision(p: &Preset) -> String {
     format!("{:08x}", crate::util::crc32(crate::preset::pretty(p).as_bytes()))
 }
 
+/// The preset as a pack brings it (built in or added), under your saved one.
 fn built_in(name: &str) -> Option<Preset> {
-    BUILT_IN.iter().filter_map(|(_, t)| serde_json::from_str::<Preset>(t).ok()).find(|b| b.name == name)
+    let added = crate::packs::added().into_iter().filter_map(|p| p.preset);
+    built_in_files().into_iter().map(|f| f.1).chain(added).filter_map(|t| serde_json::from_str::<Preset>(&t).ok()).rfind(|b| b.name == name)
 }
 
 /// The preset named exactly `name` as it is now: the one saved in `dir`, else the built-in one.
@@ -169,20 +177,21 @@ mod tests {
     }
 
     fn all_built_in_name() -> String {
-        BUILT_IN.iter().find_map(|(_, t)| serde_json::from_str::<Preset>(t).ok()).unwrap().name
+        built_in_files().iter().find_map(|(_, t)| serde_json::from_str::<Preset>(t).ok()).unwrap().name
     }
 
     #[test]
     fn built_in_presets_read() {
         // every shipped file parses
-        for (name, text) in super::BUILT_IN {
-            if *name == "captions.json" {
+        for (name, text) in &super::built_in_files() {
+            let text = text.as_str();
+            if name == "captions.json" {
                 serde_json::from_str::<Vec<crate::talk::CaptionStyle>>(text).unwrap();
-            } else if *name == "lang.json" || *name == "prompts.json" {
+            } else if name == "lang.json" || name == "prompts.json" {
                 serde_json::from_str::<serde_json::Value>(text).unwrap();
-            } else if *name == "grades.json" {
+            } else if name == "grades.json" {
                 serde_json::from_str::<Vec<crate::grades::Grade>>(text).unwrap();
-            } else if *name == "moves.json" {
+            } else if name == "moves.json" {
                 serde_json::from_str::<Vec<crate::preset::Motion>>(text).unwrap();
             } else {
                 serde_json::from_str::<crate::preset::Preset>(text).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -195,7 +204,7 @@ mod tests {
     #[test]
     fn built_in_presets_are_sound() {
         let looks = crate::looks::names();
-        for (name, text) in super::BUILT_IN.iter().filter(|(n, _)| !super::DATA.contains(n)) {
+        for (name, text) in super::built_in_files().iter().filter(|(n, _)| !super::DATA.contains(&n.as_str())) {
             let p: crate::preset::Preset = serde_json::from_str(text).unwrap();
             assert!(!p.slots.is_empty() && p.total > 0.0, "{name}: empty");
             assert!(p.look.as_ref().is_none_or(|l| looks.contains(&l.as_str())), "{name}: unknown look {:?}", p.look);

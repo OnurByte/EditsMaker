@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.vhs-tarama",
+  "name": "vhs-tarama",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: an old tape - scan lines, grain, a colour split, warm leaks and a slow handheld wobble, faded vintage colour. Old songs, nostalgia, 2000s memories",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "9:16",
+    "zoom",
+    "shake",
+    "rgb",
+    "retro"
+  ]
+}

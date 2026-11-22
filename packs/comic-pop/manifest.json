@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.comic-pop",
+  "name": "comic-pop",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: comic book - drawn edges over bright colour, slam zooms that bounce back, a sideways jolt on each cut, white panels on the drop. Meme and anime edits",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "9:16",
+    "zoom",
+    "slide",
+    "comic",
+    "flash"
+  ]
+}

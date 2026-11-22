@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.vhs-soft-zoom-60s",
+  "name": "vhs-soft-zoom-60s",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "49 shots (1.3 s), gentle 1.15x zoom-outs under a VHS look; CapCut draft from github.com/Davidb-2107/capcut-cli-david (MIT)",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "9:16",
+    "zoom"
+  ]
+}

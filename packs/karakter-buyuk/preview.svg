@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(337,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(337,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">karakter-buyuk</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">made for edits: character edit - slow build, held face, drop</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">of punch cuts, still end</text>
+<rect x="544.0" y="28" width="64.0" height="64" rx="6" fill="none" stroke="hsl(337,70%,64%)" stroke-width="2"/>
+<rect x="237.0" y="206" width="4.2" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="314.7" y="206" width="4.2" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="378.3" y="206" width="4.2" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="441.9" y="206" width="4.2" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="505.5" y="206" width="4.2" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="32.0" y="296" width="40.4" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="74.4" y="296" width="40.4" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="116.8" y="296" width="40.4" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="159.2" y="296" width="19.2" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="180.4" y="296" width="19.2" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="201.6" y="296" width="15.7" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="219.3" y="296" width="15.7" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="237.0" y="296" width="75.7" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="314.7" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="330.6" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="346.5" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="362.4" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="378.3" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="394.2" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="410.1" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="426.0" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="441.9" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="457.8" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="473.7" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="489.6" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="505.5" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<rect x="521.4" y="296" width="13.9" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.55"/>
+<rect x="537.3" y="296" width="68.7" height="20" rx="3" fill="hsl(337,70%,64%)" fill-opacity="0.95"/>
+<polyline points="32.0,284.0 74.4,260.7 74.4,284.0 116.8,260.7 116.8,284.0 159.2,260.7 159.2,214.0 166.6,277.0 180.4,284.0 180.4,214.0 187.8,277.0 201.6,284.0 201.6,214.0 207.8,277.0 219.3,284.0 219.3,214.0 225.5,277.0 237.0,284.0 237.0,284.0 314.7,225.7 314.7,214.0 320.3,277.0 330.6,284.0 330.6,214.0 336.2,277.0 346.5,284.0 346.5,214.0 352.1,277.0 362.4,284.0 362.4,214.0 368.0,277.0 378.3,284.0 378.3,214.0 383.9,277.0 394.2,284.0 394.2,214.0 399.8,277.0 410.1,284.0 410.1,214.0 415.7,277.0 426.0,284.0 426.0,214.0 431.6,277.0 441.9,284.0 441.9,214.0 447.5,277.0 457.8,284.0 457.8,214.0 463.4,277.0 473.7,284.0 473.7,214.0 479.3,277.0 489.6,284.0 489.6,214.0 495.2,277.0 505.5,284.0 505.5,214.0 511.1,277.0 521.4,284.0 521.4,214.0 527.0,277.0 537.3,284.0 537.3,272.3 608.0,249.0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">medium  1:1  zoom  shake  flash</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">23 shots  16.3s</text>
+</svg>

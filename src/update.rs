@@ -107,12 +107,12 @@ fn put(bin: &Path, exe: &Path) -> Result<(), String> {
         let old = exe.with_extension("old");
         if cfg!(windows) {
             let _ = std::fs::remove_file(&old);
-            std::fs::rename(&exe, &old).map_err(|e| e.to_string())?;
+            std::fs::rename(exe, &old).map_err(|e| e.to_string())?;
         }
-        std::fs::rename(&next, &exe).map_err(|e| {
+        std::fs::rename(&next, exe).map_err(|e| {
             // put the old one back, so a failed update never leaves no edits at all
             if cfg!(windows) {
-                let _ = std::fs::rename(&old, &exe);
+                let _ = std::fs::rename(&old, exe);
             }
             let _ = std::fs::remove_file(&next);
             e.to_string()

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.edits-mcp",
+  "name": "edits-mcp",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Connect the `edits` video editor to an AI agent as an MCP server. Use when setting up edits for Claude Code, ChatGPT (Codex), OpenCode, Cursor, Windsurf, Gemini CLI, Claude Desktop, VS Code or another MCP client, or when its tools do not show up.",
+  "kinds": [
+    "skill"
+  ],
+  "preview": "preview.svg"
+}

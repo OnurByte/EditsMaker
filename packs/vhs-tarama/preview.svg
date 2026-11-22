@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(146,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(146,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">vhs-tarama</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">made for edits: an old tape - scan lines, grain, a colour</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">split, warm leaks and a slow handheld wobble, faded vintage...</text>
+<rect x="572.0" y="28" width="36.0" height="64" rx="6" fill="none" stroke="hsl(146,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.95"/>
+<rect x="80.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.55"/>
+<rect x="128.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.95"/>
+<rect x="176.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.55"/>
+<rect x="224.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.95"/>
+<rect x="272.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.55"/>
+<rect x="320.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.95"/>
+<rect x="368.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.55"/>
+<rect x="416.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.95"/>
+<rect x="464.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.55"/>
+<rect x="512.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.95"/>
+<rect x="560.0" y="296" width="46.0" height="20" rx="3" fill="hsl(146,70%,64%)" fill-opacity="0.55"/>
+<polyline points="32.0,277.0 80.0,267.7 80.0,277.0 128.0,267.7 128.0,277.0 176.0,267.7 176.0,277.0 224.0,267.7 224.0,277.0 272.0,267.7 272.0,277.0 320.0,267.7 320.0,277.0 368.0,267.7 368.0,277.0 416.0,267.7 416.0,277.0 464.0,267.7 464.0,277.0 512.0,267.7 512.0,277.0 560.0,267.7 560.0,277.0 608.0,267.7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">slow  9:16  zoom  shake  rgb  retro</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">12 shots  19.2s</text>
+</svg>

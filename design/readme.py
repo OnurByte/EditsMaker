@@ -133,9 +133,9 @@ def sites():
     return out + [t(C2, 94, "+1,700 more sites", 20, 700, "RED", ls=-0.4)]
 
 
-@page("badges", 44, "MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, stream VODs into clips")
+@page("badges", 44, "MCP server, 70 built-in packs, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips")
 def badges():
-    cells = ["MCP server", "8 agent skills", "62 presets", "40 looks", "TikTok + Spotify charts", "VOD → clips"]
+    cells = ["MCP server", "70 packs", "community packs", "40 looks", "TikTok + Spotify charts", "VOD → clips"]
     widths = [len(c) * 8 + 36 for c in cells]
     x, out = (W - sum(widths) - 12 * (len(cells) - 1)) / 2, []
     for c, w in zip(cells, widths):
@@ -273,11 +273,11 @@ def steps():
     return out
 
 
-@page("features", 300, "Presets, trends, looks, agents, reads captions first, every frame size, stream VODs into clips, "
+@page("features", 300, "Packs, trends, looks, agents, reads captions first, every frame size, stream VODs into clips, "
       "captions in any language, the person cut out", "3.1")
 def features():
-    cells = [("Presets", "62 real edits, as JSON", "an agent can change"), ("Trends", "TikTok's and Spotify's", "charts, one flag: trend:3"),
-             ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server, 8 skills", "and skill packs to add"),
+    cells = [("Packs", "62 presets, 8 skills,", "community packs to add"), ("Trends", "TikTok's and Spotify's", "charts, one flag: trend:3"),
+             ("Looks", "40 looks", "and your own LUTs"), ("Agents", "MCP server, 8 skills", "and skill sets to add"),
              ("Reads first", "captions before video:", "downloads only the best"), ("Every frame", "9:16 to 21:9", "or any WxH"),
              ("Streams", "a six-hour VOD in,", "the best moments out"), ("Any language", "captions translated,", "timed to the voice"),
              ("Cut-outs", "a new background or", "huge words behind them")]

@@ -1,6 +1,6 @@
 //! Everything that depends on the spoken language (laughter words, words that carry feeling, how capitals work,
-//! what to tell the transcriber) and the words the models are prompted with live in presets/lang.json and
-//! presets/prompts.json, so a language is added or a prompt reworded without touching the code.
+//! what to tell the transcriber) and the words the models are prompted with live in data/lang.json and
+//! data/prompts.json, so a language is added or a prompt reworded without touching the code.
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;

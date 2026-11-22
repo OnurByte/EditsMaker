@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.buildup-drop",
+  "name": "buildup-drop",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: 5.6 s of slow push-ins (reactions, the walk-in, his face), a held beat leaning in, a white flash on the drop, 24 punch cuts with shakes and RGB hits, one held shot to land. Put the voice line on the held beat (--say) and pick the shots by hand (--shot)",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "9:16",
+    "zoom",
+    "shake",
+    "rgb",
+    "flash"
+  ]
+}

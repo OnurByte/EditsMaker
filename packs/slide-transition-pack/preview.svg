@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(129,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(129,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">slide-transition-pack</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Alight Motion project &quot;Transition Pack © AzeenEditz01 &quot;</text>
+<rect x="544.0" y="28" width="64.0" height="64" rx="6" fill="none" stroke="hsl(129,70%,64%)" stroke-width="2"/>
+<rect x="413.5" y="206" width="40.1" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="32.0" y="296" width="39.5" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<rect x="72.9" y="296" width="39.5" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.55"/>
+<rect x="164.2" y="296" width="58.9" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<rect x="164.2" y="296" width="58.9" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.55"/>
+<rect x="257.0" y="296" width="40.2" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<rect x="272.2" y="296" width="42.0" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.55"/>
+<rect x="298.5" y="296" width="40.2" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<rect x="392.0" y="296" width="40.2" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.55"/>
+<rect x="433.6" y="296" width="40.2" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<rect x="526.4" y="296" width="39.5" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.55"/>
+<rect x="567.2" y="296" width="38.8" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<rect x="567.2" y="296" width="38.8" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.55"/>
+<rect x="567.2" y="296" width="38.8" height="20" rx="3" fill="hsl(129,70%,64%)" fill-opacity="0.95"/>
+<polyline points="32.0,284.0 73.5,284.0 72.9,284.0 114.4,284.0 164.2,284.0 225.1,284.0 164.2,284.0 225.1,284.0 257.0,284.0 299.2,284.0 272.2,284.0 316.2,284.0 298.5,284.0 340.7,284.0 392.0,284.0 434.2,284.0 433.6,284.0 475.7,284.0 526.4,284.0 567.9,284.0 567.2,284.0 589.0,214.0 608.0,253.5 567.2,284.0 608.0,284.0 567.2,284.0 608.0,284.0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">medium  1:1</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">13 shots  13.9s</text>
+</svg>

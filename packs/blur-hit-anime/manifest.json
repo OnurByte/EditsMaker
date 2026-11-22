@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.blur-hit-anime",
+  "name": "blur-hit-anime",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Alight Motion project \"TENKA \"",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "4:5",
+    "shake",
+    "blur",
+    "velocity"
+  ]
+}

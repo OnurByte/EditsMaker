@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(217,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(217,70%,64%)">PRESET</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">yavas-duygusal</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">made for edits: slow, long shots, soft drift, fade from and to</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">dark</text>
+<rect x="544.0" y="28" width="64.0" height="64" rx="6" fill="none" stroke="hsl(217,70%,64%)" stroke-width="2"/>
+<rect x="32.0" y="296" width="76.8" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.95"/>
+<rect x="110.8" y="296" width="66.9" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.55"/>
+<rect x="179.7" y="296" width="71.8" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.95"/>
+<rect x="253.5" y="296" width="57.1" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.55"/>
+<rect x="312.6" y="296" width="62.0" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.95"/>
+<rect x="376.6" y="296" width="66.9" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.55"/>
+<rect x="445.5" y="296" width="62.0" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.95"/>
+<rect x="509.5" y="296" width="96.5" height="20" rx="3" fill="hsl(217,70%,64%)" fill-opacity="0.55"/>
+<polyline points="32.0,284.0 110.8,267.7 110.8,284.0 179.7,267.7 179.7,284.0 253.5,267.7 253.5,284.0 312.6,267.7 312.6,284.0 376.6,267.7 376.6,284.0 445.5,267.7 445.5,284.0 509.5,267.7 509.5,284.0 608.0,267.7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">slow  1:1  zoom  slide</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">8 shots  23.4s</text>
+</svg>

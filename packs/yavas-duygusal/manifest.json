@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.yavas-duygusal",
+  "name": "yavas-duygusal",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: slow, long shots, soft drift, fade from and to dark",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "slow",
+    "1:1",
+    "zoom",
+    "slide"
+  ]
+}

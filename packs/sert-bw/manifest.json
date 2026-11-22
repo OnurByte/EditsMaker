@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.sert-bw",
+  "name": "sert-bw",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "made for edits: build-up push-ins, hard punch cuts, black and white",
+  "kinds": [
+    "preset"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "medium",
+    "1:1",
+    "zoom",
+    "shake",
+    "flash"
+  ]
+}
