@@ -99,8 +99,8 @@ fn install(tag: &str) -> Result<(), String> {
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     if res.is_ok() {
-        // the new edits sets up what it brings (the agent guard, its skills) for people who installed an older one
-        let _ = run(None, &exe.to_string_lossy(), &["guard", "install"]);
+        // the new edits brings its skills; a guard the user installed points at it (none is added unasked)
+        let _ = run(None, &exe.to_string_lossy(), &["guard", "refresh"]);
         let _ = run(None, &exe.to_string_lossy(), &["skills", "install"]);
     }
     res
