@@ -125,6 +125,9 @@ pub struct Workspace {
     pub ai_key: Entity<InputState>,
     pub ai_endpoint: Entity<InputState>,
     pub ai_models: Option<Result<Vec<String>, String>>,
+    /// t3code's Add provider window, and whether it shows every provider
+    pub ai_adding: bool,
+    pub ai_more: bool,
     /// what `edits doctor` said, in About
     pub doctor: Option<String>,
     /// the setting being changed
@@ -168,7 +171,7 @@ impl Workspace {
             }
         })
         .detach();
-        let mut this = Self { input, mode: Mode::Edit, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, files: vec![], preset: None, source: None, count: 1, picker: None, flows: None,
+        let mut this = Self { input, mode: Mode::Edit, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, files: vec![], preset: None, source: None, count: 1, picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
             market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(), _subscriptions: subscriptions };
         if let Some(clip) = review {

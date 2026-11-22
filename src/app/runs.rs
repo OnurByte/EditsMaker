@@ -149,12 +149,12 @@ pub struct Provider {
     pub in_use: bool,
     pub base: String,
     pub key_var: String,
+    pub about: String,
 }
 
 #[derive(Clone, Deserialize)]
 pub struct Ai {
     pub model: String,
-    pub about: String,
     pub ready: bool,
 }
 

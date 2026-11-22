@@ -39,29 +39,6 @@ fn group(title: &str, rows: Vec<AnyElement>, b: &Brand) -> impl IntoElement {
         .child(div().flex().flex_col().bg(b.page).rounded(CARD).children(rows))
 }
 
-/// How a provider is reached, in words.
-fn kind(p: &Provider) -> &'static str {
-    match (p.kind.as_str(), p.how.as_str()) {
-        ("subscription", "acp") => "An agent on your subscription, over ACP",
-        ("subscription", _) => "An agent on your subscription",
-        ("acp", _) => "Any ACP agent, by its command",
-        ("api", _) => "An API key",
-        _ => "A server on this computer",
-    }
-}
-
-fn status(p: &Provider) -> &'static str {
-    match (p.in_use, p.ready, p.kind.as_str()) {
-        (true, _, _) => "In use",
-        (_, true, "subscription") => "Installed",
-        (_, true, "api") => "Key saved",
-        (_, true, _) => "Ready to point at",
-        (_, false, "subscription") => "Not installed",
-        (_, false, "acp") => "Needs its command",
-        _ => "Needs a key",
-    }
-}
-
 /// Colour dots for an appearance tile: page, card, ink.
 fn dots(colors: [Hsla; 3], b: &Brand) -> Div {
     div().flex().gap(px(4.)).children(colors.into_iter().map(|c| div().size(px(16.)).rounded_full().bg(c).border_1().border_color(b.hair)))
@@ -95,14 +72,18 @@ impl Workspace {
         .detach();
     }
 
-    /// t3code's provider card, set up in place: the key or the server, then the model.
-    fn provider_setup(&self, p: &Provider, s: &Settings, b: &Brand, cx: &mut Context<Self>) -> AnyElement {
+    /// What a provider needs before edits can ask it, in place: a key, a server, a command, or (for an agent) nothing.
+    fn provider_setup(&self, p: &Provider, s: &Settings, b: &Brand, cx: &mut Context<Self>) -> Vec<AnyElement> {
         let name = p.name.clone();
-        let endpoint = self.ai_endpoint.read(cx).value().to_string();
         let mut rows: Vec<AnyElement> = vec![];
+        let first = |rows: &Vec<AnyElement>| rows.is_empty();
+        if p.kind == "subscription" || (p.kind == "acp" && !p.command.is_empty()) {
+            rows.push(row("Runs", if p.how == "acp" { "Spoken to over ACP; it gets no files, terminal or permission." } else { "Asked once with the prompt, on your own account." },
+                text(p.command.replace("{model}", ""), 12., FontWeight::NORMAL, b.gray).font_family(MONO).max_w(px(300.)).truncate(), first(&rows), b).into_any_element());
+        }
         if p.kind == "api" {
             let n = name.clone();
-            rows.push(row("API key", format!("Saved where only you can read it. {} works too.", p.key_var),
+            rows.push(row("API key", format!("Kept where only you can read it; {} works too.", p.key_var),
                 div().flex().items_center().gap(px(8.)).child(div().w(px(200.)).child(Input::new(&self.ai_key)))
                     .child(pill("save-key", Some(Icon::Key), "Save", false, b).on_click(cx.listener(move |this, _, window, cx| {
                         let k = this.ai_key.read(cx).value().to_string();
@@ -115,49 +96,135 @@ impl Workspace {
                             }
                             Err(e) => window.push_notification(Notification::error(e), cx),
                         }
-                    }))), true, b).into_any_element());
+                    }))), first(&rows), b).into_any_element());
         }
-        if p.kind == "local" {
+        if p.kind == "local" || p.kind == "acp" {
             let n = name.clone();
-            rows.push(row("Server", format!("Where it answers; {} by default.", p.base),
+            let acp = p.kind == "acp";
+            rows.push(row(if acp { "Local ACP command" } else { "Server" }, if acp { "How the agent starts in ACP mode, as the ACP Registry lists it." } else { "Where it answers on this computer." },
                 div().flex().items_center().gap(px(8.)).child(div().w(px(220.)).child(Input::new(&self.ai_endpoint)))
-                    .child(pill("models", None, "Look", false, b).on_click(cx.listener(move |this, _, _, cx| {
+                    .child(primary("set-endpoint", if acp { "Add" } else { "Use" }, b).on_click(cx.listener(move |this, _, window, cx| {
                         let e = this.ai_endpoint.read(cx).value().to_string();
-                        this.load_models(n.clone(), e, cx);
-                    }))), true, b).into_any_element());
+                        this.change(vec!["ai".into(), n.clone(), "--endpoint".into(), e.clone()], window, cx);
+                        if !acp {
+                            this.load_models(n.clone(), e, cx);
+                        }
+                    }))), first(&rows), b).into_any_element());
         }
-        if p.kind == "acp" {
-            let n = name.clone();
-            rows.push(row("Agent's command", "How it starts in ACP mode, as the ACP Registry lists it.",
-                div().flex().items_center().gap(px(8.)).child(div().w(px(220.)).child(Input::new(&self.ai_endpoint)))
-                    .child(primary("use-acp", "Use it", b).on_click(cx.listener(move |this, _, window, cx| {
-                        let e = this.ai_endpoint.read(cx).value().to_string();
-                        this.change(vec!["ai".into(), n.clone(), "--endpoint".into(), e], window, cx);
-                    }))), true, b).into_any_element());
-            return group(&format!("{} · {}", p.label, kind(p)), rows, b).into_any_element();
+        if p.kind == "api" || p.kind == "local" {
+            let endpoint = self.ai_endpoint.read(cx).value().to_string();
+            let models: AnyElement = match &self.ai_models {
+                None if p.ready => text("Reading its models...", 13., FontWeight::NORMAL, b.gray).into_any_element(),
+                None => text(if p.kind == "api" { "Save a key first" } else { "Point it at its server first" }, 13., FontWeight::NORMAL, b.gray).into_any_element(),
+                Some(Err(e)) => text(e.clone(), 13., FontWeight::NORMAL, b.red_text).into_any_element(),
+                Some(Ok(list)) => div().id("model-list").max_h(px(160.)).overflow_y_scroll().flex().flex_wrap().justify_end().gap(px(8.))
+                    .children(list.iter().take(60).enumerate().map(|(i, m)| {
+                        let mut cmd = vec!["ai".to_string(), name.clone(), m.clone()];
+                        if p.kind == "local" && !endpoint.is_empty() {
+                            cmd.extend(["--endpoint".to_string(), endpoint.clone()]);
+                        }
+                        pill(("model", i), None, m.clone(), p.in_use && *m == s.ai.model, b).on_click(cx.listener(move |this, _, window, cx| this.change(cmd.clone(), window, cx)))
+                    })).into_any_element(),
+            };
+            rows.push(row("Models", "The one edits asks; picking one selects this provider.", models, first(&rows), b).into_any_element());
         }
-        let models: AnyElement = match (&self.ai_models, p.kind.as_str()) {
-            (_, "subscription") => {
-                let cmd = vec!["ai".to_string(), name.clone()];
-                div().flex().items_center().gap(px(8.))
-                    .child(text(p.command.replace("{model}", ""), 12., FontWeight::NORMAL, b.gray).font_family(MONO).max_w(px(220.)).truncate())
-                    .child(primary("use", "Use it", b).on_click(cx.listener(move |this, _, window, cx| this.change(cmd.clone(), window, cx))))
-                    .into_any_element()
+        rows
+    }
+
+    /// One of the providers here, as t3code's ProviderInstanceCard: its logo, name and line, its status, Select; open,
+    /// what it runs, its key or server, its models.
+    fn provider_card(&self, i: usize, p: &Provider, s: &Settings, b: &Brand, cx: &mut Context<Self>) -> AnyElement {
+        let open = self.ai_open.as_deref() == Some(p.name.as_str());
+        let (name, kind_, base) = (p.name.clone(), p.kind.clone(), p.base.clone());
+        let badge = if p.in_use { ("Selected", b.accent) } else { ("Ready", b.gray) };
+        let select: AnyElement = if p.in_use {
+            div().into_any_element()
+        } else if p.kind == "subscription" || p.kind == "acp" || p.kind == "local" {
+            let mut cmd = vec!["ai".to_string(), p.name.clone()];
+            if p.kind != "subscription" {
+                cmd.extend(["--endpoint".to_string(), if p.kind == "acp" { p.command.clone() } else { p.base.clone() }]);
             }
-            (None, _) if p.ready || p.kind == "local" => text("Reading its models...", 13., FontWeight::NORMAL, b.gray).into_any_element(),
-            (None, _) => text("Save a key first", 13., FontWeight::NORMAL, b.gray).into_any_element(),
-            (Some(Err(e)), _) => text(e.clone(), 13., FontWeight::NORMAL, b.red_text).into_any_element(),
-            (Some(Ok(list)), _) => div().id("model-list").max_h(px(160.)).overflow_y_scroll().flex().flex_wrap().justify_end().gap(px(8.))
-                .children(list.iter().take(60).enumerate().map(|(i, m)| {
-                    let mut cmd = vec!["ai".to_string(), name.clone(), m.clone()];
-                    if p.kind == "local" && !endpoint.is_empty() {
-                        cmd.extend(["--endpoint".to_string(), endpoint.clone()]);
-                    }
-                    pill(("model", i), None, m.clone(), p.in_use && *m == s.ai.model, b).on_click(cx.listener(move |this, _, window, cx| this.change(cmd.clone(), window, cx)))
-                })).into_any_element(),
+            pill(("select", i), None, "Select", false, b).on_click(cx.listener(move |this, _, window, cx| this.change(cmd.clone(), window, cx))).into_any_element()
+        } else {
+            text("Pick a model to select", 12., FontWeight::NORMAL, b.gray).into_any_element()
         };
-        rows.push(row(if p.kind == "subscription" { "Use it" } else { "Model" }, if p.kind == "subscription" { "edits asks it on your subscription, with this command; it picks its own model." } else { "The one edits asks; it becomes the one in use." }, models, rows.is_empty(), b).into_any_element());
-        group(&format!("{} · {}", p.label, kind(p)), rows, b).into_any_element()
+        let hover = b.hair;
+        let head = div().id(("provider", i)).px(px(16.)).py(px(16.)).flex().items_center().gap(px(16.)).cursor_pointer().hover(move |st| st.bg(hover))
+            .child(div().size(px(32.)).flex_none().flex().items_center().justify_center().rounded(SMALL).bg(b.card)
+                .children(crate::app::icons::logo(&p.name, b.ink, b.card).map(|l| l.size(px(18.)))))
+            .child(div().flex_1().min_w_0().flex().flex_col().gap(px(2.))
+                .child(div().flex().items_center().gap(px(8.))
+                    .child(text(p.label.clone(), 14., BOLD, b.ink))
+                    .child(div().px(px(8.)).h(px(20.)).flex().items_center().rounded(px(10.)).bg(badge.1.opacity(0.16)).child(text(badge.0, 11., BOLD, badge.1))))
+                .child(text(p.about.clone(), 13., LIGHT, b.gray).truncate()))
+            .child(select)
+            .child(text(if open { "−" } else { "+" }, 18., LIGHT, b.gray))
+            .on_click(cx.listener(move |this, _, window, cx| {
+                let opening = this.ai_open.as_deref() != Some(name.as_str());
+                this.ai_open = opening.then(|| name.clone());
+                this.ai_models = None;
+                if opening && (kind_ == "local" || kind_ == "acp") {
+                    this.ai_endpoint.update(cx, |s, cx| s.set_value(base.clone(), window, cx));
+                }
+                if opening && (kind_ == "api" || kind_ == "local") {
+                    this.load_models(name.clone(), if kind_ == "local" { base.clone() } else { String::new() }, cx);
+                }
+                cx.notify();
+            }));
+        div().flex().flex_col().when(i > 0, |d| d.border_t_1().border_color(b.hair)).child(head)
+            .when(open, |d| d.child(div().pb(px(8.)).flex().flex_col().children(self.provider_setup(p, s, b, cx))))
+            .into_any_element()
+    }
+
+    /// t3code's Add provider: every provider not here yet, on a tile with its logo and line; picked, set up below.
+    fn add_provider(&self, s: &Settings, b: &Brand, cx: &mut Context<Self>) -> AnyElement {
+        let rest: Vec<&Provider> = s.providers.iter().filter(|p| !p.ready && !p.in_use).collect();
+        let shown = if self.ai_more { rest.len() } else { rest.len().min(9) };
+        let tiles = rest.iter().take(shown).enumerate().map(|(i, p)| {
+            let (on, hover, name, kind_, base) = (self.ai_open.as_deref() == Some(p.name.as_str()), b.hair, p.name.clone(), p.kind.clone(), p.base.clone());
+            div().id(("add", i)).w(relative(0.32)).p(px(16.)).flex().flex_col().gap(px(8.)).rounded(SMALL).cursor_pointer()
+                .bg(if on { b.accent.opacity(0.14) } else { b.page }).hover(move |st| st.bg(hover))
+                .child(div().flex().items_center().gap(px(8.))
+                    .children(crate::app::icons::logo(&p.name, b.ink, b.page).map(|l| l.size(px(18.))))
+                    .child(text(p.label.clone(), 14., BOLD, b.ink)))
+                .child(text(p.about.clone(), 12., LIGHT, b.gray).h(px(40.)).line_clamp(2))
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    this.ai_open = Some(name.clone());
+                    this.ai_models = None;
+                    if kind_ == "local" || kind_ == "acp" {
+                        this.ai_endpoint.update(cx, |s, cx| s.set_value(base.clone(), window, cx));
+                    }
+                    cx.notify();
+                }))
+                .into_any_element()
+        }).collect::<Vec<_>>();
+        let picked = self.ai_open.as_ref().and_then(|n| rest.iter().find(|p| &p.name == n)).copied();
+        let setup: AnyElement = match picked {
+            Some(p) if p.kind == "subscription" => group(&p.label, vec![row("Not on this computer yet", format!("Install it, sign in, and it shows up among your providers by itself. It runs: {}", p.command.replace("{model}", "")), div(), true, b).into_any_element()], b).into_any_element(),
+            Some(p) => group(&p.label, self.provider_setup(p, s, b, cx), b).into_any_element(),
+            None => div().into_any_element(),
+        };
+        div().absolute().inset_0().flex().items_center().justify_center()
+            .child(div().id("add-backdrop").absolute().inset_0().bg(black().opacity(0.4)).on_click(cx.listener(|this, _, _, cx| {
+                this.ai_adding = false;
+                cx.notify();
+            })))
+            .child(div().id("add-provider").relative().w(relative(0.9)).max_h(relative(0.9)).p(px(24.)).flex().flex_col().gap(px(16.)).rounded(CARD).bg(b.card).overflow_y_scroll()
+                .on_click(|_, _, cx| cx.stop_propagation())
+                .child(div().flex().items_center()
+                    .child(div().flex_1().flex().flex_col().gap(px(4.)).child(text("Add provider", 19., BOLD, b.ink)).child(text("Pick one; the agents you install show up by themselves.", 13., LIGHT, b.gray)))
+                    .child(div().id("close-add").size(px(32.)).flex().items_center().justify_center().rounded(SMALL).cursor_pointer().child(text("×", 20., LIGHT, b.gray))
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.ai_adding = false;
+                            cx.notify();
+                        }))))
+                .child(div().flex().flex_wrap().gap(px(8.)).children(tiles))
+                .when(rest.len() > 9, |d| d.child(pill("more-providers", None, if self.ai_more { "Show less" } else { "More providers" }, false, b).on_click(cx.listener(|this, _, _, cx| {
+                    this.ai_more = !this.ai_more;
+                    cx.notify();
+                }))))
+                .child(setup))
+            .into_any_element()
     }
 
     fn section(&self, section: Section, s: &Settings, b: &Brand, cx: &mut Context<Self>) -> Vec<AnyElement> {
@@ -172,36 +239,22 @@ impl Workspace {
                 ], b).into_any_element()]
             }
             Section::Ai => {
-                let now = s.providers.iter().find(|p| p.in_use);
-                let in_use: AnyElement = match now {
-                    Some(p) => group("In use", vec![row(&p.label, format!("{} · {}", kind(p), s.ai.about), text(if s.ai.ready { "Ready" } else { "Not ready" }, 13., BOLD, if s.ai.ready { b.ink } else { b.red_text }), true, b).into_any_element()], b).into_any_element(),
-                    None => div().into_any_element(),
-                };
-                // t3code's Add provider: every provider on a tile, the one opened set up below
-                let tiles = s.providers.iter().enumerate().map(|(i, p)| {
-                    let (on, hover, name) = (self.ai_open.as_deref() == Some(p.name.as_str()), b.hair, p.name.clone());
-                    let (kind_, base) = (p.kind.clone(), p.base.clone());
-                    div().id(("provider", i)).w(px(196.)).p(px(16.)).flex().flex_col().gap(px(4.)).rounded(SMALL).cursor_pointer()
-                        .bg(if on { b.accent.opacity(0.14) } else { b.page }).hover(move |st| st.bg(hover))
-                        .child(div().flex().items_center().gap(px(8.)).child(icon(match p.kind.as_str() { "local" => Icon::Sliders, "api" => Icon::Key, _ => Icon::Bot }, if p.in_use { b.accent } else { b.gray }).size(px(16.))).child(text(p.label.clone(), 14., BOLD, b.ink)))
-                        .child(text(status(p), 12., FontWeight::NORMAL, b.gray))
-                        .on_click(cx.listener(move |this, _, window, cx| {
-                            this.ai_open = if this.ai_open.as_deref() == Some(name.as_str()) { None } else { Some(name.clone()) };
-                            this.ai_models = None;
-                            if kind_ == "local" || kind_ == "acp" {
-                                this.ai_endpoint.update(cx, |s, cx| s.set_value(base.clone(), window, cx));
-                            }
-                            if this.ai_open.is_some() && (kind_ == "api" || kind_ == "local") {
-                                this.load_models(name.clone(), if kind_ == "local" { base.clone() } else { String::new() }, cx);
-                            }
+                // t3code's providers: the ones here (installed, keyed, pointed at) already listed, the rest to add
+                let here: Vec<&Provider> = s.providers.iter().filter(|p| p.ready || p.in_use).collect();
+                let cards = here.iter().enumerate().map(|(i, p)| self.provider_card(i, p, s, b, cx)).collect::<Vec<_>>();
+                vec![
+                    div().flex().items_center().gap(px(16.))
+                        .child(div().flex_1().flex().flex_col().gap(px(4.))
+                            .child(text("Providers", 13., BOLD, b.gray))
+                            .child(text(format!("edits asks the selected one to pick moments. {}", if s.ai.ready { "It is ready." } else { "It is not ready: its command or key is missing." }), 13., LIGHT, b.gray)))
+                        .child(primary("add-provider-open", "Add provider", b).on_click(cx.listener(|this, _, _, cx| {
+                            this.ai_adding = true;
+                            this.ai_open = None;
                             cx.notify();
-                        }))
-                        .into_any_element()
-                }).collect::<Vec<_>>();
-                let setup = self.ai_open.as_ref().and_then(|n| s.providers.iter().find(|p| &p.name == n)).map(|p| self.provider_setup(p, s, b, cx));
-                vec![in_use,
-                    div().flex().flex_col().gap(px(8.)).child(text("Add provider", 13., BOLD, b.gray)).child(div().flex().flex_wrap().gap(px(8.)).children(tiles)).into_any_element()]
-                    .into_iter().chain(setup).collect()
+                        })))
+                        .into_any_element(),
+                    div().flex().flex_col().bg(b.page).rounded(CARD).overflow_hidden().children(cards).into_any_element(),
+                ]
             }
             Section::Accounts => {
                 let mut rows: Vec<AnyElement> = s.accounts.iter().enumerate().map(|(i, a)| {
@@ -305,6 +358,10 @@ impl Workspace {
             Some(Ok(s)) => self.section(at, s, &b, cx),
         };
         let title = SECTIONS.iter().find(|x| x.0 == at).map_or("", |x| x.1);
+        let add = match (&self.settings, self.ai_adding && at == Section::Ai) {
+            (Some(Ok(s)), true) => Some(self.add_provider(s, &b, cx)),
+            _ => None,
+        };
         div().absolute().inset_0().flex().items_center().justify_center()
             .child(div().id("backdrop").absolute().inset_0().bg(black().opacity(0.5)).on_click(cx.listener(|this, _, _, cx| {
                 this.settings_open = None;
@@ -326,6 +383,7 @@ impl Workspace {
                                 cx.notify();
                             }))))
                     .child(div().id("settings-body").flex_1().min_h_0().overflow_y_scroll()
-                        .child(div().px(px(24.)).pb(px(24.)).flex().flex_col().gap(px(24.)).children(body)))))
+                        .child(div().px(px(24.)).pb(px(24.)).flex().flex_col().gap(px(24.)).children(body))))
+                .children(add))
     }
 }

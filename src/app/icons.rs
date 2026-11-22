@@ -30,7 +30,6 @@ pub enum Icon {
     Sun,
     Moon,
     Palette,
-    Bot,
     Sliders,
     Github,
 }
@@ -58,7 +57,6 @@ fn name(i: Icon) -> IconName {
         Icon::Sun => IconName::Sun,
         Icon::Moon => IconName::Moon,
         Icon::Palette => IconName::Palette,
-        Icon::Bot => IconName::Bot,
         Icon::Sliders => IconName::SlidersHorizontal,
         Icon::Github => IconName::Github,
     }
@@ -91,6 +89,49 @@ pub fn mark(ink: Hsla) -> Img {
     img(image)
 }
 
+/// A provider's logo as t3code draws it (assets/providers, from t3code and Simple Icons), in one colour.
+pub fn logo(name: &str, color: Hsla, page: Hsla) -> Option<Img> {
+    macro_rules! svg {
+        ($f:literal) => {
+            include_str!(concat!("../../assets/providers/", $f, ".svg"))
+        };
+    }
+    let src = match name {
+        "claude-code" => svg!("claude"),
+        "codex" | "openai" => svg!("openai"),
+        "anthropic" => svg!("anthropic"),
+        "cursor" => svg!("cursor"),
+        "grok" => svg!("grok"),
+        "fx" => svg!("fx"),
+        "opencode" => svg!("opencode"),
+        "antigravity" => svg!("antigravity"),
+        "kiro" => svg!("kiro"),
+        "muse" => svg!("muse"),
+        "pi" => svg!("pi"),
+        "gemini-cli" | "gemini" => svg!("gemini"),
+        "acp" => svg!("acp"),
+        "openrouter" => svg!("openrouter"),
+        "ollama" => svg!("ollama"),
+        _ => return None,
+    };
+    let (c, p) = (css(color), css(page));
+    let key = format!("{name}{c}{p}");
+    picture(&key, || {
+        let mut s = src.to_string();
+        for dark in ["#000000", "#000", "currentColor", "black", "#9046FF"] {
+            s = s.replace(&format!("\"{dark}\""), &format!("\"{c}\""));
+        }
+        for light in ["#ffffff", "#FFFFFF", "#fff", "#FFF", "white"] {
+            s = s.replace(&format!("\"{light}\""), &format!("\"{p}\""));
+        }
+        // a logo with no colour of its own takes it on its root
+        if !s.contains(&c) {
+            s = s.replacen("<svg", &format!("<svg fill=\"{c}\""), 1);
+        }
+        Some((ImageFormat::Svg, s.into_bytes()))
+    })
+}
+
 /// A pack's cover (its preview SVG, or its own file), read once.
 pub fn picture(key: &str, bytes: impl FnOnce() -> Option<(ImageFormat, Vec<u8>)>) -> Option<Img> {
     type Pictures = std::sync::Mutex<std::collections::HashMap<String, Option<Arc<Image>>>>;
@@ -101,6 +142,14 @@ pub fn picture(key: &str, bytes: impl FnOnce() -> Option<(ImageFormat, Vec<u8>)>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn every_logo_takes_one_colour() {
+        for f in ["claude", "openai", "anthropic", "cursor", "grok", "fx", "opencode", "antigravity", "kiro", "muse", "pi", "gemini", "acp", "openrouter", "ollama"] {
+            let s = std::fs::read_to_string(format!("{}/assets/providers/{f}.svg", env!("CARGO_MANIFEST_DIR"))).unwrap();
+            assert!(s.starts_with("<svg") && !s.contains("ANTIGRAVITY_ICON"), "{f}");
+        }
+    }
+
     #[test]
     fn the_mark_takes_the_ink_and_keeps_its_red() {
         let s = include_str!("../../assets/mark.svg");

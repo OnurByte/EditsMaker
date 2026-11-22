@@ -64,17 +64,47 @@ fn file() -> PathBuf {
 /// Each provider as the app's AI settings show it, after t3code's provider cards: what t3code calls it, how it is
 /// reached (an agent on your subscription, an API key, a server on this computer), whether it is ready here, whether
 /// it is the one in use.
+/// A line on each provider, as t3code's Add provider dialog says it.
+fn about(name: &str) -> &'static str {
+    match name {
+        "claude-code" => "Anthropic's coding agent, on your Claude plan.",
+        "codex" => "OpenAI's coding agent, on your ChatGPT plan.",
+        "cursor" => "Cursor's agent, signed in with your Cursor account.",
+        "grok" => "xAI's Grok Build agent, spoken to over ACP.",
+        "fx" => "The fx agent, spoken to over ACP.",
+        "opencode" => "The open-source agent, with whichever model you gave it.",
+        "antigravity" => "Google's Antigravity agent and its Gemini models, over ACP.",
+        "kiro" => "Amazon's Kiro agent, over ACP.",
+        "muse" => "Muse's coding agent.",
+        "pi" => "The Pi coding agent, with whichever model you gave it.",
+        "gemini-cli" => "Google's Gemini CLI, over ACP.",
+        "acp" => "Any agent that speaks ACP, by its command: Devin, Goose, Qwen Code and more.",
+        "openai" => "GPT models, with your OpenAI API key.",
+        "anthropic" => "Claude models, with your Anthropic API key.",
+        "gemini" => "Gemini models, with a Google AI Studio key.",
+        "openrouter" => "Hundreds of models behind one key.",
+        "ollama" => "Models running here with Ollama; nothing leaves this computer.",
+        "lmstudio" => "Models running here in LM Studio; nothing leaves this computer.",
+        "llamacpp" => "A llama.cpp server on this computer.",
+        _ => "A vLLM server on this computer.",
+    }
+}
+
 pub fn providers() -> Vec<Value> {
     let c = choice();
     let agents = AGENTS.iter().map(|&(name, label, how, cmd)| {
         let bin = cmd.split_whitespace().next().unwrap_or("");
         let ready = if cmd.is_empty() { c.provider == name && !c.endpoint.is_empty() } else { crate::util::have(bin) };
-        json!({"name": name, "label": label, "kind": if cmd.is_empty() { "acp" } else { "subscription" }, "how": how, "command": cmd, "ready": ready, "inUse": c.provider == name, "base": "", "keyVar": ""})
+        json!({"name": name, "label": label, "kind": if cmd.is_empty() { "acp" } else { "subscription" }, "how": how, "command": if cmd.is_empty() && c.provider == name { c.endpoint.as_str() } else { cmd },
+            "ready": ready, "inUse": c.provider == name, "base": "", "keyVar": "", "about": about(name)})
     });
     let http = PROVIDERS.iter().map(|&(name, base, var)| {
         let kind = if var.is_empty() { "local" } else { "api" };
         let label = match name { "openai" => "OpenAI", "anthropic" => "Anthropic API", "gemini" => "Gemini API", "openrouter" => "OpenRouter", "ollama" => "Ollama", "lmstudio" => "LM Studio", "llamacpp" => "llama.cpp", _ => "vLLM" };
-        json!({"name": name, "label": label, "kind": kind, "how": "http", "command": "", "ready": kind == "local" || key(name).is_ok(), "inUse": c.provider == name, "base": base, "keyVar": var})
+        // a server here counts as added once it is the one in use; a key, once it is saved
+        let ready = if kind == "local" { c.provider == name } else { key(name).is_ok() };
+        json!({"name": name, "label": label, "kind": kind, "how": "http", "command": "", "ready": ready, "inUse": c.provider == name,
+            "base": if c.provider == name && !c.endpoint.is_empty() { c.endpoint.as_str() } else { base }, "keyVar": var, "about": about(name)})
     });
     agents.chain(http).collect()
 }

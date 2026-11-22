@@ -63,6 +63,7 @@ pub fn run(args: &[String]) {
         Some("about") => workspace::Section::About,
         _ => workspace::Section::General,
     });
+    let args_: Vec<String> = args.to_vec();
     gpui_kit::application().with_assets(AppAssets).run(move |cx| {
         gpui_kit::init(cx);
         // Windows posts system notifications under the app's identity
@@ -89,6 +90,8 @@ pub fn run(args: &[String]) {
             }
             if let Some(at) = settings {
                 w.open_settings(at, cx);
+                // settings ai add: t3code's Add provider, open
+                w.ai_adding = args_.iter().any(|a| a == "add");
             }
             w
         })).expect("could not open the window");
