@@ -2,18 +2,18 @@
 <rect x="0.5" y="0.5" width="1039" height="269" rx="20" fill="#F6F4EF" stroke="#E4E0D7"/>
 <g transform="translate(40,40)">
 <text x="0" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.3">Presets</text>
-<text x="0" y="50" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">50 real edits, as JSON</text>
+<text x="0" y="50" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">62 real edits, as JSON</text>
 <text x="0" y="71" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">an agent can change</text>
 <text x="320" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.3">Trends</text>
-<text x="320" y="50" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">TikTok's chart,</text>
-<text x="320" y="71" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">one flag: trend:3</text>
+<text x="320" y="50" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">TikTok's and Spotify's</text>
+<text x="320" y="71" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">charts, one flag: trend:3</text>
 <text x="640" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.3">Looks</text>
 <text x="640" y="50" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">40 looks</text>
 <text x="640" y="71" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">and your own LUTs</text>
 <line x1="0" y1="95.5" x2="296" y2="95.5" stroke="#E4E0D7" stroke-width="1"/>
 <text x="0" y="134" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.3">Agents</text>
-<text x="0" y="160" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">MCP server</text>
-<text x="0" y="181" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">and 8 skills</text>
+<text x="0" y="160" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">MCP server, 8 skills</text>
+<text x="0" y="181" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">and skill packs to add</text>
 <line x1="320" y1="95.5" x2="616" y2="95.5" stroke="#E4E0D7" stroke-width="1"/>
 <text x="320" y="134" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#0B0B0C" text-anchor="start" letter-spacing="-0.3">Reads first</text>
 <text x="320" y="160" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="15" fill="#0B0B0C" text-anchor="start" letter-spacing="0">captions before video:</text>

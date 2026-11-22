@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok trends, 1,700+ sites">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 8 agent skills, 62 presets, 40 looks, TikTok and Spotify charts, 1,700+ sites">
 </picture>
 
 <p align="center">
@@ -67,7 +67,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/sounds-dark.svg">
-  <img src="assets/readme/sounds-light.svg" width="100%" alt="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, or ask for TikTok's trending songs in any country with --music trend:3">
+  <img src="assets/readme/sounds-light.svg" width="100%" alt="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, ask for TikTok's or Spotify's chart in any country with --music trend:3, or let it name the song in any clip with edits song">
 </picture>
 
 <picture>
@@ -76,6 +76,8 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 </picture>
 
 Saw an edit you love? Hand edits its link. It reverse-engineers every cut, flash, zoom, slide and shake into a preset, then puts your footage into the same shape. No other editor does that.
+
+Heard a song in it? `edits song` names it, Shazam built in, and `--music` brings the clean original. Cuts land on the kick itself, come faster where the song gets loud and hold where it breathes. `--denoise` takes the score and room noise out from under a spoken line and leaves the song alone. On a Mac it renders on Apple's own hardware encoder, on a PC on your NVIDIA GPU.
 
 <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
   <picture>
@@ -108,7 +110,7 @@ Saw an edit you love? Hand edits its link. It reverse-engineers every cut, flash
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/encoder-dark.svg">
-  <img src="assets/readme/encoder-light.svg" width="100%" alt="Renders on your GPU: NVIDIA GPUs by default, or in software on any CPU (Intel, AMD, Apple). One command switches: edits encoder">
+  <img src="assets/readme/encoder-light.svg" width="100%" alt="Renders on your GPU: an NVIDIA GPU or a Mac's own VideoToolbox, picked by itself, or in software on any CPU (Intel, AMD). One command switches: edits encoder">
 </picture>
 
 ## Install

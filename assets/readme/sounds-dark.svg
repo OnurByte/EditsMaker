@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="404" viewBox="0 0 1040 404" role="img" aria-label="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, or ask for TikTok's trending songs in any country with --music trend:3">
-<rect x="0.5" y="0.5" width="1039" height="403" rx="20" fill="#161B22" stroke="#30363D"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="460" viewBox="0 0 1040 460" role="img" aria-label="Any sound, any trend: paste a TikTok, Reel, Short, YouTube or SoundCloud link and EditsMaker takes its sound, ask for TikTok's or Spotify's chart in any country with --music trend:3, or let it name the song in any clip with edits song">
+<rect x="0.5" y="0.5" width="1039" height="459" rx="20" fill="#161B22" stroke="#30363D"/>
 <g transform="translate(40,40)">
 <text x="0" y="24" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">Any sound,</text>
 <text x="0" y="47" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="19" fill="#F4F1EA" text-anchor="start" letter-spacing="-0.3">any trend</text>
@@ -29,9 +29,13 @@
 <text x="320" y="222" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">TikTok's 3rd trending song, here</text>
 <text x="0" y="250" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F25247" text-anchor="start" letter-spacing="0">--music trend:us:1</text>
 <text x="320" y="250" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">number one in the US</text>
-<text x="0" y="278" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F4F1EA" text-anchor="start" letter-spacing="0">--music https://www.tiktok.com/…</text>
-<text x="320" y="278" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">the sound of that TikTok</text>
-<text x="0" y="306" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F4F1EA" text-anchor="start" letter-spacing="0">edits trends us</text>
-<text x="320" y="306" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">the chart itself</text>
+<text x="0" y="278" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F4F1EA" text-anchor="start" letter-spacing="0">--music spotify:1</text>
+<text x="320" y="278" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">Spotify's number one today</text>
+<text x="0" y="306" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F4F1EA" text-anchor="start" letter-spacing="0">--music https://www.tiktok.com/…</text>
+<text x="320" y="306" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">the sound of that TikTok</text>
+<text x="0" y="334" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F25247" text-anchor="start" letter-spacing="0">edits song clip.mp4</text>
+<text x="320" y="334" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">names the song in any clip, Shazam built in</text>
+<text x="0" y="362" font-family="ui-monospace, JetBrains Mono, SF Mono, Menlo, monospace" font-weight="400" font-size="13" fill="#F4F1EA" text-anchor="start" letter-spacing="0">edits trends us</text>
+<text x="320" y="362" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="300" font-size="14" fill="#F4F1EA" text-anchor="start" letter-spacing="0">the chart itself</text>
 </g>
 </svg>
