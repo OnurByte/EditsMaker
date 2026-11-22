@@ -277,8 +277,10 @@ pub fn judged(reply: &str, cands: &[Moment]) -> Result<Vec<(Moment, String)>, St
     let v: Vec<Judged> = serde_json::from_str(reply.get(a..=b).ok_or("no JSON array in the model's reply")?).map_err(|e| format!("model reply is not valid JSON: {e}"))?;
     let mut out: Vec<(Moment, String)> = v.into_iter().filter(|j| j.score >= 12.0).filter_map(|j| {
         let c = cands.get(j.id)?;
-        let s = j.start.filter(|s| *s >= c.start - 5.0 && *s < c.end).unwrap_or(c.start);
-        let e = j.end.filter(|e| *e > s + 5.0 && *e <= c.end + 10.0 && *e - s <= 90.0).unwrap_or(c.end);
+        // the model reads words, not the picture: its cut may tighten but always keeps the loudest second (the crash,
+        // the scream) with 3 s before it and 2 s after
+        let s = j.start.filter(|s| *s >= c.start - 5.0 && *s < c.end).unwrap_or(c.start).min(c.punch - 3.0).max(0.0);
+        let e = j.end.filter(|e| *e > s + 5.0 && *e <= c.end + 10.0 && *e - s <= 90.0).unwrap_or(c.end).max(c.punch + 2.0);
         Some((Moment { start: s, end: e, punch: c.punch.clamp(s, e), score: j.score, title: j.title, why: format!("{} ({}/21; {})", j.why, j.score, c.why) }, j.post))
     }).collect();
     out.sort_by(|a, b| b.0.score.total_cmp(&a.0.score));
@@ -365,5 +367,8 @@ mod tests {
         let j = judged(r, &c).unwrap();
         assert_eq!(j.len(), 1);
         assert_eq!((j[0].0.start, j[0].0.end, j[0].0.title.as_str(), j[0].1.as_str()), (105.0, 140.0, "t", "p #a"));
+        // a cut that starts after the loudest second is taken back to 3 s before it
+        let late = judged("[{\"id\":0,\"start\":125,\"end\":140,\"score\":14}]", &c).unwrap();
+        assert_eq!((late[0].0.start, late[0].0.end), (117.0, 140.0));
     }
 }
