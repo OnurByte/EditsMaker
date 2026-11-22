@@ -664,7 +664,7 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
     }
     let focus = if opts.layout == "fill" { face::center_x(&video, seek, m.end - m.start, w, h) } else { None };
     // the subtitle file is per clip: clips render at the same time
-    let work = a.src.work.join(out.file_stem().unwrap_or_default());
+    let work = a.src.work.join(fetch::safe(&out.file_stem().unwrap_or_default().to_string_lossy()));
     std::fs::create_dir_all(&work).map_err(|e| e.to_string())?;
     // nobody to frame on (screen recordings, graphics): cropping would cut content at random, so keep the whole frame
     if opts.layout == "fill" && focus.is_none() && wide {
@@ -730,11 +730,12 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
 }
 
 /// Where a run's clips go without --out: one folder per run, the same place whoever starts edits (the CLI in any
-/// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then "HH.MM what it was made from".
+/// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then what it was made from (every run on
+/// the same footage that day sits together), then the run's "HH.MM".
 fn auto_out(input: &str) -> PathBuf {
     let base = std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"));
     let (day, time) = util::now().unwrap_or(("undated".into(), "00.00".into()));
-    let dir = base.join(day).join(format!("{time} {}", folder_name(&subject(input))));
+    let dir = base.join(day).join(folder_name(&subject(input))).join(time);
     // a second run in the same minute on the same footage gets its own folder, never overwrites
     (1..).map(|k| if k == 1 { dir.clone() } else { PathBuf::from(format!("{} ({k})", dir.display())) }).find(|d| !d.exists()).unwrap()
 }
@@ -745,11 +746,25 @@ fn subject(input: &str) -> String {
     if p.is_file() {
         return p.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
     }
-    if input.starts_with("http://") || input.starts_with("https://") {
-        let title = util::yt(&["--no-warnings", "--flat-playlist", "--playlist-items", "1", "--print", "%(playlist_title,title)s", "--", input]);
+    // a bare video ID: the title saved when it was fetched, else YouTube's; never the ID itself as a folder
+    let is_id = input.len() == 11 && input.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    if is_id {
+        if let Some(t) = cached_title(input) {
+            return t;
+        }
+    }
+    let url = if is_id { format!("https://www.youtube.com/watch?v={input}") } else { input.to_string() };
+    if url.starts_with("http://") || url.starts_with("https://") {
+        let title = util::yt(&["--no-warnings", "--flat-playlist", "--playlist-items", "1", "--print", "%(playlist_title,title)s", "--", &url]);
         return title.ok().and_then(|t| t.lines().next().map(str::to_string)).filter(|t| !t.trim().is_empty() && t != "NA").unwrap_or_else(|| input.to_string());
     }
     input.to_string()
+}
+
+/// A fetched video's title, from the info yt-dlp left in the cache.
+fn cached_title(id: &str) -> Option<String> {
+    let t = std::fs::read_to_string(util::home().join(".cache/edits").join(fetch::safe(id)).join("src.info.json")).ok()?;
+    serde_json::from_str::<serde_json::Value>(&t).ok()?.get("title")?.as_str().map(str::to_string)
 }
 
 /// A title as a folder name: words kept (any alphabet), path and shell characters dropped, at most 60 characters.
@@ -856,7 +871,7 @@ fn make(args: &[String]) -> Result<(), String> {
     } else { c.n };
     best.truncate(n);
     let jobs: Vec<(PathBuf, &Analysed, &pick::Moment)> = best.iter().enumerate()
-        .map(|(k, (a, m))| (c.out.join(format!("{:02}-{}.mp4", k + 1, fetch::safe(&a.src.id))), *a, *m)).collect();
+        .map(|(k, (a, m))| (c.out.join(format!("{:02} {}.mp4", k + 1, folder_name(if m.title.is_empty() { &a.src.title } else { &m.title }))), *a, *m)).collect();
     let mut clips: Vec<PathBuf> = vec![];
     for batch in jobs.chunks(4) {
         let done: Vec<_> = std::thread::scope(|s| {
@@ -2225,9 +2240,9 @@ mod tests {
         let base = std::env::temp_dir().join(format!("edits-out-test-{}", std::process::id()));
         std::env::set_var("EDITS_OUT", &base);
         let first = auto_out("sad cats");
-        assert!(first.starts_with(&base) && first.to_string_lossy().ends_with(" sad cats"));
+        assert!(first.starts_with(&base) && first.parent().unwrap().ends_with("sad cats"));
         std::fs::create_dir_all(&first).unwrap();
-        assert!(auto_out("sad cats").to_string_lossy().ends_with(" sad cats (2)"));
+        assert!(auto_out("sad cats").to_string_lossy().ends_with(" (2)"));
         std::fs::remove_dir_all(&base).unwrap();
         assert!(parse(&args("x"), None).unwrap().out.as_os_str().is_empty(), "no --out means the automatic folder");
     }
