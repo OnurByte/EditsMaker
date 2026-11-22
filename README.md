@@ -6,7 +6,7 @@
 <a href="#install">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/download-dark.svg">
-  <img src="assets/readme/download-light.svg" width="100%" alt="Download: 12.4 MB with its desktop app, for Linux, macOS and Windows">
+  <img src="assets/readme/download-light.svg" width="100%" alt="Download: 13.5 MB with its desktop app, for Linux, macOS and Windows">
 </picture>
 </a>
 
@@ -72,7 +72,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
-  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 12.4 MB with its desktop app (Linux 12.4, Windows and macOS under 15), auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents, reads TikTok's trending songs, takes footage from a link and reverse-engineers any edit into a preset.">
+  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 13.5 MB with its desktop app (Linux 13.5, Windows and macOS under 15), auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents, reads TikTok's trending songs, takes footage from a link and reverse-engineers any edit into a preset.">
 </picture>
 
 <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
@@ -464,7 +464,7 @@ It keeps itself up to date: once a day it installs a newer release from GitHub (
 <details>
 <summary><b>Sizes, sources</b></summary>
 
-November 2026. EditsMaker 0.31: `edits` and its desktop app built for Linux x64, gzipped together (12.4 MB); the release check keeps every download under 15 MB. <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. auto-editor takes links only with yt-dlp beside it; CapCut copies an edit only as a creator's template. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
+November 2026. EditsMaker 0.31: `edits` and its desktop app built for Linux x64, gzipped together (13.5 MB); the release check keeps every download under 15 MB. <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. auto-editor takes links only with yt-dlp beside it; CapCut copies an edit only as a creator's template. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
 
 </details>
 
