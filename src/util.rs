@@ -81,7 +81,7 @@ fn encoder_file() -> PathBuf {
 }
 
 /// The encoder asked for: EDITS_ENCODER, else the one `edits encoder` saved, else auto.
-fn encoder_choice() -> String {
+pub fn encoder_choice() -> String {
     std::env::var("EDITS_ENCODER").ok()
         .or_else(|| std::fs::read_to_string(encoder_file()).ok())
         .map(|s| s.trim().to_string()).filter(|s| ENCODERS.contains(&s.as_str()))

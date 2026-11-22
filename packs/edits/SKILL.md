@@ -18,7 +18,7 @@ The tool alone makes a generic edit: it picks moments from the transcript (a `cl
 sees or hears the footage) and replays a preset. What makes an edit land is your judgment on top. Every edit:
 
 1. **Load the tools first.** If `mcp__edits__*` is listed as deferred, load all of it in one call:
-   `ToolSearch select:mcp__edits__edits_make,mcp__edits__edits_presets,mcp__edits__edits_preset_get,mcp__edits__edits_preset_save,mcp__edits__edits_looks,mcp__edits__edits_trends,mcp__edits__edits_library,mcp__edits__edits_learn,mcp__edits__edits_check,mcp__edits__edits_preset_create,mcp__edits__edits_doctor`.
+   `ToolSearch select:mcp__edits__edits_make,mcp__edits__edits_presets,mcp__edits__edits_preset_get,mcp__edits__edits_preset_save,mcp__edits__edits_looks,mcp__edits__edits_trends,mcp__edits__edits_library,mcp__edits__edits_learn,mcp__edits__edits_check,mcp__edits__edits_pack_create,mcp__edits__edits_doctor`.
    Use them over the CLI: only `edits_make` takes `line_texts`, `preset_json`, `overlays`, `svgs`, `whoosh`/`boom`.
 2. **Decide the idea before any command**: one sentence on what the viewer feels (laughs at X, aches at Y) and the
    one line or moment it hangs on. No idea, no render.

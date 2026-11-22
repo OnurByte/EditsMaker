@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
+/// Chromium-family browsers on PATH, by their command names.
+const APP_BROWSERS: &[&str] = &["chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "brave-browser", "brave", "helium-browser", "microsoft-edge-stable", "microsoft-edge", "vivaldi-stable"];
+
 /// The first Chromium-family browser installed here.
 pub fn find() -> Option<PathBuf> {
     let mut c: Vec<PathBuf> = ["Google Chrome", "Chromium", "Microsoft Edge", "Brave Browser"].iter()
@@ -19,7 +22,7 @@ pub fn find() -> Option<PathBuf> {
     }
     if let Some(p) = std::env::var_os("PATH") {
         for d in std::env::split_paths(&p) {
-            c.extend(crate::review::APP_BROWSERS.iter().map(|b| d.join(b)));
+            c.extend(APP_BROWSERS.iter().map(|b| d.join(b)));
         }
     }
     c.into_iter().find(|p| p.is_file())

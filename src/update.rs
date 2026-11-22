@@ -78,7 +78,13 @@ fn install(tag: &str) -> Result<(), String> {
         // the version being replaced is kept, for `edits update rollback`
         let _ = std::fs::create_dir_all(dir());
         let _ = std::fs::copy(&exe, previous());
-        put(&bin, &exe)
+        put(&bin, &exe)?;
+        // the desktop app comes in the same download and goes beside edits
+        let app = format!("edits-app{}", std::env::consts::EXE_SUFFIX);
+        if tmp.join(&app).is_file() {
+            put(&tmp.join(&app), &exe.with_file_name(&app))?;
+        }
+        Ok(())
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     if res.is_ok() {
@@ -105,7 +111,7 @@ fn put(bin: &Path, exe: &Path) -> Result<(), String> {
         }
         // a running exe can be renamed but not replaced on Windows; on unix the rename alone is atomic
         let old = exe.with_extension("old");
-        if cfg!(windows) {
+        if cfg!(windows) && exe.exists() {
             let _ = std::fs::remove_file(&old);
             std::fs::rename(exe, &old).map_err(|e| e.to_string())?;
         }
@@ -165,7 +171,7 @@ pub fn cmd(args: &[String]) -> Result<(), String> {
     }
 }
 
-fn auto_on() -> bool {
+pub fn auto_on() -> bool {
     std::env::var("EDITS_AUTO_UPDATE").map_or(true, |v| !matches!(v.as_str(), "0" | "off" | "no" | "false")) && !off_file().exists()
 }
 

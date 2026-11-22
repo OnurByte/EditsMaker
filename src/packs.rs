@@ -1,6 +1,7 @@
-//! Packs: a preset, an agent skill or both, in one folder with a manifest.json and a preview picture. The packs in
-//! packs/ are built in (ids `edits.*`); community packs live in their own GitHub repositories, are listed in
-//! packs.json at the root of this repository, and are added into ~/.config/edits/packs/<id>.
+//! Packs: a preset, an agent skill, an automation or some of each, in one folder with a manifest.json and a preview
+//! picture (PACKS.md is the standard). The packs in packs/ are built in (ids `edits.*`); community packs live in their
+//! own GitHub repositories, are listed in packs.json at the root of this repository (the marketplace), and are added
+//! into ~/.config/edits/packs/<id>, each in its own folder.
 use crate::preset::Preset;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -21,7 +22,7 @@ pub struct Manifest {
     pub version: String,
     pub author: String,
     pub description: String,
-    /// what is in the folder: "preset" (preset.json), "skill" (SKILL.md)
+    /// what is in the folder: "preset" (preset.json), "skill" (SKILL.md), "automation" (automation.js)
     pub kinds: Vec<String>,
     /// the picture beside the manifest: preview.svg, .png, .jpg or .webp
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -30,12 +31,30 @@ pub struct Manifest {
     pub tags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub license: Option<String>,
+    /// for an automation: the one site its automation.js runs on
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub automation: Option<Automation>,
+}
+
+/// Where an automation runs. Its script runs only inside `page`, a page of `domain`, signed in with the person's own
+/// session in a browser profile of its own; it gets nothing from edits but the clip and what it is asked to do.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Automation {
+    /// what `edits connect SITE` and `edits post --to` call it
+    pub site: String,
+    /// the sign-in page, and the page the script runs in
+    pub login: String,
+    pub page: String,
+    /// the cookie that says someone is signed in, and the site it belongs to
+    pub cookie: String,
+    pub domain: String,
 }
 
 pub struct Pack {
     pub manifest: Manifest,
     pub preset: Option<String>,
     pub skill: Option<String>,
+    pub automation: Option<String>,
 }
 
 impl Pack {
@@ -64,8 +83,15 @@ fn valid_id(id: &str) -> bool {
         && !id.starts_with('.') && !id.contains("..")
 }
 
+/// The site an https page is on: the last two parts of its host (studio.youtube.com: youtube.com).
+fn site_of(url: &str) -> Option<String> {
+    let host = url.strip_prefix("https://")?.split(['/', '?', '#', ':']).next()?.to_lowercase();
+    let parts: Vec<&str> = host.split('.').collect();
+    (parts.len() >= 2 && parts.iter().all(|p| !p.is_empty())).then(|| parts[parts.len() - 2..].join("."))
+}
+
 /// Whether a pack holds what its manifest says, and nothing claims to be built in that is not.
-fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, built_in: bool) -> Result<(), String> {
+fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, automation: Option<&str>, built_in: bool) -> Result<(), String> {
     let id = &m.id;
     if m.schema_version != 1 {
         return Err(format!("{id}: schemaVersion {} is not known (1 is)", m.schema_version));
@@ -81,13 +107,23 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, built_in: bool
             return Err(format!("{id}: manifest.json needs a {k}"));
         }
     }
-    for (kind, file, there) in [("preset", "preset.json", preset.is_some()), ("skill", "SKILL.md", skill.is_some())] {
+    for (kind, file, there) in [("preset", "preset.json", preset.is_some()), ("skill", "SKILL.md", skill.is_some()), ("automation", "automation.js", automation.is_some())] {
         if m.kinds.iter().any(|k| k == kind) != there {
             return Err(format!("{id}: kinds says {:?} but {file} is {}", m.kinds, if there { "there" } else { "missing" }));
         }
     }
-    if m.kinds.is_empty() || m.kinds.iter().any(|k| k != "preset" && k != "skill") {
-        return Err(format!("{id}: kinds is \"preset\", \"skill\" or both, not {:?}", m.kinds));
+    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation"].contains(&k.as_str())) {
+        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", not {:?}", m.kinds));
+    }
+    if let Some(js) = automation {
+        let a = m.automation.as_ref().ok_or(format!("{id}: an automation needs an \"automation\" block in manifest.json (PACKS.md)"))?;
+        if !valid_id(&a.site) || site_of(&a.page).is_none() || site_of(&a.page) != site_of(&a.login) || a.cookie.trim().is_empty() || a.domain.trim().is_empty() {
+            return Err(format!("{id}: automation needs a site name, a cookie and its domain, and its login and page as https pages of one site (PACKS.md)"));
+        }
+        let code: String = js.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
+        if !(code.trim_start().starts_with("async (p) => {") && code.trim_end().ends_with('}')) {
+            return Err(format!("{id}: automation.js is one function, async (p) => {{ ... }}"));
+        }
     }
     if let Some(p) = preset {
         let p: Preset = serde_json::from_str(p).map_err(|e| format!("{id}: preset.json is not a preset: {e}"))?;
@@ -105,9 +141,9 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, built_in: bool
 }
 
 pub fn built_in() -> Vec<Pack> {
-    BUILT_IN_PACKS.iter().filter_map(|(d, m, p, s)| {
+    BUILT_IN_PACKS.iter().filter_map(|(d, m, p, s, a)| {
         let manifest: Manifest = serde_json::from_str(m).map_err(|e| eprintln!("edits: pack {d}: {e}")).ok()?;
-        Some(Pack { manifest, preset: p.map(String::from), skill: s.map(String::from) })
+        Some(Pack { manifest, preset: p.map(String::from), skill: s.map(String::from), automation: a.map(String::from) })
     }).collect()
 }
 
@@ -116,9 +152,31 @@ pub fn read(d: &Path) -> Result<Pack, String> {
     let text = |f: &str| std::fs::read_to_string(d.join(f)).ok();
     let manifest: Manifest = serde_json::from_str(&text("manifest.json").ok_or(format!("{}: no manifest.json", d.display()))?)
         .map_err(|e| format!("{}/manifest.json: {e}", d.display()))?;
-    let (preset, skill) = (text("preset.json"), text("SKILL.md"));
-    check(&manifest, preset.as_deref(), skill.as_deref(), false)?;
-    Ok(Pack { manifest, preset, skill })
+    let (preset, skill, automation) = (text("preset.json"), text("SKILL.md"), text("automation.js"));
+    check(&manifest, preset.as_deref(), skill.as_deref(), automation.as_deref(), false)?;
+    Ok(Pack { manifest, preset, skill, automation })
+}
+
+fn trust_file(id: &str) -> PathBuf {
+    dir().join(id).join(".trusted")
+}
+
+/// Whether an automation may run: built-in ones may; an added one only once the person read it and ran
+/// `edits packs trust ID`, and only while its automation.js is the one they read.
+pub fn trusted(p: &Pack) -> bool {
+    let id = &p.manifest.id;
+    id.starts_with("edits.") || crate::update::sha256(&dir().join(id).join("automation.js")).is_ok_and(|h| std::fs::read_to_string(trust_file(id)).is_ok_and(|t| t.trim() == h))
+}
+
+/// Lets an added automation run, as it is now.
+pub fn trust(id: &str) -> Result<PathBuf, String> {
+    let p = read(&dir().join(id)).map_err(|_| format!("\"{id}\" is not an added pack (edits packs lists them)"))?;
+    if p.automation.is_none() {
+        return Err(format!("{id} has no automation to trust"));
+    }
+    let js = dir().join(id).join("automation.js");
+    std::fs::write(trust_file(id), crate::update::sha256(&js)?).map_err(|e| e.to_string())?;
+    Ok(js)
 }
 
 /// The community packs added here. A broken one is said and skipped.
@@ -205,7 +263,7 @@ pub fn add(what: &str) -> Result<Pack, String> {
         let to = dir().join(&pack.manifest.id);
         let _ = std::fs::remove_dir_all(&to);
         std::fs::create_dir_all(&to).map_err(|e| e.to_string())?;
-        for f in ["manifest.json", "preset.json", "SKILL.md"].iter().copied().chain(pack.manifest.preview.as_deref()) {
+        for f in ["manifest.json", "preset.json", "SKILL.md", "automation.js"].iter().copied().chain(pack.manifest.preview.as_deref()) {
             let src = top.join(f);
             match std::fs::symlink_metadata(&src) {
                 Ok(m) if m.is_file() && m.len() <= 20 << 20 => std::fs::copy(&src, to.join(f)).map(|_| ()).map_err(|e| e.to_string())?,
@@ -240,15 +298,15 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>) -> Result<Manifest
     }
     let text = |f: &str| std::fs::read_to_string(d.join(f)).ok();
     let p: Option<Preset> = text("preset.json").map(|t| serde_json::from_str(&t).map_err(|e| format!("{}/preset.json: {e}", d.display()))).transpose()?;
-    let skill = text("SKILL.md");
-    if p.is_none() && skill.is_none() {
-        return Err(format!("{}: put a preset.json or a SKILL.md in it, or give --preset NAME", d.display()));
+    let (skill, automation) = (text("SKILL.md"), text("automation.js"));
+    if p.is_none() && skill.is_none() && automation.is_none() {
+        return Err(format!("{}: put a preset.json, a SKILL.md or an automation.js in it, or give --preset NAME", d.display()));
     }
     let old: Option<Manifest> = text("manifest.json").and_then(|t| serde_json::from_str(&t).ok());
     let folder = d.canonicalize().ok().and_then(|c| c.file_name().map(|n| n.to_string_lossy().into_owned())).unwrap_or_else(|| "pack".into());
     let about = skill.as_deref().and_then(|s| front(s, "description")).map(String::from);
     let id = id.map(String::from).or(old.as_ref().map(|m| m.id.clone())).unwrap_or_else(|| crate::preset::slug(&folder));
-    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", skill.is_some())].iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
+    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", skill.is_some()), ("automation", automation.is_some())].iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
     let own_picture = old.as_ref().and_then(|m| m.preview.clone()).filter(|f| f != "preview.svg" && d.join(f).is_file());
     let m = Manifest {
         schema_version: 1,
@@ -259,10 +317,11 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>) -> Result<Manifest
         kinds,
         preview: Some(own_picture.clone().unwrap_or_else(|| "preview.svg".into())),
         tags: old.as_ref().map(|m| m.tags.clone()).filter(|t| !t.is_empty()).unwrap_or_else(|| p.as_ref().map(|p| p.tags().iter().map(|t| t.to_string()).collect()).unwrap_or_default()),
-        license: old.and_then(|m| m.license),
+        license: old.as_ref().and_then(|m| m.license.clone()),
+        automation: old.and_then(|m| m.automation),
         id,
     };
-    check(&m, text("preset.json").as_deref(), skill.as_deref(), m.id.starts_with("edits."))?;
+    check(&m, text("preset.json").as_deref(), skill.as_deref(), automation.as_deref(), m.id.starts_with("edits."))?;
     if own_picture.is_none() {
         std::fs::write(d.join("preview.svg"), preview(&m, p.as_ref())).map_err(|e| e.to_string())?;
     }
@@ -302,15 +361,13 @@ pub fn preview(m: &Manifest, p: Option<&Preset>) -> String {
     let hue = crate::util::crc32(look.as_bytes()) % 360;
     let sat = if ["bw", "mono", "grey", "gray", "noir"].iter().any(|g| look.contains(g)) { 0 } else { 45 };
     let (bg, ink) = (format!("hsl({hue},{sat}%,11%)"), format!("hsl({hue},{}%,64%)", if sat == 0 { 0 } else { 70 }));
-    let kind = match (m.kinds.iter().any(|k| k == "preset"), m.kinds.iter().any(|k| k == "skill")) {
-        (true, true) => "PRESET + SKILL",
-        (true, false) => "PRESET",
-        _ => "AGENT SKILL",
-    };
+    let has = |k: &str| m.kinds.iter().any(|x| x == k);
+    // one word in sentence case (BRAND.md § 4): a preset and a skill are both a pack to the person
+    let kind = if has("automation") { "Automation" } else { "Pack" };
     let font = "font-family=\"Inter, Helvetica, Arial, sans-serif\"";
     let mut s = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 360\" width=\"640\" height=\"360\">\n\
         <rect width=\"640\" height=\"360\" rx=\"24\" fill=\"{bg}\"/>\n\
-        <text x=\"32\" y=\"48\" {font} font-size=\"13\" font-weight=\"700\" letter-spacing=\"2.5\" fill=\"{ink}\">{kind}</text>\n\
+        <text x=\"32\" y=\"48\" {font} font-size=\"14\" font-weight=\"700\" fill=\"{ink}\">{kind}</text>\n\
         <text x=\"32\" y=\"94\" {font} font-size=\"38\" font-weight=\"800\" fill=\"#fff\">{}</text>\n",
         esc(&lines(&m.name, 26, 1).concat()));
     let about = lines(&m.description, 62, if p.is_some() { 2 } else { 6 });
@@ -340,6 +397,7 @@ pub fn preview(m: &Manifest, p: Option<&Preset>) -> String {
             s += &format!("<text x=\"32\" y=\"344\" {font} font-size=\"13\" fill=\"#fff\" fill-opacity=\"0.6\">{}</text>\n", esc(&m.tags.join("  ")));
             s += &format!("<text x=\"608\" y=\"344\" text-anchor=\"end\" {font} font-size=\"13\" fill=\"#fff\" fill-opacity=\"0.6\">{} shots  {:.1}s</text>\n", p.slots.len(), p.total);
         }
+        None if has("automation") => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits connect {}</text>\n", esc(m.automation.as_ref().map_or("", |a| &a.site))),
         None => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits skills install</text>\n"),
     }
     s + "</svg>\n"
@@ -351,8 +409,8 @@ pub fn gallery(d: &Path) -> Result<usize, String> {
         .filter_map(|e| Some((e.file_name().to_string_lossy().into_owned(), serde_json::from_str(&std::fs::read_to_string(e.path().join("manifest.json")).ok()?).ok()?)))
         .collect();
     packs.sort_by(|a, b| (a.1.kinds.contains(&"skill".to_string()), &a.0).cmp(&(b.1.kinds.contains(&"skill".to_string()), &b.0)));
-    let mut s = format!("# Packs\n\n{} built-in packs: a preset, an agent skill or both, each with a `manifest.json` and a picture. \
-        Community packs: `edits packs browse`, `edits packs add ID`. Making one: [CONTRIBUTING.md](../CONTRIBUTING.md#packs).\n\n<p>\n", packs.len());
+    let mut s = format!("# Packs\n\n{} built-in packs: presets, agent skills and automations, each with a `manifest.json` and a picture. \
+        The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).\n\n<p>\n", packs.len());
     for (f, m) in &packs {
         let pic = m.preview.as_deref().unwrap_or("preview.svg");
         s += &format!("<a href=\"{f}\"><img src=\"{f}/{pic}\" width=\"300\" alt=\"{}\"></a>\n", esc(&m.name));
@@ -370,9 +428,9 @@ mod tests {
     fn built_in_packs_are_whole() {
         assert!(BUILT_IN_PACKS.len() >= 70);
         let mut ids = vec![];
-        for (d, m, p, s) in BUILT_IN_PACKS {
+        for (d, m, p, s, a) in BUILT_IN_PACKS {
             let m: Manifest = serde_json::from_str(m).unwrap_or_else(|e| panic!("{d}: {e}"));
-            check(&m, *p, *s, true).unwrap();
+            check(&m, *p, *s, *a, true).unwrap();
             assert_eq!(m.id, format!("edits.{d}"));
             assert!(m.preview.as_ref().is_some_and(|f| Path::new(env!("CARGO_MANIFEST_DIR")).join("packs").join(d).join(f).is_file()), "{d}: no picture");
             assert!(!ids.contains(&m.id));
@@ -396,10 +454,28 @@ mod tests {
     }
 
     #[test]
+    fn an_automation_stays_on_its_own_site() {
+        assert_eq!(site_of("https://studio.youtube.com/x?y=1").as_deref(), Some("youtube.com"));
+        for bad in ["http://www.tiktok.com/", "https://localhost/", "https://.com/", "tiktok.com"] {
+            assert!(site_of(bad).is_none(), "{bad}");
+        }
+        assert_ne!(site_of("https://tiktok.com.evil.io/"), site_of("https://www.tiktok.com/"));
+        let m: Manifest = serde_json::from_value(serde_json::json!({"schemaVersion": 1, "id": "io.github.you.x", "name": "x", "version": "1.0.0",
+            "author": "you", "description": "x", "kinds": ["automation"],
+            "automation": {"site": "x", "login": "https://x.com/login", "page": "https://evil.io/", "cookie": "auth", "domain": "x.com"}})).unwrap();
+        assert!(check(&m, None, None, Some("async (p) => {\n}"), false).is_err(), "a page off its site");
+        let mut ok = m.clone();
+        ok.automation.as_mut().unwrap().page = "https://x.com/compose".into();
+        check(&ok, None, None, Some("// posts\nasync (p) => {\n}"), false).unwrap();
+        assert!(check(&ok, None, None, Some("fetch('https://evil.io')"), false).is_err(), "not one function");
+        assert!(check(&ok, None, None, None, false).is_err(), "kinds says automation, no automation.js");
+    }
+
+    #[test]
     fn a_pack_is_made_from_a_preset_and_says_what_it_holds() {
         let d = std::env::temp_dir().join(format!("edits-pack-make-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
-        let (_, _, p, _) = BUILT_IN_PACKS.iter().find(|x| x.2.is_some()).unwrap();
+        let (_, _, p, _, _) = BUILT_IN_PACKS.iter().find(|x| x.2.is_some()).unwrap();
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(d.join("preset.json"), p.unwrap()).unwrap();
         let m = make(&d, None, Some("io.github.you.test")).unwrap();

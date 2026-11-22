@@ -1,6 +1,6 @@
 # EditsMaker brand standards
 
-<sub>Version 1, November 2026. Applies to the README, release pages, the design kit, the MCP server's text and anything else that carries the EditsMaker name.</sub>
+<sub>Version 1, November 2026. Applies to the README, release pages, the app, the MCP server's text and anything else that carries the EditsMaker name.</sub>
 
 ## 0. Why these rules exist
 
@@ -8,7 +8,7 @@ A brand is a promise that keeps its shape. People judge a page in about 50 milli
 
 The system descends from the 1976 NASA Graphics Standards Manual (NHB 1430.2) by Danne & Blackburn [5]: one logotype, one red, one typeface, a strict grid and nothing decorative. Since November 2026 one thing differs from the manual: sections sit on soft cards with round corners, because research and our readers both found that more comfortable (§ 6).
 
-Every value here also lives as code: colours and sizes in [`design/tokens.css`](design/tokens.css), the README pictures in [`design/readme.py`](design/readme.py). If this document and the code disagree, the code is the bug: fix it, then this page.
+Every value here also lives as code: colours, type and sizes in [`apps/desktop/src/theme.rs`](apps/desktop/src/theme.rs), which the app draws with. The README pictures in [`assets/readme`](assets/readme) are SVG files, kept to these rules by hand. If this document and the code disagree, the code is the bug: fix it, then this page.
 
 ---
 
@@ -60,7 +60,7 @@ All text meets WCAG 2.2 level AA [15]: 4.5 : 1 for body text, 3 : 1 for large te
 | Brand red (`--cut-red`), large only | 3.95 : 1 | 3.99 : 1 |
 | Paper on `--red-deep` | 5.0 : 1 | 5.0 : 1 |
 
-The brand red passes only at large sizes, which is why small red text switches to `--red-text`. `design/readme.py` does this by itself, by size, so no picture has to remember it.
+The brand red passes only at large sizes, which is why small red text switches to `--red-text`.
 
 ### 3.2 One red per view
 
@@ -73,7 +73,7 @@ Each picture, section or screen gets **one** red thing: the punchline, our row i
 | Role | Size / weight | Where |
 |---|---|---|
 | Display | 76 / 700, tracking −3.5 | the name in the title |
-| Number | 64–104 / 700, tracking −3 to −6 | one big figure per view, e.g. 3.7 MB |
+| Number | 64–104 / 700, tracking −3 to −6 | one big figure per view, e.g. 12.4 MB |
 | Call to action | 32 / 700 | Download |
 | Label | 19 / 700 | a section's name, left column |
 | Body | 15 / 300 | what the section says |
@@ -111,12 +111,12 @@ Our comparisons have to survive someone checking them.
 ## 8. Other brands' logos
 
 - Shown only to say what EditsMaker works with or is compared to (nominative use), **one colour**, at the same size as the text beside them.
-- Taken from Simple Icons (CC0) or LobeHub icons (MIT); see [`design/logos.json`](design/logos.json).
+- Taken from Simple Icons (CC0) or LobeHub icons (MIT).
 - Where a brand has no free icon, such as Adobe, which asked Simple Icons to remove theirs, we set its **initials in our type** ("Pr", "Ae"). We never redraw or copy a logo.
 
 ## 9. Words
 
-- **Plain words, short sentences, numbers before adjectives**: "3.7 MB", not "lightweight". Concrete claims are easier to process, and so feel truer [12].
+- **Plain words, short sentences, numbers before adjectives**: "12.4 MB", not "lightweight". Concrete claims are easier to process, and so feel truer [12].
 - **One call to action**. Every extra choice adds decision time [7]: the page asks for one thing, Download.
 - **Lists of at most six**. Working memory holds about four chunks at once [4]; six badges is the ceiling, and four is better.
 - **The visible README is the sales page.** No licence, language, version, citations or caveats above the folded sections: those live below, in `<details>`. Honest labels inside a picture are fine; footnotes are not.
@@ -153,7 +153,7 @@ Edits carry the brand by their captions, not by a logo.
 - [ ] Bars from zero on a linear scale; any differently measured value labelled in the picture
 - [ ] Other brands' logos in one colour, or their initials
 - [ ] No licence, version or source text in the visible README
-- [ ] Pictures regenerated with `python3 design/readme.py` and checked light and dark
+- [ ] Pictures and the app checked light and dark
 
 ---
 

@@ -6,7 +6,7 @@
 <a href="#install">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/download-dark.svg">
-  <img src="assets/readme/download-light.svg" width="100%" alt="Download: under 4 MB, one file for Linux, macOS and Windows">
+  <img src="assets/readme/download-light.svg" width="100%" alt="Download: 12.4 MB with its desktop app, for Linux, macOS and Windows">
 </picture>
 </a>
 
@@ -72,7 +72,7 @@ edits https://www.youtube.com/@channel --preset spin-slide-shake --music trend:3
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/size-dark.svg">
-  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 3.7 MB (Windows 3.7, Linux 3.7, macOS 3.4), auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents, reads TikTok's trending songs, takes footage from a link and reverse-engineers any edit into a preset.">
+  <img src="assets/readme/size-light.svg" width="100%" alt="EditsMaker against other editors. Download: EditsMaker 12.4 MB with its desktop app (Linux 12.4, Windows and macOS under 15), auto-editor 46 MB, HyperFrames about 360 MB with its Chrome, CapCut about 510 MB, Descript about 654 MB, Filmora about 810 MB, DaVinci Resolve about 1.7 GB, Premiere Pro and After Effects 8 GB each to install. EditsMaker is the only one that is free, open source, built for AI agents, reads TikTok's trending songs, takes footage from a link and reverse-engineers any edit into a preset.">
 </picture>
 
 <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">
@@ -126,6 +126,12 @@ curl -fsSL https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.sh
 ```powershell
 irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 ```
+
+### The app
+
+Comes with it: **EditsMaker** in your launcher, Start menu or `~/Applications`, or `edits app`. Paste a link, drop a
+video, get a notification when the edits are ready; review a clip frame by frame; add packs and automations from the
+marketplace.
 
 ### Prompt Install
 
@@ -248,7 +254,7 @@ edits learn liked-edit.mp4
 Or make a preset from scratch for your footage: the video sets the rhythm, other presets lend the moves.
 
 ```sh
-edits preset create footage.mp4 --name mine --like spin-slide-shake,flash-velocity-square
+edits packs create footage.mp4 --name mine --like spin-slide-shake,flash-velocity-square
 ```
 
 Measure a finished clip: length, loudness, cut rhythm and a contact sheet to look at (the same as the `edits_check` tool):
@@ -438,7 +444,7 @@ edits skills add youtube-research
 
 Any other client: command `edits`, args `["mcp"]`.
 
-Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_set`, `edits_preset_create`, `edits_learn`,
+Tools: `edits_make`, `edits_presets`, `edits_preset_get`, `edits_preset_save`, `edits_preset_set`, `edits_pack_create`, `edits_learn`,
 `edits_check`, `edits_frames`, `edits_words`, `edits_moments`, `edits_song`, `edits_cut`, `edits_looks`, `edits_library`, `edits_trends`, `edits_doctor`. An agent reads a preset, changes it for
 the footage, renders with it and measures the result; the output folder is always edits' own choice.
 
@@ -458,7 +464,7 @@ It keeps itself up to date: once a day it installs a newer release from GitHub (
 <details>
 <summary><b>Sizes, sources</b></summary>
 
-November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. auto-editor takes links only with yt-dlp beside it; CapCut copies an edit only as a creator's template. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
+November 2026. EditsMaker 0.31: `edits` and its desktop app built for Linux x64, gzipped together (12.4 MB); the release check keeps every download under 15 MB. <a href="https://github.com/WyattBlue/auto-editor/releases/tag/31.9.0">auto-editor 31.9</a>: GitHub releases, Windows x64. <a href="https://www.npmjs.com/package/hyperframes">HyperFrames 0.9.58</a>: npm install plus the Chrome it downloads, measured. <a href="https://www.capeditcut.com/capcut-for-pc/">CapCut 8.9</a>, <a href="https://desktopinsights.com/apps/descript">Descript 114</a> and <a href="https://softradar.com/wondershare-filmora/download/15.7.3/us/">Filmora 15.7</a>: as listed by download sites. <a href="https://apps.apple.com/app/id571213070">DaVinci Resolve</a>: Mac App Store. Premiere Pro and After Effects: the <a href="https://helpx.adobe.com/after-effects/system-requirements.html">disk space Adobe asks for</a>; their MCP is a <a href="https://nofilmschool.com/adobe-local-mcp-integrations">preview</a>. auto-editor takes links only with yt-dlp beside it; CapCut copies an edit only as a creator's template. CapCut's TikTok sounds are partly there: its <a href="https://www.capcut.com/help/how-to-link-tiktok-with-capcut">desktop app does not link TikTok</a>. Pictures drawn by <code>design/readme.py</code>.
 
 </details>
 
@@ -466,8 +472,7 @@ November 2026. EditsMaker and <a href="https://github.com/WyattBlue/auto-editor/
 <summary><b>Brand</b></summary>
 
 The mark, colours, type, layout and words, and the research behind each rule: [BRAND.md](BRAND.md).
-Colours and sizes as code: [design/tokens.css](design/tokens.css). Every README picture is drawn by
-`python3 design/readme.py`.
+Colours, type and sizes as code: [apps/desktop/src/theme.rs](apps/desktop/src/theme.rs), which the app draws with.
 
 </details>
 

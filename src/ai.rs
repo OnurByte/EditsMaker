@@ -32,6 +32,11 @@ const PROVIDERS: &[(&str, &str, &str)] = &[
 fn file() -> PathBuf {
     home().join(".config/edits/ai.json")
 }
+
+/// The providers `edits ai` takes.
+pub fn names() -> Vec<&'static str> {
+    PROVIDERS.iter().map(|p| p.0).collect()
+}
 fn keys_file() -> PathBuf {
     home().join(".config/edits/keys.json")
 }

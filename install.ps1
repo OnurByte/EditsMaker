@@ -2,7 +2,7 @@
 #
 #   irm https://raw.githubusercontent.com/OnurByte/EditsMaker/main/install.ps1 | iex
 #
-# Installs edits.exe for the current user into %LOCALAPPDATA%\Programs\EditsMaker after checking the release
+# Installs edits.exe and the desktop app (edits-app.exe, in the Start menu) for the current user into %LOCALAPPDATA%\Programs\EditsMaker after checking the release
 # archive's SHA-256, and adds that folder to the user PATH. EDITS_VERSION=v0.2.0 picks a release.
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
@@ -37,6 +37,15 @@ try {
         $env:Path += ";$InstallDir"
     }
     Write-Host "Installed: $(& (Join-Path $InstallDir 'edits.exe') --version)"
+    # the desktop app in the Start menu
+    $App = Join-Path $InstallDir 'edits-app.exe'
+    if (Test-Path $App) {
+        $Link = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path ([Environment]::GetFolderPath('Programs')) 'EditsMaker.lnk'))
+        $Link.TargetPath = $App
+        $Link.WorkingDirectory = $InstallDir
+        $Link.Save()
+        Write-Host 'The app: EditsMaker in the Start menu, or edits app'
+    }
     # ffmpeg and yt-dlp, if this machine lacks them: static builds into ~\.config\edits\bin, checksum checked
     & (Join-Path $InstallDir 'edits.exe') setup
     if ($LASTEXITCODE -ne 0) { Write-Host 'ffmpeg/yt-dlp download failed; edits tries again on first use.' }

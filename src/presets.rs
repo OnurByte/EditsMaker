@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 /// (file name, contents) of every built-in file: the data files, then each pack's preset as FOLDER.json.
 fn built_in_files() -> Vec<(String, String)> {
     let data = crate::packs::DATA_FILES.iter().map(|(n, t)| (n.to_string(), t.to_string()));
-    data.chain(crate::packs::BUILT_IN_PACKS.iter().filter_map(|(d, _, p, _)| Some((format!("{d}.json"), (*p)?.to_string())))).collect()
+    data.chain(crate::packs::BUILT_IN_PACKS.iter().filter_map(|(d, _, p, _, _)| Some((format!("{d}.json"), (*p)?.to_string())))).collect()
 }
 
 pub fn user_dir() -> PathBuf {

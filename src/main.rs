@@ -56,8 +56,8 @@ fn main() -> ExitCode {
     }
     tools::add_to_path();
     // anything that cuts, measures or downloads gets ffmpeg and yt-dlp first, fetched if missing
-    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "setup" | "mcp" | "skills" | "packs" | "looks" | "rate" | "trends" | "guard"))
-        || (args.first().map(String::as_str) == Some("preset") && args.get(1).map(String::as_str) != Some("create"));
+    let light = matches!(args.first().map(String::as_str), None | Some("update" | "info" | "-V" | "--version" | "-h" | "--help" | "help" | "doctor" | "app" | "settings" | "setup" | "mcp" | "skills" | "packs" | "looks" | "rate" | "trends" | "guard"))
+        || (matches!(args.first().map(String::as_str), Some("preset" | "packs")) && args.get(1).map(String::as_str) != Some("create"));
     if !light {
         if let Err(e) = tools::ensure() {
             eprintln!("edits: could not download ffmpeg/yt-dlp ({e}); trying the ones this machine has");
@@ -73,6 +73,8 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("doctor") => doctor(),
+        Some("app") => app(),
+        Some("settings") => settings(),
         Some("encoder") => util::encoder_cmd(args.get(1).map(String::as_str)),
         Some("setup") => tools::ensure().map(|_| println!("edits: ffmpeg and yt-dlp ready")),
         Some("update") => update::cmd(&args[1..]),
@@ -785,11 +787,27 @@ fn cut(a: &Analysed, m: &pick::Moment, c: &Cli, bed: Option<&(PathBuf, f64)>, ca
     keep(c, out, serde_json::json!({ "clip": out, "kind": "clip", "source": a.src.title, "id": a.src.id, "moment": m, "text": text, "seconds": fetch::duration(out).ok(), "framed_on_faces": focus.is_some() }))
 }
 
+/// $EDITS_OUT or ~/Videos/edits: where runs go.
+fn out_base() -> PathBuf {
+    std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"))
+}
+
+/// `edits settings --json`: everything the app's settings screen shows, in one go; each is changed by its own command.
+fn settings() -> Result<(), String> {
+    let c = ai::choice();
+    let accounts: Vec<serde_json::Value> = social::all().iter().map(|a| serde_json::json!({"name": a.name, "platform": a.platform, "user": a.user})).collect();
+    let sites: Vec<String> = packs::all().iter().filter(|p| packs::trusted(p)).filter_map(|p| p.manifest.automation.as_ref().map(|a| a.site.clone())).collect();
+    println!("{}", serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "ai": {"provider": c.provider, "model": c.model, "about": ai::describe(), "ready": ai::ready()},
+        "providers": ai::names(), "encoder": util::encoder_choice(), "encoders": util::ENCODERS, "updates": update::auto_on(), "out": out_base(),
+        "accounts": accounts, "sites": sites}));
+    Ok(())
+}
+
 /// Where a run's clips go without --out: one folder per run, the same place whoever starts edits (the CLI in any
 /// folder, the MCP server): $EDITS_OUT or ~/Videos/edits, then the day, then what it was made from (every run on
 /// the same footage that day sits together), then the run's "HH.MM".
 fn auto_out(input: &str) -> PathBuf {
-    let base = std::env::var_os("EDITS_OUT").map(PathBuf::from).unwrap_or_else(|| util::home().join("Videos/edits"));
+    let base = out_base();
     let (day, time) = util::now().unwrap_or(("undated".into(), "00.00".into()));
     let dir = base.join(day).join(folder_name(&subject(input))).join(time);
     // a second run in the same minute on the same footage gets its own folder, never overwrites
@@ -1813,6 +1831,8 @@ fn skills(args: &[String]) -> Result<(), String> {
             // a folder given, or Claude's and every other agent's skill folder that exists
             let list = skill_list();
             for dir in &skill_dirs(args.get(1)) {
+                // renamed in 0.31.0 (making a preset makes a pack now)
+                let _ = std::fs::remove_dir_all(dir.join("edits-preset-create"));
                 for (name, text) in &list {
                     let d = dir.join(name);
                     std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
@@ -1870,12 +1890,36 @@ fn skills(args: &[String]) -> Result<(), String> {
     }
 }
 
+/// `edits app`: the desktop app the release ships beside this binary, started on its own.
+fn app() -> Result<(), String> {
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name(format!("edits-app{}", std::env::consts::EXE_SUFFIX));
+    // `edits app market|automations|settings` opens there
+    let at = std::env::args().nth(2).filter(|a| ["market", "automations", "settings"].contains(&a.as_str())).map(|a| format!("--{a}"));
+    std::process::Command::new(&exe).args(at).spawn().map(drop).map_err(|e| format!("{}: {e} (the app comes with the release download: edits update)", exe.display()))
+}
+
 /// `edits packs`: the packs here (built in and added); `browse` the community list; `add ID|LINK`, `remove ID`;
-/// `make DIR [--preset NAME] [--id ID]` makes a folder a pack; `gallery DIR` writes the picture page of a packs folder.
+/// `create VIDEO` makes a new pack from a video; `make DIR [--preset NAME] [--id ID]` makes a folder a pack; `gallery DIR` writes the picture page of a packs folder.
 fn packs_cmd(args: &[String]) -> Result<(), String> {
     let opt = |k: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).map(String::as_str);
     let kinds = |k: &[String]| k.join("+");
-    match (args.first().map(String::as_str), args.get(1)) {
+    let words: Vec<&String> = args.iter().filter(|a| *a != "--json").collect();
+    match (words.first().map(|w| w.as_str()), words.get(1).copied()) {
+        (Some("list") | None, _) if args.iter().any(|a| a == "--json") => {
+            // what the app's marketplace shows: every pack here, with its picture
+            let v: Vec<serde_json::Value> = packs::all().iter().map(|p| {
+                let m = &p.manifest;
+                let built_in = m.id.starts_with("edits.");
+                let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok());
+                let file = m.preview.as_ref().map(|f| packs::dir().join(&m.id).join(f)).filter(|f| !built_in && f.is_file());
+                serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
+                    "kinds": m.kinds, "tags": m.tags, "builtIn": built_in, "trusted": p.automation.is_none() || packs::trusted(p),
+                    "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name),
+                    "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset.as_ref())) } else { None }})
+            }).collect();
+            println!("{}", serde_json::Value::Array(v));
+            Ok(())
+        }
         (Some("list") | None, _) => {
             for p in packs::all() {
                 let m = &p.manifest;
@@ -1888,6 +1932,11 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
         (Some("browse"), _) => {
             let have: Vec<String> = packs::added().into_iter().map(|p| p.manifest.id).collect();
             let list = packs::registry()?;
+            if args.iter().any(|a| a == "--json") {
+                let v: Vec<serde_json::Value> = list.iter().map(|e| serde_json::json!({"id": e.id, "name": e.name, "description": e.description, "kinds": e.kinds, "repo": e.repo, "added": have.contains(&e.id)})).collect();
+                println!("{}", serde_json::Value::Array(v));
+                return Ok(());
+            }
             for e in &list {
                 println!("{:<34} {:<12} {}{}\n{:<34} {}", e.id, kinds(&e.kinds), e.name, if have.contains(&e.id) { "  (added)" } else { "" }, "", e.description.chars().take(100).collect::<String>());
             }
@@ -1909,8 +1958,13 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
                     println!("  its skill {name} (instructions your agent will follow; read it) in {}", dir.display());
                 }
             }
+            if let Some(a) = &m.automation {
+                // it would run in their signed-in account: nothing runs until they read it and say so
+                println!("  its automation runs in your signed-in {}: read {}, then edits packs trust {}", a.site, packs::dir().join(&m.id).join("automation.js").display(), m.id);
+            }
             Ok(())
         }
+        (Some("trust"), Some(id)) => packs::trust(id).map(|js| println!("{id}: its automation ({}) may run now; a changed one asks again", js.display())),
         (Some("remove"), Some(id)) => {
             let p = packs::remove(id)?;
             if let Some(name) = p.skill_name() {
@@ -1921,13 +1975,27 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             println!("removed {id}");
             Ok(())
         }
+        (Some("create"), Some(video)) => {
+            // a pack from nothing but a video; --like a,b picks the presets whose moves it borrows (default: the closest three)
+            let name = opt("--name").map(String::from).unwrap_or_else(|| Path::new(video).file_stem().unwrap_or_default().to_string_lossy().into_owned());
+            let like: Vec<String> = opt("--like").map(|l| l.split(',').map(str::to_string).collect()).unwrap_or_default();
+            let len = opt("--length").and_then(|l| l.parse().ok()).unwrap_or(18.0);
+            let p = create::create(Path::new(video), &name, &like, len)?;
+            let id = preset::slug(&name);
+            let d = packs::dir().join(&id);
+            std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
+            std::fs::write(d.join("preset.json"), preset::pretty(&p)).map_err(|e| e.to_string())?;
+            let m = packs::make(&d, None, Some(&id))?;
+            println!("{}: pack {} ({}, {:.1}s) -> --preset {}; share it: PACKS.md", d.display(), m.id, p.about, p.total, p.name);
+            Ok(())
+        }
         (Some("make"), Some(dir)) => {
             let m = packs::make(Path::new(dir), opt("--preset"), opt("--id"))?;
             println!("{}: {} {} ({}), picture {}", dir, m.id, m.version, kinds(&m.kinds), m.preview.unwrap_or_default());
             Ok(())
         }
         (Some("gallery"), Some(dir)) => packs::gallery(Path::new(dir)).map(|n| println!("{dir}/README.md: {n} packs")),
-        _ => Err("usage: edits packs [browse | add ID|LINK | remove ID | make DIR [--preset NAME] [--id ID] | gallery DIR]".into()),
+        _ => Err("usage: edits packs [--json] [browse [--json] | add ID|LINK | trust ID | remove ID | create VIDEO [--name N] [--like A,B] [--length S] | make DIR [--preset NAME] [--id ID] | gallery DIR]".into()),
     }
 }
 
@@ -2091,19 +2159,8 @@ fn preset_cmd(args: &[String]) -> Result<(), String> {
             println!("\n{} cut moves; your presets: {}", presets::motions().len(), presets::user_dir().display());
             Ok(())
         }
-        (Some("create"), Some(video)) => {
-            // from nothing but a video; --like a,b picks the presets whose moves it borrows (default: the closest three)
-            let opt = |k: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1));
-            let name = opt("--name").cloned().unwrap_or_else(|| Path::new(video).file_stem().unwrap_or_default().to_string_lossy().into_owned());
-            let like: Vec<String> = opt("--like").map(|l| l.split(',').map(str::to_string).collect()).unwrap_or_default();
-            let len = opt("--length").and_then(|l| l.parse().ok()).unwrap_or(18.0);
-            let p = create::create(Path::new(video), &name, &like, len)?;
-            std::fs::create_dir_all(presets::user_dir()).map_err(|e| e.to_string())?;
-            let to = presets::user_dir().join(format!("{}.json", preset::slug(&name)));
-            std::fs::write(&to, preset::pretty(&p)).map_err(|e| e.to_string())?;
-            println!("{}: {} ({:.1}s) -> --preset {}", to.display(), p.about, p.total, preset::slug(&name));
-            Ok(())
-        }
+        // making a preset makes a pack now: same arguments, the pack lands with the added ones
+        (Some("create"), Some(_)) => packs_cmd(args),
         (Some("show"), Some(name)) => {
             let p = preset::load(name)?;
             println!("{}", preset::pretty(&p));

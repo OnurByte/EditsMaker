@@ -1,14 +1,20 @@
 [package]
 name = "edits"
-version = "0.30.0"
+version = "0.31.0"
 edition = "2021"
-description = "One small binary (under 4 MB to download) that turns any YouTube link, channel or topic into viral TikTok, Reels and Shorts edits: Alight Motion and Premiere presets, trending songs, beat-synced cuts, captions, colour looks, MCP server for AI agents."
+description = "One small download (under 15 MB, with its desktop app) that turns any YouTube link, channel or topic into viral TikTok, Reels and Shorts edits: Alight Motion and Premiere presets, trending songs, beat-synced cuts, captions, colour looks, MCP server for AI agents."
 repository = "https://github.com/OnurByte/EditsMaker"
 homepage = "https://github.com/OnurByte/EditsMaker"
 readme = "README.md"
 keywords = ["video-editor", "tiktok", "shorts", "ffmpeg", "mcp"]
 categories = ["command-line-utilities", "multimedia::video"]
 license = "MIT"
+
+# the desktop app (apps/desktop, GPUI) is its own binary, so `edits` still runs where there is no screen;
+# `cargo test` and `cargo build` here stay the CLI's, `-p edits-app` builds the app
+[workspace]
+members = [".", "apps/desktop"]
+default-members = ["."]
 
 [dependencies]
 regex = "1"
@@ -25,3 +31,9 @@ opt-level = "s"
 lto = true
 codegen-units = 1
 strip = true
+
+# the desktop app: built with --profile app, smallest over fastest (it waits on edits, not on itself)
+[profile.app]
+inherits = "release"
+opt-level = "z"
+panic = "abort"

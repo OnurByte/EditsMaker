@@ -54,14 +54,17 @@ pub fn pick(names: &str) -> Result<Vec<Account>, String> {
     Ok(out)
 }
 
-/// (sign-in page, page to post from, cookie that says signed in, its domain, the page script)
-fn site(platform: &str) -> Option<(&'static str, &'static str, &'static str, &'static str, &'static str)> {
-    Some(match platform {
-        "tiktok" => ("https://www.tiktok.com/login", "https://www.tiktok.com/tiktokstudio/upload", "sessionid", "tiktok.com", include_str!("post/tiktok.js")),
-        "youtube" => ("https://studio.youtube.com", "https://studio.youtube.com", "SAPISID", "google.com", include_str!("post/youtube.js")),
-        "instagram" => ("https://www.instagram.com/accounts/login/", "https://www.instagram.com/", "sessionid", "instagram.com", include_str!("post/instagram.js")),
-        _ => return None,
-    })
+/// The automation pack that signs in and posts on `platform` (packs/post-*, or an added one the person trusted):
+/// (sign-in page, page to post from, cookie that says signed in, its domain, the page script).
+fn site(platform: &str) -> Result<(String, String, String, String, String), String> {
+    let p = crate::packs::all().into_iter().find(|p| p.manifest.automation.as_ref().is_some_and(|a| a.site == platform))
+        .ok_or(format!("nothing posts to {platform}: edits connect {}, or an automation pack from edits packs browse", PLATFORMS.join("|")))?;
+    if !crate::packs::trusted(&p) {
+        let id = &p.manifest.id;
+        return Err(format!("{id} runs in your signed-in {platform}: read {} first, then edits packs trust {id}", crate::packs::dir().join(id).join("automation.js").display()));
+    }
+    let (a, js) = (p.manifest.automation.unwrap_or_else(|| unreachable!()), p.automation.unwrap_or_default());
+    Ok((a.login, a.page, a.cookie, a.domain, js))
 }
 
 fn run_page(b: &mut Browser, js: &str, args: Value, wait: Duration) -> Result<Value, String> {
@@ -93,7 +96,8 @@ pub fn connect(args: &[String]) -> Result<(), String> {
             Account { name: format!("facebook-{}", crate::fetch::safe(&user)), platform: platform.into(), id: page.trim().into(), user, secret: secret.trim().into() }
         }
         p => {
-            let (login, home_url, cookie, domain, js) = site(p).ok_or(format!("usage: edits connect {}", PLATFORMS.join("|")))?;
+            let (login, home_url, cookie, domain, js) = site(p)?;
+            let (login, home_url, cookie, domain, js) = (login.as_str(), home_url.as_str(), cookie.as_str(), domain.as_str(), js.as_str());
             let tmp = dir().join(format!("{p}-new"));
             let _ = std::fs::remove_dir_all(&tmp);
             eprintln!("edits: sign in to {p} in the window that opened (up to 10 minutes); edits never sees your password");
@@ -171,12 +175,12 @@ pub fn post(acc: &Account, clip: &Path, caption: &str, private: bool) -> Result<
         "bluesky" => bsky_post(acc, clip, caption),
         "facebook" => fb_post(acc, clip, caption),
         p => {
-            let (_, home_url, _, _, js) = site(p).ok_or(format!("unknown platform {p}"))?;
-            let mut b = Browser::open(&dir().join(&acc.name), home_url)?;
+            let (_, home_url, _, _, js) = site(p)?;
+            let mut b = Browser::open(&dir().join(&acc.name), &home_url)?;
             let r = (|| {
                 b.settle()?;
                 b.give_file(clip)?;
-                run_page(&mut b, js, json!({"do": "post", "caption": caption, "private": private, "expect": acc.id}), Duration::from_secs(1800))
+                run_page(&mut b, &js, json!({"do": "post", "caption": caption, "private": private, "expect": acc.id}), Duration::from_secs(1800))
             })();
             b.close();
             let v = r.map_err(|e| relogin(p, e))?;
@@ -347,16 +351,8 @@ mod tests {
     fn dates_and_sites() {
         assert_eq!(rfc3339(0), "1970-01-01T00:00:00Z");
         assert_eq!(rfc3339(1_709_210_096), "2024-02-29T12:34:56Z");
-        assert!(PLATFORMS.iter().all(|p| site(p).is_some() || ["bluesky", "facebook"].contains(p)));
+        // every browser platform has its built-in automation pack (packs.rs checks the scripts themselves)
+        assert!(PLATFORMS.iter().all(|p| site(p).is_ok() || ["bluesky", "facebook"].contains(p)));
         assert!(site("instagram").unwrap().4.trim_start().starts_with("//"), "page scripts are whole files");
-    }
-
-    #[test]
-    fn page_scripts_are_one_async_function() {
-        for p in ["tiktok", "youtube", "instagram"] {
-            let js = site(p).unwrap().4;
-            let code: String = js.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
-            assert!(code.trim_start().starts_with("async (p) => {") && code.trim_end().ends_with('}'), "{p}");
-        }
     }
 }

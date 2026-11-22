@@ -1,6 +1,6 @@
 # Packs
 
-70 built-in packs: a preset, an agent skill or both, each with a `manifest.json` and a picture. Community packs: `edits packs browse`, `edits packs add ID`. Making one: [CONTRIBUTING.md](../CONTRIBUTING.md#packs).
+73 built-in packs: presets, agent skills and automations, each with a `manifest.json` and a picture. The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).
 
 <p>
 <a href="akis-whip"><img src="akis-whip/preview.svg" width="300" alt="akis-whip"></a>
@@ -26,6 +26,9 @@
 <a href="kitap-slayt"><img src="kitap-slayt/preview.svg" width="300" alt="kitap-slayt"></a>
 <a href="loop-push"><img src="loop-push/preview.svg" width="300" alt="loop-push"></a>
 <a href="phonk-drift"><img src="phonk-drift/preview.svg" width="300" alt="phonk-drift"></a>
+<a href="post-instagram"><img src="post-instagram/preview.svg" width="300" alt="Post to Instagram"></a>
+<a href="post-tiktok"><img src="post-tiktok/preview.svg" width="300" alt="Post to TikTok"></a>
+<a href="post-youtube"><img src="post-youtube/preview.svg" width="300" alt="Post to YouTube"></a>
 <a href="problem-cozum"><img src="problem-cozum/preview.svg" width="300" alt="problem-cozum"></a>
 <a href="punch-zoom-60s"><img src="punch-zoom-60s/preview.svg" width="300" alt="punch-zoom-60s"></a>
 <a href="quarter-spin-rush"><img src="quarter-spin-rush/preview.svg" width="300" alt="quarter-spin-rush"></a>
@@ -67,7 +70,7 @@
 <a href="zoom-slide-wide"><img src="zoom-slide-wide/preview.svg" width="300" alt="zoom-slide-wide"></a>
 <a href="edits"><img src="edits/preview.svg" width="300" alt="edits"></a>
 <a href="edits-mcp"><img src="edits-mcp/preview.svg" width="300" alt="edits-mcp"></a>
-<a href="edits-preset-create"><img src="edits-preset-create/preview.svg" width="300" alt="edits-preset-create"></a>
+<a href="edits-pack-create"><img src="edits-pack-create/preview.svg" width="300" alt="edits-pack-create"></a>
 <a href="edits-preset-tweak"><img src="edits-preset-tweak/preview.svg" width="300" alt="edits-preset-tweak"></a>
 <a href="edits-presets-import"><img src="edits-presets-import/preview.svg" width="300" alt="edits-presets-import"></a>
 <a href="edits-reverse"><img src="edits-reverse/preview.svg" width="300" alt="edits-reverse"></a>

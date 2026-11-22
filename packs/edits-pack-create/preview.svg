@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(168,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(168,70%,64%)">Pack</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">edits-pack-create</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Make a brand-new `edits` pack from a video, its preset</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">borrowing moves from existing presets for inspiration. Use</text>
+<text x="32" y="178" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">when the user wants a new preset or pack, a style of their own</text>
+<text x="32" y="202" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">to keep or share, or an edit shaped to their footage rather</text>
+<text x="32" y="226" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">than a copy of an existing one.</text>
+<text x="32" y="336" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="hsl(168,70%,64%)">edits skills install</text>
+</svg>

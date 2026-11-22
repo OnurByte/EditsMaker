@@ -2,6 +2,8 @@ edits - give it a link, a topic or a file; get finished edits.
 
 USAGE
   edits <youtube-link | topic | video-file> [options]
+  edits app [market|automations|settings]   the desktop app: paste a link, watch it work, get a notification when
+                               it is done; or open it on its marketplace, automations or settings
   edits doctor                 check ffmpeg, yt-dlp, whisper and the LLM command
   edits encoder [auto|nvenc|videotoolbox|cpu]  what renders the video (GPU or CPU), saved for every run
   edits setup                  fetch ffmpeg and yt-dlp if missing (also done on first use)
@@ -46,8 +48,12 @@ USAGE
                                (--ask: asks you each time instead); edits guard remove takes it out again
   edits skills [install]       agent skills for every command
   edits skills catalog | add SET [SKILL...]   skill sets from other projects (Remotion, YouTube research), fetched from GitHub
-  edits packs                  the packs here: a preset, an agent skill or both, each with a manifest.json and a picture
-  edits packs browse           community packs (packs.json); edits packs add ID|GITHUB-LINK, edits packs remove ID
+  edits packs                  the packs here: presets, agent skills and automations, each with a manifest.json and a picture
+  edits packs browse           the marketplace (packs.json); edits packs add ID|GITHUB-LINK, edits packs remove ID;
+                               --json on edits packs and browse for programs (the app)
+  edits packs trust ID         let an added automation run (it posts from your signed-in account: read it first)
+  edits packs create <video> [--name N] [--like A,B] [--length S]   a new pack from a video: its rhythm, moves borrowed
+                               from presets, saved with your packs (edits preset create does the same); PACKS.md
   edits packs make DIR [--preset NAME] [--id ID]   make a folder a pack: manifest.json and preview.svg written for you
   edits trends [spotify] [country]   what is trending on TikTok now (default tr), or Spotify's daily chart; use with --music trend:N / spotify:N
   edits study <folder>         measure edits you like; their shape, grade and loudness become the defaults
@@ -63,9 +69,8 @@ USAGE
                                [edit options]   every new video becomes clips made with those options, and posted
   edits follows | unfollow N   what is followed and what happened; edits watch [--once] does the checking,
                                edits service install|remove keeps it running in the background from login
-  edits review <clip.mp4> [--notes]   the clip in a window of its own (Chrome, Edge, Brave or Chromium's app window,
-                               else a browser tab): click a moment, a shot or a spot in the frame and
-                               say what to change; the notes come back (and are saved as clip.notes.json)
+  edits review <clip.mp4> [--notes]   the clip in the app's review screen: pick a moment and a spot in the frame
+                               and say what to change; the notes come back (and are saved as clip.notes.json)
 
 OPTIONS
       --music SONG    make music edits: the footage's best shots cut on the song's beats (link, file, a library song, or

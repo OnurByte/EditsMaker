@@ -18,20 +18,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup target add ${{ matrix.target }}
-      - run: cargo test --release
+      # what GPUI (the desktop app) builds against on Linux
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-x11-dev libwayland-dev libfontconfig-dev libx11-xcb-dev libvulkan-dev
+      - run: cargo test --release --workspace
         if: matrix.target != 'x86_64-apple-darwin'
-      - run: cargo build --release --target ${{ matrix.target }}
+      - run: cargo build --release --target ${{ matrix.target }} -p edits
+      - run: cargo build --profile app --target ${{ matrix.target }} -p edits-app
       - name: package (unix)
         if: runner.os != 'Windows'
         run: |
           mkdir out
-          tar -czf out/edits-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release edits
+          tar -czf out/edits-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release edits -C ../app edits-app
       - name: package (windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           mkdir out
-          Compress-Archive -Path target/${{ matrix.target }}/release/edits.exe -DestinationPath out/edits-${{ matrix.target }}.zip
+          Compress-Archive -Path target/${{ matrix.target }}/release/edits.exe, target/${{ matrix.target }}/app/edits-app.exe -DestinationPath out/edits-${{ matrix.target }}.zip
+      # the download is a selling point: edits and its app together stay under 15 MB
+      - name: size
+        shell: bash
+        run: |
+          f=$(ls out/*); n=$(wc -c < "$f")
+          echo "$f: $n bytes"
+          [ "$n" -le 15728640 ] || { echo "$f is over 15 MB"; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: edits-${{ matrix.target }}

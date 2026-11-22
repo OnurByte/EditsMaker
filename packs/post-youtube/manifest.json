@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.post-youtube",
+  "name": "Post to YouTube",
+  "version": "1.0.0",
+  "author": "edits",
+  "description": "Signs in to YouTube once in a window of its own and posts your clips there from your own account: edits connect youtube, then edits post --to youtube.",
+  "kinds": [
+    "automation"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "post",
+    "youtube"
+  ],
+  "automation": {
+    "site": "youtube",
+    "login": "https://studio.youtube.com",
+    "page": "https://studio.youtube.com",
+    "cookie": "SAPISID",
+    "domain": "google.com"
+  }
+}

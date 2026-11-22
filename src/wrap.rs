@@ -328,9 +328,9 @@ pub struct Around {
 /// The EditsMaker card, `secs` long, as a PNG.
 fn outro_svg(w: u32, h: u32, lang: &str) -> String {
     let (top, sub, foot) = if lang == "tr" {
-        ("bu edit tek komutla yapıldı", "link at, edit al.", "ücretsiz  ·  4 MB  ·  AI agent ile çalışır")
+        ("bu edit tek komutla yapıldı", "link at, edit al.", "ücretsiz  ·  15 MB  ·  AI agent ile çalışır")
     } else {
-        ("this edit took one command", "link in, edits out.", "free  ·  4 MB  ·  works with AI agents")
+        ("this edit took one command", "link in, edits out.", "free  ·  15 MB  ·  works with AI agents")
     };
     let u = h as f64 / 1080.0;
     let t = |y: f64, size: f64, weight: u32, fill: &str, s: &str| format!(r#"<text x="{:.0}" y="{:.0}" text-anchor="middle" font-family="Noto Sans, Adwaita Sans, DejaVu Sans, Liberation Sans, Arial, sans-serif" font-weight="{weight}" font-size="{:.0}" fill="{fill}">{}</text>"#, w as f64 / 2.0, h as f64 / 2.0 + y * u, size * u, esc(s));
