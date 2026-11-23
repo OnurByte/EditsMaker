@@ -40,10 +40,32 @@ fn parse(s: &str) -> Option<Hsla> {
     u32::from_str_radix(s.trim().trim_start_matches('#'), 16).ok().filter(|_| s.trim().len() == 7).map(hex)
 }
 
+/// Themes to pick besides EditsMaker's own and Omarchy's, as t3code's theme library offers them: (id, name, dark,
+/// page, card, hairline, ink, grey, red, accent), each from the theme's published palette.
+pub const THEMES: &[(&str, &str, bool, [u32; 7])] = &[
+    ("dracula", "Dracula", true, [0x282A36, 0x343746, 0x44475A, 0xF8F8F2, 0x8B93B8, 0xFF5555, 0xBD93F9]),
+    ("nord", "Nord", true, [0x2E3440, 0x3B4252, 0x434C5E, 0xECEFF4, 0x9AA5B8, 0xBF616A, 0x88C0D0]),
+    ("catppuccin-mocha", "Catppuccin Mocha", true, [0x1E1E2E, 0x313244, 0x45475A, 0xCDD6F4, 0x9399B2, 0xF38BA8, 0xCBA6F7]),
+    ("catppuccin-latte", "Catppuccin Latte", false, [0xEFF1F5, 0xE6E9EF, 0xCCD0DA, 0x4C4F69, 0x7C7F93, 0xD20F39, 0x8839EF]),
+    ("tokyo-night", "Tokyo Night", true, [0x1A1B26, 0x24283B, 0x414868, 0xC0CAF5, 0x787C99, 0xF7768E, 0x7AA2F7]),
+    ("gruvbox", "Gruvbox", true, [0x282828, 0x3C3836, 0x504945, 0xEBDBB2, 0xA89984, 0xFB4934, 0xFABD2F]),
+    ("one-dark", "One Dark", true, [0x282C34, 0x2C313A, 0x3E4451, 0xABB2BF, 0x7F848E, 0xE06C75, 0x61AFEF]),
+    ("rose-pine", "Rosé Pine", true, [0x191724, 0x1F1D2E, 0x26233A, 0xE0DEF4, 0x908CAA, 0xEB6F92, 0xC4A7E7]),
+    ("solarized-light", "Solarized Light", false, [0xFDF6E3, 0xEEE8D5, 0xDDD6C1, 0x073642, 0x657B83, 0xDC322F, 0x268BD2]),
+    ("everforest", "Everforest", true, [0x2D353B, 0x343F44, 0x475258, 0xD3C6AA, 0x859289, 0xE67E80, 0xA7C080]),
+];
+
+/// One of THEMES as brand colours, and whether it is dark.
+pub fn named(id: &str) -> Option<(Brand, bool)> {
+    THEMES.iter().find(|t| t.0 == id).map(|&(_, _, dark, c)| {
+        (Brand { page: hex(c[0]), card: hex(c[1]), hair: hex(c[2]), ink: hex(c[3]), gray: hex(c[4]), red_text: hex(c[5]), accent: hex(c[6]) }, dark)
+    })
+}
+
 /// What Settings > Appearance chose, after t3code's appearance settings.
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Prefs {
-    /// system, light, dark or omarchy
+    /// system, light, dark, omarchy, or theme:ID (one of THEMES)
     pub mode: String,
     /// the chat column: narrow, normal, wide
     pub width: String,
@@ -149,6 +171,9 @@ pub fn brand(cx: &App) -> Brand {
             return b;
         }
     }
+    if let Some((b, _)) = p.mode.strip_prefix("theme:").and_then(named) {
+        return b;
+    }
     palette(Theme::global(cx).is_dark(), hex_of(&p.accent))
 }
 
@@ -174,6 +199,10 @@ pub fn apply(window: Option<&mut Window>, cx: &mut App) {
         ("light", _) => Theme::change(ThemeMode::Light, window, cx),
         ("dark", _) => Theme::change(ThemeMode::Dark, window, cx),
         ("omarchy", Some((_, dark))) => Theme::change(if dark { ThemeMode::Dark } else { ThemeMode::Light }, window, cx),
+        (m, _) if m.strip_prefix("theme:").and_then(named).is_some() => {
+            let dark = m.strip_prefix("theme:").and_then(named).is_some_and(|t| t.1);
+            Theme::change(if dark { ThemeMode::Dark } else { ThemeMode::Light }, window, cx)
+        }
         _ => Theme::sync_system_appearance(window, cx),
     }
     let b = brand(cx);
@@ -191,6 +220,14 @@ pub fn apply(window: Option<&mut Window>, cx: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::parse;
+
+    #[test]
+    fn every_theme_reads() {
+        for t in super::THEMES {
+            assert!(super::named(t.0).is_some_and(|x| x.1 == t.2), "{}", t.0);
+        }
+        assert!(super::named("nope").is_none());
+    }
 
     #[test]
     fn omarchy_colours_read() {

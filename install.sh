@@ -37,8 +37,8 @@ echo "edits: installed $("$BIN/edits" --version) to $BIN/edits"
 # the app (edits app) in the launcher: a .desktop entry on Linux, an app bundle on macOS (its notifications need one)
 case "$(uname -s)" in
     Linux)
-      A="${XDG_DATA_HOME:-$HOME/.local/share}/applications"; mkdir -p "$A"
-      printf '[Desktop Entry]\nType=Application\nName=EditsMaker\nComment=Link in. Edits out.\nExec=%s app\nIcon=video-x-generic\nCategories=AudioVideo;Video;\nStartupWMClass=edits\n' "$BIN/edits" > "$A/edits.desktop" ;;
+      # edits writes its own .desktop entry and icon (and mends them each time the app starts)
+      "$BIN/edits" app --launcher || true ;;
     Darwin)
       C="$HOME/Applications/EditsMaker.app/Contents"; mkdir -p "$C/MacOS"
       # started by this name, edits opens its app

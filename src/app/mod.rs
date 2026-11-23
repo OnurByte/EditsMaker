@@ -24,6 +24,7 @@ use std::path::PathBuf;
 
 actions!(edits, [Quit, ToggleSidebar, Search]);
 
+
 /// gpui-kit's own icons, and the Lucide ones the app adds.
 struct AppAssets;
 
@@ -50,7 +51,42 @@ extern "system" {
     fn FreeConsole() -> i32;
 }
 
+/// The app in the Linux launcher: its icon in the user's icon theme and a .desktop entry naming it, written again when
+/// they differ (an old install pointed at a stock icon that shows blank). Done each start, so `edits update` mends it.
+pub fn launcher() -> std::io::Result<()> {
+    if !cfg!(target_os = "linux") {
+        return Ok(());
+    }
+    let data = std::env::var_os("XDG_DATA_HOME").map(PathBuf::from).unwrap_or_else(|| crate::util::home().join(".local/share"));
+    let exe = std::env::current_exe()?;
+    // a cargo build is someone working on edits: the launcher stays on the installed one
+    if exe.components().any(|c| c.as_os_str() == "target") {
+        return Ok(());
+    }
+    let files: [(PathBuf, Vec<u8>); 3] = [
+        (data.join("icons/hicolor/scalable/apps/edits.svg"), include_bytes!("../../assets/icon.svg").to_vec()),
+        (data.join("icons/hicolor/512x512/apps/edits.png"), include_bytes!("../../assets/icon.png").to_vec()),
+        (data.join("applications/edits.desktop"), desktop_entry(&exe).into_bytes()),
+    ];
+    for (f, bytes) in files {
+        if std::fs::read(&f).ok().as_deref() != Some(&bytes[..]) {
+            std::fs::create_dir_all(f.parent().unwrap_or(std::path::Path::new(".")))?;
+            std::fs::write(&f, bytes)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn desktop_entry(exe: &std::path::Path) -> String {
+    format!("[Desktop Entry]\nType=Application\nName=EditsMaker\nComment=The AI video harness.\nExec={} app\nIcon=edits\nCategories=AudioVideo;Video;\nStartupWMClass=edits\n", exe.display())
+}
+
 pub fn run(args: &[String]) {
+    let _ = launcher();
+    // the installer's step: the launcher written, nothing opened
+    if args.iter().any(|a| a == "--launcher") {
+        return;
+    }
     // started from the Start menu, edits.exe has a console it does not need
     #[cfg(windows)]
     unsafe {
@@ -109,4 +145,13 @@ pub fn run(args: &[String]) {
         })).expect("could not open the window");
         cx.activate(true);
     });
+}
+
+#[cfg(test)]
+mod launcher_tests {
+    #[test]
+    fn the_launcher_names_its_own_icon() {
+        let d = super::desktop_entry(std::path::Path::new("/home/a/.local/bin/edits"));
+        assert!(d.contains("Icon=edits\n") && d.contains("Exec=/home/a/.local/bin/edits app\n") && !d.contains("video-x-generic"));
+    }
 }

@@ -4,7 +4,7 @@
 //! then the thread's title. Collapsed (the panel button, Ctrl+B) it is a rail of the places' icons.
 use crate::app::icons::{icon, Icon};
 use crate::app::runs;
-use crate::app::theme::{brand, Brand, BOLD, HEADER, SIDEBAR, SMALL};
+use crate::app::theme::{brand, Brand, BOLD, HEADER, SMALL};
 use crate::app::ui::{badge, icon_button, text};
 use crate::app::workspace::{Route, Section, Workspace};
 use gpui_kit::component::input::Input;
@@ -114,20 +114,45 @@ impl Workspace {
         rows.retain(|r| matches(&q, &r.subject, &r.title));
         let empty = rows.is_empty();
         let list: Vec<AnyElement> = rows.into_iter().enumerate().map(|(i, r)| self.row(i, r, &b, cx).into_any_element()).collect();
-        div().w(SIDEBAR).h_full().flex_none().flex().flex_col().border_r_1().border_color(b.hair)
-            .child(div().h(HEADER).flex_none().pl(px(16.)).pr(px(8.)).flex().items_center().gap(px(8.))
+        let nav = |id: &'static str, i: Icon, tip: &'static str, ahead: bool, can: bool, b: &Brand, cx: &mut Context<Self>| {
+            icon_button(id, i, b).size(px(28.)).when(!can, |d| d.opacity(0.35))
+                .tooltip(move |w, cx| gpui_kit::component::tooltip::Tooltip::new(tip).build(w, cx))
+                .on_click(cx.listener(move |this, _, _, cx| this.step(ahead, cx)))
+        };
+        let (can_back, can_forward) = (!self.back.is_empty(), !self.forward.is_empty());
+        let hover = b.card;
+        div().w(px(self.sidebar_w)).h_full().flex_none().relative().flex().flex_col().border_r_1().border_color(b.hair)
+            .child(div().h(HEADER).flex_none().pl(px(12.)).pr(px(8.)).flex().items_center().gap(px(4.))
                 // macOS draws its window buttons here
                 .when(cfg!(target_os = "macos"), |d| d.pl(px(80.)))
-                .child(crate::app::icons::mark(b.ink).size(px(20.)))
-                .child(text("EditsMaker", 15., BOLD, b.ink).flex_1())
+                // the mark and the name: a new edit, as t3code's brand starts a new thread
+                .child(div().id("brand").flex().items_center().gap(px(8.)).px(px(4.)).h(px(32.)).rounded(SMALL).cursor_pointer().hover(move |s| s.bg(hover))
+                    .tooltip(|w, cx| gpui_kit::component::tooltip::Tooltip::new("New edit").build(w, cx))
+                    .child(crate::app::icons::mark(b.ink).size(px(20.)))
+                    .child(text("EditsMaker", 15., BOLD, b.ink))
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        this.go(Route::New, cx);
+                        this.input.update(cx, |s, cx| s.focus(window, cx));
+                    })))
+                .child(nav("nav-back", Icon::Back, "Back", false, can_back, &b, cx))
+                .child(nav("nav-forward", Icon::Forward, "Forward", true, can_forward, &b, cx))
+                .child(div().flex_1())
                 .child(toggle))
+            // the search first: it reaches everything below it
+            .child(div().px(px(8.)).pb(px(8.)).child(Input::new(&self.thread_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).suffix(shortcut(&b)).cleanable(true)))
             .child(div().px(px(8.)).flex().flex_col().gap(px(2.)).children(places))
-            .child(div().px(px(8.)).pt(px(16.)).child(Input::new(&self.thread_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).suffix(shortcut(&b)).cleanable(true)))
             .child(text("Edits", 12., FontWeight::NORMAL, b.gray).px(px(16.)).pt(px(16.)).pb(px(8.)))
             .child(div().id("threads").flex_1().min_h_0().overflow_y_scroll().px(px(8.)).pb(px(8.)).flex().flex_col().gap(px(2.)).children(list)
                 .when(empty, |d| d.child(text(if q.trim().is_empty() { "Nothing made yet." } else { "No edit like that." }, 13., crate::app::theme::LIGHT, b.gray).px(px(8.)))))
             // t3code keeps its settings at the foot of the sidebar, and opens them over everything
             .child(div().flex_none().p(px(8.)).border_t_1().border_color(b.hair).child(settings))
+            // its edge, to drag wider or narrower
+            .child(div().id("sidebar-edge").absolute().top_0().bottom_0().right(px(-3.)).w(px(6.)).cursor_col_resize()
+                .hover(move |s| s.bg(hover))
+                .on_mouse_down(MouseButton::Left, cx.listener(|this, _, _, cx| {
+                    this.sidebar_drag = true;
+                    cx.notify();
+                })))
             .into_any_element()
     }
 }

@@ -24,7 +24,7 @@ pub fn doing(what: String) {
 pub fn activity(doing: &str, since: u64, nonce: u64) -> Value {
     let mut a = json!({
         "details": if doing.is_empty() { "Making edits" } else { doing },
-        "state": "Link in. Edits out.",
+        "state": "The AI video harness.",
         "timestamps": {"start": since},
         "assets": {"large_image": ICON, "large_text": "EditsMaker"},
         "buttons": [{"label": "Download EditsMaker", "url": DOWNLOAD}],

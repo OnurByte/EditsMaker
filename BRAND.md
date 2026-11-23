@@ -31,7 +31,7 @@ A letter **E** drawn with one stroke width on a 96-unit grid, then cut on a slan
 
 - The product is **EditsMaker**: one word, capital E, capital M. The command is **`edits`**, always in code type.
 - In sentences: "EditsMaker cuts…", never "the EditsMaker", never "Edits Maker" or "EDITSMAKER".
-- The line is **Link in. Edits out.** with two full stops. It is never translated inside the logo lockup.
+- The line is **The AI video harness.** with one full stop. It is never translated inside the logo lockup.
 
 ## 3. Colour
 
@@ -126,7 +126,7 @@ Our comparisons have to survive someone checking them.
 
 The first and the last things on a page are the ones people remember best (the serial position effect) [10]. So the page opens with what it is and how to get it, and closes with how to install it:
 
-1. **Title**: the mark and the name, centred, "Link in. Edits out." Nothing above it.
+1. **Title**: the mark and the name, centred, "The AI video harness." Nothing above it.
 2. **Download** band, red, linking to Install.
 3. **Badges**: up to six chips, one red.
 4. **Made with it**: the videos; proof before claims.

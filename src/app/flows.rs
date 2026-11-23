@@ -1,6 +1,6 @@
 //! Flows, as in n8n but in one line each: a topic (the news on it, from a topic pack) or a channel, made into edits,
 //! posted to accounts. Each is an `edits follow`; `edits watch` (or the background service) runs them.
-use crate::app::icons::{icon, Icon};
+use crate::app::icons::{icon, illustration, Icon};
 use crate::app::runs::Flow;
 use crate::app::theme::{Brand, BOLD, LIGHT};
 use crate::app::ui::{card, pill, primary, text};
@@ -80,13 +80,15 @@ impl Workspace {
             }))
         }));
         let source = self.picker_pill("flow-source", Icon::Workflow, self.flow_source.clone().unwrap_or_else(|| "Pick a topic".into()), Picker::FlowSource, b, cx);
-        let label = |s: &'static str| text(s, 13., BOLD, b.ink).w(px(96.)).flex_none();
+        // each step with its micro illustration: what it is about, how it is made, where it goes, how often
+        let label = |s: &'static str, art: &'static str| div().w(px(152.)).flex_none().flex().items_center().gap(px(8.))
+            .child(illustration(art).w(px(48.)).h(px(36.)).flex_none()).child(text(s, 13., BOLD, b.ink));
         let new = card(b).gap(px(16.))
-            .child(div().flex().items_center().gap(px(16.)).child(label("About")).child(source))
+            .child(div().flex().items_center().gap(px(16.)).child(label("About", "topics")).child(source))
             .when(self.picker == Some(Picker::FlowSource), |d| d.child(self.picker_list(Picker::FlowSource, b, cx)))
-            .child(div().flex().items_center().gap(px(16.)).child(label("Made with")).child(text(self.preset.clone().unwrap_or_else(|| "the composer's preset (none now)".into()), 13., FontWeight::NORMAL, b.gray)))
-            .child(div().flex().items_center().gap(px(16.)).child(label("Posted to")).child(post))
-            .child(div().flex().items_center().gap(px(16.)).child(label("Every")).child(every))
+            .child(div().flex().items_center().gap(px(16.)).child(label("Made with", "styles")).child(text(self.preset.clone().unwrap_or_else(|| "the composer's preset (none now)".into()), 13., FontWeight::NORMAL, b.gray)))
+            .child(div().flex().items_center().gap(px(16.)).child(label("Posted to", "accounts")).child(post))
+            .child(div().flex().items_center().gap(px(16.)).child(label("Every", "schedule")).child(every))
             .child(div().flex().gap(px(8.))
                 .child(primary("make-flow", "Make the flow", b).on_click(cx.listener(|this, _, window, cx| {
                     let Some(src) = this.flow_source.clone() else { return };

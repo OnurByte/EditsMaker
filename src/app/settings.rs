@@ -22,7 +22,7 @@ const SECTIONS: &[(Section, &str, Icon, &str)] = &[
     (Section::Accounts, "Accounts", Icon::User, "accounts connect sign in tiktok youtube instagram bluesky facebook post"),
     (Section::Agents, "Agents", Icon::Terminal, "agents mcp server skills claude code chatgpt cursor tools"),
     (Section::Usage, "Usage", Icon::Usage, "usage how many edits clips space disk ai calls requests time spent stats"),
-    (Section::Appearance, "Appearance", Icon::Palette, "appearance theme dark light system omarchy accent colour color chat width text size font"),
+    (Section::Appearance, "Appearance", Icon::Palette, "appearance theme themes dark light system omarchy dracula nord catppuccin tokyo night gruvbox one dark rose pine solarized everforest accent colour color chat width text size font"),
     (Section::About, "About", Icon::Info, "about version github x twitter author issues program updates update rollback latest release check doctor ffmpeg yt-dlp whisper terms of use privacy license legal"),
 ];
 
@@ -307,7 +307,7 @@ impl Workspace {
                 vec![group("", vec![
                     row("Where edits go", s.out.display().to_string(), pill("out", Some(Icon::Folder), "Open", false, b).on_click(move |_, _, cx| cx.open_with_system(&out)), true, b).into_any_element(),
                     row("What renders the video", "auto uses the graphics card when it works, else the processor.", self.choice("encoder", &s.encoders, &s.encoder, &["encoder"], b, cx), false, b).into_any_element(),
-                    row("Discord", "Shows Playing EditsMaker on your profile and what you are making. Your friends also see a Download button: Discord never shows you your own.",
+                    row("Discord", "Show what you are making on your Discord profile.",
                         Switch::new("discord").checked(theme::prefs().discord).on_click(|on: &bool, window, cx| theme::save(&Prefs { discord: *on, ..theme::prefs() }, window, cx)), false, b).into_any_element(),
                 ], b).into_any_element()]
             }
@@ -334,8 +334,13 @@ impl Workspace {
                     row(&a.name, format!("{} · {}", a.platform, a.user), self.button(("disconnect", i), "Disconnect", &["disconnect", &a.name], b, cx), i == 0, b).into_any_element()
                 }).collect();
                 let first = rows.is_empty();
-                let sites = div().flex().gap(px(8.)).children(s.sites.iter().enumerate().map(|(i, site)| self.button(("connect", i), site, &["connect", site], b, cx)));
-                rows.push(row("Connect an account", "Signs in once in a window of its own; edits never sees the password.", sites, first, b).into_any_element());
+                if s.sites.is_empty() {
+                    // posting is a pack that starts off
+                    rows.push(row("Connect an account", "Posting is off until the Post pack is on.", self.button("post-on", "Turn on Post", &["packs", "on", "edits.post"], b, cx), first, b).into_any_element());
+                } else {
+                    let sites = div().flex().gap(px(8.)).children(s.sites.iter().enumerate().map(|(i, site)| self.button(("connect", i), site, &["connect", site], b, cx)));
+                    rows.push(row("Connect an account", "Signs in once in a window of its own; edits never sees the password.", sites, first, b).into_any_element());
+                }
                 let token = |i: usize, platform: &'static str, b: &Brand, cx: &mut Context<Self>| {
                     let [who, secret] = [self.sign_in[i * 2].clone(), self.sign_in[i * 2 + 1].clone()];
                     div().flex().items_center().gap(px(8.))
@@ -460,10 +465,12 @@ impl Workspace {
         let d = Prefs::default();
         let omarchy = theme::omarchy_dir().is_some();
         let on_omarchy = p.mode == "omarchy" && omarchy;
+        // a theme from the library: the mode tiles are not what is in use
+        let on_named = p.mode.starts_with("theme:") && theme::named(&p.mode[6..]).is_some();
         let accent = theme::hex_of(&p.accent);
         let (light, dark) = (theme::palette(false, accent), theme::palette(true, accent));
         let tiles = [("system", "System"), ("light", "Light"), ("dark", "Dark")].into_iter().map(|(m, label)| {
-            let on = !on_omarchy && p.mode == m;
+            let on = !on_omarchy && !on_named && p.mode == m;
             let preview = match m {
                 "light" => wireframe(&light).w_full(),
                 "dark" => wireframe(&dark).w_full(),
@@ -477,21 +484,26 @@ impl Workspace {
                 theme::save(&Prefs { mode: m.into(), mode_picked: true, ..theme::prefs() }, window, cx);
             })).into_any_element()
         }).collect::<Vec<_>>();
-        // the theme library: EditsMaker's colours, and Omarchy's
-        let mut themes: Vec<(&'static str, String, String, Brand)> = vec![("edits", "EditsMaker".into(), "Ink and paper, one warm grey, your accent".into(), if theme::is_dark(cx) && !on_omarchy { dark } else { light })];
+        // the theme library: EditsMaker's colours, Omarchy's, then the editor themes everyone knows
+        let mut themes: Vec<(String, String, String, Brand)> = vec![("edits".into(), "EditsMaker".into(), "Ink and paper, your accent".into(), if theme::is_dark(cx) && !on_omarchy && !on_named { dark } else { light })];
         if omarchy {
             let name = std::fs::read_to_string(crate::util::home().join(".local/state/omarchy/current/theme.name")).unwrap_or_default();
             if let Some(ob) = theme::omarchy_brand() {
-                themes.push(("omarchy", format!("Omarchy · {}", name.trim()), "Follows the theme you pick in Omarchy, live".into(), ob));
+                themes.push(("omarchy".into(), format!("Omarchy · {}", name.trim()), "Follows Omarchy, live".into(), ob));
+            }
+        }
+        for &(id, name, dark_, _) in theme::THEMES {
+            if let Some((c, _)) = theme::named(id) {
+                themes.push((format!("theme:{id}"), name.into(), if dark_ { "Dark".into() } else { "Light".into() }, c));
             }
         }
         let cards = themes.into_iter().map(|(id, label, about, c)| {
-            let on = if id == "omarchy" { on_omarchy } else { !on_omarchy };
+            let on = match id.as_str() { "omarchy" => on_omarchy, "edits" => !on_omarchy && !on_named, m => p.mode == m };
             let hover = b.accent.opacity(0.06);
-            div().id(SharedString::from(format!("theme-{id}"))).flex_1().min_w(px(220.)).p(px(12.)).flex().items_center().gap(px(12.)).rounded(px(12.)).cursor_pointer()
+            div().id(SharedString::from(format!("theme-{id}"))).w(relative(0.32)).min_w(px(180.)).p(px(12.)).flex().items_center().gap(px(12.)).rounded(px(12.)).cursor_pointer()
                 .bg(if on { b.accent.opacity(0.14) } else { b.page }).border_1().border_color(if on { b.accent } else { b.hair })
                 .when(!on, |d| d.hover(move |s| s.bg(hover)))
-                .child(div().size(px(40.)).flex_none().rounded_full().overflow_hidden().border_1().border_color(b.hair).flex()
+                .child(div().size(px(36.)).flex_none().rounded_full().overflow_hidden().border_1().border_color(b.hair).flex()
                     .child(div().w(relative(0.5)).h_full().bg(c.page)).child(div().w(relative(0.5)).h_full().bg(c.card).flex().items_center().justify_center().child(div().size(px(8.)).rounded_full().bg(c.accent))))
                 .child(div().flex_1().min_w_0().flex().flex_col().gap(px(2.))
                     .child(text(label, 13., BOLD, b.ink).truncate())
@@ -499,8 +511,8 @@ impl Workspace {
                 .when(on, |d| d.child(icon(Icon::Check, b.accent).size(px(16.))))
                 .on_click(cx.listener(move |_, _, window, cx| {
                     let p = theme::prefs();
-                    // back from Omarchy: the mode picked before, else the system's
-                    let mode = if id == "omarchy" { "omarchy".to_string() } else if p.mode == "omarchy" { "system".into() } else { p.mode.clone() };
+                    // back to EditsMaker's own: the mode picked before, else the system's
+                    let mode = if id != "edits" { id.clone() } else if p.mode == "omarchy" || p.mode.starts_with("theme:") { "system".to_string() } else { p.mode.clone() };
                     theme::save(&Prefs { mode, mode_picked: true, ..p }, window, cx);
                 }))
                 .into_any_element()
@@ -514,8 +526,8 @@ impl Workspace {
                 .on_click(cx.listener(move |_, _, window, cx| theme::save(&f(theme::prefs()), window, cx))).into_any_element()
         };
         // t3code's accent; Omarchy's own when following Omarchy
-        let accents: AnyElement = if on_omarchy {
-            text("Omarchy's accent", 13., FontWeight::NORMAL, b.gray).into_any_element()
+        let accents: AnyElement = if on_omarchy || on_named {
+            text("The theme's own", 13., FontWeight::NORMAL, b.gray).into_any_element()
         } else {
             div().flex().items_center().gap(px(8.)).child(reset("reset-accent", p.accent != d.accent, |p| Prefs { accent: Prefs::default().accent, ..p }, b, cx))
                 .children(theme::ACCENTS.iter().enumerate().map(|(i, &(name, hexv))| {

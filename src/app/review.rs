@@ -211,7 +211,25 @@ impl Workspace {
                 .child(text(n.text.clone(), 14., LIGHT, b.ink))
                 .into_any_element()
         }).collect::<Vec<_>>();
-        div().size_full().flex().flex_col()
+        let focus = self.review_focus.clone();
+        div().id("editor").size_full().flex().flex_col().track_focus(&focus)
+            // a click on the picture or the bare page gives the player the keys
+            .on_mouse_down(MouseButton::Left, cx.listener(|this, _, window, cx| window.focus(&this.review_focus, cx)))
+            // as any player: Space plays and pauses, the arrows step a second; only when no field has the keys
+            .on_key_down(cx.listener(|this, e: &KeyDownEvent, window, cx| {
+                if !this.review_focus.is_focused(window) {
+                    return;
+                }
+                let Some(p) = this.review.as_mut().and_then(|r| r.player.as_mut()) else { return };
+                match e.keystroke.key.as_str() {
+                    "space" => p.toggle(),
+                    "left" => p.seek(p.position() - 1.),
+                    "right" => p.seek(p.position() + 1.),
+                    _ => return,
+                }
+                cx.stop_propagation();
+                cx.notify();
+            }))
             .child(div().h(HEADER).flex_none().px(px(24.)).flex().items_center().gap(px(8.)).border_b_1().border_color(b.hair)
                 .child(icon(Icon::Eye, b.gray).size(px(16.)))
                 .child(text(name, 14., BOLD, b.ink).flex_none())
