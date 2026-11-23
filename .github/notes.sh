@@ -21,3 +21,5 @@ for c in $commits; do
   [ "$count" -gt 1 ] && printf '### %s\n\n' "$title"
   [ -n "$body" ] && printf '%s\n\n' "$body"
 done
+# a last commit with no list of its own must not fail the release
+exit 0
