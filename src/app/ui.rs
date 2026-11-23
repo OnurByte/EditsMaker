@@ -51,11 +51,11 @@ pub fn tag(label: &str, b: &Brand) -> Div {
         .child(text(label.to_string(), 12., crate::app::theme::BOLD, c))
 }
 
-/// What lies under a modal: the page frosted over (GPUI draws no backdrop blur, so the page's own colour veils it and
-/// a dark tint pushes it back), taking every click and scroll so nothing behind moves. A click on it closes the modal.
+/// What lies over the blurred page (Workspace::blurred) under a modal: a light veil, taking every click and scroll so
+/// nothing behind moves. A click on it closes the modal.
 pub fn backdrop(id: impl Into<SharedString>, b: &Brand) -> Stateful<Div> {
-    div().id(ElementId::Name(id.into())).absolute().inset_0().occlude().bg(b.page.opacity(0.72))
-        .child(div().size_full().bg(black().opacity(0.28)))
+    div().id(ElementId::Name(id.into())).absolute().inset_0().occlude().bg(b.page.opacity(0.25))
+        .child(div().size_full().bg(black().opacity(0.25)))
 }
 
 /// A modal sheet over the window: a frosted backdrop that closes it, and the card in the middle.

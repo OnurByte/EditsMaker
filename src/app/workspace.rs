@@ -6,7 +6,6 @@ use crate::app::theme::{self, brand};
 use gpui_kit::component::input::{InputEvent, InputState, TextareaState};
 use gpui_kit::component::notification::Notification;
 use gpui_kit::component::WindowExt;
-use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -593,9 +592,9 @@ impl Workspace {
     }
 }
 
-impl Render for Workspace {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let b = brand(cx);
+impl Workspace {
+    /// The window's page: the sidebar and the route in view.
+    fn page(&mut self, window: &mut Window, cx: &mut Context<Self>) -> Vec<AnyElement> {
         let main = match self.route {
             Route::Market => self.marketplace(false, window, cx).into_any_element(),
             Route::Automations => self.marketplace(true, window, cx).into_any_element(),
@@ -603,12 +602,53 @@ impl Render for Workspace {
             Route::Review => self.review_screen(window, cx).into_any_element(),
             _ => self.chat_view(window, cx).into_any_element(),
         };
-        let settings = self.settings_open.map(|at| self.settings_window(at, window, cx));
+        let mut v = vec![];
+        if !self.review_only {
+            v.push(self.sidebar(cx).into_any_element());
+        }
+        v.push(div().flex_1().min_w_0().h_full().flex().flex_col().child(main).into_any_element());
+        v
+    }
+
+    /// The page blurred, under a modal: GPUI has no blur filter, so the page is drawn again at small offsets on a
+    /// ring and the copies averaged (each one over the last at 1/(n+1)), a box blur. It sits under the modal's
+    /// backdrop, which takes every click and scroll.
+    fn blurred(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        let page = brand(cx).page;
+        let mut layer = div().absolute().inset_0().overflow_hidden();
+        for (i, (dx, dy)) in blur_offsets(6.).into_iter().enumerate() {
+            let copy = div().id(("blur", i)).absolute().top(px(dy)).left(px(dx)).size_full().flex().bg(page)
+                .opacity(1. / (i as f32 + 1.)).children(self.page(window, cx));
+            layer = layer.child(copy);
+        }
+        layer.into_any_element()
+    }
+}
+
+/// Where the blur's copies of the page go: the middle, a ring of eight `r` / 2 px out, then eight more `r` px out,
+/// turned half a step so the two rings fill each other's gaps.
+pub fn blur_offsets(r: f32) -> Vec<(f32, f32)> {
+    let mut v = vec![(0., 0.)];
+    for (radius, turn) in [(r / 2., 0.), (r, 0.5)] {
+        v.extend((0..8).map(|k| {
+            let a = (k as f32 + turn) * std::f32::consts::FRAC_PI_4;
+            (radius * a.cos(), radius * a.sin())
+        }));
+    }
+    v
+}
+
+impl Render for Workspace {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let b = brand(cx);
+        let settings = self.settings_open.map(|at| self.settings_window(at, window, cx).into_any_element());
         let pack = self.market.open.clone().and_then(|id| self.pack_sheet(&id, cx));
         if self.welcome {
             return div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
                 .child(self.welcome(window, cx)).children(settings);
         }
+        let page = self.page(window, cx);
+        let blur = (settings.is_some() || pack.is_some()).then(|| self.blurred(window, cx));
         div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
             .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
                 if let Some(p) = paths.paths().first() {
@@ -629,8 +669,8 @@ impl Render for Workspace {
                 s.update(cx, |s, cx| s.focus(window, cx));
                 cx.notify();
             }))
-            .when(!self.review_only, |d| d.child(self.sidebar(cx)))
-            .child(div().flex_1().min_w_0().h_full().flex().flex_col().child(main))
+            .children(page)
+            .children(blur)
             .children(pack)
             .children(settings)
     }
@@ -661,7 +701,7 @@ fn copy_file(p: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     // not super::*: gpui_kit's own `test` attribute would come with it
-    use super::{commands, file_uri};
+    use super::{blur_offsets, commands, file_uri};
     use std::path::PathBuf;
 
     fn s(v: &[&str]) -> Vec<String> {
@@ -676,6 +716,9 @@ mod tests {
         assert_eq!(commands("https://youtu.be/x --preset mine", &[], Some("akis-whip"), None), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
         assert_eq!(commands("x", &[], None, Some("stardust")), [s(&["x", "--overlay", "stardust"])], "a 3D scene goes over it");
         assert!(commands("  ", &[], None, None).is_empty());
+        let ring = blur_offsets(5.);
+        assert_eq!(ring.len(), 17);
+        assert!(ring[9..].iter().all(|(x, y)| ((x * x + y * y).sqrt() - 5.).abs() < 1e-4), "the outer copies sit on a ring");
         assert_eq!(file_uri(std::path::Path::new("/home/a/Videos/Halime Sultan'ın.mp4")), "file:///home/a/Videos/Halime%20Sultan%27%C4%B1n.mp4");
     }
 
