@@ -290,8 +290,21 @@ impl Workspace {
                     .child(div().flex().items_center().gap(px(8.)).child(text(if on { "On" } else { "Off" }, 13., BOLD, if on { b.ink } else { b.gray })).child(toggle)))
                 .child(text(p.description.clone(), 15., LIGHT, b.ink))
                 .when(!inside.is_empty(), |d| d.child(card(&b).bg(b.page).gap(px(4.))
-                    .child(text(if !p.presets.is_empty() { "Its styles" } else if !p.topics.is_empty() { "Its topics" } else { "What it does" }, 13., BOLD, b.gray).pb(px(4.)))
+                    .child(div().flex().items_center().gap(px(8.)).pb(px(4.))
+                        .child(illustration(art(&p)).w(px(40.)).h(px(30.)))
+                        .child(text(if !p.presets.is_empty() { "Its styles" } else if !p.topics.is_empty() { "Its topics" } else { "What it does" }, 13., BOLD, b.gray)))
                     .children(inside)))
+                // a pack that runs by itself: how it goes, each step with its illustration
+                .when(runs_something(&p.kinds) || p.is("feed"), |d| d.child(card(&b).bg(b.page).gap(px(12.))
+                    .child(text("How it runs", 13., BOLD, b.gray))
+                    .child(div().flex().items_center().gap(px(8.)).children([
+                        ("topics", if p.is("feed") { "A new story comes in" } else if p.is("source") { "It finds something new" } else { "An edit is ready" }),
+                        ("styles", "edits makes the video"),
+                        ("accounts", if p.is("automation") { "It goes up on your account" } else { "It is posted, if you say where" }),
+                    ].into_iter().enumerate().map(|(i, (a, said))| div().flex_1().flex().flex_col().items_center().gap(px(4.))
+                        .child(illustration(a).w(px(72.)).h(px(54.)))
+                        .child(text(format!("{}. {said}", i + 1), 12., FontWeight::NORMAL, b.ink).text_center()))))
+                    .when(!on, |d| d.child(text("It starts off: turn it on above when you want it to run.", 12., LIGHT, b.gray)))))
                 .children(p.from.clone().map(|f| text(format!("From {f}"), 12., FontWeight::NORMAL, b.gray)))
                 .child(div().pt(px(8.)).border_t_1().border_color(b.hair).flex().flex_wrap().items_center().gap(px(8.)).children(actions)));
         Some(div().absolute().inset_0().flex().items_center().justify_center().child(backdrop).child(body).into_any_element())

@@ -88,6 +88,29 @@ impl Workspace {
         }
     }
 
+    /// t3code's TimelineMinimap: a short line for each item down the timeline's right edge, the one in view
+    /// highlighted; a click jumps to it, the chevrons step one up or down.
+    fn minimap(&self, n: usize, b: &Brand, cx: &mut Context<Self>) -> impl IntoElement {
+        let at = self.timeline_scroll.logical_scroll_top().0.min(n - 1);
+        let jump = |to: usize| move |this: &mut Self, _: &ClickEvent, _: &mut Window, cx: &mut Context<Self>| {
+            this.timeline_scroll.scroll_to_top_of_item(to);
+            cx.notify();
+        };
+        let (hover, gray, ink) = (b.card, b.gray, b.ink);
+        let chevron = |id: &'static str, i: Icon, to: usize, cx: &mut Context<Self>| div().id(id).size(px(20.)).flex().items_center().justify_center().rounded(px(4.)).cursor_pointer()
+            .hover(move |s| s.bg(hover)).child(icon(i, gray).size(px(12.))).on_click(cx.listener(jump(to)));
+        div().absolute().right(px(8.)).top_0().bottom_0().flex().flex_col().justify_center()
+            .child(div().py(px(6.)).px(px(4.)).flex().flex_col().items_end().gap(px(2.)).rounded(px(8.))
+                .child(chevron("mini-up", Icon::ChevronUp, at.saturating_sub(1), cx))
+                .children((0..n).map(|i| {
+                    let on = i == at;
+                    div().id(("mini", i)).w(px(20.)).h(px(10.)).flex().items_center().justify_end().cursor_pointer()
+                        .child(div().h(px(2.)).w(px(if on { 16. } else { 10. })).rounded(px(1.)).bg(if on { ink } else { gray.opacity(0.6) }))
+                        .on_click(cx.listener(jump(i)))
+                }))
+                .child(chevron("mini-down", Icon::ChevronDown, (at + 1).min(n - 1), cx)))
+    }
+
     pub fn chat_view(&self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let b = brand(cx);
         let composer = div().flex_none().px(px(24.)).pb(px(24.)).child(self.composer(window, cx));
@@ -95,15 +118,21 @@ impl Workspace {
             return div().size_full().flex().flex_col()
                 .child(div().flex_1().flex().flex_col().items_center().justify_center().gap(px(16.)).px(px(24.))
                     .child(crate::app::icons::mark(b.ink).size(px(48.)))
-                    .child(text("Link in. Edits out.", 32., BOLD, b.ink))
+                    .child(text("The AI video harness.", 32., BOLD, b.ink))
                     .child(text("A YouTube video or channel, a topic, or a video file: drop one anywhere here.", 15., LIGHT, b.gray).max_w(px(420.)).text_center()))
                 .child(composer);
         }
         let (subject, title, folder, items) = self.timeline(cx);
+        let n = items.len();
+        // each item its own child of the scroll, so the minimap can jump to it
+        let rows = items.into_iter().map(|it| div().w_full().max_w(theme::column()).mx_auto().px(px(24.)).pt(px(24.)).child(it));
         div().size_full().flex().flex_col()
             .child(self.header(&subject, title, folder, &b))
-            .child(div().id("timeline").flex_1().min_h_0().overflow_y_scroll()
-                .child(div().w_full().max_w(theme::column()).mx_auto().px(px(24.)).py(px(24.)).flex().flex_col().gap(px(24.)).children(items)))
+            .child(div().flex_1().min_h_0().relative()
+                .child(div().id("timeline").size_full().overflow_y_scroll().track_scroll(&self.timeline_scroll).pb(px(24.))
+                    // the minimap follows what is in view
+                    .on_scroll(cx.listener(|_, _, _, cx| cx.notify())).flex().flex_col().children(rows))
+                .when(n >= 2, |d| d.child(self.minimap(n, &b, cx))))
             .child(composer)
     }
 }

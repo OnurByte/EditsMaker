@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-dark.svg">
-  <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. Link in. Edits out.">
+  <img src="assets/readme/hero-light.svg" width="100%" alt="EditsMaker. The AI video harness.">
 </picture>
 
 <a href="#install">

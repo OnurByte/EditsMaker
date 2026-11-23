@@ -6,7 +6,7 @@ use gpui_kit::{img, Hsla, Image, ImageFormat, Img, Rgba, Styled};
 use std::sync::{Arc, LazyLock};
 
 gpui_kit::assets::icon_assets!(pub Extra, [Trash, Rss, Film, Package, Download, Share2, Zap, Store, SquarePen, SlidersHorizontal, KeyRound, Brain, Library, PanelLeft,
-    Upload, FileDown, GitBranch, ExternalLink, Gauge, Box, ChevronDown, LockOpen, Lock, Check, RotateCcw, ChevronRight, Pause, Volume2, VolumeX]);
+    Upload, FileDown, GitBranch, ExternalLink, Gauge, Box, ChevronDown, LockOpen, Lock, Check, RotateCcw, ChevronRight, Pause, Volume2, VolumeX, ArrowLeft, ArrowRight, ChevronUp]);
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Icon {
@@ -55,6 +55,9 @@ pub enum Icon {
     Pause,
     Volume,
     Mute,
+    Back,
+    Forward,
+    ChevronUp,
 }
 
 fn name(i: Icon) -> IconName {
@@ -103,6 +106,9 @@ fn name(i: Icon) -> IconName {
         Icon::Pause => IconName::Pause,
         Icon::Volume => IconName::Volume2,
         Icon::Mute => IconName::VolumeX,
+        Icon::Back => IconName::ArrowLeft,
+        Icon::Forward => IconName::ArrowRight,
+        Icon::ChevronUp => IconName::ChevronUp,
     }
 }
 
@@ -190,7 +196,7 @@ pub fn illustration(name: &str) -> Img {
             match name { $($f => include_str!(concat!("../../assets/illustrations/", $f, ".svg")),)* _ => include_str!("../../assets/illustrations/styles.svg") }
         };
     }
-    let src = art!("styles", "topics", "automations", "skills", "scene", "library", "search", "community", "hello", "brain", "agents", "accounts", "folder", "ready");
+    let src = art!("styles", "topics", "automations", "skills", "scene", "library", "search", "community", "hello", "brain", "agents", "accounts", "folder", "ready", "schedule");
     // on a dark page the pale backdrop would turn muddy: it is drawn whole, as a sticker
     let dark = ILLUSTRATIONS_DARK.load(std::sync::atomic::Ordering::Relaxed);
     picture(&format!("art:{name}:{dark}"), || {

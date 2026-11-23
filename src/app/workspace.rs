@@ -130,8 +130,13 @@ pub struct Workspace {
     pub review: Option<Review>,
     /// started by `edits review CLIP`: saving the notes closes the app
     pub review_only: bool,
-    /// the sidebar, open or a rail of icons (Ctrl+B)
+    /// the sidebar, open or a rail of icons (Ctrl+B), its width, and whether its edge is being dragged
     pub sidebar_open: bool,
+    pub sidebar_w: f32,
+    pub sidebar_drag: bool,
+    /// t3code's back and forward: the places been to, and the ones gone back from
+    pub back: Vec<Route>,
+    pub forward: Vec<Route>,
     /// t3code's thread search, the marketplace's search, and a pack's git address
     pub thread_search: Entity<InputState>,
     pub market_search: Entity<InputState>,
@@ -143,6 +148,10 @@ pub struct Workspace {
     pub welcome_step: usize,
     /// Bluesky's handle and app password, Facebook's Page and token: signed in here, not in a terminal
     pub sign_in: [Entity<InputState>; 4],
+    /// the editor's keys (Space, the arrows)
+    pub review_focus: FocusHandle,
+    /// the timeline's scroll, for t3code's minimap beside it
+    pub timeline_scroll: ScrollHandle,
     /// what Usage counts, read when it opens
     pub usage: Option<crate::app::usage::Usage>,
     _subscriptions: Vec<Subscription>,
@@ -217,7 +226,7 @@ impl Workspace {
         let mut this = Self { input, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, settings_search, welcome: review.is_none() && !theme::prefs().onboarded, files: vec![], preset: None, overlay: None, post: vec![], picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
             market: Market::default(), settings: None, doctor: None, latest: None, changing: None, review: None, review_only: review.is_some(),
-            sidebar_open: true, thread_search, market_search, library_search, git_url, model_lists: Default::default(), welcome_step: 0, sign_in, usage: None, _subscriptions: subscriptions };
+            sidebar_open: true, sidebar_w: f32::from(theme::SIDEBAR), sidebar_drag: false, back: vec![], forward: vec![], thread_search, market_search, library_search, git_url, model_lists: Default::default(), welcome_step: 0, sign_in, timeline_scroll: ScrollHandle::new(), review_focus: cx.focus_handle(), usage: None, _subscriptions: subscriptions };
         crate::app::discord::start();
         // the composer's model picker shows the AI in use from the start
         this.load_settings(cx);
@@ -231,6 +240,25 @@ impl Workspace {
     }
 
     pub fn go(&mut self, to: Route, cx: &mut Context<Self>) {
+        if to != self.route {
+            self.back.push(self.route);
+            self.back.truncate(50);
+            self.forward.clear();
+        }
+        self.visit(to, cx);
+    }
+
+    /// Back (or forward, `ahead`) one place, as a browser's buttons.
+    pub fn step(&mut self, ahead: bool, cx: &mut Context<Self>) {
+        let (from, to) = if ahead { (&mut self.forward, &mut self.back) } else { (&mut self.back, &mut self.forward) };
+        let Some(r) = from.pop() else { return };
+        to.push(self.route);
+        // a review left behind is gone: step past it
+        let r = if r == Route::Review && self.review.is_none() { Route::New } else { r };
+        self.visit(r, cx);
+    }
+
+    fn visit(&mut self, to: Route, cx: &mut Context<Self>) {
         if to != Route::Review {
             if let Some(p) = self.review.as_mut().and_then(|r| r.player.as_mut()) {
                 p.pause();
@@ -513,6 +541,10 @@ impl Workspace {
                     _ => {}
                 }
                 this.load_settings(cx);
+                // a pack turned on or off here shows so in the marketplace too
+                if what.starts_with("packs ") {
+                    this.load_market(cx);
+                }
                 if this.route == Route::Automations {
                     this.load_flows(cx);
                 }
@@ -560,7 +592,12 @@ impl Workspace {
             }
         }));
         self.review = Some(Review { clip: clip.clone(), sheet: None, at: 0, spot: None, notes: vec![], note, general, player: None });
+        if self.route != Route::Review {
+            self.back.push(self.route);
+            self.forward.clear();
+        }
         self.route = Route::Review;
+        window.focus(&self.review_focus, cx);
         let c = clip.clone();
         cx.spawn(async move |this, cx| {
             let p = cx.background_executor().spawn(async move { crate::app::player::Player::open(&c, 0.0) }).await;
@@ -656,6 +693,25 @@ impl Render for Workspace {
                 }
             }))
             .on_action(cx.listener(|this, _: &crate::app::ToggleSidebar, _, cx| this.toggle_sidebar(cx)))
+            // the sidebar's edge, dragged: its width follows the pointer; pulled narrow it folds to the rail
+            .on_mouse_move(cx.listener(|this, e: &MouseMoveEvent, _, cx| {
+                if this.sidebar_drag {
+                    let x = f32::from(e.position.x);
+                    if x < 160. {
+                        this.sidebar_open = false;
+                    } else {
+                        this.sidebar_open = true;
+                        this.sidebar_w = x.clamp(200., 440.);
+                    }
+                    cx.notify();
+                }
+            }))
+            .on_mouse_up(MouseButton::Left, cx.listener(|this, _, _, cx| {
+                if this.sidebar_drag {
+                    this.sidebar_drag = false;
+                    cx.notify();
+                }
+            }))
             // t3code's search shortcut: the search of the page in view, else the edits' in the sidebar
             .on_action(cx.listener(|this, _: &crate::app::Search, window, cx| {
                 let s = match this.route {

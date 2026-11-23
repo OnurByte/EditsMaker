@@ -81,8 +81,14 @@ pub fn resolve(what: &str) -> Result<(Vec<Feed>, Option<String>), String> {
         }
     }
     let names = [want.clone(), format!("edits.rss-{want}"), format!("edits.{want}")];
-    let p = packs::all().into_iter().find(|p| !p.manifest.feeds.is_empty() && names.contains(&p.manifest.id))
-        .ok_or(format!("no feed pack or topic \"{what}\": edits packs lists them (the RSS ones say feed), or give a feed's address"))?;
+    let is = |p: &packs::Pack| p.manifest.topics.iter().any(|t| t.key == key) || (!p.manifest.feeds.is_empty() && names.contains(&p.manifest.id));
+    let p = packs::all().into_iter().find(|p| !p.manifest.feeds.is_empty() && names.contains(&p.manifest.id)).ok_or_else(|| {
+        // in a pack that is off: say how to turn it on
+        match packs::every().into_iter().find(|p| is(p)) {
+            Some(off) => packs::turn_on(&off.manifest.id),
+            None => format!("no feed pack or topic \"{what}\": edits packs lists them (the RSS ones say feed), or give a feed's address"),
+        }
+    })?;
     let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<crate::preset::Preset>(t).ok()).map(|p| p.name);
     Ok((p.manifest.feeds, preset))
 }

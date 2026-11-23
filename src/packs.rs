@@ -491,21 +491,52 @@ fn disabled_file() -> PathBuf {
 }
 
 /// The packs turned off.
+/// The packs turned on by hand that start off (packs-on.json).
+fn enabled_file() -> PathBuf {
+    crate::util::home().join(".config/edits/packs-on.json")
+}
+
+fn read_list(f: &Path) -> Vec<String> {
+    std::fs::read_to_string(f).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+}
+
+/// A pack that runs on its own (posts, finds things, follows feeds) starts off: it is turned on by hand, once.
+pub fn starts_off(m: &Manifest) -> bool {
+    m.kinds.iter().any(|k| k == "automation" || k == "source" || k == "feed")
+}
+
+/// Whether a pack is off: turned off by hand, or one that starts off and was never turned on.
+pub fn is_off(m: &Manifest, off: &[String], on: &[String]) -> bool {
+    off.contains(&m.id) || (starts_off(m) && !on.contains(&m.id))
+}
+
+/// Every pack that is off now. Tests see every pack on: they must not hang on this computer's choices (is_off's own
+/// test covers which start off).
 pub fn disabled() -> Vec<String> {
-    std::fs::read_to_string(disabled_file()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+    if cfg!(test) {
+        return vec![];
+    }
+    let (off, on) = (read_list(&disabled_file()), read_list(&enabled_file()));
+    every().iter().filter(|p| is_off(&p.manifest, &off, &on)).map(|p| p.manifest.id.clone()).collect()
+}
+
+/// The words that say how to turn a pack on, for an error that met it off.
+pub fn turn_on(id: &str) -> String {
+    format!("{id} is off: turn it on in the app's Automations, or edits packs on {id}")
 }
 
 /// Turns a pack on or off; any pack, built in too. An off pack's preset, skill, feeds and automation are not used.
 pub fn enable(id: &str, on: bool) -> Result<Pack, String> {
     let p = every().into_iter().find(|p| p.manifest.id == id).ok_or(format!("no pack \"{id}\" (edits packs lists them)"))?;
-    let mut off = disabled();
-    off.retain(|x| x != id);
-    if !on {
-        off.push(id.to_string());
+    for (f, add) in [(disabled_file(), !on), (enabled_file(), on)] {
+        let mut list = read_list(&f);
+        list.retain(|x| x != id);
+        if add {
+            list.push(id.to_string());
+        }
+        std::fs::create_dir_all(f.parent().unwrap_or(Path::new("."))).map_err(|e| e.to_string())?;
+        std::fs::write(&f, serde_json::to_string_pretty(&list).unwrap_or_default()).map_err(|e| e.to_string())?;
     }
-    let f = disabled_file();
-    std::fs::create_dir_all(f.parent().unwrap_or(Path::new("."))).map_err(|e| e.to_string())?;
-    std::fs::write(&f, serde_json::to_string_pretty(&off).unwrap_or_default()).map_err(|e| e.to_string())?;
     Ok(p)
 }
 
@@ -961,6 +992,16 @@ pub fn gallery(d: &Path) -> Result<usize, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn packs_that_run_alone_start_off() {
+        let by = |id: &str| built_in().into_iter().find(|p| p.manifest.id == id).unwrap().manifest;
+        let none: Vec<String> = vec![];
+        assert!(is_off(&by("edits.post"), &none, &none) && is_off(&by("edits.news"), &none, &none), "posting and feeds start off");
+        assert!(!is_off(&by("edits.spin"), &none, &none), "styles start on");
+        assert!(!is_off(&by("edits.news"), &none, &["edits.news".into()]), "turned on, it stays on");
+        assert!(is_off(&by("edits.spin"), &["edits.spin".into()], &none));
+    }
 
     #[test]
     fn a_pack_carries_at_most_three_of_the_ten_tags() {

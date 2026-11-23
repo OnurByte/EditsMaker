@@ -58,7 +58,10 @@ pub fn pick(names: &str) -> Result<Vec<Account>, String> {
 /// (sign-in page, page to post from, cookie that says signed in, its domain, the page script).
 fn site(platform: &str) -> Result<(String, String, String, String, String), String> {
     let p = crate::packs::all().into_iter().find(|p| p.automations().iter().any(|a| a.0.site == platform))
-        .ok_or(format!("nothing posts to {platform}: edits connect {}, or an automation pack from edits packs browse", PLATFORMS.join("|")))?;
+        .ok_or_else(|| match crate::packs::every().into_iter().find(|p| p.automations().iter().any(|a| a.0.site == platform)) {
+            Some(off) => crate::packs::turn_on(&off.manifest.id),
+            None => format!("nothing posts to {platform}: edits connect {}, or an automation pack from edits packs browse", PLATFORMS.join("|")),
+        })?;
     if !crate::packs::trusted(&p) {
         let id = &p.manifest.id;
         return Err(format!("{id} runs in your signed-in {platform}: read what it runs in {} first, then edits packs trust {id}", crate::packs::dir().join(id).display()));
