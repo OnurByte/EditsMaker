@@ -1,0 +1,330 @@
+{
+  "name": "shake-only-square",
+  "about": "Square frame, nothing but shake. Raw and simple.",
+  "w": 1080,
+  "h": 1080,
+  "total": 7.549,
+  "song": null,
+  "look": null,
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 0.916,
+      "speed": 0.8319,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 0.9,
+      "end": 1.973,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 1.967,
+      "end": 2.751,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 2.734,
+      "end": 3.266,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 3.25,
+      "end": 3.765,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 3.75,
+      "end": 4.636,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 4.617,
+      "end": 5.649,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 5.634,
+      "end": 6.616,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    },
+    {
+      "start": 6.6,
+      "end": 7.549,
+      "shake": [
+        [
+          0.0,
+          0.1713,
+          "linear"
+        ],
+        [
+          0.4825,
+          0.0,
+          "out 6"
+        ],
+        [
+          1.0,
+          0.1713,
+          "in 6"
+        ]
+      ],
+      "shake_hz": 2.0,
+      "exposure": [
+        [
+          0.0,
+          1.0,
+          "linear"
+        ],
+        [
+          1.0,
+          0.0,
+          "out 2.3"
+        ]
+      ],
+      "motion_blur": true
+    }
+  ],
+  "flashes": []
+}

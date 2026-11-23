@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.spin",
+  "name": "Spin",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Turns and spins between the shots: quarter turns, half turns, full loops. Movement that pulls the eye round.",
+  "kinds": [
+    "preset",
+    "skill"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "slow",
+    "medium",
+    "fast",
+    "9:16",
+    "4:5",
+    "1:1",
+    "blur",
+    "shake",
+    "slide",
+    "spin",
+    "velocity",
+    "zoom"
+  ]
+}

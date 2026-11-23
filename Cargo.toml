@@ -1,8 +1,8 @@
 [package]
 name = "edits"
-version = "0.30.0"
+version = "0.31.0"
 edition = "2021"
-description = "One small binary (under 4 MB to download) that turns any YouTube link, channel or topic into viral TikTok, Reels and Shorts edits: Alight Motion and Premiere presets, trending songs, beat-synced cuts, captions, colour looks, MCP server for AI agents."
+description = "One small download (under 15 MB, with its desktop app) that turns any YouTube link, channel or topic into viral TikTok, Reels and Shorts edits: Alight Motion and Premiere presets, trending songs, beat-synced cuts, captions, colour looks, MCP server for AI agents."
 repository = "https://github.com/OnurByte/EditsMaker"
 homepage = "https://github.com/OnurByte/EditsMaker"
 readme = "README.md"
@@ -10,7 +10,16 @@ keywords = ["video-editor", "tiktok", "shorts", "ffmpeg", "mcp"]
 categories = ["command-line-utilities", "multimedia::video"]
 license = "MIT"
 
+# the desktop app (src/app, GPUI and gpui-kit) is inside edits: `edits app`. A server build without a screen:
+# cargo build --release --no-default-features
+[features]
+default = ["app"]
+app = ["dep:gpui-kit", "dep:kael_share"]
+
 [dependencies]
+gpui-kit = { version = "0.10.0", optional = true }
+# the system's own share sheet (macOS, Windows; mail on Linux), for Share on a clip or a pack; 0.4 pins a wasm-bindgen GPUI cannot share
+kael_share = { version = "=0.3.0", optional = true }
 regex = "1"
 resvg = { version = "0.45.1", default-features = false, features = ["text", "system-fonts", "raster-images"] }
 libloading = "0.8"

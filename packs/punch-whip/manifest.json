@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.punch-whip",
+  "name": "Punch & whip",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Hard punch-ins and whip slides that land on the beat. For edits that hit from the first second.",
+  "kinds": [
+    "preset",
+    "skill"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "medium",
+    "fast",
+    "9:16",
+    "4:5",
+    "1:1",
+    "wide",
+    "flash",
+    "shake",
+    "slide",
+    "zoom"
+  ]
+}

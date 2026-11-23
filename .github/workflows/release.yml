@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup target add ${{ matrix.target }}
+      # what GPUI (the app inside edits) builds against on Linux
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-x11-dev libwayland-dev libfontconfig-dev libx11-xcb-dev libvulkan-dev
       - run: cargo test --release
         if: matrix.target != 'x86_64-apple-darwin'
       - run: cargo build --release --target ${{ matrix.target }}
@@ -32,6 +35,13 @@ jobs:
         run: |
           mkdir out
           Compress-Archive -Path target/${{ matrix.target }}/release/edits.exe -DestinationPath out/edits-${{ matrix.target }}.zip
+      # the download is a selling point: edits, its app inside, stays under 15 MB
+      - name: size
+        shell: bash
+        run: |
+          f=$(ls out/*); n=$(wc -c < "$f")
+          echo "$f: $n bytes"
+          [ "$n" -le 15728640 ] || { echo "$f is over 15 MB"; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: edits-${{ matrix.target }}

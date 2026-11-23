@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
 <rect width="640" height="360" rx="24" fill="hsl(43,45%,11%)"/>
-<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="hsl(43,70%,64%)">AGENT SKILL</text>
-<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">edits</text>
-<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Make short viral edits (TikTok, Reels, Shorts) from a YouTube</text>
-<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">link, a channel, a topic or a video file with the `edits`</text>
-<text x="32" y="178" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">command. Use when asked to make an edit, a sad edit, a</text>
-<text x="32" y="202" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">velocity/anime-style edit, or clips from a video or channel.</text>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(43,70%,64%)">Pack</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">What your agent knows</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Eight skills that teach Claude Code, Codex, Cursor and the</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">rest to use edits: make an edit, connect over MCP, tweak and</text>
+<text x="32" y="178" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">import presets, rebuild an edit, follow trends, make it hit</text>
+<text x="32" y="202" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">harder, make a pack.</text>
 <text x="32" y="336" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="hsl(43,70%,64%)">edits skills install</text>
 </svg>

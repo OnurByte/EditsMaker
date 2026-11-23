@@ -170,6 +170,10 @@ pub fn parse(spec: &str) -> Result<Overlay, String> {
         }
         None => (rest, 0.0, None),
     };
+    // a 3D scene pack, drawn for it (shortcut: always 1080x1920, the overlay is scaled to the frame; upgrade to the edit's size if a square edit looks soft)
+    if let Some(p) = crate::scene::find(name) {
+        return Ok(Overlay { file: crate::scene::render(&p, 1080, 1920)?, from, to, opacity, place });
+    }
     let file = find(&["overlay", "transition", "greenscreen", "background", "meme", "video", "image"], name)
         .ok_or(format!("--overlay {name}: no such file or library clip (edits library overlay)"))?;
     Ok(Overlay { file, from, to, opacity, place })

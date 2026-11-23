@@ -54,14 +54,17 @@ pub fn pick(names: &str) -> Result<Vec<Account>, String> {
     Ok(out)
 }
 
-/// (sign-in page, page to post from, cookie that says signed in, its domain, the page script)
-fn site(platform: &str) -> Option<(&'static str, &'static str, &'static str, &'static str, &'static str)> {
-    Some(match platform {
-        "tiktok" => ("https://www.tiktok.com/login", "https://www.tiktok.com/tiktokstudio/upload", "sessionid", "tiktok.com", include_str!("post/tiktok.js")),
-        "youtube" => ("https://studio.youtube.com", "https://studio.youtube.com", "SAPISID", "google.com", include_str!("post/youtube.js")),
-        "instagram" => ("https://www.instagram.com/accounts/login/", "https://www.instagram.com/", "sessionid", "instagram.com", include_str!("post/instagram.js")),
-        _ => return None,
-    })
+/// The automation pack that signs in and posts on `platform` (packs/post, or an added one the person trusted):
+/// (sign-in page, page to post from, cookie that says signed in, its domain, the page script).
+fn site(platform: &str) -> Result<(String, String, String, String, String), String> {
+    let p = crate::packs::all().into_iter().find(|p| p.automations().iter().any(|a| a.0.site == platform))
+        .ok_or(format!("nothing posts to {platform}: edits connect {}, or an automation pack from edits packs browse", PLATFORMS.join("|")))?;
+    if !crate::packs::trusted(&p) {
+        let id = &p.manifest.id;
+        return Err(format!("{id} runs in your signed-in {platform}: read what it runs in {} first, then edits packs trust {id}", crate::packs::dir().join(id).display()));
+    }
+    let (a, js) = p.automations().into_iter().find(|a| a.0.site == platform).unwrap_or_else(|| unreachable!());
+    Ok((a.login, a.page, a.cookie, a.domain, js))
 }
 
 fn run_page(b: &mut Browser, js: &str, args: Value, wait: Duration) -> Result<Value, String> {
@@ -78,22 +81,15 @@ pub fn connect(args: &[String]) -> Result<(), String> {
     let acc = match platform {
         "bluesky" => {
             let handle = args.get(1).ok_or("usage: edits connect bluesky HANDLE   (then paste an app password from bsky.app/settings/app-passwords)")?;
-            let secret = read_secret("Bluesky app password (not your main password): ")?;
-            let s = bsky_login(handle, &secret)?;
-            Account { name: format!("bluesky-{}", s.handle), platform: platform.into(), id: s.did, user: s.handle, secret }
+            token_account(platform, handle, &read_secret("Bluesky app password (not your main password): ")?)?
         }
         "facebook" => {
             let page = args.get(1).ok_or("usage: edits connect facebook PAGE_ID   (then paste a Page access token with pages_manage_posts)")?;
-            let secret = read_secret("Facebook Page access token: ")?;
-            let v = curl_json(&[("url", &format!("{GRAPH}/{}", page.trim())), ("data-urlencode", "fields=id,name"), ("data-urlencode", &format!("access_token={}", secret.trim())), ("get", "")])?;
-            if v["id"].as_str() != Some(page.trim()) {
-                return Err("the token does not belong to that Page".into());
-            }
-            let user = v["name"].as_str().unwrap_or(page).to_string();
-            Account { name: format!("facebook-{}", crate::fetch::safe(&user)), platform: platform.into(), id: page.trim().into(), user, secret: secret.trim().into() }
+            token_account(platform, page, &read_secret("Facebook Page access token: ")?)?
         }
         p => {
-            let (login, home_url, cookie, domain, js) = site(p).ok_or(format!("usage: edits connect {}", PLATFORMS.join("|")))?;
+            let (login, home_url, cookie, domain, js) = site(p)?;
+            let (login, home_url, cookie, domain, js) = (login.as_str(), home_url.as_str(), cookie.as_str(), domain.as_str(), js.as_str());
             let tmp = dir().join(format!("{p}-new"));
             let _ = std::fs::remove_dir_all(&tmp);
             eprintln!("edits: sign in to {p} in the window that opened (up to 10 minutes); edits never sees your password");
@@ -131,6 +127,41 @@ pub fn connect(args: &[String]) -> Result<(), String> {
     println!("connected {} ({}) as {}", acc.platform, acc.user, acc.name);
     list.push(acc);
     save(&list)
+}
+
+/// A Bluesky account (handle, app password) or a Facebook Page (its id, a Page token), checked with the site.
+fn token_account(platform: &str, who: &str, secret: &str) -> Result<Account, String> {
+    match platform {
+        "bluesky" => {
+            let s = bsky_login(who.trim(), secret.trim())?;
+            Ok(Account { name: format!("bluesky-{}", s.handle), platform: platform.into(), id: s.did, user: s.handle, secret: secret.trim().into() })
+        }
+        "facebook" => {
+            let page = who.trim();
+            let v = curl_json(&[("url", &format!("{GRAPH}/{page}")), ("data-urlencode", "fields=id,name"), ("data-urlencode", &format!("access_token={}", secret.trim())), ("get", "")])?;
+            if v["id"].as_str() != Some(page) {
+                return Err("the token does not belong to that Page".into());
+            }
+            let user = v["name"].as_str().unwrap_or(page).to_string();
+            Ok(Account { name: format!("facebook-{}", crate::fetch::safe(&user)), platform: platform.into(), id: page.into(), user, secret: secret.trim().into() })
+        }
+        p => Err(format!("{p} signs in in a window of its own, not with a token")),
+    }
+}
+
+/// The app's sign-in for the sites that take a token: checked, then kept like `edits connect` keeps it.
+#[cfg(feature = "app")]
+pub fn connect_token(platform: &str, who: &str, secret: &str) -> Result<String, String> {
+    if who.trim().is_empty() || secret.trim().is_empty() {
+        return Err(if platform == "bluesky" { "your handle and an app password".into() } else { "the Page's id and its access token".into() });
+    }
+    let acc = token_account(platform, who, secret)?;
+    let said = format!("connected {} as {}", acc.platform, acc.user);
+    let mut list = all();
+    list.retain(|a| a.name != acc.name);
+    list.push(acc);
+    save(&list)?;
+    Ok(said)
 }
 
 /// `edits accounts`
@@ -171,12 +202,12 @@ pub fn post(acc: &Account, clip: &Path, caption: &str, private: bool) -> Result<
         "bluesky" => bsky_post(acc, clip, caption),
         "facebook" => fb_post(acc, clip, caption),
         p => {
-            let (_, home_url, _, _, js) = site(p).ok_or(format!("unknown platform {p}"))?;
-            let mut b = Browser::open(&dir().join(&acc.name), home_url)?;
+            let (_, home_url, _, _, js) = site(p)?;
+            let mut b = Browser::open(&dir().join(&acc.name), &home_url)?;
             let r = (|| {
                 b.settle()?;
                 b.give_file(clip)?;
-                run_page(&mut b, js, json!({"do": "post", "caption": caption, "private": private, "expect": acc.id}), Duration::from_secs(1800))
+                run_page(&mut b, &js, json!({"do": "post", "caption": caption, "private": private, "expect": acc.id}), Duration::from_secs(1800))
             })();
             b.close();
             let v = r.map_err(|e| relogin(p, e))?;
@@ -347,16 +378,8 @@ mod tests {
     fn dates_and_sites() {
         assert_eq!(rfc3339(0), "1970-01-01T00:00:00Z");
         assert_eq!(rfc3339(1_709_210_096), "2024-02-29T12:34:56Z");
-        assert!(PLATFORMS.iter().all(|p| site(p).is_some() || ["bluesky", "facebook"].contains(p)));
+        // every browser platform has its built-in automation pack (packs.rs checks the scripts themselves)
+        assert!(PLATFORMS.iter().all(|p| site(p).is_ok() || ["bluesky", "facebook"].contains(p)));
         assert!(site("instagram").unwrap().4.trim_start().starts_with("//"), "page scripts are whole files");
-    }
-
-    #[test]
-    fn page_scripts_are_one_async_function() {
-        for p in ["tiktok", "youtube", "instagram"] {
-            let js = site(p).unwrap().4;
-            let code: String = js.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
-            assert!(code.trim_start().starts_with("async (p) => {") && code.trim_end().ends_with('}'), "{p}");
-        }
     }
 }

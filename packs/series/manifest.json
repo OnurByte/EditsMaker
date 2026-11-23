@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.series",
+  "name": "Series scenes",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Shapes learned from TV series: dialogue, a table conversation, faces in turn. Made for scenes, not montages.",
+  "kinds": [
+    "preset",
+    "skill"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "slow",
+    "medium",
+    "1:1",
+    "wide",
+    "shake",
+    "slide",
+    "zoom"
+  ]
+}

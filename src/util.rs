@@ -81,7 +81,7 @@ fn encoder_file() -> PathBuf {
 }
 
 /// The encoder asked for: EDITS_ENCODER, else the one `edits encoder` saved, else auto.
-fn encoder_choice() -> String {
+pub fn encoder_choice() -> String {
     std::env::var("EDITS_ENCODER").ok()
         .or_else(|| std::fs::read_to_string(encoder_file()).ok())
         .map(|s| s.trim().to_string()).filter(|s| ENCODERS.contains(&s.as_str()))
@@ -284,7 +284,11 @@ pub fn mmss(t: f64) -> String {
 pub fn curl(opts: &[(&str, &str)]) -> Result<(u16, String), String> {
     let q = |v: &str| v.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n").replace('\r', "\\r").replace('\t', "\\t");
     let mut cfg: String = opts.iter().map(|(k, v)| if v.is_empty() { format!("{k}\n") } else { format!("{k} = \"{}\"\n", q(v)) }).collect();
-    cfg.push_str("silent\nshow-error\nlocation\nmax-time = 900\nwrite-out = \"\\n%{http_code}\"\n");
+    // a caller's own max-time wins (curl takes the last one given)
+    if !opts.iter().any(|(k, _)| *k == "max-time") {
+        cfg.push_str("max-time = 900\n");
+    }
+    cfg.push_str("silent\nshow-error\nlocation\nwrite-out = \"\\n%{http_code}\"\n");
     let out = run_stdin("curl -K -", &cfg)?;
     let (body, code) = out.rsplit_once('\n').unwrap_or(("", &out));
     Ok((code.trim().parse().unwrap_or(0), body.to_string()))
@@ -314,6 +318,12 @@ pub fn write_private(path: &Path, text: &str) -> Result<(), String> {
     o.open(path).and_then(|mut f| f.write_all(text.as_bytes())).map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// Opens a web address in the person's own browser.
+pub fn open_url(url: &str) -> Result<(), String> {
+    let (cmd, args): (&str, Vec<&str>) = if cfg!(target_os = "macos") { ("open", vec![url]) } else if cfg!(windows) { ("cmd", vec!["/C", "start", "", url]) } else { ("xdg-open", vec![url]) };
+    std::process::Command::new(cmd).args(args).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn().map(drop).map_err(|e| format!("{cmd}: {e}"))
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -327,5 +337,35 @@ mod tests {
         let (d, t) = super::now().expect("date works here");
         assert!(d.len() == 10 && d.as_bytes()[4] == b'-' && d.as_bytes()[7] == b'-', "{d}");
         assert!(t.len() == 5 && t.as_bytes()[2] == b'.', "{t}");
+    }
+}
+
+/// Base64 (the standard alphabet or the URL one, padded or not) as bytes; anything else in it is skipped.
+pub fn base64_decode(s: &str) -> Vec<u8> {
+    let (mut acc, mut n, mut out) = (0u32, 0u32, Vec::with_capacity(s.len() * 3 / 4));
+    for c in s.bytes() {
+        let v = match c {
+            b'A'..=b'Z' => c - b'A',
+            b'a'..=b'z' => c - b'a' + 26,
+            b'0'..=b'9' => c - b'0' + 52,
+            b'-' | b'+' => 62,
+            b'_' | b'/' => 63,
+            _ => continue,
+        };
+        (acc, n) = ((acc << 6) | v as u32, n + 6);
+        if n >= 8 {
+            n -= 8;
+            out.push((acc >> n) as u8);
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod base64_tests {
+    #[test]
+    fn decodes_both_alphabets() {
+        assert_eq!(super::base64_decode("aGk/Pz8="), b"hi???");
+        assert_eq!(super::base64_decode("aGk_Pz8"), b"hi???");
     }
 }

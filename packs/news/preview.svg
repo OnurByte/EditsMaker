@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(220,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(220,70%,64%)">RSS</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">News</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">42 topics, from football to space, each read from the feeds</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">that cover it best. Every new story becomes an edit, and a</text>
+<text x="32" y="178" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">flow can post it for you.</text>
+<text x="32" y="336" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="hsl(220,70%,64%)">Android  ·  Android Development  ·  Animal &amp; Wildlife  ·  Apple  ·  Architecture  +37 more</text>
+</svg>

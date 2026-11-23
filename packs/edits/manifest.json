@@ -1,12 +1,17 @@
 {
   "schemaVersion": 1,
   "id": "edits.edits",
-  "name": "edits",
-  "version": "1.0.0",
-  "author": "edits",
-  "description": "Make short viral edits (TikTok, Reels, Shorts) from a YouTube link, a channel, a topic or a video file with the `edits` command. Use when asked to make an edit, a sad edit, a velocity/anime-style edit, or clips from a video or channel.",
+  "name": "What your agent knows",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Eight skills that teach Claude Code, Codex, Cursor and the rest to use edits: make an edit, connect over MCP, tweak and import presets, rebuild an edit, follow trends, make it hit harder, make a pack.",
   "kinds": [
     "skill"
   ],
-  "preview": "preview.svg"
+  "preview": "preview.gif",
+  "tags": [
+    "agent",
+    "mcp",
+    "skills"
+  ]
 }

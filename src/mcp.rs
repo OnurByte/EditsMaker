@@ -93,7 +93,7 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}},
         {"name": "edits_learn", "description": "Reverse-engineer a finished edit (an mp4 the user likes, or its X/TikTok/Instagram/YouTube link) into a preset: its cuts, flashes and each shot's zoom, slide, turn and shake. Saved like any preset; use it with edits_make preset, read or change it with edits_preset_get.",
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path or link of the edit"}}, "required": ["video"]}},
-        {"name": "edits_preset_create", "description": "Make a new preset from scratch for a video: the video sets the rhythm (its cuts, extra cuts where it moves most) and which shots hit hardest; the moves, flashes and look are borrowed from other presets (`like`: names from edits_presets, default the three with the closest shot length). Saved like any preset; read it with edits_preset_get, change it, then edits_make preset.",
+        {"name": "edits_pack_create", "description": "Make a new pack from scratch for a video: a preset where the video sets the rhythm (its cuts, extra cuts where it moves most) and which shots hit hardest; the moves, flashes and look are borrowed from other presets (`like`: names from edits_presets, default the three with the closest shot length). It lands with the added packs (manifest.json, preset.json, preview.svg, as PACKS.md says), so it can be shared as is; use its preset with edits_make preset, read or change it with edits_preset_get.",
          "inputSchema": {"type": "object", "properties": {"video": {"type": "string", "description": "path of the footage"}, "name": {"type": "string"}, "like": {"type": "array", "items": {"type": "string"}, "description": "presets to take inspiration from"}, "length": {"type": "number", "description": "seconds of the video to use (default 18)"}}, "required": ["video"]}},
         {"name": "edits_check", "description": "Measure a finished clip: length, loudness (LUFS), cut rhythm, and write a contact sheet jpg beside it. Read the sheet to look at the edit before showing it; fast montages usually sit near -11 LUFS.",
          "inputSchema": {"type": "object", "properties": {"clip": {"type": "string", "description": "path of the rendered mp4, or a link to an edit"}}, "required": ["clip"]}},
@@ -112,7 +112,7 @@ fn tools() -> Value {
          "inputSchema": {"type": "object", "properties": {"use": {"type": "string", "enum": ["auto", "nvenc", "videotoolbox", "cpu"]}}}},
         {"name": "edits_stats", "description": "How posted edits did: a channel's or profile's latest posts (\"@name\" is a YouTube channel's Shorts; TikTok links work) with views, likes and comments, which of them are edits made with edits (matched by their sound against the render log) and each preset, song and look ranked by median views. Talking clips that did best and worst become taste examples. Use it before choosing a preset or song for that channel.",
          "inputSchema": {"type": "object", "properties": {"channel": {"type": "string"}, "n": {"type": "integer", "minimum": 1, "maximum": 200, "description": "posts to read (default 30)"}}, "required": ["channel"]}},
-        {"name": "edits_review", "description": "Show a finished clip to the user in a window of its own (a Chromium-family app window, else their browser) and wait (up to 20 minutes) for their notes: they click a moment, a shot or a spot in the frame and say what to change. Returns each note with its time, shot number and place in the frame; change exactly that and render again. `saved`: true returns the last notes without opening the page.",
+        {"name": "edits_review", "description": "Show a finished clip to the user in the edits app's review screen and wait for their notes: they click a moment, a shot or a spot in the frame and say what to change. Returns each note with its time, shot number and place in the frame; change exactly that and render again. `saved`: true returns the last notes without opening the app.",
          "inputSchema": {"type": "object", "properties": {"clip": {"type": "string"}, "saved": {"type": "boolean"}}, "required": ["clip"]}},
         {"name": "edits_doctor", "description": "Check the tools edits needs (ffmpeg, yt-dlp, whisper).", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
         {"name": "edits_accounts", "description": "The accounts clips can be posted to (Instagram, TikTok, YouTube Shorts, Bluesky, Facebook Reels), by name.", "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": true}},
@@ -188,8 +188,8 @@ pub fn args_for(name: &str, a: &Value) -> Result<Vec<String>, String> {
             v.extend(["frames".into(), s("video").ok_or("video is needed")?]);
             v.extend(a["at"].as_array().into_iter().flatten().filter_map(|x| x.as_str().map(String::from).or(x.as_f64().map(|n| n.to_string()))));
         }
-        "edits_preset_create" => {
-            v.extend(["preset".into(), "create".into(), s("video").ok_or("video is needed")?]);
+        "edits_pack_create" => {
+            v.extend(["packs".into(), "create".into(), s("video").ok_or("video is needed")?]);
             for (key, flag) in [("name", "--name"), ("length", "--length")] {
                 if let Some(x) = a[key].as_str().map(String::from).or(a[key].as_f64().map(|n| n.to_string())) {
                     v.extend([flag.into(), x]);
@@ -647,7 +647,7 @@ mod tests {
             ["moments", "https://twitch.tv/videos/1", "-n", "10", "--find", "uçuyor", "--find", "no way", "--lang", "tr", "--no-sheets"]);
         assert_eq!(args_for("edits_make", &json!({"input": "abc", "layout": "stack", "translate": "tr"})).unwrap(), ["abc", "--layout", "stack", "--translate", "tr"]);
         assert_eq!(args_for("edits_frames", &json!({"video": "abc", "at": ["5:36", 390]})).unwrap(), ["frames", "abc", "5:36", "390"]);
-        assert_eq!(args_for("edits_preset_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["preset", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
+        assert_eq!(args_for("edits_pack_create", &json!({"video": "a.mp4", "name": "x", "like": ["yura", "madara"], "length": 12})).unwrap(), ["packs", "create", "a.mp4", "--name", "x", "--length", "12", "--like", "yura,madara"]);
         assert_eq!(args_for("edits_preset_get", &json!({"name": "yura"})).unwrap(), ["preset", "show", "yura"]);
         assert_eq!(args_for("edits_library", &json!({"kind": "sfx", "words": "fast woosh"})).unwrap(), ["library", "sfx", "fast", "woosh"]);
         assert_eq!(args_for("edits_make", &json!({"input": "a.mp4", "whoosh": "main swoosh", "overlays": ["vhs:0.5"]})).unwrap(), ["a.mp4", "--whoosh", "main swoosh", "--overlay", "vhs:0.5"]);

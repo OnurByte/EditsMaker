@@ -1,0 +1,2612 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.news",
+  "name": "News",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "42 topics, from football to space, each read from the feeds that cover it best. Every new story becomes an edit, and a flow can post it for you.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "news",
+    "rss",
+    "automation"
+  ],
+  "topics": [
+    {
+      "key": "android",
+      "name": "Android",
+      "feeds": [
+        {
+          "name": "All About Android (Audio)",
+          "url": "https://feeds.twit.tv/aaa.xml"
+        },
+        {
+          "name": "Android",
+          "url": "https://blog.google/products/android/rss"
+        },
+        {
+          "name": "Android",
+          "url": "https://www.reddit.com/r/android/.rss"
+        },
+        {
+          "name": "Android Authority",
+          "url": "https://www.androidauthority.com/feed"
+        },
+        {
+          "name": "Android Authority",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=AndroidAuthority"
+        },
+        {
+          "name": "Android Authority Podcast",
+          "url": "https://androidauthority.libsyn.com/rss"
+        },
+        {
+          "name": "Android Central Podcast",
+          "url": "http://feeds.feedburner.com/AndroidCentralPodcast"
+        },
+        {
+          "name": "Android Community",
+          "url": "https://androidcommunity.com/feed/"
+        },
+        {
+          "name": "Android Police",
+          "url": "http://feeds.feedburner.com/AndroidPolice"
+        },
+        {
+          "name": "Blind Android Users Podcast",
+          "url": "https://anchor.fm/s/4495abac/podcast/rss"
+        },
+        {
+          "name": "Cult of Android",
+          "url": "https://www.cultofandroid.com/feed"
+        },
+        {
+          "name": "Droid Life – Opinionated Android news.",
+          "url": "https://www.droid-life.com/feed"
+        },
+        {
+          "name": "GSMArena.com - Latest articles",
+          "url": "https://www.gsmarena.com/rss-news-reviews.php3"
+        },
+        {
+          "name": "Latest from Android Central",
+          "url": "http://feeds.androidcentral.com/androidcentral"
+        },
+        {
+          "name": "Phandroid",
+          "url": "http://feeds2.feedburner.com/AndroidPhoneFans"
+        },
+        {
+          "name": "TalkAndroid",
+          "url": "http://feeds.feedburner.com/AndroidNewsGoogleAndroidForums"
+        }
+      ]
+    },
+    {
+      "key": "android-development",
+      "name": "Android Development",
+      "feeds": [
+        {
+          "name": "Android Developers",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=androiddevelopers"
+        },
+        {
+          "name": "Android Developers - Medium",
+          "url": "https://medium.com/feed/androiddevelopers"
+        },
+        {
+          "name": "Android Developers Backstage",
+          "url": "http://feeds.feedburner.com/blogspot/androiddevelopersbackstage"
+        },
+        {
+          "name": "Android Developers Blog",
+          "url": "http://feeds.feedburner.com/blogspot/hsDu"
+        },
+        {
+          "name": "Android in MindOrks on Medium",
+          "url": "https://medium.com/feed/mindorks/tagged/android"
+        },
+        {
+          "name": "Android in The Airbnb Tech Blog on Medium",
+          "url": "https://medium.com/feed/airbnb-engineering/tagged/android"
+        },
+        {
+          "name": "Chris Keenan Codes",
+          "url": "https://chrynan.codes/rss/"
+        },
+        {
+          "name": "Company | The JetBrains Blog",
+          "url": "https://blog.jetbrains.com/blog/feed"
+        },
+        {
+          "name": "Dan Lew Codes",
+          "url": "https://blog.danlew.net/rss/"
+        },
+        {
+          "name": "Developing Android Apps",
+          "url": "https://reddit.com/r/androiddev.rss"
+        },
+        {
+          "name": "Fragmented - AI Developer Podcast",
+          "url": "https://feeds.simplecast.com/LpAGSLnY"
+        },
+        {
+          "name": "Handstand Sam",
+          "url": "https://handstandsam.com/feed/"
+        },
+        {
+          "name": "Jake Wharton",
+          "url": "https://jakewharton.com/atom.xml"
+        },
+        {
+          "name": "Kotlin",
+          "url": "https://www.youtube.com/feeds/videos.xml?playlist_id=PLQ176FUIyIUa6SChjajjVc-LMzxWiz6dy"
+        },
+        {
+          "name": "OkKotlin",
+          "url": "https://okkotlin.com/rss.xml"
+        },
+        {
+          "name": "ProAndroidDev - Medium",
+          "url": "https://proandroiddev.com/feed"
+        },
+        {
+          "name": "Public Object",
+          "url": "https://publicobject.com/rss/"
+        },
+        {
+          "name": "Saket Narayan",
+          "url": "https://saket.me/feed/"
+        },
+        {
+          "name": "The Android Arsenal",
+          "url": "https://feeds.feedburner.com/Android_Arsenal"
+        },
+        {
+          "name": "Zac Sweers",
+          "url": "https://www.zacsweers.dev/rss/"
+        },
+        {
+          "name": "Zarah Dominguez",
+          "url": "https://zarah.dev/feed.xml"
+        },
+        {
+          "name": "droidcon SF",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCKubKoe1CBw_-n_GXetEQbg"
+        },
+        {
+          "name": "zsmb.co",
+          "url": "https://zsmb.co/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "animal-and-wildlife",
+      "name": "Animal & Wildlife",
+      "feeds": [
+        {
+          "name": "Active Wild",
+          "url": "https://www.activewild.com/feed/"
+        },
+        {
+          "name": "Focusing on Wildlife",
+          "url": "https://focusingonwildlife.com/news/feed/"
+        },
+        {
+          "name": "Love Nature",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCRZPkuHwaoKwTP3CYPdVldg"
+        },
+        {
+          "name": "Real Wild",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCbq-4OJxnziD3awH-aTezeA"
+        },
+        {
+          "name": "The Wildlife India",
+          "url": "https://www.thewildlifeindia.com/feeds/posts/default"
+        },
+        {
+          "name": "Wildlife Photography: Gear, Photos & Discussion",
+          "url": "https://www.reddit.com/r/wildlifephotography/.rss"
+        },
+        {
+          "name": "Wildlife | The Guardian",
+          "url": "https://www.theguardian.com/environment/wildlife/rss"
+        },
+        {
+          "name": "🔥 Nature Is Fucking Lit",
+          "url": "https://www.reddit.com/r/NatureIsFuckingLit/.rss"
+        }
+      ]
+    },
+    {
+      "key": "apple",
+      "name": "Apple",
+      "feeds": [
+        {
+          "name": "9to5Mac",
+          "url": "https://9to5mac.com/feed"
+        },
+        {
+          "name": "Apple",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=Apple"
+        },
+        {
+          "name": "Apple Newsroom",
+          "url": "https://www.apple.com/newsroom/rss-feed.rss"
+        },
+        {
+          "name": "AppleInsider News",
+          "url": "https://appleinsider.com/rss/news/"
+        },
+        {
+          "name": "Cult of Mac",
+          "url": "https://www.cultofmac.com/feed"
+        },
+        {
+          "name": "Daring Fireball",
+          "url": "https://daringfireball.net/feeds/main"
+        },
+        {
+          "name": "MacRumors",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=macrumors"
+        },
+        {
+          "name": "MacRumors: Mac News and Rumors - Mac Blog",
+          "url": "http://feeds.macrumors.com/MacRumors-Mac"
+        },
+        {
+          "name": "MacStories",
+          "url": "https://www.macstories.net/feed"
+        },
+        {
+          "name": "Macworld",
+          "url": "https://www.macworld.com/index.rss"
+        },
+        {
+          "name": "Marco.org",
+          "url": "https://marco.org/rss"
+        },
+        {
+          "name": "OS X Daily",
+          "url": "http://feeds.feedburner.com/osxdaily"
+        },
+        {
+          "name": "The Loop",
+          "url": "https://www.loopinsight.com/feed"
+        },
+        {
+          "name": "iMore - The #1 iPhone, iPad, and iPod touch blog",
+          "url": "http://feeds.feedburner.com/TheiPhoneBlog"
+        },
+        {
+          "name": "r/Apple: Unofficial Apple Community",
+          "url": "https://www.reddit.com/r/apple/.rss"
+        },
+        {
+          "name": "r/iPhone",
+          "url": "https://www.reddit.com/r/iphone/.rss"
+        }
+      ]
+    },
+    {
+      "key": "architecture",
+      "name": "Architecture",
+      "feeds": [
+        {
+          "name": "A Weekly Dose of Architecture Books",
+          "url": "http://feeds.feedburner.com/archidose"
+        },
+        {
+          "name": "ArchDaily Global",
+          "url": "http://feeds.feedburner.com/Archdaily"
+        },
+        {
+          "name": "Architectural Digest",
+          "url": "https://www.architecturaldigest.com/feed/rss"
+        },
+        {
+          "name": "Architectural Digest",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=ArchitecturalDigest"
+        },
+        {
+          "name": "Architecture",
+          "url": "https://www.reddit.com/r/architecture/.rss"
+        },
+        {
+          "name": "Architecture news and projects | Dezeen",
+          "url": "https://www.dezeen.com/architecture/feed/"
+        },
+        {
+          "name": "Design MilkArchitecture, Architectural Designs, and House Designs | Design Milk",
+          "url": "https://design-milk.com/category/architecture/feed/"
+        },
+        {
+          "name": "Journal",
+          "url": "https://architizer.wpengine.com/feed/"
+        },
+        {
+          "name": "Living Big In A Tiny House",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=livingbigtinyhouse"
+        },
+        {
+          "name": "The Architect’s Newspaper",
+          "url": "https://archpaper.com/feed"
+        },
+        {
+          "name": "architecture archives | designboom | architecture & design magazine",
+          "url": "https://www.designboom.com/architecture/feed/"
+        }
+      ]
+    },
+    {
+      "key": "beauty",
+      "name": "Beauty",
+      "feeds": [
+        {
+          "name": "Beauty - ELLE",
+          "url": "https://www.elle.com/rss/beauty.xml/"
+        },
+        {
+          "name": "Fashionista Full",
+          "url": "https://fashionista.com/.rss/excerpt/beauty"
+        },
+        {
+          "name": "From Head To Toe",
+          "url": "http://feeds.feedburner.com/frmheadtotoe"
+        },
+        {
+          "name": "Into The Gloss - Beauty Tips, Trends, And Product Reviews",
+          "url": "https://feeds.feedburner.com/intothegloss/oqoU"
+        },
+        {
+          "name": "POPSUGAR Beauty",
+          "url": "https://www.popsugar.com/beauty/feed"
+        },
+        {
+          "name": "Refinery29",
+          "url": "https://www.refinery29.com/beauty/rss.xml"
+        },
+        {
+          "name": "The Beauty Look Book",
+          "url": "https://thebeautylookbook.com/feed"
+        }
+      ]
+    },
+    {
+      "key": "books",
+      "name": "Books",
+      "feeds": [
+        {
+          "name": "A year of reading the world",
+          "url": "https://ayearofreadingtheworld.com/feed/"
+        },
+        {
+          "name": "Aestas Book Blog",
+          "url": "https://aestasbookblog.com/feed/"
+        },
+        {
+          "name": "BOOK RIOT",
+          "url": "https://bookriot.com/feed/"
+        },
+        {
+          "name": "Harry Potter and the Sacred Text",
+          "url": "https://rss.acast.com/harrypottersacredtext"
+        },
+        {
+          "name": "Kirkus Reviews",
+          "url": "https://www.kirkusreviews.com/feeds/rss/"
+        },
+        {
+          "name": "NewInBooks",
+          "url": "https://www.newinbooks.com/feed/"
+        },
+        {
+          "name": "So many books, so little time",
+          "url": "https://reddit.com/r/books/.rss"
+        },
+        {
+          "name": "Wokeread",
+          "url": "https://wokeread.home.blog/feed/"
+        }
+      ]
+    },
+    {
+      "key": "business-and-economy",
+      "name": "Business & Economy",
+      "feeds": [
+        {
+          "name": "All News",
+          "url": "https://www.investing.com/rss/news.rss"
+        },
+        {
+          "name": "Bloomberg Originals",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=Bloomberg"
+        },
+        {
+          "name": "Breaking News on Seeking Alpha",
+          "url": "https://seekingalpha.com/market_currents.xml"
+        },
+        {
+          "name": "Business Insider",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=businessinsider"
+        },
+        {
+          "name": "EconTalk",
+          "url": "https://feeds.simplecast.com/wgl4xEgL"
+        },
+        {
+          "name": "Economic Times",
+          "url": "https://economictimes.indiatimes.com/rssfeedsdefault.cms"
+        },
+        {
+          "name": "Forbes - Business",
+          "url": "https://www.forbes.com/business/feed/"
+        },
+        {
+          "name": "Fortune | FORTUNE",
+          "url": "https://fortune.com/feed"
+        },
+        {
+          "name": "HBR IdeaCast",
+          "url": "http://feeds.harvardbusiness.org/harvardbusiness/ideacast"
+        },
+        {
+          "name": "How I Built This with Guy Raz",
+          "url": "https://feeds.npr.org/510313/podcast.xml"
+        },
+        {
+          "name": "Planet Money",
+          "url": "https://feeds.npr.org/510289/podcast.xml"
+        },
+        {
+          "name": "Startup Stories - Mixergy",
+          "url": "https://feeds.feedburner.com/Mixergy-main-podcast"
+        },
+        {
+          "name": "The Blog of Author Tim Ferriss",
+          "url": "https://tim.blog/feed/"
+        },
+        {
+          "name": "The Duct Tape Marketing Podcast",
+          "url": "https://ducttape.libsyn.com/rss"
+        },
+        {
+          "name": "The Growth Show",
+          "url": "http://thegrowthshow.hubspot.libsynpro.com/"
+        },
+        {
+          "name": "US Top News and Analysis",
+          "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html"
+        },
+        {
+          "name": "Yahoo Finance",
+          "url": "https://finance.yahoo.com/news/rssindex"
+        }
+      ]
+    },
+    {
+      "key": "cars",
+      "name": "Cars",
+      "feeds": [
+        {
+          "name": "Autocar RSS Feed",
+          "url": "https://www.autocar.co.uk/rss"
+        },
+        {
+          "name": "BMWBLOG",
+          "url": "https://feeds.feedburner.com/BmwBlog"
+        },
+        {
+          "name": "BikeEXIF",
+          "url": "https://www.bikeexif.com/feed"
+        },
+        {
+          "name": "Car Body Design",
+          "url": "https://www.carbodydesign.com/feed/"
+        },
+        {
+          "name": "Carscoops",
+          "url": "https://www.carscoops.com/feed/"
+        },
+        {
+          "name": "Formula 1",
+          "url": "https://www.reddit.com/r/formula1/.rss"
+        },
+        {
+          "name": "Jalopnik - Obsessed with the culture of cars",
+          "url": "https://jalopnik.com/rss"
+        },
+        {
+          "name": "Latest Content - Car and Driver",
+          "url": "https://www.caranddriver.com/rss/all.xml/"
+        },
+        {
+          "name": "Speedhunters",
+          "url": "http://feeds.feedburner.com/speedhunters"
+        },
+        {
+          "name": "The best vintage and classic cars for sale online | Bring a Trailer",
+          "url": "https://bringatrailer.com/feed/"
+        },
+        {
+          "name": "TheTruthAboutCars",
+          "url": "https://www.thetruthaboutcars.com/feed/"
+        }
+      ]
+    },
+    {
+      "key": "chess",
+      "name": "Chess",
+      "feeds": [
+        {
+          "name": "Better Chess",
+          "url": "https://betterchess.net/feed/"
+        },
+        {
+          "name": "Chess News",
+          "url": "https://en.chessbase.com/feed"
+        },
+        {
+          "name": "Chess Talk",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC6HDXr-sNPnWLF_Q-y3KduA"
+        },
+        {
+          "name": "Chess | The Guardian",
+          "url": "https://www.theguardian.com/sport/chess/rss"
+        },
+        {
+          "name": "Chess.com",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=wwwChesscom"
+        },
+        {
+          "name": "Chess.com News",
+          "url": "https://www.chess.com/rss/news"
+        },
+        {
+          "name": "ChessBase India",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCIsEhwBMPkRHsEgqYAPQHsA"
+        },
+        {
+          "name": "Chessable Blog",
+          "url": "https://www.chessable.com/blog/feed/"
+        },
+        {
+          "name": "For the budding patzer",
+          "url": "https://www.reddit.com/r/chessbeginners/.rss"
+        },
+        {
+          "name": "Lichess's Blog",
+          "url": "https://lichess.org/blog.atom"
+        },
+        {
+          "name": "Perpetual Chess Podcast",
+          "url": "https://feeds.megaphone.fm/BLU4811105299"
+        },
+        {
+          "name": "The Week in Chess",
+          "url": "https://theweekinchess.com/twic-rss-feed"
+        },
+        {
+          "name": "agadmator's Chess Channel",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCL5YbN5WLFD8dLIegT5QAbA"
+        },
+        {
+          "name": "chess24",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=chess24media"
+        },
+        {
+          "name": "r/Chess",
+          "url": "https://www.reddit.com/r/chess/.rss"
+        },
+        {
+          "name": "thechesswebsite",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=thechesswebsite"
+        }
+      ]
+    },
+    {
+      "key": "cricket",
+      "name": "Cricket",
+      "feeds": [
+        {
+          "name": "BBC Sport",
+          "url": "http://feeds.bbci.co.uk/sport/cricket/rss.xml"
+        },
+        {
+          "name": "Can't Bowl Can't Throw Cricket Show",
+          "url": "http://feeds.feedburner.com/cantbowlcantthrow"
+        },
+        {
+          "name": "Cricbuzz",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSRQXk5yErn4e14vN76upOw"
+        },
+        {
+          "name": "Cricket",
+          "url": "https://www.reddit.com/r/Cricket/.rss"
+        },
+        {
+          "name": "Cricket News Today, Latest Cricket Updates, Cricket Live Score, Upcoming Matches | Times of India",
+          "url": "https://timesofindia.indiatimes.com/rssfeeds/54829575.cms"
+        },
+        {
+          "name": "Cricket News: Stories, Features, Interviews, Opinion, Reports | Wisden",
+          "url": "https://www.wisden.com/feed"
+        },
+        {
+          "name": "Cricket news from ESPN Cricinfo.com",
+          "url": "http://www.espncricinfo.com/rss/content/story/feeds/0.xml"
+        },
+        {
+          "name": "Cricket | The Guardian",
+          "url": "https://www.theguardian.com/sport/cricket/rss"
+        },
+        {
+          "name": "Cricket | The Indian Express",
+          "url": "https://indianexpress.com/section/sports/cricket/feed/"
+        },
+        {
+          "name": "Cricket – The Roar",
+          "url": "https://www.theroar.com.au/cricket/feed/"
+        },
+        {
+          "name": "England & Wales Cricket Board",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=ecbcricket"
+        },
+        {
+          "name": "NDTV News Search Records Found 1000",
+          "url": "http://feeds.feedburner.com/ndtvsports-cricket"
+        },
+        {
+          "name": "Pakistan Cricket",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCiWrjBhlICf_L_RK5y6Vrxw"
+        },
+        {
+          "name": "Sri Lanka Cricket",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=TheOfficialSLC"
+        },
+        {
+          "name": "Stumped",
+          "url": "https://podcasts.files.bbci.co.uk/p02gsrmh.rss"
+        },
+        {
+          "name": "Switch Hit Podcast",
+          "url": "https://feeds.megaphone.fm/ESP9247246951"
+        },
+        {
+          "name": "Tailenders",
+          "url": "https://podcasts.files.bbci.co.uk/p02pcb4w.rss"
+        },
+        {
+          "name": "Test Match Special",
+          "url": "https://podcasts.files.bbci.co.uk/p02nrsl2.rss"
+        },
+        {
+          "name": "cricket.com.au",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=cricketaustraliatv"
+        }
+      ]
+    },
+    {
+      "key": "cryptocurrency",
+      "name": "Cryptocurrency",
+      "feeds": [
+        {
+          "name": "Bitcoin & Crypto Trading: Ledger Cast",
+          "url": "https://feeds.simplecast.com/j5Cx9jps"
+        },
+        {
+          "name": "Bitcoin - The Currency of the Internet",
+          "url": "https://www.reddit.com/r/Bitcoin/.rss"
+        },
+        {
+          "name": "Bitcoin Audible",
+          "url": "https://bitcoinaudible.com/feed/"
+        },
+        {
+          "name": "Bitcoin News",
+          "url": "https://news.bitcoin.com/feed/"
+        },
+        {
+          "name": "BuyUcoin Talks - Medium",
+          "url": "https://medium.com/feed/buyucoin-talks"
+        },
+        {
+          "name": "Cointelegraph.com News",
+          "url": "https://cointelegraph.com/rss"
+        },
+        {
+          "name": "CryptoCurrency – Finance Magnates | Financial and business news",
+          "url": "https://www.financemagnates.com/cryptocurrency/feed/"
+        },
+        {
+          "name": "CryptoNinjas",
+          "url": "https://www.cryptoninjas.net/feed/"
+        },
+        {
+          "name": "CryptoPotato",
+          "url": "https://cryptopotato.com/feed/"
+        },
+        {
+          "name": "Cryptocurrency News & Discussion",
+          "url": "https://www.reddit.com/r/CryptoCurrency/.rss"
+        },
+        {
+          "name": "DailyCoin",
+          "url": "https://dailycoin.com/feed/"
+        },
+        {
+          "name": "Epicenter - Learn about Crypto, Blockchain, Ethereum, Bitcoin and Distributed Technologies",
+          "url": "https://feeds.simplecast.com/lKmQDG9R"
+        },
+        {
+          "name": "Ethereum",
+          "url": "https://www.reddit.com/r/ethereum/.rss"
+        },
+        {
+          "name": "Ethereum Foundation Blog",
+          "url": "https://blog.ethereum.org/feed.xml"
+        },
+        {
+          "name": "INCRYPTED",
+          "url": "https://incrypted.net/feed/"
+        },
+        {
+          "name": "Interviews",
+          "url": "https://feed.podbean.com/nuggetsnews/feed.xml"
+        },
+        {
+          "name": "Kraken Blog",
+          "url": "https://blog.kraken.com/feed/"
+        },
+        {
+          "name": "News - Cryptonews",
+          "url": "https://cryptonews.com/news/feed"
+        },
+        {
+          "name": "NewsBTC",
+          "url": "https://www.newsbtc.com/feed/"
+        },
+        {
+          "name": "Stephan Livera Podcast",
+          "url": "https://anchor.fm/s/7d083a4/podcast/rss"
+        },
+        {
+          "name": "The Bad Crypto Podcast",
+          "url": "https://badcryptopodcast.com/feed/"
+        },
+        {
+          "name": "The Bitcoin Knowledge Podcast",
+          "url": "https://www.bitcoin.kn/feed/podcast/"
+        },
+        {
+          "name": "The Bitcoin Podcast",
+          "url": "https://feeds.simplecast.com/xCQr3ykc"
+        },
+        {
+          "name": "The Market's Compass Technical View",
+          "url": "https://themarketscompass.substack.com/feed"
+        },
+        {
+          "name": "Today in Web 3",
+          "url": "https://feeds.soundcloud.com/users/soundcloud:users:844321453/sounds.rss"
+        },
+        {
+          "name": "ZebPay",
+          "url": "https://zebpay.com/feed/"
+        },
+        {
+          "name": "cryptocurrency | TechCrunch",
+          "url": "https://techcrunch.com/tag/cryptocurrency/feed"
+        }
+      ]
+    },
+    {
+      "key": "cyber-security",
+      "name": "Cyber security",
+      "feeds": [
+        {
+          "name": "Blackhat Library: Hacking techniques and research",
+          "url": "https://www.reddit.com/r/blackhat/.rss"
+        },
+        {
+          "name": "CyberWire Daily",
+          "url": "https://feeds.megaphone.fm/cyberwire-daily-podcast"
+        },
+        {
+          "name": "Darknet Diaries",
+          "url": "https://feeds.megaphone.fm/darknetdiaries"
+        },
+        {
+          "name": "Darknet – Hacking Tools, Hacker News & Cyber Security",
+          "url": "http://feeds.feedburner.com/darknethackers"
+        },
+        {
+          "name": "Google Online Security Blog",
+          "url": "http://googleonlinesecurity.blogspot.com/atom.xml"
+        },
+        {
+          "name": "Hacking Humans",
+          "url": "https://feeds.megaphone.fm/hacking-humans"
+        },
+        {
+          "name": "ISF Podcast",
+          "url": "https://audioboom.com/channels/4991893.rss"
+        },
+        {
+          "name": "Krebs on Security",
+          "url": "http://krebsonsecurity.com/feed/"
+        },
+        {
+          "name": "Latest news",
+          "url": "https://www.zdnet.com/topic/security/rss.xml"
+        },
+        {
+          "name": "Malicious Life",
+          "url": "https://malicious.life/feed/podcast/"
+        },
+        {
+          "name": "Risky Business",
+          "url": "https://risky.biz/feeds/risky-business"
+        },
+        {
+          "name": "Schneier on Security",
+          "url": "http://www.schneier.com/blog/index.rdf"
+        },
+        {
+          "name": "Security Affairs",
+          "url": "http://securityaffairs.co/wordpress/feed"
+        },
+        {
+          "name": "Smashing Security",
+          "url": "http://www.smashingsecurity.com/rss"
+        },
+        {
+          "name": "Technical Information Security Content & Discussion",
+          "url": "https://www.reddit.com/r/netsec/.rss"
+        },
+        {
+          "name": "The Hacker News",
+          "url": "http://thehackernews.com/feeds/posts/default"
+        },
+        {
+          "name": "The Privacy, Security, & OSINT Show",
+          "url": "http://feeds.soundcloud.com/users/soundcloud:users:261098918/sounds.rss"
+        },
+        {
+          "name": "Threatpost",
+          "url": "http://threatpost.com/feed"
+        },
+        {
+          "name": "cybersecurity",
+          "url": "https://www.reddit.com/r/cybersecurity/.rss"
+        },
+        {
+          "name": "cybersecurity | TechCrunch",
+          "url": "https://techcrunch.com/tag/cybersecurity/feed/"
+        },
+        {
+          "name": "www.theregister.com - Articles",
+          "url": "http://www.theregister.co.uk/security/headlines.atom"
+        }
+      ]
+    },
+    {
+      "key": "diy",
+      "name": "DIY",
+      "feeds": [
+        {
+          "name": "A Beautiful Mess",
+          "url": "https://abeautifulmess.com/feed"
+        },
+        {
+          "name": "Blog – Hackaday",
+          "url": "https://hackaday.com/blog/feed/"
+        },
+        {
+          "name": "Centsational Style",
+          "url": "https://centsationalstyle.com/feed/"
+        },
+        {
+          "name": "How-To Geek",
+          "url": "https://www.howtogeek.com/feed/"
+        },
+        {
+          "name": "IKEA Hackers",
+          "url": "https://www.ikeahackers.net/feed"
+        },
+        {
+          "name": "MakeUseOf",
+          "url": "https://www.makeuseof.com/feed/"
+        },
+        {
+          "name": "Oh Happy Day!",
+          "url": "http://ohhappyday.com/feed/"
+        },
+        {
+          "name": "WonderHowTo",
+          "url": "https://www.wonderhowto.com/rss.xml"
+        }
+      ]
+    },
+    {
+      "key": "environment",
+      "name": "Environment",
+      "feeds": [
+        {
+          "name": "\"Human Nature\" Blog Feed",
+          "url": "http://feeds.feedburner.com/ConservationInternationalBlog"
+        },
+        {
+          "name": "Bionic Planet: Reversing Climate Change by Restoring Nature",
+          "url": "https://bionicplanet.libsyn.com/rss"
+        },
+        {
+          "name": "Conservation International",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCam5sCp6mzGBcn8ZBB2RBJg"
+        },
+        {
+          "name": "Environment",
+          "url": "https://www.reddit.com/r/environment/.rss"
+        },
+        {
+          "name": "Environment + Energy – The Conversation",
+          "url": "https://theconversation.com/au/environment/articles.atom"
+        },
+        {
+          "name": "Environment News, Earth News, Global Warming, Wild Life, Carbon Trading, Climate Business, Climate Change & Pollution News",
+          "url": "https://timesofindia.indiatimes.com/rssfeeds/2647163.cms"
+        },
+        {
+          "name": "Environment | The Guardian",
+          "url": "https://www.theguardian.com/us/environment/rss"
+        },
+        {
+          "name": "Good Good Good",
+          "url": "https://www.goodgoodgood.co/articles/rss.xml"
+        },
+        {
+          "name": "NPR Topics: Environment",
+          "url": "https://feeds.npr.org/1025/rss.xml"
+        },
+        {
+          "name": "NYT > Climate and Environment",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Climate.xml"
+        },
+        {
+          "name": "Prakati India",
+          "url": "https://www.prakati.in/feed/"
+        },
+        {
+          "name": "Vox",
+          "url": "https://www.vox.com/rss/energy-and-environment/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "fashion",
+      "name": "Fashion",
+      "feeds": [
+        {
+          "name": "Fashion - ELLE",
+          "url": "https://www.elle.com/rss/fashion.xml/"
+        },
+        {
+          "name": "Fashion | The Guardian",
+          "url": "https://www.theguardian.com/fashion/rss"
+        },
+        {
+          "name": "Fashionista Full",
+          "url": "https://fashionista.com/.rss/excerpt/"
+        },
+        {
+          "name": "Latest from Who What Wear",
+          "url": "https://www.whowhatwear.com/rss"
+        },
+        {
+          "name": "NYT > Style",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/FashionandStyle.xml"
+        },
+        {
+          "name": "POPSUGAR Fashion",
+          "url": "https://www.popsugar.com/fashion/feed"
+        },
+        {
+          "name": "Refinery29",
+          "url": "https://www.refinery29.com/fashion/rss.xml"
+        }
+      ]
+    },
+    {
+      "key": "food",
+      "name": "Food",
+      "feeds": [
+        {
+          "name": "Binging with Babish",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=bgfilms"
+        },
+        {
+          "name": "Bon Appétit",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=BonAppetitDotCom"
+        },
+        {
+          "name": "Budget Bytes",
+          "url": "http://budgetbytes.blogspot.com/feeds/posts/default"
+        },
+        {
+          "name": "Chocolate & Zucchini",
+          "url": "https://cnz.to/feed/"
+        },
+        {
+          "name": "David Lebovitz",
+          "url": "https://www.davidlebovitz.com/feed/"
+        },
+        {
+          "name": "Dinner: A Love Story",
+          "url": "http://www.dinneralovestory.com/feed/"
+        },
+        {
+          "name": "Food52",
+          "url": "http://feeds.feedburner.com/food52-TheAandMBlog"
+        },
+        {
+          "name": "Green Kitchen Stories",
+          "url": "https://greenkitchenstories.com/feed/"
+        },
+        {
+          "name": "How Sweet Eats",
+          "url": "https://www.howsweeteats.com/feed/"
+        },
+        {
+          "name": "Kitchn | Inspiring cooks, nourishing homes",
+          "url": "https://www.thekitchn.com/main.rss"
+        },
+        {
+          "name": "Laura in the Kitchen",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=LauraVitalesKitchen"
+        },
+        {
+          "name": "Love and Lemons",
+          "url": "http://www.loveandlemons.com/feed/"
+        },
+        {
+          "name": "Love and Olive Oil",
+          "url": "https://www.loveandoliveoil.com/feed"
+        },
+        {
+          "name": "NYT > Food",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/DiningandWine.xml"
+        },
+        {
+          "name": "Serious Eats",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=SeriousEats"
+        },
+        {
+          "name": "Serious Eats: Recipes",
+          "url": "http://feeds.feedburner.com/seriouseats/recipes"
+        },
+        {
+          "name": "Shutterbean",
+          "url": "http://www.shutterbean.com/feed/"
+        },
+        {
+          "name": "Sprouted Kitchen",
+          "url": "https://www.sproutedkitchen.com/home?format=rss"
+        },
+        {
+          "name": "smitten kitchen",
+          "url": "http://feeds.feedburner.com/smittenkitchen"
+        }
+      ]
+    },
+    {
+      "key": "football",
+      "name": "Football",
+      "feeds": [
+        {
+          "name": "BBC Sport",
+          "url": "https://feeds.bbci.co.uk/sport/football/rss.xml"
+        },
+        {
+          "name": "CNN.com - RSS Channel - Sport - Football",
+          "url": "http://rss.cnn.com/rss/edition_football.rss"
+        },
+        {
+          "name": "EFL Championship",
+          "url": "https://www.reddit.com/r/Championship/.rss?format=xml"
+        },
+        {
+          "name": "Football - The People's Sport",
+          "url": "https://www.reddit.com/r/football/.rss?format=xml"
+        },
+        {
+          "name": "Football News, Football Scores, Premier League, La Liga, ISL | The Hindu",
+          "url": "https://www.thehindu.com/sport/football/feeder/default.rss"
+        },
+        {
+          "name": "Football | The Guardian",
+          "url": "https://www.theguardian.com/football/rss"
+        },
+        {
+          "name": "NYT > Sports > Soccer",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Soccer.xml"
+        },
+        {
+          "name": "Soccer News",
+          "url": "https://www.soccernews.com/feed"
+        }
+      ]
+    },
+    {
+      "key": "funny",
+      "name": "Funny",
+      "feeds": [
+        {
+          "name": "Cracked: All Posts",
+          "url": "http://feeds.feedburner.com/CrackedRSS"
+        },
+        {
+          "name": "Explosm.net",
+          "url": "http://feeds.feedburner.com/Explosm"
+        },
+        {
+          "name": "FAIL Blog",
+          "url": "http://feeds.feedburner.com/failblog"
+        },
+        {
+          "name": "I Can Has Cheezburger?",
+          "url": "http://feeds.feedburner.com/icanhascheezburger"
+        },
+        {
+          "name": "PHD Comics",
+          "url": "http://phdcomics.com/gradfeed.php"
+        },
+        {
+          "name": "Penny Arcade",
+          "url": "https://www.penny-arcade.com/feed"
+        },
+        {
+          "name": "PostSecret",
+          "url": "https://postsecret.com/feed/?alt=rss"
+        },
+        {
+          "name": "Saturday Morning Breakfast Cereal",
+          "url": "https://www.smbc-comics.com/comic/rss"
+        },
+        {
+          "name": "The Bloggess",
+          "url": "https://thebloggess.com/feed/"
+        },
+        {
+          "name": "The Daily WTF",
+          "url": "http://syndication.thedailywtf.com/TheDailyWtf"
+        },
+        {
+          "name": "The Oatmeal - Comics by Matthew Inman",
+          "url": "http://feeds.feedburner.com/oatmealfeed"
+        },
+        {
+          "name": "The Onion",
+          "url": "https://www.theonion.com/rss"
+        },
+        {
+          "name": "xkcd.com",
+          "url": "https://xkcd.com/rss.xml"
+        }
+      ]
+    },
+    {
+      "key": "gaming",
+      "name": "Gaming",
+      "feeds": [
+        {
+          "name": "Eurogamer.net Latest Articles Feed",
+          "url": "https://www.eurogamer.net/?format=rss"
+        },
+        {
+          "name": "GameSpot - All Content",
+          "url": "https://www.gamespot.com/feeds/mashup/"
+        },
+        {
+          "name": "IGN Articles",
+          "url": "http://feeds.ign.com/ign/all"
+        },
+        {
+          "name": "Indie Games Plus",
+          "url": "https://indiegamesplus.com/feed"
+        },
+        {
+          "name": "Kotaku",
+          "url": "https://kotaku.com/rss"
+        },
+        {
+          "name": "Makeup and Beauty Blog | Makeup Reviews, Swatches and How-To Makeup",
+          "url": "https://www.makeupandbeautyblog.com/feed/"
+        },
+        {
+          "name": "PlayStation.Blog",
+          "url": "http://feeds.feedburner.com/psblog"
+        },
+        {
+          "name": "Polygon.com",
+          "url": "https://www.polygon.com/rss/index.xml"
+        },
+        {
+          "name": "Rock, Paper, Shotgun",
+          "url": "http://feeds.feedburner.com/RockPaperShotgun"
+        },
+        {
+          "name": "Steam RSS News Feed",
+          "url": "https://store.steampowered.com/feeds/news.xml"
+        },
+        {
+          "name": "The Ancient Gaming Noob",
+          "url": "http://feeds.feedburner.com/TheAncientGamingNoob"
+        },
+        {
+          "name": "The Escapist",
+          "url": "https://www.escapistmagazine.com/v2/feed/"
+        },
+        {
+          "name": "TouchArcade - iPhone, iPad, Android Games Forum",
+          "url": "https://toucharcade.com/community/forums/-/index.rss"
+        },
+        {
+          "name": "r/gaming",
+          "url": "https://www.reddit.com/r/gaming.rss"
+        }
+      ]
+    },
+    {
+      "key": "history",
+      "name": "History",
+      "feeds": [
+        {
+          "name": "30 for 30 Podcasts",
+          "url": "https://feeds.megaphone.fm/ESP5765452710"
+        },
+        {
+          "name": "Dan Carlin's Hardcore History",
+          "url": "https://feeds.feedburner.com/dancarlin/history?format=xml"
+        },
+        {
+          "name": "History in 28-minutes",
+          "url": "https://www.historyisnowmagazine.com/blog?format=RSS"
+        },
+        {
+          "name": "HistoryNet",
+          "url": "http://www.historynet.com/feed"
+        },
+        {
+          "name": "Throughline",
+          "url": "https://feeds.npr.org/510333/podcast.xml"
+        },
+        {
+          "name": "You Must Remember This",
+          "url": "https://feeds.megaphone.fm/YMRT7068253588"
+        },
+        {
+          "name": "the memory palace",
+          "url": "http://feeds.thememorypalace.us/thememorypalace"
+        }
+      ]
+    },
+    {
+      "key": "interior-design",
+      "name": "Interior design",
+      "feeds": [
+        {
+          "name": "BLOG - decor8",
+          "url": "https://www.decor8blog.com/blog?format=rss"
+        },
+        {
+          "name": "Core77",
+          "url": "http://feeds.feedburner.com/core77/blog"
+        },
+        {
+          "name": "Design MilkInterior Design Ideas for Your Modern Home | Design Milk",
+          "url": "https://design-milk.com/category/interior-design/feed/"
+        },
+        {
+          "name": "Fubiz Media",
+          "url": "http://feeds.feedburner.com/fubiz"
+        },
+        {
+          "name": "In My Own Style",
+          "url": "https://inmyownstyle.com/feed"
+        },
+        {
+          "name": "Interior Design",
+          "url": "https://www.interiordesign.net/rss/"
+        },
+        {
+          "name": "Interior Design (Interior Architecture)",
+          "url": "https://www.reddit.com/r/InteriorDesign/.rss"
+        },
+        {
+          "name": "Interior Design Ideas",
+          "url": "http://www.home-designing.com/feed"
+        },
+        {
+          "name": "Interior design | Dezeen",
+          "url": "https://www.dezeen.com/interiors/feed/"
+        },
+        {
+          "name": "Latest from Ideal Home in News",
+          "url": "https://www.idealhome.co.uk/feed"
+        },
+        {
+          "name": "Liz Marie Blog",
+          "url": "https://www.lizmarieblog.com/feed/"
+        },
+        {
+          "name": "The Inspired Room",
+          "url": "https://theinspiredroom.net/feed/"
+        },
+        {
+          "name": "Thrifty Decor Chick | Thrifty DIY, Decor and Organizing",
+          "url": "http://feeds.feedburner.com/blogspot/ZBcZ"
+        },
+        {
+          "name": "Trendir",
+          "url": "https://www.trendir.com/feed/"
+        },
+        {
+          "name": "Yanko Design",
+          "url": "http://feeds.feedburner.com/yankodesign"
+        },
+        {
+          "name": "Yatzer | Live Beautifully. Explore Endlessly.",
+          "url": "https://www.yatzer.com/rss.xml"
+        },
+        {
+          "name": "Young House Love",
+          "url": "https://www.younghouselove.com/feed/"
+        },
+        {
+          "name": "decoist",
+          "url": "https://www.decoist.com/feed/"
+        },
+        {
+          "name": "design archives | designboom | architecture & design magazine",
+          "url": "https://www.designboom.com/design/feed"
+        }
+      ]
+    },
+    {
+      "key": "ios-development",
+      "name": "iOS Development",
+      "feeds": [
+        {
+          "name": "Alberto De Bortoli",
+          "url": "https://albertodebortoli.com/rss/"
+        },
+        {
+          "name": "Augmented Code",
+          "url": "https://augmentedcode.io/feed/"
+        },
+        {
+          "name": "Benoit Pasquier",
+          "url": "https://benoitpasquier.com/index.xml"
+        },
+        {
+          "name": "Bruno Rocha",
+          "url": "https://swiftrocks.com/rss.xml"
+        },
+        {
+          "name": "Latest News - Apple Developer",
+          "url": "https://developer.apple.com/news/rss/news.rss"
+        },
+        {
+          "name": "Mobile A11y",
+          "url": "https://mobilea11y.com/index.xml"
+        },
+        {
+          "name": "Ole Begemann",
+          "url": "https://oleb.net/blog/atom.xml"
+        },
+        {
+          "name": "Swift by Sundell",
+          "url": "https://www.swiftbysundell.com/feed.rss"
+        },
+        {
+          "name": "Swift by Sundell",
+          "url": "https://swiftbysundell.com/feed.rss"
+        },
+        {
+          "name": "The Atomic Birdhouse",
+          "url": "https://atomicbird.com/index.xml"
+        },
+        {
+          "name": "The One And Only Blog Of Joe Fabisevich",
+          "url": "https://www.fabisevi.ch/feed.xml"
+        },
+        {
+          "name": "Under the Radar",
+          "url": "https://www.relay.fm/radar/feed"
+        },
+        {
+          "name": "Use Your Loaf - iOS Development News & Tips",
+          "url": "https://useyourloaf.com/blog/rss.xml"
+        },
+        {
+          "name": "inessential.com",
+          "url": "https://inessential.com/xml/rss.xml"
+        },
+        {
+          "name": "tyler.io",
+          "url": "https://tyler.io/feed/"
+        }
+      ]
+    },
+    {
+      "key": "memes",
+      "name": "Memes",
+      "feeds": [
+        {
+          "name": "/r/Memes the original since 2008",
+          "url": "https://www.reddit.com/r/memes/.rss"
+        },
+        {
+          "name": "A sub for History Memes",
+          "url": "https://www.reddit.com/r/historymemes/.rss"
+        },
+        {
+          "name": "Advice Animals",
+          "url": "https://www.reddit.com/r/AdviceAnimals/.rss"
+        },
+        {
+          "name": "Indian Meme Templates",
+          "url": "https://indianmemetemplates.com/feed/"
+        },
+        {
+          "name": "Indian Memes",
+          "url": "https://www.reddit.com/r/IndianMeyMeys/.rss"
+        },
+        {
+          "name": "Internet for the Spirit",
+          "url": "https://www.reddit.com/r/wholesomememes/.rss"
+        },
+        {
+          "name": "Know Your Meme Newsfeed",
+          "url": "https://knowyourmeme.com/newsfeed.rss"
+        },
+        {
+          "name": "Memebase",
+          "url": "https://memebase.cheezburger.com/rss"
+        },
+        {
+          "name": "PrequelMemes - Memes of the Star Wars Prequels",
+          "url": "https://www.reddit.com/r/PrequelMemes/.rss"
+        },
+        {
+          "name": "Rabbit Ramblings",
+          "url": "http://feeds.feedburner.com/blogspot/GlZMR"
+        },
+        {
+          "name": "YuckSauce",
+          "url": "https://yucksauce.com/feed/"
+        },
+        {
+          "name": "dankmemes",
+          "url": "https://www.reddit.com/r/dankmemes/.rss"
+        },
+        {
+          "name": "r/IndianDankMemes - India's Largest Meme Subreddit",
+          "url": "https://www.reddit.com/r/IndianDankMemes/.rss"
+        },
+        {
+          "name": "selfies of the soul",
+          "url": "https://www.reddit.com/r/me_irl/.rss"
+        },
+        {
+          "name": "when things get too real for meirl",
+          "url": "https://www.reddit.com/r/2meirl4meirl/.rss"
+        },
+        {
+          "name": "😎HAHA DAE MINIONS!!!😎",
+          "url": "https://www.reddit.com/r/terriblefacebookmemes/.rss"
+        }
+      ]
+    },
+    {
+      "key": "movies",
+      "name": "Movies",
+      "feeds": [
+        {
+          "name": "/Film",
+          "url": "https://feeds2.feedburner.com/slashfilm"
+        },
+        {
+          "name": "Ain't It Cool News Feed",
+          "url": "https://www.aintitcool.com/node/feed/"
+        },
+        {
+          "name": "ComingSoon.net – Movie Trailers, TV & Streaming News, and More",
+          "url": "https://www.comingsoon.net/feed"
+        },
+        {
+          "name": "Deadline",
+          "url": "https://deadline.com/feed/"
+        },
+        {
+          "name": "FirstShowing.net",
+          "url": "https://www.firstshowing.net/feed/"
+        },
+        {
+          "name": "IndieWire",
+          "url": "https://www.indiewire.com/feed"
+        },
+        {
+          "name": "Movie News and Discussion",
+          "url": "https://reddit.com/r/movies/.rss"
+        },
+        {
+          "name": "Movies",
+          "url": "https://www.bleedingcool.com/movies/feed/"
+        },
+        {
+          "name": "Variety",
+          "url": "https://variety.com/feed/"
+        }
+      ]
+    },
+    {
+      "key": "music",
+      "name": "Music",
+      "feeds": [
+        {
+          "name": "Consequence",
+          "url": "http://consequenceofsound.net/feed"
+        },
+        {
+          "name": "Metal Injection",
+          "url": "http://feeds.feedburner.com/metalinjection"
+        },
+        {
+          "name": "Music Business Worldwide",
+          "url": "https://www.musicbusinessworldwide.com/feed/"
+        },
+        {
+          "name": "RSS: News",
+          "url": "http://pitchfork.com/rss/news"
+        },
+        {
+          "name": "Song Exploder",
+          "url": "http://feed.songexploder.net/songexploder"
+        }
+      ]
+    },
+    {
+      "key": "nature",
+      "name": "Nature",
+      "feeds": [
+        {
+          "name": "BBC Earth",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCwmZiChSryoWQCZMIQezgTg"
+        },
+        {
+          "name": "BBC Earth Podcast",
+          "url": "https://rss.acast.com/bbcearthpodcast"
+        },
+        {
+          "name": "BLOG POSTS – Mark Avery",
+          "url": "https://markavery.info/blog/feed/"
+        },
+        {
+          "name": "Blog | Nature | PBS",
+          "url": "https://www.pbs.org/wnet/nature/blog/feed/"
+        },
+        {
+          "name": "EarthPorn: Amazing images of light and landscape",
+          "url": "https://www.reddit.com/r/EarthPorn/.rss"
+        },
+        {
+          "name": "Explore Oceans",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSyg9cb3Iq-NtlbxqNB9wGw"
+        },
+        {
+          "name": "National Geographic",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpVm7bg6pXKo1Pr6k5kxG9A"
+        },
+        {
+          "name": "Nature",
+          "url": "http://feeds.nature.com/nature/rss/current?x=1"
+        },
+        {
+          "name": "Nature",
+          "url": "https://www.reddit.com/r/nature/.rss"
+        },
+        {
+          "name": "Nature Gifs",
+          "url": "https://www.reddit.com/r/NatureGifs/.rss"
+        },
+        {
+          "name": "Nature on PBS",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCcBp_9YPyma4c3HTadmRJ3Q"
+        },
+        {
+          "name": "Reflections of the Natural World",
+          "url": "https://reflectionsofthenaturalworld.com/feed/"
+        },
+        {
+          "name": "Stories Archives - Nature Canada",
+          "url": "https://naturecanada.ca/category/news/blog/feed/"
+        },
+        {
+          "name": "nature video",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC7c8mE90qCtu11z47U0KErg"
+        }
+      ]
+    },
+    {
+      "key": "news",
+      "name": "News",
+      "feeds": [
+        {
+          "name": "BBC News",
+          "url": "http://feeds.bbci.co.uk/news/world/rss.xml"
+        },
+        {
+          "name": "CNN.com - RSS Channel - World",
+          "url": "http://rss.cnn.com/rss/edition_world.rss"
+        },
+        {
+          "name": "International: Top News And Analysis",
+          "url": "https://www.cnbc.com/id/100727362/device/rss/rss.html"
+        },
+        {
+          "name": "NDTV News Search Records Found 1000",
+          "url": "http://feeds.feedburner.com/ndtvnews-world-news"
+        },
+        {
+          "name": "NYT > World News",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+        },
+        {
+          "name": "Top stories - Google News",
+          "url": "https://news.google.com/rss"
+        },
+        {
+          "name": "World",
+          "url": "http://feeds.washingtonpost.com/rss/world"
+        },
+        {
+          "name": "World News",
+          "url": "https://www.reddit.com/r/worldnews/.rss"
+        },
+        {
+          "name": "World News, Today World News, Latest International News, World Breaking News, Trending News of World - Times of India",
+          "url": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms"
+        },
+        {
+          "name": "World news | The Guardian",
+          "url": "https://www.theguardian.com/world/rss"
+        }
+      ]
+    },
+    {
+      "key": "personal-finance",
+      "name": "Personal finance",
+      "feeds": [
+        {
+          "name": "Afford Anything®",
+          "url": "https://affordanything.com/feed/"
+        },
+        {
+          "name": "Afford Anything®",
+          "url": "https://feeds.feedburner.com/AffordAnythingFeed"
+        },
+        {
+          "name": "Budgets Are Sexy",
+          "url": "https://feeds2.feedburner.com/budgetsaresexy"
+        },
+        {
+          "name": "Financial Samurai",
+          "url": "https://www.financialsamurai.com/feed/"
+        },
+        {
+          "name": "Frugalwoods",
+          "url": "https://feeds.feedburner.com/Frugalwoods"
+        },
+        {
+          "name": "Good Financial Cents®",
+          "url": "https://www.goodfinancialcents.com/feed/"
+        },
+        {
+          "name": "Invest Like the Best with Patrick O'Shaughnessy",
+          "url": "http://investlikethebest.libsyn.com/rss"
+        },
+        {
+          "name": "Learn To Trade The Market",
+          "url": "https://www.learntotradethemarket.com/feed"
+        },
+        {
+          "name": "Listen Money Matters - Free your inner financial badass. All the stuff you should know about personal finance.",
+          "url": "https://feeds.megaphone.fm/listen-money-matters"
+        },
+        {
+          "name": "Making Sense Of Cents",
+          "url": "https://www.makingsenseofcents.com/feed"
+        },
+        {
+          "name": "Millennial Money",
+          "url": "https://millennialmoney.com/feed/"
+        },
+        {
+          "name": "Money Crashers",
+          "url": "https://www.moneycrashers.com/feed/"
+        },
+        {
+          "name": "Money For the Rest of Us",
+          "url": "https://rss.art19.com/money-for-the-rest-of-us"
+        },
+        {
+          "name": "Money Saving Mom®",
+          "url": "https://moneysavingmom.com/feed/"
+        },
+        {
+          "name": "Money Under 30",
+          "url": "https://www.moneyunder30.com/feed"
+        },
+        {
+          "name": "MoneyNing",
+          "url": "http://feeds.feedburner.com/MoneyNing"
+        },
+        {
+          "name": "MyWifeQuitHerJob.com",
+          "url": "https://mywifequitherjob.com/feed/"
+        },
+        {
+          "name": "Nerd's Eye View | Kitces.com",
+          "url": "http://feeds.feedblitz.com/kitcesnerdseyeview&x=1"
+        },
+        {
+          "name": "NerdWallet",
+          "url": "https://www.nerdwallet.com/blog/feed/"
+        },
+        {
+          "name": "Oblivious Investor",
+          "url": "https://obliviousinvestor.com/feed/"
+        },
+        {
+          "name": "Personal Finance",
+          "url": "https://reddit.com/r/personalfinance/.rss"
+        },
+        {
+          "name": "SavingAdvice.com Blog",
+          "url": "https://www.savingadvice.com/feed/"
+        },
+        {
+          "name": "Side Hustle Nation",
+          "url": "https://www.sidehustlenation.com/feed"
+        },
+        {
+          "name": "So Money with Farnoosh Torabi",
+          "url": "https://feeds.megaphone.fm/somoney"
+        },
+        {
+          "name": "The Clark Howard Podcast",
+          "url": "https://feeds.megaphone.fm/clarkhoward"
+        },
+        {
+          "name": "The College Investor",
+          "url": "https://thecollegeinvestor.com/feed/"
+        },
+        {
+          "name": "The Ramsey Show",
+          "url": "https://daveramsey.libsyn.com/rss"
+        },
+        {
+          "name": "The Stacking Benjamins Show",
+          "url": "https://feeds.megaphone.fm/stacking-benjamins"
+        },
+        {
+          "name": "Well Kept Wallet",
+          "url": "https://wellkeptwallet.com/feed/"
+        },
+        {
+          "name": "Wise Bread",
+          "url": "http://feeds.killeraces.com/wisebread"
+        }
+      ]
+    },
+    {
+      "key": "photography",
+      "name": "Photography",
+      "feeds": [
+        {
+          "name": "500px",
+          "url": "https://iso.500px.com/feed/"
+        },
+        {
+          "name": "Digital Photography School",
+          "url": "https://feeds.feedburner.com/DigitalPhotographySchool"
+        },
+        {
+          "name": "Light Stalking",
+          "url": "https://www.lightstalking.com/feed/"
+        },
+        {
+          "name": "One Big Photo",
+          "url": "http://feeds.feedburner.com/OneBigPhoto"
+        },
+        {
+          "name": "PetaPixel",
+          "url": "https://petapixel.com/feed/"
+        },
+        {
+          "name": "Strobist",
+          "url": "http://feeds.feedburner.com/blogspot/WOBq"
+        },
+        {
+          "name": "Stuck in Customs",
+          "url": "https://stuckincustoms.com/feed/"
+        },
+        {
+          "name": "The Boston Globe",
+          "url": "https://www.bostonglobe.com/rss/bigpicture"
+        }
+      ]
+    },
+    {
+      "key": "programming",
+      "name": "Programming",
+      "feeds": [
+        {
+          "name": "Better Programming - Medium",
+          "url": "https://medium.com/feed/better-programming"
+        },
+        {
+          "name": "CodeNewbie",
+          "url": "http://feeds.codenewbie.org/cnpodcast.xml"
+        },
+        {
+          "name": "Coding Horror",
+          "url": "https://feeds.feedburner.com/codinghorror"
+        },
+        {
+          "name": "Developer Tea",
+          "url": "https://feeds.simplecast.com/dLRotFGk"
+        },
+        {
+          "name": "Engineering at Meta",
+          "url": "https://engineering.fb.com/feed/"
+        },
+        {
+          "name": "Engineering at Slack",
+          "url": "https://slack.engineering/feed"
+        },
+        {
+          "name": "Etsy Engineering | Code as Craft",
+          "url": "https://codeascraft.com/feed/atom/"
+        },
+        {
+          "name": "FLOSS Weekly (Audio)",
+          "url": "https://feeds.twit.tv/floss.xml"
+        },
+        {
+          "name": "GitLab",
+          "url": "https://about.gitlab.com/atom.xml"
+        },
+        {
+          "name": "Google Developers Blog",
+          "url": "http://feeds.feedburner.com/GDBcode"
+        },
+        {
+          "name": "Google TechTalks",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=GoogleTechTalks"
+        },
+        {
+          "name": "HackerNoon.com - Medium",
+          "url": "https://medium.com/feed/hackernoon"
+        },
+        {
+          "name": "Hanselminutes with Scott Hanselman",
+          "url": "https://feeds.simplecast.com/gvtxUiIf"
+        },
+        {
+          "name": "InfoQ",
+          "url": "https://feed.infoq.com"
+        },
+        {
+          "name": "Java, SQL and jOOQ.",
+          "url": "https://blog.jooq.org/feed"
+        },
+        {
+          "name": "Joel on Software",
+          "url": "https://www.joelonsoftware.com/feed/"
+        },
+        {
+          "name": "Martin Fowler",
+          "url": "https://martinfowler.com/feed.atom"
+        },
+        {
+          "name": "Overflow - Buffer Resources",
+          "url": "https://buffer.com/resources/overflow/rss/"
+        },
+        {
+          "name": "Podcast Archives - Software Engineering Daily",
+          "url": "https://softwareengineeringdaily.com/category/podcast/feed"
+        },
+        {
+          "name": "Programming Archives - The Crazy Programmer",
+          "url": "https://www.thecrazyprogrammer.com/category/programming/feed"
+        },
+        {
+          "name": "Programming Throwdown",
+          "url": "http://feeds.feedburner.com/ProgrammingThrowdown"
+        },
+        {
+          "name": "Robert Heaton | Blog",
+          "url": "https://robertheaton.com/feed.xml"
+        },
+        {
+          "name": "Scott Hanselman's Blog",
+          "url": "http://feeds.hanselman.com/ScottHanselman"
+        },
+        {
+          "name": "Scripting News",
+          "url": "http://scripting.com/rss.xml"
+        },
+        {
+          "name": "Software Defined Talk",
+          "url": "https://feeds.fireside.fm/sdt/rss"
+        },
+        {
+          "name": "Software Engineering Radio - The Podcast for Professional Software Developers",
+          "url": "http://feeds.feedburner.com/se-radio"
+        },
+        {
+          "name": "SoundCloud Backstage Blog",
+          "url": "https://developers.soundcloud.com/blog/blog.rss"
+        },
+        {
+          "name": "Spotify Engineering",
+          "url": "https://labs.spotify.com/feed/"
+        },
+        {
+          "name": "Stack Abuse",
+          "url": "https://stackabuse.com/rss/"
+        },
+        {
+          "name": "Stack Overflow Blog",
+          "url": "https://stackoverflow.blog/feed/"
+        },
+        {
+          "name": "The 6 Figure Developer",
+          "url": "http://6figuredev.com/feed/rss/"
+        },
+        {
+          "name": "The Airbnb Tech Blog - Medium",
+          "url": "https://medium.com/feed/airbnb-engineering"
+        },
+        {
+          "name": "The Cynical Developer",
+          "url": "https://cynicaldeveloper.com/feed/podcast"
+        },
+        {
+          "name": "The GitHub Blog",
+          "url": "https://github.blog/feed/"
+        },
+        {
+          "name": "The JetBrains Blog",
+          "url": "https://blog.jetbrains.com/feed"
+        },
+        {
+          "name": "The PIT Show: Reflections and Interviews in the Tech World",
+          "url": "https://feeds.transistor.fm/productivity-in-tech-podcast"
+        },
+        {
+          "name": "The Stack Overflow Podcast",
+          "url": "https://feeds.simplecast.com/XA_851k3"
+        },
+        {
+          "name": "The Women in Tech Show: A Technical Podcast",
+          "url": "https://thewomenintechshow.com/category/podcast/feed/"
+        },
+        {
+          "name": "overreacted — A blog by Dan Abramov",
+          "url": "https://overreacted.io/rss.xml"
+        },
+        {
+          "name": "programming",
+          "url": "https://www.reddit.com/r/programming/.rss"
+        }
+      ]
+    },
+    {
+      "key": "science",
+      "name": "Science",
+      "feeds": [
+        {
+          "name": "60-Second Science",
+          "url": "http://rss.sciam.com/sciam/60secsciencepodcast"
+        },
+        {
+          "name": "BBC News",
+          "url": "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"
+        },
+        {
+          "name": "Discovery",
+          "url": "https://podcasts.files.bbci.co.uk/p002w557.rss"
+        },
+        {
+          "name": "FlowingData",
+          "url": "https://flowingdata.com/feed"
+        },
+        {
+          "name": "Gastropod",
+          "url": "https://www.omnycontent.com/d/playlist/aaea4e69-af51-495e-afc9-a9760146922b/2a195077-f014-41d2-8313-ab190186b4c2/277bcd5c-0a05-4c14-8ba6-ab190186b4d5/podcast.rss"
+        },
+        {
+          "name": "Hidden Brain",
+          "url": "https://feeds.npr.org/510308/podcast.xml"
+        },
+        {
+          "name": "Invisibilia",
+          "url": "https://feeds.npr.org/510307/podcast.xml"
+        },
+        {
+          "name": "Latest Science News -- ScienceDaily",
+          "url": "https://www.sciencedaily.com/rss/all.xml"
+        },
+        {
+          "name": "NYT > Science",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml"
+        },
+        {
+          "name": "Nature",
+          "url": "https://www.nature.com/nature.rss"
+        },
+        {
+          "name": "Phys.org - latest science and technology news stories",
+          "url": "https://phys.org/rss-feed/"
+        },
+        {
+          "name": "Popular Science",
+          "url": "https://www.popsci.com/arcio/rss/"
+        },
+        {
+          "name": "Probably Science",
+          "url": "https://probablyscience.libsyn.com/rss"
+        },
+        {
+          "name": "Radiolab",
+          "url": "http://feeds.wnyc.org/radiolab"
+        },
+        {
+          "name": "Reddit Science",
+          "url": "https://reddit.com/r/science/.rss"
+        },
+        {
+          "name": "Sawbones: A Marital Tour of Misguided Medicine",
+          "url": "https://feeds.simplecast.com/y1LF_sn2"
+        },
+        {
+          "name": "Science",
+          "url": "https://gizmodo.com/tag/science/rss"
+        },
+        {
+          "name": "Science Latest",
+          "url": "https://www.wired.com/feed/category/science/latest/rss"
+        },
+        {
+          "name": "Scientific American Content: Global",
+          "url": "http://rss.sciam.com/ScientificAmerican-Global"
+        },
+        {
+          "name": "Shirtloads of Science",
+          "url": "https://shirtloadsofscience.libsyn.com/rss"
+        },
+        {
+          "name": "TED Talks Daily",
+          "url": "https://pa.tedcdn.com/feeds/talks.rss"
+        },
+        {
+          "name": "The Infinite Monkey Cage",
+          "url": "https://podcasts.files.bbci.co.uk/b00snr0w.rss"
+        },
+        {
+          "name": "This Week in Science – The Kickass Science Podcast",
+          "url": "http://www.twis.org/feed/"
+        }
+      ]
+    },
+    {
+      "key": "space",
+      "name": "Space",
+      "feeds": [
+        {
+          "name": "/r/space: news, articles and discussion",
+          "url": "https://www.reddit.com/r/space/.rss?format=xml"
+        },
+        {
+          "name": "Latest from Space.com",
+          "url": "https://www.space.com/feeds/all"
+        },
+        {
+          "name": "NASA",
+          "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss"
+        },
+        {
+          "name": "New Scientist - Space",
+          "url": "https://www.newscientist.com/subject/space/feed/"
+        },
+        {
+          "name": "Space | The Guardian",
+          "url": "https://www.theguardian.com/science/space/rss"
+        },
+        {
+          "name": "SpaceX",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=spacexchannel"
+        }
+      ]
+    },
+    {
+      "key": "sports",
+      "name": "Sports",
+      "feeds": [
+        {
+          "name": "BBC Sport",
+          "url": "http://feeds.bbci.co.uk/sport/rss.xml"
+        },
+        {
+          "name": "CNN.com - RSS Channel - Sport",
+          "url": "http://rss.cnn.com/rss/edition_sport.rss"
+        },
+        {
+          "name": "NYT > Sports",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml"
+        },
+        {
+          "name": "Reddit Sports",
+          "url": "https://www.reddit.com/r/sports.rss"
+        },
+        {
+          "name": "Sport | The Guardian",
+          "url": "https://www.theguardian.com/uk/sport/rss"
+        },
+        {
+          "name": "Sports News - Latest Sports and Football News | Sky News",
+          "url": "http://feeds.skynews.com/feeds/rss/sports.xml"
+        },
+        {
+          "name": "Sports News: Cricket Live Scorecard, Latest Cricket News, Football, NBA, NFL, WWE, NHL, MLB News & More",
+          "url": "https://timesofindia.indiatimes.com/rssfeeds/4719148.cms"
+        },
+        {
+          "name": "Sports | The Indian Express",
+          "url": "https://indianexpress.com/section/sports/feed/"
+        },
+        {
+          "name": "Sportskeeda",
+          "url": "https://www.sportskeeda.com/feed"
+        },
+        {
+          "name": "www.espn.com - TOP",
+          "url": "https://www.espn.com/espn/rss/news"
+        }
+      ]
+    },
+    {
+      "key": "startups",
+      "name": "Startups",
+      "feeds": [
+        {
+          "name": "AVC",
+          "url": "https://avc.com/feed/"
+        },
+        {
+          "name": "Blog on Feld Thoughts",
+          "url": "https://feld.com/archives/tag/blog/feed"
+        },
+        {
+          "name": "Entrepreneur – Latest",
+          "url": "http://feeds.feedburner.com/entrepreneur/latest"
+        },
+        {
+          "name": "Feld Thoughts",
+          "url": "https://feld.com/feed"
+        },
+        {
+          "name": "GaryVee",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=GaryVaynerchuk"
+        },
+        {
+          "name": "Hacker News: Front Page",
+          "url": "https://hnrss.org/frontpage"
+        },
+        {
+          "name": "Inc.com",
+          "url": "https://www.inc.com/rss/"
+        },
+        {
+          "name": "Marie Forleo",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=marieforleo"
+        },
+        {
+          "name": "Masters of Scale",
+          "url": "https://rss.art19.com/masters-of-scale"
+        },
+        {
+          "name": "Paul Graham: Essays",
+          "url": "http://www.aaronsw.com/2002/feeds/pgessays.rss"
+        },
+        {
+          "name": "Product Hunt — The best new products, every day",
+          "url": "https://www.producthunt.com/feed"
+        },
+        {
+          "name": "Small Business Trends",
+          "url": "https://feeds2.feedburner.com/SmallBusinessTrends"
+        },
+        {
+          "name": "Smart Passive Income",
+          "url": "http://feeds.feedburner.com/smartpassiveincome"
+        },
+        {
+          "name": "Steve Blank",
+          "url": "https://steveblank.com/feed/"
+        },
+        {
+          "name": "The Intercom Blog",
+          "url": "https://www.intercom.com/blog/feed"
+        },
+        {
+          "name": "The Startup Junkies Podcast",
+          "url": "https://startupjunkie.libsyn.com/rss"
+        },
+        {
+          "name": "The Tim Ferriss Show",
+          "url": "https://rss.art19.com/tim-ferriss-show"
+        },
+        {
+          "name": "VentureBeat",
+          "url": "https://feeds.feedburner.com/venturebeat/SZYF"
+        }
+      ]
+    },
+    {
+      "key": "tech",
+      "name": "Tech",
+      "feeds": [
+        {
+          "name": "Accidental Tech Podcast",
+          "url": "https://atp.fm/rss"
+        },
+        {
+          "name": "Analog(ue)",
+          "url": "https://www.relay.fm/analogue/feed"
+        },
+        {
+          "name": "Ars Technica - All content",
+          "url": "http://feeds.arstechnica.com/arstechnica/index"
+        },
+        {
+          "name": "CNET",
+          "url": "https://www.cnet.com/rss/news/"
+        },
+        {
+          "name": "CNET",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=CNETTV"
+        },
+        {
+          "name": "Clockwise",
+          "url": "https://www.relay.fm/clockwise/feed"
+        },
+        {
+          "name": "Crunch Hype",
+          "url": "http://feeds.feedburner.com/TechCrunch"
+        },
+        {
+          "name": "Engadget - Technology News & Expert Reviews",
+          "url": "https://www.engadget.com/rss.xml"
+        },
+        {
+          "name": "Gizmodo",
+          "url": "https://gizmodo.com/rss"
+        },
+        {
+          "name": "Hacker News",
+          "url": "https://news.ycombinator.com/rss"
+        },
+        {
+          "name": "Lifehacker",
+          "url": "https://lifehacker.com/rss"
+        },
+        {
+          "name": "Linus Tech Tips",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=LinusTechTips"
+        },
+        {
+          "name": "Marques Brownlee",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=marquesbrownlee"
+        },
+        {
+          "name": "Mashable",
+          "url": "http://feeds.mashable.com/Mashable"
+        },
+        {
+          "name": "NYT > Technology",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+        },
+        {
+          "name": "ReadWrite",
+          "url": "https://readwrite.com/feed/"
+        },
+        {
+          "name": "Reply All",
+          "url": "https://feeds.megaphone.fm/replyall"
+        },
+        {
+          "name": "Rocket",
+          "url": "https://www.relay.fm/rocket/feed"
+        },
+        {
+          "name": "Slashdot",
+          "url": "http://rss.slashdot.org/Slashdot/slashdotMain"
+        },
+        {
+          "name": "Stratechery by Ben Thompson",
+          "url": "http://stratechery.com/feed/"
+        },
+        {
+          "name": "The Keyword",
+          "url": "https://www.blog.google/rss/"
+        },
+        {
+          "name": "The Next Web",
+          "url": "https://thenextweb.com/feed/"
+        },
+        {
+          "name": "The Verge",
+          "url": "https://www.theverge.com/rss/index.xml"
+        },
+        {
+          "name": "The Verge",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=TheVerge"
+        },
+        {
+          "name": "The Vergecast",
+          "url": "https://feeds.megaphone.fm/vergecast"
+        },
+        {
+          "name": "This Week in Tech (Audio)",
+          "url": "https://feeds.twit.tv/twit.xml"
+        },
+        {
+          "name": "Unbox Therapy",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=unboxtherapy"
+        },
+        {
+          "name": "www.theregister.com - Articles",
+          "url": "https://www.theregister.com/headlines.rss"
+        }
+      ]
+    },
+    {
+      "key": "television",
+      "name": "Television",
+      "feeds": [
+        {
+          "name": "TV",
+          "url": "https://www.bleedingcool.com/tv/feed/"
+        },
+        {
+          "name": "TV Fanatic",
+          "url": "https://www.tvfanatic.com/rss.xml"
+        },
+        {
+          "name": "TVLine - All TV. No Interference. TV News & Spoilers by TVLine",
+          "url": "https://tvline.com/feed/"
+        },
+        {
+          "name": "the TV addict",
+          "url": "http://feeds.feedburner.com/thetvaddict/AXob"
+        },
+        {
+          "name": "📺Television News and Discussion",
+          "url": "https://reddit.com/r/television/.rss"
+        }
+      ]
+    },
+    {
+      "key": "tennis",
+      "name": "Tennis",
+      "feeds": [
+        {
+          "name": "BBC Sport",
+          "url": "http://feeds.bbci.co.uk/sport/tennis/rss.xml"
+        },
+        {
+          "name": "CNN.com - RSS Channel - Sport - Tennis",
+          "url": "http://rss.cnn.com/rss/edition_tennis.rss"
+        },
+        {
+          "name": "Essential Tennis Podcast - Instruction, Lessons, Tips",
+          "url": "https://feed.podbean.com/essentialtennis/feed.xml"
+        },
+        {
+          "name": "NYT > Sports > Tennis",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Tennis.xml"
+        },
+        {
+          "name": "Perfect Tennis",
+          "url": "https://www.perfect-tennis.com/feed/"
+        },
+        {
+          "name": "Tennis News & Discussion",
+          "url": "https://www.reddit.com/r/tennis/.rss"
+        },
+        {
+          "name": "Tennis News, Updates, Tennis Scores, ATP, WTA, Grand Slams | The Hindu",
+          "url": "https://www.thehindu.com/sport/tennis/feeder/default.rss"
+        },
+        {
+          "name": "Tennis | The Guardian",
+          "url": "https://www.theguardian.com/sport/tennis/rss"
+        },
+        {
+          "name": "Tennis | The Indian Express",
+          "url": "https://indianexpress.com/section/sports/tennis/feed/"
+        },
+        {
+          "name": "www.espn.com - TENNIS",
+          "url": "https://www.espn.com/espn/rss/tennis/news"
+        }
+      ]
+    },
+    {
+      "key": "travel",
+      "name": "Travel",
+      "feeds": [
+        {
+          "name": "Adventure.com",
+          "url": "http://adventure.com/feed/"
+        },
+        {
+          "name": "Atlas Obscura - Latest Articles and Places",
+          "url": "https://www.atlasobscura.com/feeds/latest"
+        },
+        {
+          "name": "CNN.com - RSS Channel - App Travel Section",
+          "url": "http://rss.cnn.com/rss/cnn_travel.rss"
+        },
+        {
+          "name": "Everything Everywhere",
+          "url": "http://feeds2.feedburner.com/EverythingEverywhere/"
+        },
+        {
+          "name": "Live Life Travel",
+          "url": "https://www.livelifetravel.world/feed/"
+        },
+        {
+          "name": "Million Mile Secrets",
+          "url": "http://feeds.feedburner.com/MillionMileSecrets"
+        },
+        {
+          "name": "NYT > Travel",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml"
+        },
+        {
+          "name": "TFIL (Traveling to EVERY COUNTRY in A-Z Order)",
+          "url": "https://www.youtube.com/feeds/videos.xml?user=ECastee"
+        },
+        {
+          "name": "The Points Guy Articles",
+          "url": "http://feeds.feedburner.com/thepointsguy"
+        },
+        {
+          "name": "Travel Blog -",
+          "url": "https://www.nomadicmatt.com/travel-blog/feed/"
+        },
+        {
+          "name": "Travel Dudes",
+          "url": "https://www.traveldudes.com/feed/"
+        },
+        {
+          "name": "Travel | The Guardian",
+          "url": "https://www.theguardian.com/uk/travel/rss"
+        }
+      ]
+    },
+    {
+      "key": "turkiye",
+      "name": "Türkiye",
+      "feeds": [
+        {
+          "name": "Anadolu Ajansı Güncel",
+          "url": "https://www.aa.com.tr/tr/rss/default?cat=guncel"
+        },
+        {
+          "name": "Anadolu Ajansı Dünya",
+          "url": "https://www.aa.com.tr/tr/rss/default?cat=dunya"
+        },
+        {
+          "name": "Anadolu Ajansı Ekonomi",
+          "url": "https://www.aa.com.tr/tr/rss/default?cat=ekonomi"
+        },
+        {
+          "name": "Anadolu Ajansı Spor",
+          "url": "https://www.aa.com.tr/tr/rss/default?cat=spor"
+        },
+        {
+          "name": "TRT Haber Manşet",
+          "url": "https://www.trthaber.com/manset_articles.rss"
+        },
+        {
+          "name": "BBC Türkçe",
+          "url": "https://feeds.bbci.co.uk/turkce/rss.xml"
+        }
+      ]
+    },
+    {
+      "key": "ui-ux",
+      "name": "UI / UX",
+      "feeds": [
+        {
+          "name": "Articles on Smashing Magazine — For Web Designers And Developers",
+          "url": "https://www.smashingmagazine.com/feed"
+        },
+        {
+          "name": "Boxes and Arrows",
+          "url": "http://boxesandarrows.com/rss/"
+        },
+        {
+          "name": "JUST™ Creative",
+          "url": "https://feeds.feedburner.com/JustCreativeDesignBlog"
+        },
+        {
+          "name": "NN/g latest articles and announcements",
+          "url": "https://www.nngroup.com/feed/rss/"
+        },
+        {
+          "name": "UX Collective - Medium",
+          "url": "https://uxdesign.cc/feed"
+        },
+        {
+          "name": "UX Movement",
+          "url": "https://uxmovement.com/feed/"
+        },
+        {
+          "name": "Usability Geek",
+          "url": "https://usabilitygeek.com/feed/"
+        },
+        {
+          "name": "User Experience",
+          "url": "https://www.reddit.com/r/userexperience/.rss"
+        }
+      ]
+    },
+    {
+      "key": "web-development",
+      "name": "Web Development",
+      "feeds": [
+        {
+          "name": "A List Apart: The Full Feed",
+          "url": "https://alistapart.com/main/feed/"
+        },
+        {
+          "name": "CSS-Tricks",
+          "url": "https://css-tricks.com/feed/"
+        },
+        {
+          "name": "Code Wall",
+          "url": "https://www.codewall.co.uk/feed/"
+        },
+        {
+          "name": "David Walsh Blog",
+          "url": "https://davidwalsh.name/feed"
+        },
+        {
+          "name": "Sink In - Tech Learnings",
+          "url": "https://gosink.in/rss/"
+        }
+      ]
+    }
+  ]
+}

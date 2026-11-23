@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="44" viewBox="0 0 960 44" role="img" aria-label="MCP server, 70 built-in packs, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="44" viewBox="0 0 960 44" role="img" aria-label="MCP server, 62 built-in styles, 42 news topics, 3D scenes, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips">
 <rect x="42.0" y="2" width="116" height="40" rx="20" fill="#F6F4EF"/>
 <text x="100.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">MCP server</text>
 <rect x="170.0" y="2" width="100" height="40" rx="20" fill="#F6F4EF"/>
-<text x="220.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">70 packs</text>
+<text x="220.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">62 styles</text>
 <rect x="282.0" y="2" width="156" height="40" rx="20" fill="#F6F4EF"/>
 <text x="360.0" y="27" font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, sans-serif" font-weight="700" font-size="14" fill="#0B0B0C" text-anchor="middle" letter-spacing="0">community packs</text>
 <rect x="450.0" y="2" width="100" height="40" rx="20" fill="#F6F4EF"/>

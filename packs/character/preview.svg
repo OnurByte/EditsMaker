@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+<rect width="640" height="360" rx="24" fill="hsl(27,45%,11%)"/>
+<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(27,70%,64%)">Pack</text>
+<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">Character</text>
+<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">A character's edit: the build, the held face, the drop of</text>
+<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">punch cuts, the still end.</text>
+<rect x="572.0" y="28" width="36.0" height="64" rx="6" fill="none" stroke="hsl(27,70%,64%)" stroke-width="2"/>
+<rect x="230.4" y="206" width="8.0" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="331.2" y="206" width="6.4" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="433.6" y="206" width="6.4" height="110" fill="#fff" fill-opacity="0.22"/>
+<rect x="32.0" y="296" width="49.2" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="83.2" y="296" width="42.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="128.0" y="296" width="42.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="172.8" y="296" width="36.4" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="211.2" y="296" width="17.2" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="230.4" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="243.2" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="256.0" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="268.8" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="281.6" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="294.4" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="307.2" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="320.0" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="332.8" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="345.6" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="358.4" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="371.2" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="384.0" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="396.8" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="409.6" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="422.4" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="435.2" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="448.0" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="460.8" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="473.6" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="486.4" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="499.2" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="512.0" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<rect x="524.8" y="296" width="10.8" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.95"/>
+<rect x="537.6" y="296" width="68.4" height="20" rx="3" fill="hsl(27,70%,64%)" fill-opacity="0.55"/>
+<polyline points="32.0,284.0 83.2,265.3 83.2,284.0 128.0,265.3 128.0,284.0 172.8,265.3 172.8,284.0 211.2,242.0 211.2,242.0 230.4,214.0 230.4,218.7 236.2,284.0 243.2,218.7 249.0,284.0 256.0,218.7 261.8,284.0 268.8,218.7 274.6,284.0 281.6,218.7 287.4,284.0 294.4,218.7 300.2,284.0 307.2,218.7 313.0,284.0 320.0,218.7 325.8,284.0 332.8,218.7 338.6,284.0 345.6,218.7 351.4,284.0 358.4,218.7 364.2,284.0 371.2,218.7 377.0,284.0 384.0,218.7 389.8,284.0 396.8,218.7 402.6,284.0 409.6,218.7 415.4,284.0 422.4,218.7 428.2,284.0 435.2,218.7 441.0,284.0 448.0,218.7 453.8,284.0 460.8,218.7 466.6,284.0 473.6,218.7 479.4,284.0 486.4,218.7 492.2,284.0 499.2,218.7 505.0,284.0 512.0,218.7 517.8,284.0 524.8,218.7 530.6,284.0 537.6,256.0 608.0,284.0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="32" y="344" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">medium  9:16  1:1  flash  rgb  shake  zoom</text>
+<text x="608" y="344" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#fff" fill-opacity="0.6">30 shots  18.0s</text>
+</svg>

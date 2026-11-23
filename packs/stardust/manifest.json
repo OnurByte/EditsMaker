@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.stardust",
+  "name": "Stardust",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "Soft points of light drifting towards you in 3D, drawn with three.js. Lay it over a sad or dreamy edit; it loops.",
+  "kinds": [
+    "skill",
+    "scene"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "3d",
+    "overlay",
+    "dreamy",
+    "loop"
+  ],
+  "scene": {
+    "seconds": 6.0,
+    "fps": 30
+  }
+}

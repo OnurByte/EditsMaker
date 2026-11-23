@@ -1,0 +1,22 @@
+name: Pack for the marketplace
+description: Send a pack you made (edits packs share ID makes the .tgz and opens this)
+title: "Pack: "
+labels: [pack]
+body:
+  - type: markdown
+    attributes:
+      value: Drag the `.tgz` that `edits packs share ID` made into the box below. It is read before it is listed; a pack that runs a program is read line by line.
+  - type: textarea
+    id: pack
+    attributes:
+      label: The pack
+      description: Its id, name, what it is, and the .tgz attached
+    validations:
+      required: true
+  - type: checkboxes
+    id: mine
+    attributes:
+      label: Yours to share
+      options:
+        - label: I made it, or may share everything in it
+          required: true
