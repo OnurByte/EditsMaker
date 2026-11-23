@@ -24,14 +24,6 @@ use std::path::PathBuf;
 
 actions!(edits, [Quit, ToggleSidebar, Search]);
 
-#[cfg(test)]
-mod launcher_tests {
-    #[test]
-    fn the_launcher_names_its_own_icon() {
-        let d = super::desktop_entry(std::path::Path::new("/home/a/.local/bin/edits"));
-        assert!(d.contains("Icon=edits\n") && d.contains("Exec=/home/a/.local/bin/edits app\n") && !d.contains("video-x-generic"));
-    }
-}
 
 /// gpui-kit's own icons, and the Lucide ones the app adds.
 struct AppAssets;
@@ -153,4 +145,13 @@ pub fn run(args: &[String]) {
         })).expect("could not open the window");
         cx.activate(true);
     });
+}
+
+#[cfg(test)]
+mod launcher_tests {
+    #[test]
+    fn the_launcher_names_its_own_icon() {
+        let d = super::desktop_entry(std::path::Path::new("/home/a/.local/bin/edits"));
+        assert!(d.contains("Icon=edits\n") && d.contains("Exec=/home/a/.local/bin/edits app\n") && !d.contains("video-x-generic"));
+    }
 }
