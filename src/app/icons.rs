@@ -6,7 +6,7 @@ use gpui_kit::{img, Hsla, Image, ImageFormat, Img, Rgba, Styled};
 use std::sync::{Arc, LazyLock};
 
 gpui_kit::assets::icon_assets!(pub Extra, [Trash, Rss, Film, Package, Download, Share2, Zap, Store, SquarePen, SlidersHorizontal, KeyRound, Brain, Library, PanelLeft,
-    Upload, FileDown, GitBranch, ExternalLink, Gauge, Box, ChevronDown, LockOpen, Lock, Check]);
+    Upload, FileDown, GitBranch, ExternalLink, Gauge, Box, ChevronDown, LockOpen, Lock, Check, RotateCcw, ChevronRight, Pause, Volume2, VolumeX]);
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Icon {
@@ -35,8 +35,6 @@ pub enum Icon {
     Rss,
     Share,
     Key,
-    Sun,
-    Moon,
     Palette,
     Sliders,
     Github,
@@ -52,6 +50,11 @@ pub enum Icon {
     Lock,
     Unlock,
     Check,
+    Reset,
+    ChevronRight,
+    Pause,
+    Volume,
+    Mute,
 }
 
 fn name(i: Icon) -> IconName {
@@ -80,8 +83,6 @@ fn name(i: Icon) -> IconName {
         Icon::Rss => IconName::Rss,
         Icon::Share => IconName::Share2,
         Icon::Key => IconName::KeyRound,
-        Icon::Sun => IconName::Sun,
-        Icon::Moon => IconName::Moon,
         Icon::Palette => IconName::Palette,
         Icon::Sliders => IconName::SlidersHorizontal,
         Icon::Github => IconName::Github,
@@ -97,6 +98,11 @@ fn name(i: Icon) -> IconName {
         Icon::Lock => IconName::Lock,
         Icon::Unlock => IconName::LockOpen,
         Icon::Check => IconName::Check,
+        Icon::Reset => IconName::RotateCcw,
+        Icon::ChevronRight => IconName::ChevronRight,
+        Icon::Pause => IconName::Pause,
+        Icon::Volume => IconName::Volume2,
+        Icon::Mute => IconName::VolumeX,
     }
 }
 
@@ -155,19 +161,25 @@ pub fn logo(name: &str, color: Hsla, page: Hsla) -> Option<Img> {
     let (c, p) = (css(color), css(page));
     let key = format!("{name}{c}{p}");
     picture(&key, || {
-        let mut s = src.to_string();
-        for dark in ["#000000", "#000", "currentColor", "black", "#9046FF"] {
-            s = s.replace(&format!("\"{dark}\""), &format!("\"{c}\""));
-        }
-        for light in ["#ffffff", "#FFFFFF", "#fff", "#FFF", "white"] {
-            s = s.replace(&format!("\"{light}\""), &format!("\"{p}\""));
-        }
-        // a logo with no colour of its own takes it on its root
-        if !s.contains(&c) {
-            s = s.replacen("<svg", &format!("<svg fill=\"{c}\""), 1);
-        }
-        Some((ImageFormat::Svg, s.into_bytes()))
+        Some((ImageFormat::Svg, recolor(src, &c, &p).into_bytes()))
     })
+}
+
+/// A logo's dark parts in `c`, its light ones in `p`. Through placeholders: an ink that is itself white (Omarchy's
+/// dark themes) must not be turned into the page by the second pass.
+fn recolor(src: &str, c: &str, p: &str) -> String {
+    let mut s = src.to_string();
+    for dark in ["#000000", "#000", "currentColor", "black", "#9046FF"] {
+        s = s.replace(&format!("\"{dark}\""), "\"@INK@\"");
+    }
+    for light in ["#ffffff", "#FFFFFF", "#fff", "#FFF", "white"] {
+        s = s.replace(&format!("\"{light}\""), "\"@PAGE@\"");
+    }
+    // a logo with no colour of its own takes it on its root
+    if !s.contains("@INK@") {
+        s = s.replacen("<svg", "<svg fill=\"@INK@\"", 1);
+    }
+    s.replace("@INK@", c).replace("@PAGE@", p)
 }
 
 /// A micro illustration (assets/illustrations): flat, pastel, outlined, one for each kind of thing and each step of
@@ -222,6 +234,15 @@ mod tests {
             let s = std::fs::read_to_string(format!("{}/assets/providers/{f}.svg", env!("CARGO_MANIFEST_DIR"))).unwrap();
             assert!(s.starts_with("<svg") && !s.contains("ANTIGRAVITY_ICON"), "{f}");
         }
+    }
+
+    #[test]
+    fn a_white_ink_stays_ink() {
+        // Omarchy's vantablack: white ink on a black page; the logo must not turn into the page
+        let s = super::recolor(r##"<svg fill="#000"><path/></svg>"##, "#FFFFFF", "#0A0A0A");
+        assert!(s.contains("fill=\"#FFFFFF\"") && !s.contains("#0A0A0A"), "{s}");
+        let s = super::recolor("<svg><path/></svg>", "#FFFFFF", "#0A0A0A");
+        assert!(s.starts_with("<svg fill=\"#FFFFFF\""), "{s}");
     }
 
     #[test]

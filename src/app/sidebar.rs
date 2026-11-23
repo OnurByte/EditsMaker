@@ -34,6 +34,12 @@ pub fn matches(q: &str, subject: &str, title: &str) -> bool {
     q.to_lowercase().split_whitespace().all(|w| hay.contains(w))
 }
 
+/// t3code's shortcut hint in the search: ⌘K on a Mac, Ctrl K elsewhere.
+pub fn shortcut(b: &Brand) -> Div {
+    div().px(px(6.)).h(px(18.)).flex().items_center().rounded(px(4.)).border_1().border_color(b.hair)
+        .child(text(if cfg!(target_os = "macos") { "⌘K" } else { "Ctrl K" }, 11., FontWeight::NORMAL, b.gray))
+}
+
 impl Workspace {
     fn place(&self, id: &'static str, i: Icon, label: &'static str, to: Route, b: &Brand, cx: &mut Context<Self>) -> Stateful<Div> {
         let on = self.route == to;
@@ -116,7 +122,7 @@ impl Workspace {
                 .child(text("EditsMaker", 15., BOLD, b.ink).flex_1())
                 .child(toggle))
             .child(div().px(px(8.)).flex().flex_col().gap(px(2.)).children(places))
-            .child(div().px(px(8.)).pt(px(16.)).child(Input::new(&self.thread_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).cleanable(true)))
+            .child(div().px(px(8.)).pt(px(16.)).child(Input::new(&self.thread_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).suffix(shortcut(&b)).cleanable(true)))
             .child(text("Edits", 12., FontWeight::NORMAL, b.gray).px(px(16.)).pt(px(16.)).pb(px(8.)))
             .child(div().id("threads").flex_1().min_h_0().overflow_y_scroll().px(px(8.)).pb(px(8.)).flex().flex_col().gap(px(2.)).children(list)
                 .when(empty, |d| d.child(text(if q.trim().is_empty() { "Nothing made yet." } else { "No edit like that." }, 13., crate::app::theme::LIGHT, b.gray).px(px(8.)))))

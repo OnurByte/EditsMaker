@@ -1325,9 +1325,10 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
 name = "edits"
-version = "0.31.1"
+version = "0.32.0"
 dependencies = [
  "gpui-kit",
+ "image",
  "kael_share",
  "libloading",
  "regex",

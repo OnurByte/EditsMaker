@@ -421,6 +421,37 @@ pub fn every() -> Vec<Pack> {
 }
 
 /// The packs that are on: what presets, skills, feeds and automations come from.
+/// The marketplace's tags: a few words a person would look for, not how a preset moves. A pack carries at most three.
+pub const TAGS: [&str; 10] = ["hype", "sad", "anime", "cinematic", "glitch", "retro", "meme", "news", "3d", "automation"];
+
+/// A pack's tags as the marketplace shows them: each word mapped onto TAGS (a preset's "velocity" is hype, "rgb"
+/// glitch), the rest dropped, the first three kept.
+pub fn tidy_tags<S: AsRef<str>>(raw: &[S]) -> Vec<String> {
+    let mut out: Vec<String> = vec![];
+    for t in raw {
+        let t = t.as_ref().trim().to_lowercase();
+        let m = match t.as_str() {
+            "fast" | "velocity" | "hype" | "phonk" | "drop" => "hype",
+            "sad" | "fade" | "dreamy" | "emotional" | "chill" => "sad",
+            "anime" => "anime",
+            "cinema" | "cinematic" | "letterbox" | "film" => "cinematic",
+            "glitch" | "rgb" | "strobe" => "glitch",
+            "retro" | "vhs" | "tape" => "retro",
+            "comic" | "split" | "meme" | "funny" => "meme",
+            "news" | "rss" | "feed" => "news",
+            "3d" | "scene" | "overlay" => "3d",
+            "automation" | "post" | "agent" | "mcp" | "skills" | "tiktok" | "instagram" | "youtube" => "automation",
+            _ => continue,
+        };
+        debug_assert!(TAGS.contains(&m));
+        if !out.iter().any(|x| x == m) {
+            out.push(m.into());
+        }
+    }
+    out.truncate(3);
+    out
+}
+
 pub fn all() -> Vec<Pack> {
     let off = disabled();
     every().into_iter().filter(|p| !off.contains(&p.manifest.id)).collect()
@@ -774,7 +805,7 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path
             .or(p.as_ref().map(|p| p.about.clone()).filter(|a| !a.is_empty())).or(about).unwrap_or_default(),
         kinds,
         preview: Some(own_picture.clone().unwrap_or_else(|| "preview.svg".into())),
-        tags: old.as_ref().map(|m| m.tags.clone()).filter(|t| !t.is_empty()).unwrap_or_else(|| p.as_ref().map(|p| p.tags().iter().map(|t| t.to_string()).collect()).unwrap_or_default()),
+        tags: tidy_tags(&old.as_ref().map(|m| m.tags.clone()).filter(|t| !t.is_empty()).unwrap_or_else(|| p.as_ref().map(|p| p.tags().iter().map(|t| t.to_string()).collect()).unwrap_or_default())),
         license: old.as_ref().and_then(|m| m.license.clone()),
         source: old.as_ref().and_then(|m| m.source.clone()),
         settings: old.as_ref().map(|m| m.settings.clone()).unwrap_or_default(),
@@ -930,6 +961,16 @@ pub fn gallery(d: &Path) -> Result<usize, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_pack_carries_at_most_three_of_the_ten_tags() {
+        assert_eq!(tidy_tags(&["slow", "9:16", "velocity", "rgb", "fade", "comic"]), ["hype", "glitch", "sad"]);
+        for p in built_in() {
+            let t = tidy_tags(&p.manifest.tags);
+            assert_eq!(t, p.manifest.tags, "{}: its tags are already tidy", p.manifest.id);
+            assert!(t.len() <= 3 && t.iter().all(|x| TAGS.contains(&x.as_str())), "{}", p.manifest.id);
+        }
+    }
 
     #[test]
     fn built_in_packs_are_whole() {

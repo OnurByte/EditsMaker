@@ -1,0 +1,1197 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.world",
+  "name": "World",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "25 countries, from Japan to Brazil, each read from its own newspapers. Every new story becomes an edit; a flow can post it for you.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "news",
+    "automation"
+  ],
+  "topics": [
+    {
+      "key": "australia",
+      "name": "Australia",
+      "feeds": [
+        {
+          "name": "Latest News and News Headlines | Daily Telegraph",
+          "url": "https://www.dailytelegraph.com.au/news/breaking-news/rss"
+        },
+        {
+          "name": "Sydney Morning Herald - Latest News",
+          "url": "https://www.smh.com.au/rss/feed.xml"
+        },
+        {
+          "name": "Latest News and News Headlines | Herald Sun",
+          "url": "https://www.heraldsun.com.au/news/breaking-news/rss"
+        },
+        {
+          "name": "ABC News",
+          "url": "https://www.abc.net.au/news/feed/1948/rss.xml"
+        },
+        {
+          "name": "The Age - Latest News",
+          "url": "https://www.theage.com.au/rss/feed.xml"
+        },
+        {
+          "name": "The Courier Mail",
+          "url": "https://www.couriermail.com.au/rss"
+        },
+        {
+          "name": "PerthNow",
+          "url": "https://www.perthnow.com.au/news/feed"
+        },
+        {
+          "name": "The Canberra Times - Local News",
+          "url": "https://www.canberratimes.com.au/rss.xml"
+        },
+        {
+          "name": "Brisbane Times - Latest News",
+          "url": "https://www.brisbanetimes.com.au/rss/feed.xml"
+        },
+        {
+          "name": "Independent Australia",
+          "url": "http://feeds.feedburner.com/IndependentAustralia"
+        },
+        {
+          "name": "Business News - Latest Headlines",
+          "url": "https://www.businessnews.com.au/rssfeed/latest.rss"
+        },
+        {
+          "name": "InDaily",
+          "url": "https://indaily.com.au/feed/"
+        },
+        {
+          "name": "The Mercury",
+          "url": "https://www.themercury.com.au/rss"
+        },
+        {
+          "name": "Crikey",
+          "url": "https://feeds.feedburner.com/com/rCTl"
+        },
+        {
+          "name": "KUSA - News",
+          "url": "http://rssfeeds.9news.com/kusa/home&x=1"
+        },
+        {
+          "name": "Michael West",
+          "url": "https://www.michaelwest.com.au/feed/"
+        }
+      ]
+    },
+    {
+      "key": "bangladesh",
+      "name": "Bangladesh",
+      "feeds": [
+        {
+          "name": "The Daily Star",
+          "url": "https://www.thedailystar.net/frontpage/rss.xml"
+        },
+        {
+          "name": "BD24Live.com",
+          "url": "https://www.bd24live.com/feed"
+        },
+        {
+          "name": "bdnews24.com - Home",
+          "url": "https://bdnews24.com/?widgetName=rssfeed&widgetId=1150&getXmlFeed=true"
+        },
+        {
+          "name": "Bangla News",
+          "url": "https://www.banglanews24.com/rss/rss.xml"
+        },
+        {
+          "name": "JUGANTOR",
+          "url": "https://www.jugantor.com/feed/rss.xml"
+        },
+        {
+          "name": "jagonews24.com | rss Feed",
+          "url": "https://www.jagonews24.com/rss/rss.xml"
+        },
+        {
+          "name": "kalerkantho Kantho",
+          "url": "https://www.kalerkantho.com/rss.xml"
+        },
+        {
+          "name": "প্রথম আলো",
+          "url": "https://www.prothomalo.com/feed/"
+        }
+      ]
+    },
+    {
+      "key": "brazil",
+      "name": "Brazil",
+      "feeds": [
+        {
+          "name": "Folha de S.Paulo - Em cima da hora - Principal",
+          "url": "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml"
+        },
+        {
+          "name": "Portal EBC - RSS",
+          "url": "http://www.ebc.com.br/rss/feed.xml"
+        },
+        {
+          "name": "R7 - Notícias",
+          "url": "https://noticias.r7.com/feed.xml"
+        },
+        {
+          "name": "UOL",
+          "url": "http://rss.home.uol.com.br/index.xml"
+        },
+        {
+          "name": "The Rio Times",
+          "url": "https://riotimesonline.com/feed/"
+        },
+        {
+          "name": "Brasil Wire",
+          "url": "http://www.brasilwire.com/feed/"
+        },
+        {
+          "name": "Jornal de Brasília",
+          "url": "https://jornaldebrasilia.com.br/feed/"
+        }
+      ]
+    },
+    {
+      "key": "canada",
+      "name": "Canada",
+      "feeds": [
+        {
+          "name": "CBC | Top Stories News",
+          "url": "https://www.cbc.ca/cmlink/rss-topstories"
+        },
+        {
+          "name": "CTVNews.ca - Top Stories - Public RSS",
+          "url": "https://www.ctvnews.ca/rss/ctvnews-ca-top-stories-public-rss-1.822009"
+        },
+        {
+          "name": "Financial Post",
+          "url": "https://business.financialpost.com/feed/"
+        },
+        {
+          "name": "National Post",
+          "url": "https://nationalpost.com/feed/"
+        },
+        {
+          "name": "Ottawa Citizen",
+          "url": "https://ottawacitizen.com/feed/"
+        },
+        {
+          "name": "The Province",
+          "url": "https://theprovince.com/feed/"
+        },
+        {
+          "name": "LaPresse.ca - Actualités",
+          "url": "https://www.lapresse.ca/actualites/rss"
+        },
+        {
+          "name": "Toronto Star",
+          "url": "https://www.thestar.com/content/thestar/feed.RSSManagerServlet.articles.topstories.rss"
+        },
+        {
+          "name": "Toronto Sun - RSS Feed",
+          "url": "https://torontosun.com/category/news/feed"
+        }
+      ]
+    },
+    {
+      "key": "france",
+      "name": "France",
+      "feeds": [
+        {
+          "name": "france24.com",
+          "url": "https://www.france24.com/en/rss"
+        },
+        {
+          "name": "Mediapart",
+          "url": "https://www.mediapart.fr/articles/feed"
+        },
+        {
+          "name": "Paris Star",
+          "url": "https://www.parisstaronline.com/feed"
+        },
+        {
+          "name": "Le Monde.fr - Actualités et Infos en France et dans le monde",
+          "url": "https://www.lemonde.fr/rss/une.xml"
+        },
+        {
+          "name": "L'Obs - A la une",
+          "url": "https://www.nouvelobs.com/a-la-une/rss.xml"
+        },
+        {
+          "name": "Franceinfo - Les Titres",
+          "url": "https://www.francetvinfo.fr/titres.rss"
+        },
+        {
+          "name": "Le Huffington Post",
+          "url": "https://www.huffingtonpost.fr/feeds/index.xml"
+        },
+        {
+          "name": "La Dépêche du Midi : actualités et info en direct de la région Occitanie et des environs - ladepeche.fr",
+          "url": "https://www.ladepeche.fr/rss.xml"
+        },
+        {
+          "name": "Ministry for Europe and Foreign Affairs - Actualités",
+          "url": "https://www.diplomatie.gouv.fr/spip.php?page=backend-fd&lang=en"
+        },
+        {
+          "name": "L'essentiel",
+          "url": "https://www.sudouest.fr/essentiel/rss.xml"
+        },
+        {
+          "name": "Ouest-France - Actualité",
+          "url": "https://www.ouest-france.fr/rss-en-continu.xml"
+        }
+      ]
+    },
+    {
+      "key": "germany",
+      "name": "Germany",
+      "feeds": [
+        {
+          "name": "ZEIT ONLINE | Nachrichten, Hintergründe und Debatten",
+          "url": "http://newsfeed.zeit.de/index"
+        },
+        {
+          "name": "FOCUS Online",
+          "url": "https://rss.focus.de/fol/XML/rss_folnews.xml"
+        },
+        {
+          "name": "Aktuell - FAZ.NET",
+          "url": "https://www.faz.net/rss/aktuell/"
+        },
+        {
+          "name": "tagesschau.de - Die Nachrichten der ARD",
+          "url": "http://www.tagesschau.de/xml/rss2"
+        },
+        {
+          "name": "Deutsche Welle",
+          "url": "https://rss.dw.com/rdf/rss-en-all"
+        }
+      ]
+    },
+    {
+      "key": "hong-kong",
+      "name": "Hong Kong",
+      "feeds": [
+        {
+          "name": "Hong Kong Free Press HKFP",
+          "url": "https://www.hongkongfp.com/feed/"
+        },
+        {
+          "name": "The Standard - Latest News",
+          "url": "https://www.thestandard.com.hk/newsfeed/latest/news.xml"
+        },
+        {
+          "name": "頭條日報 Headline Daily - 頭條網",
+          "url": "https://hd.stheadline.com/rss/news/daily/"
+        },
+        {
+          "name": "香港新聞RSS - 香港經濟日報 hket.com",
+          "url": "https://www.hket.com/rss/hongkong"
+        },
+        {
+          "name": "hongkongnews.net latest rss headlines",
+          "url": "http://feeds.hongkongnews.net/rss/b82693edf38ebff8"
+        }
+      ]
+    },
+    {
+      "key": "india",
+      "name": "India",
+      "feeds": [
+        {
+          "name": "BBC News - India",
+          "url": "http://feeds.bbci.co.uk/news/world/asia/india/rss.xml"
+        },
+        {
+          "name": "India | The Guardian",
+          "url": "https://www.theguardian.com/world/india/rss"
+        },
+        {
+          "name": "SEBI RSS Feed",
+          "url": "https://www.sebi.gov.in/sebirss.xml"
+        },
+        {
+          "name": "Times of India",
+          "url": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms"
+        },
+        {
+          "name": "The Hindu - Home",
+          "url": "https://www.thehindu.com/feeder/default.rss"
+        },
+        {
+          "name": "NDTV News -   Topstories",
+          "url": "https://feeds.feedburner.com/ndtvnews-top-stories"
+        },
+        {
+          "name": "India Today | Latest Stories",
+          "url": "https://www.indiatoday.in/rss/home"
+        },
+        {
+          "name": "Front Page | The Indian Express",
+          "url": "http://indianexpress.com/print/front-page/feed/"
+        },
+        {
+          "name": "Top World News- News18.com",
+          "url": "https://www.news18.com/rss/world.xml"
+        },
+        {
+          "name": "India News",
+          "url": "https://www.dnaindia.com/feeds/india.xml"
+        },
+        {
+          "name": "Firstpost India Latest News",
+          "url": "https://www.firstpost.com/rss/india.xml"
+        },
+        {
+          "name": "Home Page",
+          "url": "https://www.business-standard.com/rss/home_page_top_stories.rss"
+        },
+        {
+          "name": "Outlook India",
+          "url": "https://www.outlookindia.com/rss/main/magazine"
+        },
+        {
+          "name": "Free Press Journal",
+          "url": "https://www.freepressjournal.in/stories.rss"
+        },
+        {
+          "name": "Deccan Chronicle - Latest India news | Breaking news | Hyderabad News | World news | Business news | Politics | Technology news",
+          "url": "https://www.deccanchronicle.com/rss_feed/"
+        },
+        {
+          "name": "Moneycontrol Latest News",
+          "url": "http://www.moneycontrol.com/rss/latestnews.xml"
+        },
+        {
+          "name": "Economic Times",
+          "url": "https://economictimes.indiatimes.com/rssfeedsdefault.cms"
+        },
+        {
+          "name": "News, Latest News, Today's News Headlines, Breaking News, LIVE News - Oneindia",
+          "url": "https://www.oneindia.com/rss/news-fb.xml"
+        },
+        {
+          "name": "Scroll.in",
+          "url": "http://feeds.feedburner.com/ScrollinArticles.rss"
+        },
+        {
+          "name": "The Financial Express",
+          "url": "https://www.financialexpress.com/feed/"
+        },
+        {
+          "name": "Business Line - Home",
+          "url": "https://www.thehindubusinessline.com/feeder/default.rss"
+        },
+        {
+          "name": "TechGenyz",
+          "url": "http://feeds.feedburner.com/techgenyz"
+        },
+        {
+          "name": "Top Stories News - Gujarat Samachar : World's Leading Gujarati Newspaper",
+          "url": "https://www.gujaratsamachar.com/rss/top-stories"
+        },
+        {
+          "name": "Marathi News: मराठी बातम्या,  Latest News in Marathi, Breaking Marathi News, Marathi News Paper | Maharashtra Times",
+          "url": "https://maharashtratimes.com/rssfeedsdefault.cms"
+        },
+        {
+          "name": "Loksattaदेश-विदेश – Loksatta",
+          "url": "https://www.loksatta.com/desh-videsh/feed/"
+        },
+        {
+          "name": "Latest News program News18 Lokmat",
+          "url": "https://lokmat.news18.com/rss/program.xml"
+        },
+        {
+          "name": "OpIndia",
+          "url": "https://feeds.feedburner.com/opindia"
+        },
+        {
+          "name": "ThePrint",
+          "url": "https://theprint.in/feed/"
+        },
+        {
+          "name": "Swarajya",
+          "url": "https://prod-qt-images.s3.amazonaws.com/production/swarajya/feed.xml"
+        },
+        {
+          "name": "Latest And Breaking Hindi News Headlines, News In Hindi | अमर उजाला हिंदी न्यूज़ | - Amar Ujala",
+          "url": "https://www.amarujala.com/rss/breaking-news.xml"
+        },
+        {
+          "name": "Navbharat Times",
+          "url": "https://navbharattimes.indiatimes.com/rssfeedsdefault.cms"
+        },
+        {
+          "name": "Patrika : India's Leading Hindi News Portal",
+          "url": "http://api.patrika.com/rss/india-news"
+        },
+        {
+          "name": "JansattaJansatta",
+          "url": "https://www.jansatta.com/feed/"
+        },
+        {
+          "name": "Live Hindustan Rss feed",
+          "url": "https://feed.livehindustan.com/rss/3127"
+        },
+        {
+          "name": "देश | दैनिक भास्कर",
+          "url": "https://www.bhaskar.com/rss-feed/1061/"
+        },
+        {
+          "name": "ઈન્ડિયા | દિવ્ય ભાસ્કર",
+          "url": "https://www.divyabhaskar.co.in/rss-feed/1037/"
+        }
+      ]
+    },
+    {
+      "key": "indonesia",
+      "name": "Indonesia",
+      "feeds": [
+        {
+          "name": "Republika Online RSS Feed",
+          "url": "https://www.republika.co.id/rss/"
+        },
+        {
+          "name": "Tribunnews.com",
+          "url": "https://www.tribunnews.com/rss"
+        },
+        {
+          "name": "Merdeka.com",
+          "url": "https://www.merdeka.com/feed/"
+        },
+        {
+          "name": "Suara.com",
+          "url": "https://www.suara.com/rss"
+        }
+      ]
+    },
+    {
+      "key": "iran",
+      "name": "Iran",
+      "feeds": [
+        {
+          "name": "خبرگزاری باشگاه خبرنگاران | آخرین اخبار ایران و جهان | YJC",
+          "url": "https://www.yjc.ir/fa/rss/allnews"
+        },
+        {
+          "name": "تابناک | TABNAK",
+          "url": "https://www.tabnak.ir/fa/rss/allnews"
+        },
+        {
+          "name": "خبرگزاری ایسنا | صفحه اصلی |  ISNA News Agency",
+          "url": "https://www.isna.ir/rss"
+        },
+        {
+          "name": "خبرگزاری مهر | اخبار ایران و جهان | Mehr News Agency",
+          "url": "https://www.mehrnews.com/rss"
+        },
+        {
+          "name": "خبرگزاری خبرآنلاین - آخرین اخبار ایران و جهان | Khabaronline",
+          "url": "https://www.khabaronline.ir/rss"
+        },
+        {
+          "name": "اخبار ایران و جهان",
+          "url": "https://www.tasnimnews.com/fa/rss/feed/0/8/0/%D9%85%D9%87%D9%85%D8%AA%D8%B1%DB%8C%D9%86-%D8%A7%D8%AE%D8%A8%D8%A7%D8%B1-%D8%AA%D8%B3%D9%86%DB%8C%D9%85"
+        },
+        {
+          "name": "عصر ايران",
+          "url": "https://www.asriran.com/fa/rss/allnews"
+        }
+      ]
+    },
+    {
+      "key": "ireland",
+      "name": "Ireland",
+      "feeds": [
+        {
+          "name": "TheJournal.ie",
+          "url": "https://www.thejournal.ie/feed/"
+        },
+        {
+          "name": "All: BreakingNews.ie",
+          "url": "https://feeds.breakingnews.ie/bntopstories"
+        },
+        {
+          "name": "The42",
+          "url": "https://www.the42.ie/feed/"
+        },
+        {
+          "name": "IrishExaminer.com",
+          "url": "https://feeds.feedburner.com/ietopstories"
+        },
+        {
+          "name": "IrishCentral.com - Top Stories",
+          "url": "https://feeds.feedburner.com/IrishCentral"
+        },
+        {
+          "name": "Irish Mirror - Home",
+          "url": "https://www.irishmirror.ie/?service=rss"
+        }
+      ]
+    },
+    {
+      "key": "italy",
+      "name": "Italy",
+      "feeds": [
+        {
+          "name": "RSS di   - ANSA.it",
+          "url": "https://www.ansa.it/sito/ansait_rss.xml"
+        },
+        {
+          "name": "The Local",
+          "url": "https://feeds.thelocal.com/rss/it"
+        },
+        {
+          "name": "RSS DiariodelWeb.it",
+          "url": "https://www.diariodelweb.it/rss/home/"
+        },
+        {
+          "name": "Fanpage",
+          "url": "https://www.fanpage.it/feed/"
+        },
+        {
+          "name": "Libero Quotidiano",
+          "url": "https://www.liberoquotidiano.it/rss.xml"
+        },
+        {
+          "name": "Il Mattino Web",
+          "url": "https://www.ilmattino.it/?sez=XML&args&p=search&args[box]=Home&limit=20&layout=rss"
+        },
+        {
+          "name": "Adnkronos - ultimoratop",
+          "url": "http://rss.adnkronos.com/RSS_PrimaPagina.xml"
+        },
+        {
+          "name": "Milan News",
+          "url": "https://www.milannews.it/rss/"
+        },
+        {
+          "name": "Internazionale",
+          "url": "https://www.internazionale.it/sitemaps/rss.xml"
+        },
+        {
+          "name": "Panorama",
+          "url": "https://www.panorama.it/feeds/feed.rss"
+        },
+        {
+          "name": "Italy | The Guardian",
+          "url": "https://www.theguardian.com/world/italy/rss"
+        },
+        {
+          "name": "Repubblica.it > Homepage",
+          "url": "https://www.repubblica.it/rss/homepage/rss2.0.xml"
+        },
+        {
+          "name": "Il Post",
+          "url": "https://www.ilpost.it/feed/"
+        }
+      ]
+    },
+    {
+      "key": "japan",
+      "name": "Japan",
+      "feeds": [
+        {
+          "name": "Japan Times latest articles",
+          "url": "https://www.japantimes.co.jp/feed/topstories/"
+        },
+        {
+          "name": "Japan Today",
+          "url": "https://japantoday.com/feed"
+        },
+        {
+          "name": "News On Japan",
+          "url": "http://www.newsonjapan.com/rss/top.xml"
+        },
+        {
+          "name": "All - Kyodo News+",
+          "url": "https://english.kyodonews.net/rss/all.xml"
+        },
+        {
+          "name": "BRIDGE（ブリッジ）テクノロジー＆スタートアップ情報",
+          "url": "http://feeds.feedburner.com/SdJapan"
+        },
+        {
+          "name": "NYT > Japan",
+          "url": "https://www.nytimes.com/svc/collections/v1/publish/http://www.nytimes.com/topic/destination/japan/rss.xml"
+        },
+        {
+          "name": "ライブドアニュース - 主要トピックス",
+          "url": "https://news.livedoor.com/topics/rss/top.xml"
+        },
+        {
+          "name": "朝日新聞デジタル",
+          "url": "http://rss.asahi.com/rss/asahi/newsheadlines.rdf"
+        }
+      ]
+    },
+    {
+      "key": "mexico",
+      "name": "Mexico",
+      "feeds": [
+        {
+          "name": "Mexico | The Guardian",
+          "url": "https://www.theguardian.com/world/mexico/rss"
+        },
+        {
+          "name": "Excélsior - RSS",
+          "url": "https://www.excelsior.com.mx/rss.xml"
+        },
+        {
+          "name": "Reforma",
+          "url": "https://www.reforma.com/rss/portada.xml"
+        },
+        {
+          "name": "Lo último en Vanguardia MX",
+          "url": "https://vanguardia.com.mx/rss.xml"
+        },
+        {
+          "name": "Portada, El Siglo de Torreón",
+          "url": "https://www.elsiglodetorreon.com.mx/index.xml"
+        },
+        {
+          "name": "El Financiero",
+          "url": "https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml"
+        },
+        {
+          "name": "ElNorte",
+          "url": "https://www.elnorte.com/rss/portada.xml"
+        },
+        {
+          "name": "El Informador :: Noticias de Jalisco, México, Deportes & Entretenimiento",
+          "url": "https://www.informador.mx/rss/ultimas-noticias.xml"
+        },
+        {
+          "name": "24 Horas",
+          "url": "https://www.24-horas.mx/feed/"
+        },
+        {
+          "name": "Tu Periódico Quequi",
+          "url": "https://quequi.com.mx/feed/"
+        },
+        {
+          "name": "DEBATE",
+          "url": "https://www.debate.com.mx/rss/feed.xml"
+        },
+        {
+          "name": "Mexico News Daily",
+          "url": "https://mexiconewsdaily.com/feed/"
+        },
+        {
+          "name": "El Diario",
+          "url": "https://diario.mx/jrz/media/sitemaps/rss.xml"
+        },
+        {
+          "name": "8 Columnas",
+          "url": "https://8columnas.com.mx/feed/"
+        }
+      ]
+    },
+    {
+      "key": "myanmar",
+      "name": "Myanmar",
+      "feeds": [
+        {
+          "name": "Myanmar Gazette News Media Forum Network",
+          "url": "http://myanmargazette.net/feed"
+        },
+        {
+          "name": "DVB Multimedia Group",
+          "url": "http://www.dvb.no/feed"
+        },
+        {
+          "name": "THIT HTOO LWIN (Daily News)",
+          "url": "http://www.thithtoolwin.com/feeds/posts/default"
+        }
+      ]
+    },
+    {
+      "key": "nigeria",
+      "name": "Nigeria",
+      "feeds": [
+        {
+          "name": "All Content",
+          "url": "http://saharareporters.com/feeds/latest/feed"
+        },
+        {
+          "name": "Nigeria News Links | Today's Updates - Nigerian Bulletin",
+          "url": "https://www.nigerianbulletin.com/forums/-/index.rss"
+        },
+        {
+          "name": "Nigerian News. Latest Nigeria News. Your online Nigerian Newspaper.",
+          "url": "http://feeds.feedburner.com/Nigerianeye"
+        },
+        {
+          "name": "Legit.ng",
+          "url": "https://www.legit.ng/rss/all.rss"
+        },
+        {
+          "name": "Latest Nigeria News, Nigerian Newspapers, Politics",
+          "url": "https://thenationonlineng.net/feed/"
+        },
+        {
+          "name": "Daily Post Nigeria",
+          "url": "https://dailypost.ng/feed"
+        },
+        {
+          "name": "Premium Times Nigeria",
+          "url": "https://www.premiumtimesng.com/feed"
+        },
+        {
+          "name": "Information Nigeria",
+          "url": "https://www.informationng.com/feed"
+        },
+        {
+          "name": "The Guardian Nigeria News – Nigeria and World News",
+          "url": "https://guardian.ng/feed/"
+        },
+        {
+          "name": "Tribune Online",
+          "url": "http://tribuneonlineng.com/feed/"
+        }
+      ]
+    },
+    {
+      "key": "pakistan",
+      "name": "Pakistan",
+      "feeds": [
+        {
+          "name": "The Express Tribune",
+          "url": "https://tribune.com.pk/feed/home"
+        },
+        {
+          "name": "The Nation - Top Stories",
+          "url": "https://nation.com.pk/rss/top-stories"
+        },
+        {
+          "name": "قومی خبریں",
+          "url": "https://jang.com.pk/rss/1/1"
+        },
+        {
+          "name": "The News International - Pakistan",
+          "url": "https://www.thenews.com.pk/rss/1/1"
+        },
+        {
+          "name": "News Blog",
+          "url": "https://newsnblogs.com/feed/"
+        },
+        {
+          "name": "UrduPoint.com All Urdu News",
+          "url": "https://www.urdupoint.com/rss/urdupoint.rss"
+        },
+        {
+          "name": "ایکسپریس اردو",
+          "url": "https://www.express.pk/feed/"
+        }
+      ]
+    },
+    {
+      "key": "philippines",
+      "name": "Philippines",
+      "feeds": [
+        {
+          "name": "INQUIRER.net",
+          "url": "https://www.inquirer.net/fullfeed"
+        },
+        {
+          "name": "Latest News | Philippine Information Agency",
+          "url": "https://pia.gov.ph/news/feed.rss"
+        },
+        {
+          "name": "Interaksyon",
+          "url": "https://www.interaksyon.com/feed/"
+        },
+        {
+          "name": "- The Manila Times",
+          "url": "https://www.manilatimes.net/rssfeed/"
+        },
+        {
+          "name": "philstar.com - RSS Headlines",
+          "url": "https://www.philstar.com/rss/headlines"
+        },
+        {
+          "name": "BusinessWorld",
+          "url": "https://www.bworldonline.com/feed/"
+        },
+        {
+          "name": "https://www.sunstar.com.ph/",
+          "url": "https://www.sunstar.com.ph/rssFeed/selected"
+        },
+        {
+          "name": "PhilNews.XYZ",
+          "url": "https://www.philnews.xyz/feeds/posts/default?alt=rss"
+        },
+        {
+          "name": "Manila Standard",
+          "url": "https://manilastandard.net/feed/all"
+        },
+        {
+          "name": "GMA News Online / News",
+          "url": "https://data.gmanews.tv/gno/rss/news/feed.xml"
+        },
+        {
+          "name": "Current PH",
+          "url": "https://currentph.com/feed/"
+        },
+        {
+          "name": "Top Gear: The Philippine authority on cars and the automotive industry",
+          "url": "https://www.topgear.com.ph/feed/rss1"
+        },
+        {
+          "name": "Eagle News",
+          "url": "https://www.eaglenews.ph/feed/"
+        },
+        {
+          "name": "UNBOX PH",
+          "url": "https://www.unbox.ph/feed/"
+        },
+        {
+          "name": "Tempo – The Nation's Fastest Growing Newspaper",
+          "url": "http://tempo.com.ph/feed/"
+        },
+        {
+          "name": "Abante Tonite",
+          "url": "https://tonite.abante.com.ph/feed/"
+        },
+        {
+          "name": "BusinessMirror",
+          "url": "https://businessmirror.com.ph/feed/"
+        },
+        {
+          "name": "Latest News | Philippine News Agency",
+          "url": "https://www.pna.gov.ph/latest.rss"
+        },
+        {
+          "name": "TechPinas : Philippines' Technology News, Tips and Reviews Blog",
+          "url": "http://feeds.feedburner.com/Techpinas"
+        },
+        {
+          "name": "BICOL STANDARD | Bicol News | Bicol Newspaper",
+          "url": "http://www.bicolstandard.com/feeds/posts/default?alt=rss"
+        }
+      ]
+    },
+    {
+      "key": "poland",
+      "name": "Poland",
+      "feeds": [
+        {
+          "name": "Najnowsze",
+          "url": "http://feeds.feedburner.com/wPolitycepl"
+        },
+        {
+          "name": "Newsweek Polska",
+          "url": "https://www.newsweek.pl/rss.xml"
+        },
+        {
+          "name": "Dziennik.pl Dziennik - dziennik.pl",
+          "url": "http://rss.dziennik.pl/Dziennik-PL/"
+        },
+        {
+          "name": "www.wirtualnemedia.pl",
+          "url": "https://www.wirtualnemedia.pl/rss/wirtualnemedia_rss.xml"
+        },
+        {
+          "name": "GazetaPrawna.pl - biznes, podatki, prawo, finanse, wiadomości, praca",
+          "url": "http://rss.gazetaprawna.pl/GazetaPrawna"
+        },
+        {
+          "name": "https://www.rp.pl",
+          "url": "https://www.rp.pl/rss/1019"
+        },
+        {
+          "name": "Polska Agencja Prasowa SA",
+          "url": "https://www.pap.pl/rss.xml"
+        },
+        {
+          "name": "RMF24.pl",
+          "url": "https://www.rmf24.pl/feed"
+        }
+      ]
+    },
+    {
+      "key": "russia",
+      "name": "Russia",
+      "feeds": [
+        {
+          "name": "Lenta.ru : Новости",
+          "url": "https://lenta.ru/rss"
+        },
+        {
+          "name": "Вести.Ru",
+          "url": "https://www.vesti.ru/vesti.rss"
+        },
+        {
+          "name": "Газета.Ru - Первая полоса",
+          "url": "https://www.gazeta.ru/export/rss/first.xml"
+        },
+        {
+          "name": "Все материалы - Московский Комсомолец",
+          "url": "https://www.mk.ru/rss/index.xml"
+        },
+        {
+          "name": "Российская Газета",
+          "url": "https://rg.ru/xml/index.xml"
+        },
+        {
+          "name": "NEWSru.com :: Главные новости",
+          "url": "https://rss.newsru.com/top/big/"
+        },
+        {
+          "name": "RT - Daily news",
+          "url": "https://www.rt.com/rss/"
+        },
+        {
+          "name": "Meduza.io",
+          "url": "https://meduza.io/rss/all"
+        },
+        {
+          "name": "Russia Insider Daily Headlines",
+          "url": "https://russia-insider.com/en/all-content/rss"
+        },
+        {
+          "name": "TASS",
+          "url": "http://tass.com/rss/v2.xml"
+        },
+        {
+          "name": "The Moscow Times - Independent News From Russia",
+          "url": "https://www.themoscowtimes.com/rss/news"
+        },
+        {
+          "name": "Газета",
+          "url": "https://www.kommersant.ru/RSS/main.xml"
+        },
+        {
+          "name": "PravdaReport",
+          "url": "https://www.pravdareport.com/export.xml"
+        }
+      ]
+    },
+    {
+      "key": "south-africa",
+      "name": "South Africa",
+      "feeds": [
+        {
+          "name": "SowetanLIVE",
+          "url": "https://www.sowetanlive.co.za/rss/?publication=sowetan-live"
+        },
+        {
+          "name": "TechCentral",
+          "url": "https://techcentral.co.za/feed"
+        },
+        {
+          "name": "News24 Top Stories",
+          "url": "http://feeds.news24.com/articles/news24/TopStories/rss"
+        },
+        {
+          "name": "Eyewitness News | Latest News",
+          "url": "https://ewn.co.za/RSS%20Feeds/Latest%20News"
+        },
+        {
+          "name": "The Citizen",
+          "url": "https://citizen.co.za/feed/"
+        },
+        {
+          "name": "Daily Maverick",
+          "url": "https://www.dailymaverick.co.za/dmrss/"
+        },
+        {
+          "name": "Moneyweb",
+          "url": "https://www.moneyweb.co.za/feed/"
+        },
+        {
+          "name": "IOL section feed for News",
+          "url": "http://rss.iol.io/iol/news"
+        },
+        {
+          "name": "TimesLIVE",
+          "url": "https://www.timeslive.co.za/rss/"
+        },
+        {
+          "name": "The South African",
+          "url": "https://www.thesouthafrican.com/feed/"
+        },
+        {
+          "name": "Axios",
+          "url": "https://api.axios.com/feed/"
+        }
+      ]
+    },
+    {
+      "key": "spain",
+      "name": "Spain",
+      "feeds": [
+        {
+          "name": "The Local",
+          "url": "https://feeds.thelocal.com/rss/es"
+        },
+        {
+          "name": "EL PAÍS: el periódico global",
+          "url": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada"
+        },
+        {
+          "name": "España",
+          "url": "https://rss.elconfidencial.com/espana/"
+        },
+        {
+          "name": "ElDiario.es - ElDiario.es",
+          "url": "https://www.eldiario.es/rss/"
+        },
+        {
+          "name": "Portada // expansion",
+          "url": "https://e00-expansion.uecdn.es/rss/portada.xml"
+        },
+        {
+          "name": "El Periódico - portada",
+          "url": "https://www.elperiodico.com/es/rss/rss_portada.xml"
+        },
+        {
+          "name": "huffingtonpost.es",
+          "url": "https://www.huffingtonpost.es/feeds/index.xml"
+        },
+        {
+          "name": "Euro Weekly News Spain",
+          "url": "https://www.euroweeklynews.com/feed/"
+        },
+        {
+          "name": "Agencia EFE | www.efe.com | English edition",
+          "url": "https://www.efe.com/efe/english/4/rss"
+        }
+      ]
+    },
+    {
+      "key": "ukraine",
+      "name": "Ukraine",
+      "feeds": [
+        {
+          "name": "News Agency UNIAN",
+          "url": "https://rss.unian.net/site/news_eng.rss"
+        },
+        {
+          "name": "ТЕЛЕГРАФ - последние новости Украины и мира",
+          "url": "https://telegraf.com.ua/yandex-feed/"
+        },
+        {
+          "name": "Последние новости на сайте korrespondent.net",
+          "url": "http://k.img.com.ua/rss/ru/all_news2.0.xml"
+        },
+        {
+          "name": "Цензор.НЕТ - Новости",
+          "url": "https://censor.net.ua/includes/news_ru.xml"
+        },
+        {
+          "name": "Новини на tsn.ua",
+          "url": "https://tsn.ua/rss/full.rss"
+        },
+        {
+          "name": "Українська правда",
+          "url": "https://www.pravda.com.ua/rss/"
+        },
+        {
+          "name": "Гордон - Самые популярные материалы",
+          "url": "https://gordonua.com/xml/rss_category/top.html"
+        },
+        {
+          "name": "НВ",
+          "url": "https://nv.ua/rss/all.xml"
+        },
+        {
+          "name": "Информационное агентство УНИАН",
+          "url": "https://rss.unian.net/site/news_rus.rss"
+        },
+        {
+          "name": "Еспресо - український погляд на світ!",
+          "url": "https://espreso.tv/rss"
+        },
+        {
+          "name": "Gazeta.ua",
+          "url": "https://gazeta.ua/rss"
+        },
+        {
+          "name": "Вести.ua",
+          "url": "https://vesti.ua/feeds/partners"
+        }
+      ]
+    },
+    {
+      "key": "united-kingdom",
+      "name": "United Kingdom",
+      "feeds": [
+        {
+          "name": "BBC News - Home",
+          "url": "http://feeds.bbci.co.uk/news/rss.xml"
+        },
+        {
+          "name": "World news | The Guardian",
+          "url": "https://www.theguardian.com/world/rss"
+        },
+        {
+          "name": "Home | Mail Online",
+          "url": "https://www.dailymail.co.uk/home/index.rss"
+        },
+        {
+          "name": "The Independent",
+          "url": "http://www.independent.co.uk/news/uk/rss"
+        },
+        {
+          "name": "Daily Express :: News Feed",
+          "url": "http://feeds.feedburner.com/daily-express-news-showbiz"
+        }
+      ]
+    },
+    {
+      "key": "united-states",
+      "name": "United States",
+      "feeds": [
+        {
+          "name": "World News - Breaking News, Top Stories",
+          "url": "https://www.huffpost.com/section/world-news/feed"
+        },
+        {
+          "name": "NYT > Top Stories",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+        },
+        {
+          "name": "FOX News",
+          "url": "http://feeds.foxnews.com/foxnews/latest"
+        },
+        {
+          "name": "World",
+          "url": "http://feeds.washingtonpost.com/rss/world"
+        },
+        {
+          "name": "WSJ.com: World News",
+          "url": "https://feeds.a.dj.com/rss/RSSWorldNews.xml"
+        },
+        {
+          "name": "World & Nation",
+          "url": "https://www.latimes.com/world-nation/rss2.0.xml"
+        },
+        {
+          "name": "CNN.com - RSS Channel - App International Edition",
+          "url": "http://rss.cnn.com/rss/edition.rss"
+        },
+        {
+          "name": "Yahoo News - Latest News & Headlines",
+          "url": "https://news.yahoo.com/rss/mostviewed"
+        },
+        {
+          "name": "US Top News and Analysis",
+          "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html"
+        },
+        {
+          "name": "Playbook",
+          "url": "https://rss.politico.com/playbook.xml"
+        }
+      ]
+    }
+  ]
+}

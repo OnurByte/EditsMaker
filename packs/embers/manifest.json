@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.embers",
+  "name": "Embers",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "Sparks rising from a fire below, flickering orange to red as they climb, in 3D. For hype and phonk edits; it loops.",
+  "kinds": [
+    "skill",
+    "scene"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "3d",
+    "hype"
+  ],
+  "scene": {
+    "seconds": 5.0,
+    "fps": 30
+  }
+}

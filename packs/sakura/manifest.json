@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.sakura",
+  "name": "Sakura",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "Cherry petals drifting down on a breeze, tumbling as they fall, in 3D. For anime and soft edits; it loops.",
+  "kinds": [
+    "skill",
+    "scene"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "3d",
+    "anime",
+    "sad"
+  ],
+  "scene": {
+    "seconds": 8.0,
+    "fps": 30
+  }
+}

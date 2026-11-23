@@ -8,6 +8,7 @@ mod flows;
 mod library;
 mod icons;
 mod marketplace;
+mod player;
 mod review;
 mod runs;
 pub mod settings;
@@ -21,7 +22,7 @@ mod workspace;
 use gpui_kit::*;
 use std::path::PathBuf;
 
-actions!(edits, [Quit, ToggleSidebar]);
+actions!(edits, [Quit, ToggleSidebar, Search]);
 
 /// gpui-kit's own icons, and the Lucide ones the app adds.
 struct AppAssets;
@@ -73,8 +74,8 @@ pub fn run(args: &[String]) {
         gpui_kit::init(cx);
         // Windows posts system notifications under the app's identity
         cx.set_app_identity("io.github.onurbyte.edits", "EditsMaker");
-        let (q, b) = if cfg!(target_os = "macos") { ("cmd-q", "cmd-b") } else { ("ctrl-q", "ctrl-b") };
-        cx.bind_keys([KeyBinding::new(q, Quit, None), KeyBinding::new(b, ToggleSidebar, None)]);
+        let (q, b, k) = if cfg!(target_os = "macos") { ("cmd-q", "cmd-b", "cmd-k") } else { ("ctrl-q", "ctrl-b", "ctrl-k") };
+        cx.bind_keys([KeyBinding::new(q, Quit, None), KeyBinding::new(b, ToggleSidebar, None), KeyBinding::new(k, Search, None)]);
         cx.on_action(|_: &Quit, cx| cx.quit());
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {

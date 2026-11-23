@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.warp",
+  "name": "Warp",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "Stars streaking past at light speed, out from the middle of the frame, in 3D. For the drop; it loops.",
+  "kinds": [
+    "skill",
+    "scene"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "3d",
+    "hype"
+  ],
+  "scene": {
+    "seconds": 4.0,
+    "fps": 30
+  }
+}

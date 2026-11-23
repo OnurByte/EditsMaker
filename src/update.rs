@@ -29,7 +29,7 @@ pub fn latest() -> Result<String, String> {
     v["tag_name"].as_str().map(String::from).ok_or("no release found".into())
 }
 
-fn newer(tag: &str) -> bool {
+pub fn newer(tag: &str) -> bool {
     matches!((parse(tag), parse(env!("CARGO_PKG_VERSION"))), (Some(a), Some(b)) if a > b)
 }
 

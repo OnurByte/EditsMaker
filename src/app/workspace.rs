@@ -6,7 +6,6 @@ use crate::app::theme::{self, brand};
 use gpui_kit::component::input::{InputEvent, InputState, TextareaState};
 use gpui_kit::component::notification::Notification;
 use gpui_kit::component::WindowExt;
-use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -83,6 +82,8 @@ pub struct Review {
     pub notes: Vec<Note>,
     pub note: Entity<InputState>,
     pub general: Entity<InputState>,
+    /// the clip playing, once its size is read
+    pub player: Option<crate::app::player::Player>,
 }
 
 pub struct Workspace {
@@ -122,6 +123,8 @@ pub struct Workspace {
     pub ai_more: bool,
     /// what `edits doctor` said, in About
     pub doctor: Option<String>,
+    /// the newest release, asked for when About opens
+    pub latest: Option<Result<String, String>>,
     /// the setting being changed
     pub changing: Option<String>,
     pub review: Option<Review>,
@@ -213,7 +216,7 @@ impl Workspace {
         .detach();
         let mut this = Self { input, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, settings_search, welcome: review.is_none() && !theme::prefs().onboarded, files: vec![], preset: None, overlay: None, post: vec![], picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
-            market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(),
+            market: Market::default(), settings: None, doctor: None, latest: None, changing: None, review: None, review_only: review.is_some(),
             sidebar_open: true, thread_search, market_search, library_search, git_url, model_lists: Default::default(), welcome_step: 0, sign_in, usage: None, _subscriptions: subscriptions };
         crate::app::discord::start();
         // the composer's model picker shows the AI in use from the start
@@ -228,6 +231,11 @@ impl Workspace {
     }
 
     pub fn go(&mut self, to: Route, cx: &mut Context<Self>) {
+        if to != Route::Review {
+            if let Some(p) = self.review.as_mut().and_then(|r| r.player.as_mut()) {
+                p.pause();
+            }
+        }
         self.route = to;
         if matches!(to, Route::Market | Route::Automations) && self.market.packs.is_none() {
             self.load_market(cx);
@@ -467,6 +475,9 @@ impl Workspace {
     /// The settings window, at a section.
     pub fn open_settings(&mut self, at: Section, cx: &mut Context<Self>) {
         self.settings_open = Some(at);
+        if at == Section::About {
+            self.check_latest(cx);
+        }
         if at == Section::Usage {
             self.usage = Some(crate::app::usage::read(&self.past));
         }
@@ -510,6 +521,22 @@ impl Workspace {
         .detach();
     }
 
+    /// The newest release on GitHub, for About.
+    pub fn check_latest(&mut self, cx: &mut Context<Self>) {
+        if matches!(self.latest, Some(Ok(_))) {
+            return;
+        }
+        self.latest = None;
+        cx.spawn(async move |this, cx| {
+            let t = cx.background_executor().spawn(async { crate::update::latest() }).await;
+            let _ = this.update(cx, |this, cx| {
+                this.latest = Some(t);
+                cx.notify();
+            });
+        })
+        .detach();
+    }
+
     /// `edits doctor`, for About.
     pub fn check(&mut self, cx: &mut Context<Self>) {
         self.doctor = Some("Checking...".into());
@@ -532,12 +559,29 @@ impl Workspace {
                 this.add_note(window, cx);
             }
         }));
-        self.review = Some(Review { clip: clip.clone(), sheet: None, at: 0, spot: None, notes: vec![], note, general });
+        self.review = Some(Review { clip: clip.clone(), sheet: None, at: 0, spot: None, notes: vec![], note, general, player: None });
         self.route = Route::Review;
+        let c = clip.clone();
+        cx.spawn(async move |this, cx| {
+            let p = cx.background_executor().spawn(async move { crate::app::player::Player::open(&c, 0.0) }).await;
+            let _ = this.update(cx, |this, cx| {
+                if let Some(r) = this.review.as_mut().filter(|r| r.clip == p.clip) {
+                    r.player = Some(p);
+                }
+                cx.notify();
+            });
+        })
+        .detach();
         cx.spawn(async move |this, cx| {
             let sheet = cx.background_executor().spawn(async move { runs::sheet(&clip) }).await;
             let _ = this.update(cx, |this, cx| {
                 if let Some(r) = this.review.as_mut() {
+                    // the sheet knows the length too, should the player's probe not
+                    if let (Some(p), Ok(sh)) = (r.player.as_mut(), &sheet) {
+                        if p.total <= 0.0 {
+                            p.total = sh.total;
+                        }
+                    }
                     r.sheet = Some(sheet);
                 }
                 cx.notify();
@@ -548,9 +592,9 @@ impl Workspace {
     }
 }
 
-impl Render for Workspace {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let b = brand(cx);
+impl Workspace {
+    /// The window's page: the sidebar and the route in view.
+    fn page(&mut self, window: &mut Window, cx: &mut Context<Self>) -> Vec<AnyElement> {
         let main = match self.route {
             Route::Market => self.marketplace(false, window, cx).into_any_element(),
             Route::Automations => self.marketplace(true, window, cx).into_any_element(),
@@ -558,12 +602,53 @@ impl Render for Workspace {
             Route::Review => self.review_screen(window, cx).into_any_element(),
             _ => self.chat_view(window, cx).into_any_element(),
         };
-        let settings = self.settings_open.map(|at| self.settings_window(at, window, cx));
+        let mut v = vec![];
+        if !self.review_only {
+            v.push(self.sidebar(cx).into_any_element());
+        }
+        v.push(div().flex_1().min_w_0().h_full().flex().flex_col().child(main).into_any_element());
+        v
+    }
+
+    /// The page blurred, under a modal: GPUI has no blur filter, so the page is drawn again at small offsets on a
+    /// ring and the copies averaged (each one over the last at 1/(n+1)), a box blur. It sits under the modal's
+    /// backdrop, which takes every click and scroll.
+    fn blurred(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        let page = brand(cx).page;
+        let mut layer = div().absolute().inset_0().overflow_hidden();
+        for (i, (dx, dy)) in blur_offsets(6.).into_iter().enumerate() {
+            let copy = div().id(("blur", i)).absolute().top(px(dy)).left(px(dx)).size_full().flex().bg(page)
+                .opacity(1. / (i as f32 + 1.)).children(self.page(window, cx));
+            layer = layer.child(copy);
+        }
+        layer.into_any_element()
+    }
+}
+
+/// Where the blur's copies of the page go: the middle, a ring of eight `r` / 2 px out, then eight more `r` px out,
+/// turned half a step so the two rings fill each other's gaps.
+pub fn blur_offsets(r: f32) -> Vec<(f32, f32)> {
+    let mut v = vec![(0., 0.)];
+    for (radius, turn) in [(r / 2., 0.), (r, 0.5)] {
+        v.extend((0..8).map(|k| {
+            let a = (k as f32 + turn) * std::f32::consts::FRAC_PI_4;
+            (radius * a.cos(), radius * a.sin())
+        }));
+    }
+    v
+}
+
+impl Render for Workspace {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let b = brand(cx);
+        let settings = self.settings_open.map(|at| self.settings_window(at, window, cx).into_any_element());
         let pack = self.market.open.clone().and_then(|id| self.pack_sheet(&id, cx));
         if self.welcome {
             return div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
                 .child(self.welcome(window, cx)).children(settings);
         }
+        let page = self.page(window, cx);
+        let blur = (settings.is_some() || pack.is_some()).then(|| self.blurred(window, cx));
         div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
             .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
                 if let Some(p) = paths.paths().first() {
@@ -571,8 +656,21 @@ impl Render for Workspace {
                 }
             }))
             .on_action(cx.listener(|this, _: &crate::app::ToggleSidebar, _, cx| this.toggle_sidebar(cx)))
-            .when(!self.review_only, |d| d.child(self.sidebar(cx)))
-            .child(div().flex_1().min_w_0().h_full().flex().flex_col().child(main))
+            // t3code's search shortcut: the search of the page in view, else the edits' in the sidebar
+            .on_action(cx.listener(|this, _: &crate::app::Search, window, cx| {
+                let s = match this.route {
+                    Route::Market | Route::Automations => this.market_search.clone(),
+                    Route::Library => this.library_search.clone(),
+                    _ => {
+                        this.sidebar_open = true;
+                        this.thread_search.clone()
+                    }
+                };
+                s.update(cx, |s, cx| s.focus(window, cx));
+                cx.notify();
+            }))
+            .children(page)
+            .children(blur)
             .children(pack)
             .children(settings)
     }
@@ -603,7 +701,7 @@ fn copy_file(p: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     // not super::*: gpui_kit's own `test` attribute would come with it
-    use super::{commands, file_uri};
+    use super::{blur_offsets, commands, file_uri};
     use std::path::PathBuf;
 
     fn s(v: &[&str]) -> Vec<String> {
@@ -618,6 +716,9 @@ mod tests {
         assert_eq!(commands("https://youtu.be/x --preset mine", &[], Some("akis-whip"), None), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
         assert_eq!(commands("x", &[], None, Some("stardust")), [s(&["x", "--overlay", "stardust"])], "a 3D scene goes over it");
         assert!(commands("  ", &[], None, None).is_empty());
+        let ring = blur_offsets(5.);
+        assert_eq!(ring.len(), 17);
+        assert!(ring[9..].iter().all(|(x, y)| ((x * x + y * y).sqrt() - 5.).abs() < 1e-4), "the outer copies sit on a ring");
         assert_eq!(file_uri(std::path::Path::new("/home/a/Videos/Halime Sultan'ın.mp4")), "file:///home/a/Videos/Halime%20Sultan%27%C4%B1n.mp4");
     }
 

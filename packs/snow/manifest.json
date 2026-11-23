@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.snow",
+  "name": "Snow",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "Soft snow of three sizes falling and swaying in 3D, after three.js's points-sprites example. Lay it over a sad or winter edit; it loops.",
+  "kinds": [
+    "skill",
+    "scene"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "3d",
+    "sad"
+  ],
+  "scene": {
+    "seconds": 8.0,
+    "fps": 30
+  }
+}

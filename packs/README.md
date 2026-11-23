@@ -1,13 +1,16 @@
 # Packs
 
-15 built-in packs, each with a `manifest.json`, an agent skill and a picture. The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).
+22 built-in packs, each with a `manifest.json`, an agent skill and a picture. The marketplace: `edits packs browse`, `edits packs add ID`, or the app. The standard, and making one: [PACKS.md](../PACKS.md).
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="rss-dark.svg"><img src="rss-light.svg" width="100%" alt="RSS in. Edits out. Each new post from BBC, CNN, The Guardian, NYT, Reddit, IGN, TechCrunch, NASA, Anadolu Ajansı or TRT Haber becomes an edit, and a flow posts it."></picture>
 
 ## RSS
 
 <p>
+<a href="clubs"><img src="clubs/preview.svg" width="300" alt="Football clubs"></a>
 <a href="news"><img src="news/preview.gif" width="300" alt="News"></a>
+<a href="rss-anime"><img src="rss-anime/preview.svg" width="300" alt="Anime"></a>
+<a href="world"><img src="world/preview.svg" width="300" alt="World"></a>
 </p>
 
 ## Presets
@@ -36,5 +39,9 @@
 
 <p>
 <a href="edits"><img src="edits/preview.gif" width="300" alt="What your agent knows"></a>
+<a href="embers"><img src="embers/preview.svg" width="300" alt="Embers"></a>
+<a href="sakura"><img src="sakura/preview.svg" width="300" alt="Sakura"></a>
+<a href="snow"><img src="snow/preview.svg" width="300" alt="Snow"></a>
 <a href="stardust"><img src="stardust/preview.gif" width="300" alt="Stardust"></a>
+<a href="warp"><img src="warp/preview.svg" width="300" alt="Warp"></a>
 </p>
