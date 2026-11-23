@@ -145,6 +145,8 @@ pub struct Overlay {
     pub opacity: f64,
     /// picture in picture: centre x, y and width as fractions of the frame, laid on top with a white frame
     pub place: Option<(f64, f64, f64)>,
+    /// a 3D scene's render: it loops under the whole edit and fills the frame
+    pub scene: bool,
 }
 
 pub fn parse(spec: &str) -> Result<Overlay, String> {
@@ -172,11 +174,11 @@ pub fn parse(spec: &str) -> Result<Overlay, String> {
     };
     // a 3D scene pack, drawn for it (shortcut: always 1080x1920, the overlay is scaled to the frame; upgrade to the edit's size if a square edit looks soft)
     if let Some(p) = crate::scene::find(name) {
-        return Ok(Overlay { file: crate::scene::render(&p, 1080, 1920)?, from, to, opacity, place });
+        return Ok(Overlay { file: crate::scene::render(&p, 1080, 1920)?, from, to, opacity, place, scene: true });
     }
     let file = find(&["overlay", "transition", "greenscreen", "background", "meme", "video", "image"], name)
         .ok_or(format!("--overlay {name}: no such file or library clip (edits library overlay)"))?;
-    Ok(Overlay { file, from, to, opacity, place })
+    Ok(Overlay { file, from, to, opacity, place, scene: false })
 }
 
 /// How a clip goes over the picture: (input options, filter chain for it, joining filter).
@@ -187,7 +189,7 @@ fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bo
     let rel = o.file.to_string_lossy().to_lowercase();
     let k = kind(&rel).unwrap_or("video");
     // textures and backgrounds run under the whole edit; a transition, a meme or a green screen plays once
-    let looped = len.is_some() && matches!(k, "overlay" | "background") && o.to.is_none() && o.from == 0.0;
+    let looped = len.is_some() && (o.scene || matches!(k, "overlay" | "background")) && o.to.is_none() && o.from == 0.0;
     let end = o.to.or(if looped { None } else { len.map(|l| o.from + l) });
     let when = match end {
         Some(b) => format!(":enable='between(t,{:.3},{b:.3})'", o.from),
@@ -213,6 +215,9 @@ fn layer(o: &Overlay, i: usize, base: &str, out: &str, w: u32, h: u32, alpha: bo
         let pw = ((w as f64 * size) as u32 / 2 * 2).max(32);
         let b = (w / 270).max(2);
         format!("[{n}:v]{grey}scale={pw}:-2,setsar=1,fps=30,pad=iw+{b2}:ih+{b2}:{b}:{b}:white,format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=x='clip(W*{x:.3}-w/2,0,W-w)':y='clip(H*{y:.3}-h/2,0,H-h)':eof_action=pass{when}[{out}];", o.opacity, b2 = b * 2)
+    } else if o.scene {
+        // drawn for any frame: cover it, the edges cropped, never bars
+        format!("[{n}:v]{grey}scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=0:0:eof_action=pass{when}[{out}];", o.opacity)
     } else if k == "greenscreen" || alpha {
         let key = if k == "greenscreen" && !alpha { "chromakey=0x00FF00:0.18:0.08," } else { "" };
         format!("[{n}:v]{key}{grey}scale={w}:{h}:force_original_aspect_ratio=decrease,format=rgba,colorchannelmixer=aa={:.2},{shift}[l{i}];[{base}][l{i}]overlay=(W-w)/2:(H-h)/2:eof_action=pass{when}[{out}];", o.opacity)
@@ -290,7 +295,7 @@ mod tests {
 
     #[test]
     fn overlay_graphs() {
-        let o = |f: &str, from: f64, to: Option<f64>| Overlay { file: PathBuf::from(f), from, to, opacity: 0.5, place: None };
+        let o = |f: &str, from: f64, to: Option<f64>| Overlay { file: PathBuf::from(f), from, to, opacity: 0.5, place: None, scene: false };
         // a texture loops under the whole edit, screened
         let (i, g) = layer(&o("Overlays/VHS Texture.mp4", 0.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(20.0), false);
         assert_eq!(i, ["-stream_loop", "-1", "-i", "Overlays/VHS Texture.mp4"]);
@@ -309,6 +314,11 @@ mod tests {
         // over a black-and-white edit the burn goes grey instead of tinting it
         let (_, g) = layer(&o("Transitions/Burn 3.mp4", 4.0, None), 0, "0:v", "x0", 1080, 1920, false, Some(0.5), true);
         assert!(g.starts_with("[1:v]hue=s=0,scale="), "{g}");
+        // a 3D scene loops under the whole edit and covers a square frame, cropped, never with bars
+        let star = Overlay { scene: true, ..o("/home/x/.cache/edits/scenes/edits.stardust-1.0.0-1080x1920.mov", 0.0, None) };
+        let (i, g) = layer(&star, 0, "0:v", "x0", 1080, 1080, true, Some(6.0), false);
+        assert_eq!(&i[..2], ["-stream_loop", "-1"]);
+        assert!(g.contains("force_original_aspect_ratio=increase,crop=1080:1080") && g.contains("overlay=0:0:eof_action=pass[x0]") && !g.contains("enable"), "{g}");
         // picture in picture: small, framed, placed, plays once
         let pip = Overlay { place: Some((0.75, 0.2, 0.35)), ..o("cam.mp4", 1.0, Some(4.0)) };
         let (_, g) = layer(&pip, 0, "0:v", "x0", 1080, 1920, false, Some(10.0), false);
@@ -320,11 +330,11 @@ mod tests {
         let f = std::env::temp_dir().join("edits-overlay-spec.mp4");
         std::fs::write(&f, "").unwrap();
         let s = f.to_string_lossy();
-        assert_eq!(parse(&format!("{s}@1.5-3:0.4")).unwrap(), Overlay { file: f.clone(), from: 1.5, to: Some(3.0), opacity: 0.4, place: None });
-        assert_eq!(parse(&format!("{s}@0-5:0.75,0.2,0.35")).unwrap(), Overlay { file: f.clone(), from: 0.0, to: Some(5.0), opacity: 1.0, place: Some((0.75, 0.2, 0.35)) });
+        assert_eq!(parse(&format!("{s}@1.5-3:0.4")).unwrap(), Overlay { file: f.clone(), from: 1.5, to: Some(3.0), opacity: 0.4, place: None, scene: false });
+        assert_eq!(parse(&format!("{s}@0-5:0.75,0.2,0.35")).unwrap(), Overlay { file: f.clone(), from: 0.0, to: Some(5.0), opacity: 1.0, place: Some((0.75, 0.2, 0.35)), scene: false });
         assert_eq!(parse(&format!("{s}:0.8:0.5,0.5,0.4")).unwrap().opacity, 0.8);
         assert!(parse(&format!("{s}:2,0.5,0.4")).is_err());
-        assert_eq!(parse(&s).unwrap(), Overlay { file: f.clone(), from: 0.0, to: None, opacity: 1.0, place: None });
+        assert_eq!(parse(&s).unwrap(), Overlay { file: f.clone(), from: 0.0, to: None, opacity: 1.0, place: None, scene: false });
         assert!(parse(&format!("{s}@x")).is_err());
         let _ = std::fs::remove_file(f);
     }

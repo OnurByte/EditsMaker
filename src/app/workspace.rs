@@ -391,10 +391,17 @@ impl Workspace {
         .detach();
     }
 
-    /// Hands a file to the system's share sheet (AirDrop, Mail, Messages... on macOS; Share on Windows; mail on
-    /// Linux). Where there is none, the file is shown in its folder and its path copied, to drop anywhere.
+    /// Hands a file to the system's share sheet (AirDrop, Mail, Messages... on macOS; Share on Windows). Linux has
+    /// none: there the file itself goes on the clipboard, to paste into a chat or a folder, and is shown in its folder.
     pub fn share_file(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
         let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+        if cfg!(target_os = "linux") {
+            let copied = copy_file(&path);
+            cx.reveal_path(&path);
+            let note = if copied { format!("{name} is copied: paste it into a chat, a mail or a folder") } else { format!("{name} is in the folder that opened") };
+            window.push_notification(Notification::success(note).title("Share"), cx);
+            return;
+        }
         let sheet = kael_share::ShareSheet::builder().subject(name.clone()).file(path.clone()).build_checked();
         cx.spawn_in(window, async move |_, cx| {
             let shown = match sheet {
@@ -571,10 +578,32 @@ impl Render for Workspace {
     }
 }
 
+/// A file's file:// address, as a clipboard's file list writes it.
+pub fn file_uri(p: &Path) -> String {
+    let s = p.to_string_lossy();
+    let enc: String = s.bytes().map(|b| if b.is_ascii_alphanumeric() || b"-_.~/".contains(&b) { (b as char).to_string() } else { format!("%{b:02X}") }).collect();
+    format!("file://{enc}")
+}
+
+/// The file itself on the clipboard (text/uri-list): Wayland's wl-copy, else X11's xclip. Whether it went.
+fn copy_file(p: &Path) -> bool {
+    use std::io::Write;
+    let uri = file_uri(&std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf()));
+    let tools: &[(&str, &[&str])] = if std::env::var_os("WAYLAND_DISPLAY").is_some() {
+        &[("wl-copy", &["--type", "text/uri-list"]), ("xclip", &["-selection", "clipboard", "-t", "text/uri-list"])]
+    } else {
+        &[("xclip", &["-selection", "clipboard", "-t", "text/uri-list"]), ("wl-copy", &["--type", "text/uri-list"])]
+    };
+    tools.iter().any(|(t, args)| {
+        std::process::Command::new(t).args(*args).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn()
+            .ok().and_then(|mut c| { c.stdin.take()?.write_all(uri.as_bytes()).ok()?; c.wait().ok() }).is_some_and(|s| s.success())
+    })
+}
+
 #[cfg(test)]
 mod tests {
     // not super::*: gpui_kit's own `test` attribute would come with it
-    use super::commands;
+    use super::{commands, file_uri};
     use std::path::PathBuf;
 
     fn s(v: &[&str]) -> Vec<String> {
@@ -589,6 +618,7 @@ mod tests {
         assert_eq!(commands("https://youtu.be/x --preset mine", &[], Some("akis-whip"), None), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
         assert_eq!(commands("x", &[], None, Some("stardust")), [s(&["x", "--overlay", "stardust"])], "a 3D scene goes over it");
         assert!(commands("  ", &[], None, None).is_empty());
+        assert_eq!(file_uri(std::path::Path::new("/home/a/Videos/Halime Sultan'ın.mp4")), "file:///home/a/Videos/Halime%20Sultan%27%C4%B1n.mp4");
     }
 
 }
