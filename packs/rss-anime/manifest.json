@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.rss-anime",
+  "name": "Anime",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "Anime news as it breaks: Anime News Network, MyAnimeList, Anime Corner, Otaku USA and Crunchyroll's trailers. Each new story becomes an edit; a flow can post it for you.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "anime",
+    "news",
+    "automation"
+  ],
+  "feeds": [
+    {
+      "name": "Anime News Network",
+      "url": "https://www.animenewsnetwork.com/news/rss.xml"
+    },
+    {
+      "name": "Anime News Network (all)",
+      "url": "https://www.animenewsnetwork.com/all/rss.xml"
+    },
+    {
+      "name": "MyAnimeList News",
+      "url": "https://myanimelist.net/rss/news.xml"
+    },
+    {
+      "name": "Anime Corner",
+      "url": "https://animecorner.me/feed/"
+    },
+    {
+      "name": "Otaku USA",
+      "url": "https://otakuusamagazine.com/feed/"
+    },
+    {
+      "name": "Crunchyroll",
+      "url": "https://www.youtube.com/feeds/videos.xml?user=crunchyroll"
+    }
+  ]
+}

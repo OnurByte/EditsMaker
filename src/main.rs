@@ -835,7 +835,7 @@ pub fn packs_json() -> serde_json::Value {
         let preset = presets.first();
         let file = m.preview.as_ref().map(|f| packs::dir().join(&m.id).join(f)).filter(|f| !built_in && f.is_file());
         serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
-            "kinds": m.kinds, "tags": m.tags, "trusted": packs::trusted(p),
+            "kinds": m.kinds, "tags": packs::tidy_tags(&m.tags), "trusted": packs::trusted(p),
             "site": p.automations().first().map(|a| a.0.site.clone()), "sites": p.automations().iter().map(|a| a.0.site.clone()).collect::<Vec<_>>(), "preset": preset.map(|p| &p.name), "feeds": m.feeds,
             "presets": presets.iter().map(|p| serde_json::json!({"name": p.name, "about": p.about})).collect::<Vec<_>>(),
             "topics": m.topics.iter().map(|t| serde_json::json!({"key": t.key, "name": t.name, "feeds": t.feeds})).collect::<Vec<_>>(),

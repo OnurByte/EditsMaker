@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.clubs",
+  "name": "Football clubs",
+  "version": "1.0.0",
+  "author": "EditsMaker",
+  "description": "12 clubs, from Galatasaray to Real Madrid, each from the paper or the fans' blog that follows it closest. Every new story becomes an edit; a flow can post it for you.",
+  "kinds": [
+    "skill",
+    "feed"
+  ],
+  "preview": "preview.svg",
+  "tags": [
+    "news",
+    "automation"
+  ],
+  "topics": [
+    {
+      "key": "galatasaray",
+      "name": "Galatasaray",
+      "feeds": [
+        {
+          "name": "Fotomaç Galatasaray",
+          "url": "https://www.fotomac.com.tr/rss/galatasaray.xml"
+        }
+      ]
+    },
+    {
+      "key": "fenerbahce",
+      "name": "Fenerbahçe",
+      "feeds": [
+        {
+          "name": "Fotomaç Fenerbahçe",
+          "url": "https://www.fotomac.com.tr/rss/fenerbahce.xml"
+        }
+      ]
+    },
+    {
+      "key": "besiktas",
+      "name": "Beşiktaş",
+      "feeds": [
+        {
+          "name": "Fotomaç Beşiktaş",
+          "url": "https://www.fotomac.com.tr/rss/besiktas.xml"
+        }
+      ]
+    },
+    {
+      "key": "trabzonspor",
+      "name": "Trabzonspor",
+      "feeds": [
+        {
+          "name": "Fotomaç Trabzonspor",
+          "url": "https://www.fotomac.com.tr/rss/trabzonspor.xml"
+        }
+      ]
+    },
+    {
+      "key": "turkish-football",
+      "name": "Türk futbolu",
+      "feeds": [
+        {
+          "name": "Fotomaç Futbol",
+          "url": "https://www.fotomac.com.tr/rss/futbol.xml"
+        },
+        {
+          "name": "NTV Spor Futbol",
+          "url": "https://www.ntvspor.net/rss/kategori/futbol"
+        }
+      ]
+    },
+    {
+      "key": "real-madrid",
+      "name": "Real Madrid",
+      "feeds": [
+        {
+          "name": "Managing Madrid",
+          "url": "https://www.managingmadrid.com/rss/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "barcelona",
+      "name": "Barcelona",
+      "feeds": [
+        {
+          "name": "Barça Blaugranes",
+          "url": "https://www.barcablaugranes.com/rss/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "arsenal",
+      "name": "Arsenal",
+      "feeds": [
+        {
+          "name": "football.london Arsenal",
+          "url": "https://www.football.london/arsenal-fc/?service=rss"
+        }
+      ]
+    },
+    {
+      "key": "tottenham",
+      "name": "Tottenham",
+      "feeds": [
+        {
+          "name": "Cartilage Free Captain",
+          "url": "https://cartilagefreecaptain.sbnation.com/rss/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "bayern",
+      "name": "Bayern Munich",
+      "feeds": [
+        {
+          "name": "Bavarian Football Works",
+          "url": "https://www.bavarianfootballworks.com/rss/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "juventus",
+      "name": "Juventus",
+      "feeds": [
+        {
+          "name": "Black & White & Read All Over",
+          "url": "https://www.blackwhitereadallover.com/rss/index.xml"
+        }
+      ]
+    },
+    {
+      "key": "fifa",
+      "name": "FIFA",
+      "feeds": [
+        {
+          "name": "FIFA",
+          "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpcTrCXblq78GZrTUTLWeBw"
+        }
+      ]
+    }
+  ]
+}

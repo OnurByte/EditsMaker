@@ -83,6 +83,8 @@ pub struct Review {
     pub notes: Vec<Note>,
     pub note: Entity<InputState>,
     pub general: Entity<InputState>,
+    /// the clip playing, once its size is read
+    pub player: Option<crate::app::player::Player>,
 }
 
 pub struct Workspace {
@@ -122,6 +124,8 @@ pub struct Workspace {
     pub ai_more: bool,
     /// what `edits doctor` said, in About
     pub doctor: Option<String>,
+    /// the newest release, asked for when About opens
+    pub latest: Option<Result<String, String>>,
     /// the setting being changed
     pub changing: Option<String>,
     pub review: Option<Review>,
@@ -213,7 +217,7 @@ impl Workspace {
         .detach();
         let mut this = Self { input, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, settings_search, welcome: review.is_none() && !theme::prefs().onboarded, files: vec![], preset: None, overlay: None, post: vec![], picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
-            market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(),
+            market: Market::default(), settings: None, doctor: None, latest: None, changing: None, review: None, review_only: review.is_some(),
             sidebar_open: true, thread_search, market_search, library_search, git_url, model_lists: Default::default(), welcome_step: 0, sign_in, usage: None, _subscriptions: subscriptions };
         crate::app::discord::start();
         // the composer's model picker shows the AI in use from the start
@@ -228,6 +232,11 @@ impl Workspace {
     }
 
     pub fn go(&mut self, to: Route, cx: &mut Context<Self>) {
+        if to != Route::Review {
+            if let Some(p) = self.review.as_mut().and_then(|r| r.player.as_mut()) {
+                p.pause();
+            }
+        }
         self.route = to;
         if matches!(to, Route::Market | Route::Automations) && self.market.packs.is_none() {
             self.load_market(cx);
@@ -467,6 +476,9 @@ impl Workspace {
     /// The settings window, at a section.
     pub fn open_settings(&mut self, at: Section, cx: &mut Context<Self>) {
         self.settings_open = Some(at);
+        if at == Section::About {
+            self.check_latest(cx);
+        }
         if at == Section::Usage {
             self.usage = Some(crate::app::usage::read(&self.past));
         }
@@ -510,6 +522,22 @@ impl Workspace {
         .detach();
     }
 
+    /// The newest release on GitHub, for About.
+    pub fn check_latest(&mut self, cx: &mut Context<Self>) {
+        if matches!(self.latest, Some(Ok(_))) {
+            return;
+        }
+        self.latest = None;
+        cx.spawn(async move |this, cx| {
+            let t = cx.background_executor().spawn(async { crate::update::latest() }).await;
+            let _ = this.update(cx, |this, cx| {
+                this.latest = Some(t);
+                cx.notify();
+            });
+        })
+        .detach();
+    }
+
     /// `edits doctor`, for About.
     pub fn check(&mut self, cx: &mut Context<Self>) {
         self.doctor = Some("Checking...".into());
@@ -532,12 +560,29 @@ impl Workspace {
                 this.add_note(window, cx);
             }
         }));
-        self.review = Some(Review { clip: clip.clone(), sheet: None, at: 0, spot: None, notes: vec![], note, general });
+        self.review = Some(Review { clip: clip.clone(), sheet: None, at: 0, spot: None, notes: vec![], note, general, player: None });
         self.route = Route::Review;
+        let c = clip.clone();
+        cx.spawn(async move |this, cx| {
+            let p = cx.background_executor().spawn(async move { crate::app::player::Player::open(&c, 0.0) }).await;
+            let _ = this.update(cx, |this, cx| {
+                if let Some(r) = this.review.as_mut().filter(|r| r.clip == p.clip) {
+                    r.player = Some(p);
+                }
+                cx.notify();
+            });
+        })
+        .detach();
         cx.spawn(async move |this, cx| {
             let sheet = cx.background_executor().spawn(async move { runs::sheet(&clip) }).await;
             let _ = this.update(cx, |this, cx| {
                 if let Some(r) = this.review.as_mut() {
+                    // the sheet knows the length too, should the player's probe not
+                    if let (Some(p), Ok(sh)) = (r.player.as_mut(), &sheet) {
+                        if p.total <= 0.0 {
+                            p.total = sh.total;
+                        }
+                    }
                     r.sheet = Some(sheet);
                 }
                 cx.notify();
@@ -571,6 +616,19 @@ impl Render for Workspace {
                 }
             }))
             .on_action(cx.listener(|this, _: &crate::app::ToggleSidebar, _, cx| this.toggle_sidebar(cx)))
+            // t3code's search shortcut: the search of the page in view, else the edits' in the sidebar
+            .on_action(cx.listener(|this, _: &crate::app::Search, window, cx| {
+                let s = match this.route {
+                    Route::Market | Route::Automations => this.market_search.clone(),
+                    Route::Library => this.library_search.clone(),
+                    _ => {
+                        this.sidebar_open = true;
+                        this.thread_search.clone()
+                    }
+                };
+                s.update(cx, |s, cx| s.focus(window, cx));
+                cx.notify();
+            }))
             .when(!self.review_only, |d| d.child(self.sidebar(cx)))
             .child(div().flex_1().min_w_0().h_full().flex().flex_col().child(main))
             .children(pack)

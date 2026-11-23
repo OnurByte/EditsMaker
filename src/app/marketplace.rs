@@ -18,6 +18,22 @@ fn runs_something(kinds: &[String]) -> bool {
     kinds.iter().any(|k| k == "automation" || k == "source")
 }
 
+/// A pack's cover standing still: a GIF's first frame. It moves only in the pack's own sheet.
+fn still(p: &Pack) -> Option<Img> {
+    let gif = crate::packs::built_in_gif(&p.id).map(|g| g.to_vec())
+        .or_else(|| p.preview_file.as_ref().filter(|f| f.extension().is_some_and(|e| e.eq_ignore_ascii_case("gif"))).and_then(|f| std::fs::read(f).ok()));
+    let Some(gif) = gif else { return picture(p) };
+    icons::picture(&format!("{}:still", p.id), || Some((ImageFormat::Png, first_frame(&gif)?)))
+}
+
+/// A GIF's first frame as a PNG.
+pub fn first_frame(gif: &[u8]) -> Option<Vec<u8>> {
+    let img = image::load_from_memory_with_format(gif, image::ImageFormat::Gif).ok()?;
+    let mut out = std::io::Cursor::new(vec![]);
+    img.write_to(&mut out, image::ImageFormat::Png).ok()?;
+    Some(out.into_inner())
+}
+
 fn picture(p: &Pack) -> Option<Img> {
     icons::picture(&p.id, || {
         // a built-in pack's moving cover
@@ -88,7 +104,7 @@ impl Workspace {
                 cx.notify();
             }))
             .child(div().w_full().h(px(144.)).rounded(px(10.)).overflow_hidden().bg(b.hair).relative()
-                .children(picture(p).map(|img| img.size_full().object_fit(ObjectFit::Cover)))
+                .children(still(p).map(|img| img.size_full().object_fit(ObjectFit::Cover)))
                 .when(!p.enabled, |d| d.child(div().absolute().top(px(8.)).right(px(8.)).px(px(8.)).h(px(22.)).flex().items_center().rounded(px(11.)).bg(black().opacity(0.6)).child(text("Off", 11., BOLD, white())))))
             .child(text(p.name.clone(), 15., BOLD, b.ink).px(px(4.)).truncate())
             .child(text(format!("{count} · {origin}"), 12., FontWeight::NORMAL, b.gray).px(px(4.)).truncate())
@@ -160,7 +176,7 @@ impl Workspace {
                 .child(text(title, 24., BOLD, b.ink))
                 .child(text(about, 14., LIGHT, b.gray))
                 .child(div().pt(px(8.)).flex().flex_wrap().gap(px(8.))
-                    .child(Input::new(&self.market_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).cleanable(true).w(px(320.)))
+                    .child(Input::new(&self.market_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).suffix(crate::app::sidebar::shortcut(b)).cleanable(true).w(px(320.)))
                     .when(!automations, |d| d.child(pill("make-pack", Some(Icon::Package), "Make one from a video", false, b)
                         .on_click(cx.listener(|this, _, window, cx| this.make_pack(window, cx)))))))
     }
@@ -337,6 +353,13 @@ impl Workspace {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_gif_stands_still_on_its_card() {
+        let gif = crate::packs::built_in_gif("edits.stardust").expect("stardust has a moving cover");
+        let png = super::first_frame(gif).expect("its first frame");
+        assert!(png.starts_with(b"\x89PNG"));
+    }
+
     #[test]
     fn search_reaches_into_styles_and_topics() {
         let packs: Vec<super::Pack> = serde_json::from_value(crate::packs_json()).unwrap();

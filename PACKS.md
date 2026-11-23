@@ -156,8 +156,9 @@ edits follow football --post tiktok # as posts come: RSS in, video made, posted 
 ```
 
 `edits packs make DIR --opml FILE` turns any RSS reader's export into a feed pack. The built-in ones (`edits.rss-*`)
-come from [awesome-rss-feeds](https://github.com/plenaryapp/awesome-rss-feeds) (CC0), and `edits.rss-turkiye` from
-Anadolu Ajansı, TRT Haber and BBC Türkçe.
+and `edits.world` (25 countries) come from [awesome-rss-feeds](https://github.com/plenaryapp/awesome-rss-feeds) (CC0);
+`turkiye` from Anadolu Ajansı, TRT Haber and BBC Türkçe; `edits.clubs` from Fotomaç, NTV Spor and the clubs' fan blogs;
+`edits.rss-anime` from Anime News Network, MyAnimeList, Anime Corner, Otaku USA and Crunchyroll.
 
 ## Sources
 

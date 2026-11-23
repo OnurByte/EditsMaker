@@ -56,6 +56,9 @@ pub struct Prefs {
     /// Discord shows "Playing EditsMaker" and what is being made; on unless turned off
     #[serde(default = "on")]
     pub discord: bool,
+    /// the mode was picked in Appearance; until then Omarchy's computers follow Omarchy, the rest the system
+    #[serde(default)]
+    pub mode_picked: bool,
 }
 
 fn red() -> String {
@@ -68,7 +71,7 @@ fn on() -> bool {
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { mode: "system".into(), width: "normal".into(), font_size: 15., accent: red(), onboarded: false, discord: true }
+        Prefs { mode: "system".into(), width: "normal".into(), font_size: 15., accent: red(), onboarded: false, discord: true, mode_picked: false }
     }
 }
 
@@ -77,7 +80,11 @@ fn prefs_file() -> PathBuf {
 }
 
 pub fn prefs() -> Prefs {
-    std::fs::read_to_string(prefs_file()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+    let mut p: Prefs = std::fs::read_to_string(prefs_file()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+    if !p.mode_picked && omarchy_dir().is_some() {
+        p.mode = "omarchy".into();
+    }
+    p
 }
 
 pub fn save(p: &Prefs, window: &mut Window, cx: &mut App) {
@@ -117,6 +124,24 @@ fn omarchy() -> Option<(Brand, bool)> {
         ink: c("foreground")?, gray: c("muted").or(c("dark_foreground"))?, red_text: c("red")?, accent: c("accent").or(c("blue"))? }, dark))
 }
 
+/// Omarchy's theme as brand colours, for its card in Appearance.
+pub fn omarchy_brand() -> Option<Brand> {
+    omarchy().map(|x| x.0)
+}
+
+pub fn is_dark(cx: &App) -> bool {
+    Theme::global(cx).is_dark()
+}
+
+/// EditsMaker's own colours, dark or light, with an accent.
+pub fn palette(dark: bool, accent: Hsla) -> Brand {
+    if dark {
+        Brand { page: hex(0x0D1117), card: hex(0x161B22), hair: hex(0x30363D), ink: hex(0xF4F1EA), gray: hex(0x9A958A), red_text: hex(0xF25247), accent }
+    } else {
+        Brand { page: hex(0xFFFFFF), card: hex(0xF6F4EF), hair: hex(0xE4E0D7), ink: hex(0x0B0B0C), gray: hex(0x6F6A60), red_text: hex(0xC8261E), accent }
+    }
+}
+
 pub fn brand(cx: &App) -> Brand {
     let p = prefs();
     if p.mode == "omarchy" {
@@ -124,12 +149,7 @@ pub fn brand(cx: &App) -> Brand {
             return b;
         }
     }
-    let accent = hex_of(&p.accent);
-    if Theme::global(cx).is_dark() {
-        Brand { page: hex(0x0D1117), card: hex(0x161B22), hair: hex(0x30363D), ink: hex(0xF4F1EA), gray: hex(0x9A958A), red_text: hex(0xF25247), accent }
-    } else {
-        Brand { page: hex(0xFFFFFF), card: hex(0xF6F4EF), hair: hex(0xE4E0D7), ink: hex(0x0B0B0C), gray: hex(0x6F6A60), red_text: hex(0xC8261E), accent }
-    }
+    palette(Theme::global(cx).is_dark(), hex_of(&p.accent))
 }
 
 /// Helvetica, or the stand-in each system has.

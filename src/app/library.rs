@@ -1,5 +1,5 @@
-//! The library: every clip edits made, newest first, as cards (its contact sheet when there is one), each to play,
-//! review, find in its folder or share with the system's share sheet. The sidebar's Library opens it.
+//! The library: every clip edits made, newest first, as cards (its contact sheet when there is one), each opened in
+//! the editor (review), played in the system's player, find in its folder or share with the system's share sheet. The sidebar's Library opens it.
 use crate::app::icons::{icon, illustration, Icon};
 use crate::app::runs;
 use crate::app::theme::{brand, Brand, BOLD, HEADER, LIGHT};
@@ -35,7 +35,8 @@ impl Workspace {
         let name = it.clip.file_stem().unwrap_or_default().to_string_lossy().into_owned();
         let hover = b.hair;
         div().id(("clip", i)).w(px(208.)).flex().flex_col().gap(px(8.)).p(px(8.)).rounded(px(14.)).bg(b.card).cursor_pointer().hover(move |s| s.bg(hover))
-            .on_click(move |_, _, cx| cx.open_with_system(&play))
+            // opened in the editor, as t3code opens a thread: its frames, its shots, notes for the next cut
+            .on_click(cx.listener(move |this, _, window, cx| this.open_review(review.clone(), window, cx)))
             .child(div().w_full().h(px(148.)).rounded(px(10.)).overflow_hidden().bg(b.hair).flex().items_center().justify_center()
                 .child(match pic {
                     Some(img) => img.size_full().object_fit(ObjectFit::Cover).into_any_element(),
@@ -45,11 +46,11 @@ impl Workspace {
                 .child(text(name, 14., BOLD, b.ink).truncate())
                 .child(text(format!("{} · {}", it.subject, it.age), 12., FontWeight::NORMAL, b.gray).truncate()))
             .child(div().flex().gap(px(2.))
-                .child(icon_button(("lib-review", i), Icon::Eye, b).tooltip(|w, cx| gpui_kit::component::tooltip::Tooltip::new("Review").build(w, cx))
-                    .on_click(cx.listener(move |this, _, window, cx| {
+                .child(icon_button(("lib-play", i), Icon::Play, b).tooltip(|w, cx| gpui_kit::component::tooltip::Tooltip::new("Open in your player").build(w, cx))
+                    .on_click(move |_, _, cx| {
                         cx.stop_propagation();
-                        this.open_review(review.clone(), window, cx);
-                    })))
+                        cx.open_with_system(&play);
+                    }))
                 .child(icon_button(("lib-show", i), Icon::Folder, b).tooltip(|w, cx| gpui_kit::component::tooltip::Tooltip::new("Show in folder").build(w, cx))
                     .on_click(move |_, _, cx| {
                         cx.stop_propagation();
@@ -82,7 +83,7 @@ impl Workspace {
                 .child(icon(Icon::Library, b.gray).size(px(16.)))
                 .child(text("Library", 14., BOLD, b.ink))
                 .child(text(if n == 1 { "1 clip".into() } else { format!("{n} clips") }, 13., FontWeight::NORMAL, b.gray).flex_1())
-                .child(div().w(px(260.)).child(Input::new(&self.library_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).cleanable(true)))
+                .child(div().w(px(260.)).child(Input::new(&self.library_search).prefix(icon(Icon::Search, b.gray).size(px(14.))).suffix(crate::app::sidebar::shortcut(&b)).cleanable(true)))
                 .child(icon_button("lib-folder", Icon::Folder, &b).on_click(move |_, _, cx| cx.open_with_system(&out))))
             .child(div().id("library").flex_1().min_h_0().overflow_y_scroll()
                 .child(div().w_full().max_w(px(1120.)).mx_auto().p(px(24.)).flex().flex_col().gap(px(16.)).child(body)))

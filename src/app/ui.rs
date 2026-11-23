@@ -51,10 +51,17 @@ pub fn tag(label: &str, b: &Brand) -> Div {
         .child(text(label.to_string(), 12., crate::app::theme::BOLD, c))
 }
 
-/// A modal sheet over the window: a dimmed backdrop that closes it, and the card in the middle.
+/// What lies under a modal: the page frosted over (GPUI draws no backdrop blur, so the page's own colour veils it and
+/// a dark tint pushes it back), taking every click and scroll so nothing behind moves. A click on it closes the modal.
+pub fn backdrop(id: impl Into<SharedString>, b: &Brand) -> Stateful<Div> {
+    div().id(ElementId::Name(id.into())).absolute().inset_0().occlude().bg(b.page.opacity(0.72))
+        .child(div().size_full().bg(black().opacity(0.28)))
+}
+
+/// A modal sheet over the window: a frosted backdrop that closes it, and the card in the middle.
 pub fn sheet(id: &'static str, width: f32, b: &Brand, close: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> (Stateful<Div>, Stateful<Div>) {
-    let backdrop = div().id(SharedString::from(format!("{id}-backdrop"))).absolute().inset_0().bg(black().opacity(0.45)).on_click(close);
-    let card = div().id(id).relative().w(px(width)).max_w(relative(0.94)).max_h(relative(0.9)).flex().flex_col().rounded(CARD).bg(b.card).overflow_y_scroll()
+    let backdrop = backdrop(format!("{id}-backdrop"), b).on_click(close);
+    let card = div().id(id).relative().occlude().shadow_2xl().w(px(width)).max_w(relative(0.94)).max_h(relative(0.9)).flex().flex_col().rounded(CARD).bg(b.card).overflow_y_scroll()
         .on_click(|_, _, cx| cx.stop_propagation());
     (backdrop, card)
 }
