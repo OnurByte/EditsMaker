@@ -31,6 +31,7 @@ mod presets;
 mod render;
 mod review;
 mod rss;
+mod scene;
 mod shazam;
 mod social;
 mod source;
@@ -817,8 +818,9 @@ fn settings() -> Result<(), String> {
 pub fn settings_json() -> serde_json::Value {
     let c = ai::choice();
     let accounts: Vec<serde_json::Value> = social::all().iter().map(|a| serde_json::json!({"name": a.name, "platform": a.platform, "user": a.user})).collect();
-    let sites: Vec<String> = packs::all().iter().filter(|p| packs::trusted(p)).filter_map(|p| p.manifest.automation.as_ref().map(|a| a.site.clone())).collect();
+    let sites: Vec<String> = packs::all().iter().filter(|p| packs::trusted(p)).flat_map(|p| p.automations().into_iter().map(|a| a.0.site)).collect();
     serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "ai": {"provider": c.provider, "model": c.model, "endpoint": c.endpoint, "about": ai::describe(), "ready": ai::ready()},
+        "access": c.access,
         "providers": ai::providers(), "encoder": util::encoder_choice(), "encoders": util::ENCODERS, "updates": update::auto_on(), "out": out_base(),
         "accounts": accounts, "sites": sites})
 }
@@ -829,15 +831,19 @@ pub fn packs_json() -> serde_json::Value {
     serde_json::Value::Array(packs::every().iter().map(|p| {
         let m = &p.manifest;
         let built_in = m.id.starts_with("edits.");
-        let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok());
+        let presets: Vec<preset::Preset> = p.all_presets().iter().filter_map(|t| serde_json::from_str(t).ok()).collect();
+        let preset = presets.first();
         let file = m.preview.as_ref().map(|f| packs::dir().join(&m.id).join(f)).filter(|f| !built_in && f.is_file());
         serde_json::json!({"id": m.id, "name": m.name, "version": m.version, "author": m.author, "description": m.description,
             "kinds": m.kinds, "tags": m.tags, "trusted": packs::trusted(p),
-            "site": m.automation.as_ref().map(|a| &a.site), "preset": preset.as_ref().map(|p| &p.name), "feeds": m.feeds,
+            "site": p.automations().first().map(|a| a.0.site.clone()), "sites": p.automations().iter().map(|a| a.0.site.clone()).collect::<Vec<_>>(), "preset": preset.map(|p| &p.name), "feeds": m.feeds,
+            "presets": presets.iter().map(|p| serde_json::json!({"name": p.name, "about": p.about})).collect::<Vec<_>>(),
+            "topics": m.topics.iter().map(|t| serde_json::json!({"key": t.key, "name": t.name, "feeds": t.feeds})).collect::<Vec<_>>(),
+            "scene": m.scene.is_some(), "from": std::fs::read_to_string(packs::dir().join(&m.id).join(".from")).ok().map(|f| f.trim().to_string()),
             "enabled": !off.contains(&m.id), "origin": packs::origin(&m.id).name(), "source": m.source.is_some(),
             // when it came here, for "newest first": the folder's time for an added pack
             "added": std::fs::metadata(packs::dir().join(&m.id)).and_then(|x| x.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_secs()),
-            "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset.as_ref())) } else { None }})
+            "previewFile": file, "previewSvg": if file.is_none() { Some(packs::preview(m, preset)) } else { None }})
     }).collect())
 }
 
@@ -1834,7 +1840,7 @@ fn make_music(c: &Cli, cache: &Path, lap: &dyn Fn(&str)) -> Result<(), String> {
 
 /// (name, SKILL.md) of every pack with a skill: the built-in ones, then the added ones.
 fn skill_list() -> Vec<(String, String)> {
-    packs::all().into_iter().filter_map(|p| Some((p.skill_name()?.to_string(), p.skill?))).collect()
+    packs::all().into_iter().flat_map(|p| p.all_skills()).collect()
 }
 
 /// Skill packs from other projects, fetched from GitHub when asked for instead of built in: the binary stays small and
@@ -1992,10 +1998,11 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             let p = packs::add(what)?;
             let m = &p.manifest;
             println!("added {} {} ({}) in {}", m.id, m.version, kinds(&m.kinds), packs::dir().join(&m.id).display());
-            if let Some(preset) = p.preset.as_deref().and_then(|t| serde_json::from_str::<preset::Preset>(t).ok()) {
+            for preset in p.all_presets().iter().filter_map(|t| serde_json::from_str::<preset::Preset>(t).ok()) {
                 println!("  its preset: --preset {}", preset.name);
             }
-            if let (Some(name), Some(text)) = (p.skill_name(), p.skill.as_deref()) {
+            for (name, text) in p.all_skills() {
+                let (name, text) = (name.as_str(), text.as_str());
                 // a skill is instructions an agent follows: say so, and where it went
                 for dir in &skill_dirs(None) {
                     std::fs::create_dir_all(dir.join(name)).map_err(|e| e.to_string())?;
@@ -2013,7 +2020,8 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
         (Some(w @ ("on" | "off")), Some(id)) => {
             let p = packs::enable(id, w == "on")?;
             // an off pack's skill leaves the agents' skill folders; on, it comes back
-            if let (Some(name), Some(text)) = (p.skill_name(), p.skill.as_deref()) {
+            for (name, text) in p.all_skills() {
+                let (name, text) = (name.as_str(), text.as_str());
                 for dir in &skill_dirs(None) {
                     if w == "on" {
                         std::fs::create_dir_all(dir.join(name)).map_err(|e| e.to_string())?;
@@ -2027,6 +2035,11 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
             Ok(())
         }
         (Some("set"), Some(id)) => packs::set(id, &args[2..]).map(|v| println!("{id}: {}", serde_json::Value::Object(v))),
+        (Some("export"), Some(id)) => {
+            let to = words.get(2).map(|w| std::path::PathBuf::from(w.as_str()));
+            println!("{}", packs::export(id, to.as_deref())?.display());
+            Ok(())
+        }
         (Some("share"), Some(id)) => {
             let (tgz, url) = packs::share(id)?;
             println!("{}\nattach it to the issue: {url}", tgz.display());
@@ -2034,9 +2047,9 @@ community packs: edits packs browse; added ones live in {}", packs::dir().displa
         }
         (Some("remove" | "delete"), Some(id)) => {
             let p = packs::remove(id)?;
-            if let Some(name) = p.skill_name() {
+            for (name, _) in p.all_skills() {
                 for dir in &skill_dirs(None) {
-                    let _ = std::fs::remove_dir_all(dir.join(name));
+                    let _ = std::fs::remove_dir_all(dir.join(&name));
                 }
             }
             println!("removed {id}");

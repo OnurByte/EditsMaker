@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.post",
+  "name": "Post for you",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Signs in to TikTok, Instagram and YouTube once, each in a window of its own, and posts your edits from your own accounts. Your password stays with the site.",
+  "kinds": [
+    "skill",
+    "automation"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "post",
+    "tiktok",
+    "instagram",
+    "youtube"
+  ],
+  "sites": [
+    {
+      "site": "tiktok",
+      "login": "https://www.tiktok.com/login",
+      "page": "https://www.tiktok.com/tiktokstudio/upload",
+      "cookie": "sessionid",
+      "domain": "tiktok.com"
+    },
+    {
+      "site": "instagram",
+      "login": "https://www.instagram.com/accounts/login/",
+      "page": "https://www.instagram.com/",
+      "cookie": "sessionid",
+      "domain": "instagram.com"
+    },
+    {
+      "site": "youtube",
+      "login": "https://studio.youtube.com",
+      "page": "https://studio.youtube.com",
+      "cookie": "SAPISID",
+      "domain": "google.com"
+    }
+  ]
+}

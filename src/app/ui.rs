@@ -40,3 +40,21 @@ pub fn badge(s: &str, b: &Brand) -> Div {
 pub fn card(b: &Brand) -> Div {
     div().flex().flex_col().bg(b.card).rounded(CARD).p(px(16.))
 }
+
+/// A tag as a word on its own colour, never "#word": the same tag is always the same colour, so they are told
+/// apart at a glance.
+pub fn tag(label: &str, b: &Brand) -> Div {
+    const COLOURS: &[u32] = &[0xE5332A, 0x3B6FF5, 0x2EA043, 0x8B5CF6, 0xF28C28, 0x0EA5A4, 0xDB2777, 0xCA8A04, 0x6366F1, 0x059669];
+    let c: Hsla = rgb(COLOURS[crate::util::crc32(label.as_bytes()) as usize % COLOURS.len()]).into();
+    let _ = b;
+    div().h(px(24.)).px(px(10.)).flex().flex_none().items_center().rounded(px(12.)).bg(c.opacity(0.14))
+        .child(text(label.to_string(), 12., crate::app::theme::BOLD, c))
+}
+
+/// A modal sheet over the window: a dimmed backdrop that closes it, and the card in the middle.
+pub fn sheet(id: &'static str, width: f32, b: &Brand, close: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> (Stateful<Div>, Stateful<Div>) {
+    let backdrop = div().id(SharedString::from(format!("{id}-backdrop"))).absolute().inset_0().bg(black().opacity(0.45)).on_click(close);
+    let card = div().id(id).relative().w(px(width)).max_w(relative(0.94)).max_h(relative(0.9)).flex().flex_col().rounded(CARD).bg(b.card).overflow_y_scroll()
+        .on_click(|_, _, cx| cx.stop_propagation());
+    (backdrop, card)
+}

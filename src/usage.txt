@@ -49,7 +49,7 @@ USAGE
   edits skills [install]       agent skills for every command
   edits skills catalog | add SET [SKILL...]   skill sets from other projects (Remotion, YouTube research), fetched from GitHub
   edits packs                  the packs here: presets, agent skills and automations, each with a manifest.json and a picture
-  edits packs browse           the marketplace (packs.json); edits packs add ID|GITHUB-LINK, edits packs remove ID;
+  edits packs browse           the marketplace (packs.json); edits packs add ID|GITHUB-LINK|GIT-URL|FILE.tgz|FOLDER, edits packs remove ID;
                                --json on edits packs and browse for programs (the app)
   edits packs trust ID         let an added automation run (it posts from your signed-in account: read it first)
   edits packs create <video> [--name N] [--like A,B] [--length S]   a new pack from a video: its rhythm, moves borrowed
@@ -61,6 +61,7 @@ USAGE
   edits packs on|off ID        turn a pack off (its preset, skill, feeds, program unused) or on; built-in ones too
   edits packs remove ID        delete a pack made here or added; built-in ones are only turned off
   edits packs share ID         a pack made here, packed up, and a GitHub issue to send it to the marketplace
+  edits packs export ID [FILE] any pack as a .tgz (built in too) to keep or send; edits packs add FILE.tgz takes it back
   edits packs set ID KEY=VALUE a pack's settings (a source's search, say)
   edits rss <pack|feed> [--list|--json] [--feed NAME|all] [-n N] [edit options]   videos from RSS: each new post's
                                headline searched for footage and put on screen, in the pack's look (edits packs lists

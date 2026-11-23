@@ -1,0 +1,1202 @@
+{
+  "name": "strobe-rave",
+  "about": "Club strobe: a flicker on every other shot, zoom pulses, flashes on the hardest beats.",
+  "w": 1080,
+  "h": 1920,
+  "total": 11.3,
+  "song": null,
+  "look": "neon",
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 0.4,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 0.4,
+      "end": 0.8,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 0.8,
+      "end": 1.2,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 1.2,
+      "end": 1.6,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 1.6,
+      "end": 2.0,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 2.0,
+      "end": 2.4,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 2.4,
+      "end": 2.8,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 2.8,
+      "end": 3.2,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 3.2,
+      "end": 3.5,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 3.5,
+      "end": 3.8,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 3.8,
+      "end": 4.1,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 4.1,
+      "end": 4.4,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 4.4,
+      "end": 4.7,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 4.7,
+      "end": 5.0,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 5.0,
+      "end": 5.3,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 5.3,
+      "end": 5.6,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true,
+      "drop": true
+    },
+    {
+      "start": 5.6,
+      "end": 5.9,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 5.9,
+      "end": 6.2,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 6.2,
+      "end": 6.5,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 6.5,
+      "end": 6.8,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 6.8,
+      "end": 7.25,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 7.25,
+      "end": 7.7,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 7.7,
+      "end": 8.15,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 8.15,
+      "end": 8.6,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 8.6,
+      "end": 9.05,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 9.05,
+      "end": 9.5,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 9.5,
+      "end": 9.95,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 9.95,
+      "end": 10.4,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": true,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 10.4,
+      "end": 10.85,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 0.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    },
+    {
+      "start": 10.85,
+      "end": 11.3,
+      "speed": 1.6,
+      "zoom": [
+        [
+          0,
+          1.18,
+          "linear"
+        ],
+        [
+          0.4,
+          1.0,
+          "out 3"
+        ]
+      ],
+      "shake": [
+        [
+          0,
+          0.02,
+          "linear"
+        ],
+        [
+          1,
+          0.0,
+          "out 2"
+        ]
+      ],
+      "shake_hz": 11.0,
+      "strobe": 8.0,
+      "rgb": false,
+      "contrast": 1.25,
+      "saturation": 1.3,
+      "motion_blur": true
+    }
+  ],
+  "flashes": [
+    {
+      "start": 0.0,
+      "end": 0.12,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 1.6,
+      "end": 1.72,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 3.2,
+      "end": 3.32,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 4.4,
+      "end": 4.52,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 5.6,
+      "end": 5.72,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 6.8,
+      "end": 6.92,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 8.6,
+      "end": 8.72,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    },
+    {
+      "start": 10.4,
+      "end": 10.52,
+      "color": "ffffff",
+      "opacity": [
+        [
+          0,
+          0.85,
+          "linear"
+        ],
+        [
+          1,
+          0,
+          "out 3"
+        ]
+      ]
+    }
+  ]
+}

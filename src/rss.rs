@@ -66,15 +66,23 @@ pub fn opml(xml: &str) -> Result<(Option<String>, Vec<Feed>), String> {
     Ok((group, feeds))
 }
 
-/// A pack's feeds and its preset, by its id or the NAME of edits.rss-NAME; or a feed's own address.
+/// A topic's feeds (football), or a pack's by its id, and its preset; or a feed's own address.
 pub fn resolve(what: &str) -> Result<(Vec<Feed>, Option<String>), String> {
     if what.starts_with("https://") || what.starts_with("http://") {
         return Ok((vec![Feed { name: what.into(), url: what.into() }], None));
     }
     let want = what.to_lowercase();
+    // a topic of a many-topic pack, by its short name: football, or news/football
+    let key = want.rsplit('/').next().unwrap_or(&want).trim_start_matches("edits.").trim_start_matches("rss-").to_string();
+    for p in packs::all() {
+        if let Some(t) = p.manifest.topics.iter().find(|t| t.key == key) {
+            let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<crate::preset::Preset>(t).ok()).map(|p| p.name);
+            return Ok((t.feeds.clone(), preset));
+        }
+    }
     let names = [want.clone(), format!("edits.rss-{want}"), format!("edits.{want}")];
     let p = packs::all().into_iter().find(|p| !p.manifest.feeds.is_empty() && names.contains(&p.manifest.id))
-        .ok_or(format!("no feed pack \"{what}\": edits packs lists them (the RSS ones say feed), or give a feed's address"))?;
+        .ok_or(format!("no feed pack or topic \"{what}\": edits packs lists them (the RSS ones say feed), or give a feed's address"))?;
     let preset = p.preset.as_deref().and_then(|t| serde_json::from_str::<crate::preset::Preset>(t).ok()).map(|p| p.name);
     Ok((p.manifest.feeds, preset))
 }
@@ -202,7 +210,8 @@ mod tests {
     fn packs_are_found_by_their_short_name() {
         let (feeds, _) = resolve("turkiye").unwrap();
         assert!(feeds.iter().any(|f| f.name == "BBC Türkçe"));
-        assert_eq!(resolve("edits.rss-football").unwrap().0, resolve("football").unwrap().0);
+        assert_eq!(resolve("edits.rss-football").unwrap().0, resolve("football").unwrap().0, "an old pack id still finds its topic");
+        assert_eq!(resolve("news/space").unwrap().0, resolve("space").unwrap().0);
         assert!(resolve("akis-whip").is_err(), "a preset pack has no feeds");
         assert_eq!(resolve("https://x/rss").unwrap().0[0].url, "https://x/rss");
     }

@@ -339,3 +339,33 @@ mod tests {
         assert!(t.len() == 5 && t.as_bytes()[2] == b'.', "{t}");
     }
 }
+
+/// Base64 (the standard alphabet or the URL one, padded or not) as bytes; anything else in it is skipped.
+pub fn base64_decode(s: &str) -> Vec<u8> {
+    let (mut acc, mut n, mut out) = (0u32, 0u32, Vec::with_capacity(s.len() * 3 / 4));
+    for c in s.bytes() {
+        let v = match c {
+            b'A'..=b'Z' => c - b'A',
+            b'a'..=b'z' => c - b'a' + 26,
+            b'0'..=b'9' => c - b'0' + 52,
+            b'-' | b'+' => 62,
+            b'_' | b'/' => 63,
+            _ => continue,
+        };
+        (acc, n) = ((acc << 6) | v as u32, n + 6);
+        if n >= 8 {
+            n -= 8;
+            out.push((acc >> n) as u8);
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod base64_tests {
+    #[test]
+    fn decodes_both_alphabets() {
+        assert_eq!(super::base64_decode("aGk/Pz8="), b"hi???");
+        assert_eq!(super::base64_decode("aGk_Pz8"), b"hi???");
+    }
+}

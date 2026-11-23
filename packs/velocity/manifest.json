@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.velocity",
+  "name": "Velocity & colour split",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Speed that rushes in and slows at the peak, colour split on the snares. Phonk, drift and car edits.",
+  "kinds": [
+    "preset",
+    "skill"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "slow",
+    "medium",
+    "fast",
+    "9:16",
+    "1:1",
+    "blur",
+    "flash",
+    "rgb",
+    "shake",
+    "slide",
+    "velocity",
+    "zoom"
+  ]
+}

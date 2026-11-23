@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
-<rect width="640" height="360" rx="24" fill="hsl(285,45%,11%)"/>
-<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(285,70%,64%)">RSS</text>
-<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">iOS Development</text>
-<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">iOS Development from 15 feeds, Alberto De Bortoli, Augmented</text>
-<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Code, Benoit Pasquier: videos from their newest posts.</text>
-<text x="32" y="336" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="hsl(285,70%,64%)">Alberto De Bortoli  ·  Augmented Code  ·  Benoit Pasquier  +12 more</text>
-</svg>

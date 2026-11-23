@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.blur-reveal",
+  "name": "Blur & reveal",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "Motion blur, speed ramps and slow reveals: the shot hides, then hits. For the moment a face turns round.",
+  "kinds": [
+    "preset",
+    "skill"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "slow",
+    "medium",
+    "fast",
+    "9:16",
+    "4:5",
+    "blur",
+    "flash",
+    "rgb",
+    "shake",
+    "slide",
+    "velocity",
+    "zoom"
+  ]
+}

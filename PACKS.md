@@ -11,9 +11,13 @@ sad-rain/
   manifest.json   what the pack is (always)
   SKILL.md        what an AI agent does with it (always)         (kind "skill")
   preset.json     an edit's shape: shots, moves, flashes, look   (kind "preset")
+  presets/*.json  a family of them, each found by its own name    (kind "preset")
+  skills/*.md     more agent skills, each with its own name       (kind "skill")
+  sites/SITE.js   more automations, one per site in "sites"       (kind "automation")
   automation.js   a script that does a job on one website        (kind "automation")
                   RSS feeds, in manifest.json                    (kind "feed")
   source.sh       a program that finds things to make            (kind "source")
+  scene.js        a 3D scene drawn with three.js, laid over edits (kind "scene")
   preview.gif     its cover: .gif, .svg, .png, .jpg, .jpeg or .webp, any size
 ```
 
@@ -65,6 +69,8 @@ pack's folder, and removing it removes all of it.
 | `automation` | for an automation | Where its script runs; see below. |
 | `source` | for a source | Its program; see below. |
 | `settings` | no | What the person can change, Omarchy's schema: `[{"key": "query", "label": "Search for", "default": "rust"}]`. `edits packs set ID query=gaming`. |
+| `topics` | for a feed pack of many topics | `[{"key": "football", "name": "Football", "feeds": [...]}]`: each found by its key (`edits rss football`). |
+| `scene` | for a 3D scene | `{"seconds": 6, "fps": 30}`: how long it plays and how smoothly. |
 | `feeds` | for a feed pack | Its RSS or Atom feeds, `[{"name": "BBC Türkçe", "url": "https://feeds.bbci.co.uk/turkce/rss.xml"}]`; see below. |
 
 Fields are camelCase. Unknown fields are ignored, so a newer pack still opens in an older `edits`.
@@ -108,8 +114,9 @@ that do more than the skill says. Skills are read before a pack is listed.
 
 ## automation.js
 
-A job on one website, done from the person's own signed-in account: posting a clip, for now. The `edits.post-tiktok`,
-`edits.post-youtube` and `edits.post-instagram` packs are the examples.
+A job on one website, done from the person's own signed-in account: posting a clip, for now. The built-in `edits.post`
+pack is the example: one pack for TikTok, YouTube and Instagram, each site's block in `"sites"` and its script in
+`sites/SITE.js`, each still running only on its own site's pages.
 
 ```json
 "automation": {
@@ -210,3 +217,17 @@ Then anyone finds it in the marketplace (the app, or `edits packs browse`) and a
 A folder in [`packs/`](packs) named after the pack, id `edits.<folder>`, author `edits` or the original maker. Then
 `edits packs make packs/NAME --id edits.NAME`, `edits packs gallery packs` and `cargo test`: every shipped pack must pass
 this page's checks and have a picture. Only add presets you made or may share.
+
+## A 3D scene
+
+`scene.js` is one function: `(THREE, scene, camera, opts) => (t) => { ... }`. It fills the scene once (three.js is
+handed to it, `opts` holds `width` and `height`) and returns what moves it to `t` seconds for each frame. edits draws
+it with a transparent background and lays it over an edit: `edits <link> --overlay ID`. It runs alone, in a browser
+of its own with no window, a throwaway profile and nothing of the person's; one from someone else runs only after
+`edits packs trust ID`. `packs/stardust` is one.
+
+## Sharing a pack as a file
+
+`edits packs export ID [FILE]` packs any pack (built in too) into a `.tgz`; `edits packs add FILE.tgz` (or a folder,
+or any git repository: `edits packs add https://codeberg.org/you/pack.git`) brings it in, checked like any other.
+The app has Share (the system's share sheet), Export and Import on every pack.

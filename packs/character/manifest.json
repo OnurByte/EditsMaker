@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "edits.character",
+  "name": "Character",
+  "version": "2.0.0",
+  "author": "EditsMaker",
+  "description": "A character's edit: the build, the held face, the drop of punch cuts, the still end.",
+  "kinds": [
+    "preset",
+    "skill"
+  ],
+  "preview": "preview.gif",
+  "tags": [
+    "medium",
+    "9:16",
+    "1:1",
+    "flash",
+    "rgb",
+    "shake",
+    "zoom"
+  ]
+}

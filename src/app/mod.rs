@@ -3,7 +3,9 @@
 //! or `settings` opens there. Long jobs run as `edits` itself beside it, so their output streams and stays apart.
 mod chat_view;
 mod composer;
+mod discord;
 mod flows;
+mod library;
 mod icons;
 mod marketplace;
 mod review;
@@ -12,13 +14,14 @@ pub mod settings;
 mod sidebar;
 mod theme;
 mod ui;
+mod usage;
 mod welcome;
 mod workspace;
 
 use gpui_kit::*;
 use std::path::PathBuf;
 
-actions!(edits, [Quit]);
+actions!(edits, [Quit, ToggleSidebar]);
 
 /// gpui-kit's own icons, and the Lucide ones the app adds.
 struct AppAssets;
@@ -53,13 +56,14 @@ pub fn run(args: &[String]) {
         FreeConsole();
     }
     let review = args.iter().position(|a| a == "--review").and_then(|i| args.get(i + 1)).map(PathBuf::from);
-    let start = [("market", workspace::Route::Market), ("automations", workspace::Route::Automations)]
+    let start = [("market", workspace::Route::Market), ("automations", workspace::Route::Automations), ("library", workspace::Route::Library)]
         .into_iter().find(|(f, _)| args.iter().any(|a| a.trim_start_matches('-') == *f)).map(|x| x.1);
     // settings, or settings ai|accounts|agents|appearance|about: the settings window, there
     let settings = args.iter().position(|a| a.trim_start_matches('-') == "settings").map(|i| match args.get(i + 1).map(String::as_str) {
         Some("ai") => workspace::Section::Ai,
         Some("accounts") => workspace::Section::Accounts,
         Some("agents") => workspace::Section::Agents,
+        Some("usage") => workspace::Section::Usage,
         Some("appearance") => workspace::Section::Appearance,
         Some("about") => workspace::Section::About,
         _ => workspace::Section::General,
@@ -69,7 +73,8 @@ pub fn run(args: &[String]) {
         gpui_kit::init(cx);
         // Windows posts system notifications under the app's identity
         cx.set_app_identity("io.github.onurbyte.edits", "EditsMaker");
-        cx.bind_keys([KeyBinding::new(if cfg!(target_os = "macos") { "cmd-q" } else { "ctrl-q" }, Quit, None)]);
+        let (q, b) = if cfg!(target_os = "macos") { ("cmd-q", "cmd-b") } else { ("ctrl-q", "ctrl-b") };
+        cx.bind_keys([KeyBinding::new(q, Quit, None), KeyBinding::new(b, ToggleSidebar, None)]);
         cx.on_action(|_: &Quit, cx| cx.quit());
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {
@@ -88,6 +93,8 @@ pub fn run(args: &[String]) {
             let mut w = workspace::Workspace::new(review, window, cx);
             if let Some(to) = start {
                 w.go(to, cx);
+                // market PACK-ID: that pack's sheet, open
+                w.market.open = args_.iter().find(|a| a.contains('.') && !a.starts_with('-')).cloned();
             }
             if let Some(at) = settings {
                 w.open_settings(at, cx);

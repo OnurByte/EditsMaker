@@ -1,0 +1,231 @@
+{
+  "name": "fade-anilar",
+  "about": "Memories: slow motion, warm light, every shot fading in from black.",
+  "w": 1080,
+  "h": 1920,
+  "total": 17.0,
+  "song": null,
+  "look": "warm",
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 3.0,
+      "speed": 0.6,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.08,
+          "inout 2"
+        ]
+      ],
+      "y": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "fade_in": 0.6,
+      "fade_out": 0.6,
+      "glow": 0.35,
+      "kelvin": 4200.0,
+      "leak": 0.0,
+      "grain": 0.15,
+      "letterbox": 0.5
+    },
+    {
+      "start": 3.0,
+      "end": 5.6,
+      "speed": 0.6,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.08,
+          "inout 2"
+        ]
+      ],
+      "y": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "fade_in": 0.6,
+      "fade_out": 0.6,
+      "glow": 0.35,
+      "kelvin": 4200.0,
+      "leak": 0.3,
+      "grain": 0.15,
+      "letterbox": 0.5
+    },
+    {
+      "start": 5.6,
+      "end": 8.2,
+      "speed": 0.6,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.08,
+          "inout 2"
+        ]
+      ],
+      "y": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "fade_in": 0.6,
+      "fade_out": 0.6,
+      "glow": 0.35,
+      "kelvin": 4200.0,
+      "leak": 0.0,
+      "grain": 0.15,
+      "letterbox": 0.5
+    },
+    {
+      "start": 8.2,
+      "end": 11.2,
+      "speed": 0.6,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.08,
+          "inout 2"
+        ]
+      ],
+      "y": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "fade_in": 0.6,
+      "fade_out": 0.6,
+      "glow": 0.35,
+      "kelvin": 4200.0,
+      "leak": 0.3,
+      "grain": 0.15,
+      "letterbox": 0.5,
+      "drop": true
+    },
+    {
+      "start": 11.2,
+      "end": 13.8,
+      "speed": 0.6,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.08,
+          "inout 2"
+        ]
+      ],
+      "y": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "fade_in": 0.6,
+      "fade_out": 0.6,
+      "glow": 0.35,
+      "kelvin": 4200.0,
+      "leak": 0.0,
+      "grain": 0.15,
+      "letterbox": 0.5
+    },
+    {
+      "start": 13.8,
+      "end": 17.0,
+      "speed": 0.6,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.08,
+          "inout 2"
+        ]
+      ],
+      "y": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "fade_in": 0.6,
+      "fade_out": 0.6,
+      "glow": 0.35,
+      "kelvin": 4200.0,
+      "leak": 0.3,
+      "grain": 0.15,
+      "letterbox": 0.5
+    }
+  ],
+  "flashes": []
+}

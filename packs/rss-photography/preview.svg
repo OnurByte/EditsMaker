@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
-<rect width="640" height="360" rx="24" fill="hsl(330,45%,11%)"/>
-<text x="32" y="48" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="hsl(330,70%,64%)">RSS</text>
-<text x="32" y="94" font-family="Inter, Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#fff">Photography</text>
-<text x="32" y="130" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Photography from 8 feeds, 500px, Digital Photography School,</text>
-<text x="32" y="154" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#fff" fill-opacity="0.72">Light Stalking: videos from their newest posts.</text>
-<text x="32" y="336" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="hsl(330,70%,64%)">500px  ·  Digital Photography Scho  ·  Light Stalking  +5 more</text>
-</svg>

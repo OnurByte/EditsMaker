@@ -1,0 +1,275 @@
+{
+  "name": "yavas-duygusal",
+  "about": "Slow long shots with a soft drift, fading from and to dark.",
+  "w": 1080,
+  "h": 1080,
+  "total": 23.4,
+  "song": null,
+  "look": "faded",
+  "intensity": 1.0,
+  "fit_beats": true,
+  "shots": [
+    {
+      "start": 0.0,
+      "end": 3.2,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "exposure": [
+        [
+          0,
+          -1.0,
+          "linear"
+        ],
+        [
+          0.4,
+          0.0,
+          "out 2"
+        ]
+      ]
+    },
+    {
+      "start": 3.2,
+      "end": 6.0,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ]
+    },
+    {
+      "start": 6.0,
+      "end": 9.0,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          0.015,
+          "inout 2"
+        ]
+      ]
+    },
+    {
+      "start": 9.0,
+      "end": 11.4,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          0.015,
+          "inout 2"
+        ]
+      ]
+    },
+    {
+      "start": 11.4,
+      "end": 14.0,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ]
+    },
+    {
+      "start": 14.0,
+      "end": 16.8,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ]
+    },
+    {
+      "start": 16.8,
+      "end": 19.4,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          0.015,
+          "inout 2"
+        ]
+      ]
+    },
+    {
+      "start": 19.4,
+      "end": 23.4,
+      "speed": 0.85,
+      "zoom": [
+        [
+          0,
+          1.0,
+          "linear"
+        ],
+        [
+          1,
+          1.07,
+          "inout 2"
+        ]
+      ],
+      "x": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -0.015,
+          "inout 2"
+        ]
+      ],
+      "exposure": [
+        [
+          0,
+          0.0,
+          "linear"
+        ],
+        [
+          0.6,
+          0.0,
+          "linear"
+        ],
+        [
+          1,
+          -1.0,
+          "in 2"
+        ]
+      ]
+    }
+  ],
+  "flashes": []
+}

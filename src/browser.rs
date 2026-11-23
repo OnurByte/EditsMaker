@@ -37,6 +37,15 @@ pub struct Browser {
 impl Browser {
     /// Opens a window on `url` with `profile` as its own data folder, connected to its first tab.
     pub fn open(profile: &Path, url: &str) -> Result<Browser, String> {
+        Self::launch(profile, url, false)
+    }
+
+    /// The same with no window: for drawing a 3D scene, never for a sign-in.
+    pub fn headless(profile: &Path) -> Result<Browser, String> {
+        Self::launch(profile, "about:blank", true)
+    }
+
+    fn launch(profile: &Path, url: &str, headless: bool) -> Result<Browser, String> {
         let exe = find().ok_or("no Chrome, Chromium, Edge or Brave found; install one to connect this account")?;
         std::fs::create_dir_all(profile).map_err(|e| e.to_string())?;
         let marker = profile.join("DevToolsActivePort");
@@ -44,7 +53,10 @@ impl Browser {
         let child = Command::new(exe)
             .arg(format!("--user-data-dir={}", profile.display()))
             // the debugging port makes navigator.webdriver true, which Google's sign-in refuses as "not secure"
-            .args(["--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-blink-features=AutomationControlled", url])
+            .args(["--remote-debugging-port=0", "--no-first-run", "--no-default-browser-check", "--disable-blink-features=AutomationControlled"])
+            // WebGL with no screen: the browser's own software renderer
+            .args(if headless { &["--headless=new", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--hide-scrollbars"][..] } else { &[][..] })
+            .arg(url)
             .stdout(Stdio::null()).stderr(Stdio::null()).spawn().map_err(|e| format!("the browser did not start: {e}"))?;
         let mut b = Browser { child, port: 0, page: Ws(None) };
         for _ in 0..200 {
@@ -143,9 +155,26 @@ fn http_get(port: u16, path: &str) -> Result<String, String> {
     let mut s = TcpStream::connect(("127.0.0.1", port)).map_err(|e| e.to_string())?;
     s.set_read_timeout(Some(Duration::from_secs(5))).ok();
     s.write_all(format!("GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n").as_bytes()).map_err(|e| e.to_string())?;
-    let mut out = String::new();
-    s.read_to_string(&mut out).map_err(|e| e.to_string())?;
-    Ok(out.split_once("\r\n\r\n").map_or("", |(_, b)| b).to_string())
+    // a headless browser keeps the connection open: read the body by its length, not to the end
+    let (mut buf, mut chunk) = (Vec::new(), [0u8; 8192]);
+    loop {
+        let n = s.read(&mut chunk).map_err(|e| e.to_string())?;
+        buf.extend_from_slice(&chunk[..n]);
+        if let Some(body) = http_body(&buf) {
+            return Ok(body);
+        }
+        if n == 0 {
+            return Ok(String::from_utf8_lossy(&buf).split_once("\r\n\r\n").map_or("", |(_, b)| b).to_string());
+        }
+    }
+}
+
+/// The body of an HTTP response read so far, once all of it (by its Content-Length) is there.
+fn http_body(buf: &[u8]) -> Option<String> {
+    let text = String::from_utf8_lossy(buf);
+    let (head, body) = text.split_once("\r\n\r\n")?;
+    let len: usize = head.lines().find_map(|l| l.split_once(':').filter(|(k, _)| k.eq_ignore_ascii_case("content-length")).and_then(|(_, v)| v.trim().parse().ok()))?;
+    (body.len() >= len).then(|| body[..len].to_string())
 }
 
 /// A WebSocket to the browser: text frames out (masked, as a client must), text frames in.
@@ -239,6 +268,15 @@ fn frame(p: &[u8]) -> Vec<u8> {
     f.extend(key);
     f.extend(p.iter().enumerate().map(|(i, b)| b ^ key[i % 4]));
     f
+}
+
+#[cfg(test)]
+mod http_tests {
+    #[test]
+    fn a_body_is_read_by_its_length() {
+        assert_eq!(super::http_body(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n[]"), Some("[]".into()));
+        assert_eq!(super::http_body(b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n[]"), None, "not all there yet");
+    }
 }
 
 #[cfg(test)]

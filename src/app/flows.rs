@@ -23,7 +23,8 @@ impl Workspace {
     /// What a flow's source is called: its RSS pack's feed, else its address.
     fn source_name(&self, source: &str) -> String {
         let packs = self.market.packs.as_ref().and_then(|p| p.as_ref().ok());
-        packs.into_iter().flatten().find_map(|p| p.feeds.iter().find(|f| f.url == source).map(|f| format!("{} · {}", p.name, f.name)))
+        packs.into_iter().flatten().find_map(|p| p.topics.iter().find(|t| t.key == source).map(|t| format!("{} · {}", p.name, t.name))
+            .or_else(|| p.feeds.iter().chain(p.topics.iter().flat_map(|t| &t.feeds)).find(|f| f.url == source).map(|f| format!("{} · {}", p.name, f.name))))
             .unwrap_or_else(|| source.trim_start_matches("https://").trim_start_matches("www.").to_string())
     }
 

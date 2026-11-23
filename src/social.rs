@@ -54,16 +54,16 @@ pub fn pick(names: &str) -> Result<Vec<Account>, String> {
     Ok(out)
 }
 
-/// The automation pack that signs in and posts on `platform` (packs/post-*, or an added one the person trusted):
+/// The automation pack that signs in and posts on `platform` (packs/post, or an added one the person trusted):
 /// (sign-in page, page to post from, cookie that says signed in, its domain, the page script).
 fn site(platform: &str) -> Result<(String, String, String, String, String), String> {
-    let p = crate::packs::all().into_iter().find(|p| p.manifest.automation.as_ref().is_some_and(|a| a.site == platform))
+    let p = crate::packs::all().into_iter().find(|p| p.automations().iter().any(|a| a.0.site == platform))
         .ok_or(format!("nothing posts to {platform}: edits connect {}, or an automation pack from edits packs browse", PLATFORMS.join("|")))?;
     if !crate::packs::trusted(&p) {
         let id = &p.manifest.id;
-        return Err(format!("{id} runs in your signed-in {platform}: read {} first, then edits packs trust {id}", crate::packs::dir().join(id).join("automation.js").display()));
+        return Err(format!("{id} runs in your signed-in {platform}: read what it runs in {} first, then edits packs trust {id}", crate::packs::dir().join(id).display()));
     }
-    let (a, js) = (p.manifest.automation.unwrap_or_else(|| unreachable!()), p.automation.unwrap_or_default());
+    let (a, js) = p.automations().into_iter().find(|a| a.0.site == platform).unwrap_or_else(|| unreachable!());
     Ok((a.login, a.page, a.cookie, a.domain, js))
 }
 
@@ -81,19 +81,11 @@ pub fn connect(args: &[String]) -> Result<(), String> {
     let acc = match platform {
         "bluesky" => {
             let handle = args.get(1).ok_or("usage: edits connect bluesky HANDLE   (then paste an app password from bsky.app/settings/app-passwords)")?;
-            let secret = read_secret("Bluesky app password (not your main password): ")?;
-            let s = bsky_login(handle, &secret)?;
-            Account { name: format!("bluesky-{}", s.handle), platform: platform.into(), id: s.did, user: s.handle, secret }
+            token_account(platform, handle, &read_secret("Bluesky app password (not your main password): ")?)?
         }
         "facebook" => {
             let page = args.get(1).ok_or("usage: edits connect facebook PAGE_ID   (then paste a Page access token with pages_manage_posts)")?;
-            let secret = read_secret("Facebook Page access token: ")?;
-            let v = curl_json(&[("url", &format!("{GRAPH}/{}", page.trim())), ("data-urlencode", "fields=id,name"), ("data-urlencode", &format!("access_token={}", secret.trim())), ("get", "")])?;
-            if v["id"].as_str() != Some(page.trim()) {
-                return Err("the token does not belong to that Page".into());
-            }
-            let user = v["name"].as_str().unwrap_or(page).to_string();
-            Account { name: format!("facebook-{}", crate::fetch::safe(&user)), platform: platform.into(), id: page.trim().into(), user, secret: secret.trim().into() }
+            token_account(platform, page, &read_secret("Facebook Page access token: ")?)?
         }
         p => {
             let (login, home_url, cookie, domain, js) = site(p)?;
@@ -135,6 +127,41 @@ pub fn connect(args: &[String]) -> Result<(), String> {
     println!("connected {} ({}) as {}", acc.platform, acc.user, acc.name);
     list.push(acc);
     save(&list)
+}
+
+/// A Bluesky account (handle, app password) or a Facebook Page (its id, a Page token), checked with the site.
+fn token_account(platform: &str, who: &str, secret: &str) -> Result<Account, String> {
+    match platform {
+        "bluesky" => {
+            let s = bsky_login(who.trim(), secret.trim())?;
+            Ok(Account { name: format!("bluesky-{}", s.handle), platform: platform.into(), id: s.did, user: s.handle, secret: secret.trim().into() })
+        }
+        "facebook" => {
+            let page = who.trim();
+            let v = curl_json(&[("url", &format!("{GRAPH}/{page}")), ("data-urlencode", "fields=id,name"), ("data-urlencode", &format!("access_token={}", secret.trim())), ("get", "")])?;
+            if v["id"].as_str() != Some(page) {
+                return Err("the token does not belong to that Page".into());
+            }
+            let user = v["name"].as_str().unwrap_or(page).to_string();
+            Ok(Account { name: format!("facebook-{}", crate::fetch::safe(&user)), platform: platform.into(), id: page.into(), user, secret: secret.trim().into() })
+        }
+        p => Err(format!("{p} signs in in a window of its own, not with a token")),
+    }
+}
+
+/// The app's sign-in for the sites that take a token: checked, then kept like `edits connect` keeps it.
+#[cfg(feature = "app")]
+pub fn connect_token(platform: &str, who: &str, secret: &str) -> Result<String, String> {
+    if who.trim().is_empty() || secret.trim().is_empty() {
+        return Err(if platform == "bluesky" { "your handle and an app password".into() } else { "the Page's id and its access token".into() });
+    }
+    let acc = token_account(platform, who, secret)?;
+    let said = format!("connected {} as {}", acc.platform, acc.user);
+    let mut list = all();
+    list.retain(|a| a.name != acc.name);
+    list.push(acc);
+    save(&list)?;
+    Ok(said)
 }
 
 /// `edits accounts`

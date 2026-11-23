@@ -10,7 +10,10 @@ fn built_in_files() -> Vec<(String, String)> {
     let data = crate::packs::DATA_FILES.iter().map(|(n, t)| (n.to_string(), t.to_string()));
     // a built-in pack that is turned off brings no preset
     let off = crate::packs::disabled();
-    data.chain(crate::packs::BUILT_IN_PACKS.iter().filter(|(d, ..)| !off.contains(&format!("edits.{d}"))).filter_map(|(d, _, p, _, _)| Some((format!("{d}.json"), (*p)?.to_string())))).collect()
+    let packs = crate::packs::BUILT_IN_PACKS.iter().filter(|(d, ..)| !off.contains(&format!("edits.{d}")));
+    // a family's presets come one by one, each under its pack's folder
+    data.chain(packs.flat_map(|(d, _, p, _, _, _, family, ..)| p.iter().map(move |p| (format!("{d}.json"), p.to_string()))
+        .chain(family.iter().enumerate().map(move |(i, t)| (format!("{d}-{i}.json"), t.to_string()))))).collect()
 }
 
 pub fn user_dir() -> PathBuf {
@@ -20,7 +23,9 @@ pub fn user_dir() -> PathBuf {
 /// (file name, contents) of every preset file: built in first, then the added packs', then saved ones over them.
 fn files() -> Vec<(String, String)> {
     let mut all = built_in_files();
-    all.extend(crate::packs::all().into_iter().filter(|p| !p.manifest.id.starts_with("edits.")).filter_map(|p| Some((format!("{}/preset.json", p.manifest.id), p.preset?))));
+    for p in crate::packs::all().into_iter().filter(|p| !p.manifest.id.starts_with("edits.")) {
+        all.extend(p.all_presets().into_iter().enumerate().map(|(i, t)| (format!("{}/{i}.json", p.manifest.id), t.to_string())));
+    }
     let mut saved: Vec<PathBuf> = std::fs::read_dir(user_dir()).map(|d| d.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "json")).collect()).unwrap_or_default();
     saved.sort();
     for p in saved {
@@ -41,7 +46,7 @@ pub fn revision(p: &Preset) -> String {
 
 /// The preset as a pack brings it (built in or added), under your saved one.
 fn built_in(name: &str) -> Option<Preset> {
-    let added = crate::packs::all().into_iter().filter(|p| !p.manifest.id.starts_with("edits.")).filter_map(|p| p.preset);
+    let added = crate::packs::all().into_iter().filter(|p| !p.manifest.id.starts_with("edits.")).flat_map(|p| p.all_presets().into_iter().map(String::from).collect::<Vec<_>>());
     built_in_files().into_iter().map(|f| f.1).chain(added).filter_map(|t| serde_json::from_str::<Preset>(&t).ok()).rfind(|b| b.name == name)
 }
 

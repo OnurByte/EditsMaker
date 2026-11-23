@@ -5,7 +5,8 @@ use gpui_kit::component::Icon as Glyph;
 use gpui_kit::{img, Hsla, Image, ImageFormat, Img, Rgba, Styled};
 use std::sync::{Arc, LazyLock};
 
-gpui_kit::assets::icon_assets!(pub Extra, [Trash, Rss, Film, Package, Download, Share2, Zap, Store, SquarePen, SlidersHorizontal, KeyRound, Sparkles]);
+gpui_kit::assets::icon_assets!(pub Extra, [Trash, Rss, Film, Package, Download, Share2, Zap, Store, SquarePen, SlidersHorizontal, KeyRound, Brain, Library, PanelLeft,
+    Upload, FileDown, GitBranch, ExternalLink, Gauge, Box, ChevronDown, LockOpen, Lock, Check]);
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Icon {
@@ -20,7 +21,8 @@ pub enum Icon {
     Eye,
     Plus,
     Attach,
-    Sparkles,
+    /// AI: a brain, not sparkles
+    Brain,
     User,
     Terminal,
     Info,
@@ -38,6 +40,18 @@ pub enum Icon {
     Palette,
     Sliders,
     Github,
+    Library,
+    PanelLeft,
+    Import,
+    Export,
+    Git,
+    External,
+    Usage,
+    Cube,
+    ChevronDown,
+    Lock,
+    Unlock,
+    Check,
 }
 
 fn name(i: Icon) -> IconName {
@@ -53,7 +67,7 @@ fn name(i: Icon) -> IconName {
         Icon::Eye => IconName::Eye,
         Icon::Plus => IconName::SquarePen,
         Icon::Attach => IconName::Plus,
-        Icon::Sparkles => IconName::Sparkles,
+        Icon::Brain => IconName::Brain,
         Icon::User => IconName::User,
         Icon::Terminal => IconName::SquareTerminal,
         Icon::Info => IconName::Info,
@@ -71,6 +85,18 @@ fn name(i: Icon) -> IconName {
         Icon::Palette => IconName::Palette,
         Icon::Sliders => IconName::SlidersHorizontal,
         Icon::Github => IconName::Github,
+        Icon::Library => IconName::Library,
+        Icon::PanelLeft => IconName::PanelLeft,
+        Icon::Import => IconName::Upload,
+        Icon::Export => IconName::FileDown,
+        Icon::Git => IconName::GitBranch,
+        Icon::External => IconName::ExternalLink,
+        Icon::Usage => IconName::Gauge,
+        Icon::Cube => IconName::Box,
+        Icon::ChevronDown => IconName::ChevronDown,
+        Icon::Lock => IconName::Lock,
+        Icon::Unlock => IconName::LockOpen,
+        Icon::Check => IconName::Check,
     }
 }
 
@@ -142,6 +168,42 @@ pub fn logo(name: &str, color: Hsla, page: Hsla) -> Option<Img> {
         }
         Some((ImageFormat::Svg, s.into_bytes()))
     })
+}
+
+/// A micro illustration (assets/illustrations): flat, pastel, outlined, one for each kind of thing and each step of
+/// the welcome.
+pub fn illustration(name: &str) -> Img {
+    macro_rules! art {
+        ($($f:literal),*) => {
+            match name { $($f => include_str!(concat!("../../assets/illustrations/", $f, ".svg")),)* _ => include_str!("../../assets/illustrations/styles.svg") }
+        };
+    }
+    let src = art!("styles", "topics", "automations", "skills", "scene", "library", "search", "community", "hello", "brain", "agents", "accounts", "folder", "ready");
+    // on a dark page the pale backdrop would turn muddy: it is drawn whole, as a sticker
+    let dark = ILLUSTRATIONS_DARK.load(std::sync::atomic::Ordering::Relaxed);
+    picture(&format!("art:{name}:{dark}"), || {
+        let mut s = src.to_string();
+        if dark {
+            for o in [".35", ".4", ".45", ".5", ".55"] {
+                s = s.replace(&format!("fill-opacity=\"{o}\" stroke=\"none\""), "fill-opacity=\".92\" stroke=\"none\"");
+            }
+        }
+        Some((ImageFormat::Svg, s.into_bytes()))
+    }).expect("an illustration always draws")
+}
+
+/// Whether the page is dark, for the illustrations; theme::apply sets it.
+pub static ILLUSTRATIONS_DARK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[cfg(test)]
+mod art_tests {
+    #[test]
+    fn every_illustration_has_a_backdrop_to_swap() {
+        for f in std::fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/illustrations")).unwrap().flatten() {
+            let s = std::fs::read_to_string(f.path()).unwrap();
+            assert!(s.starts_with("<svg") && s.contains("stroke=\"none\"/>"), "{:?}", f.path());
+        }
+    }
 }
 
 /// A pack's cover (its preview SVG, or its own file), read once.

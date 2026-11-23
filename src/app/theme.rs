@@ -53,15 +53,22 @@ pub struct Prefs {
     /// the welcome page was seen
     #[serde(default)]
     pub onboarded: bool,
+    /// Discord shows "Playing EditsMaker" and what is being made; on unless turned off
+    #[serde(default = "on")]
+    pub discord: bool,
 }
 
 fn red() -> String {
     "#E5332A".into()
 }
 
+fn on() -> bool {
+    true
+}
+
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { mode: "system".into(), width: "normal".into(), font_size: 15., accent: red(), onboarded: false }
+        Prefs { mode: "system".into(), width: "normal".into(), font_size: 15., accent: red(), onboarded: false, discord: true }
     }
 }
 
@@ -150,6 +157,7 @@ pub fn apply(window: Option<&mut Window>, cx: &mut App) {
         _ => Theme::sync_system_appearance(window, cx),
     }
     let b = brand(cx);
+    crate::app::icons::ILLUSTRATIONS_DARK.store(Theme::global(cx).is_dark(), std::sync::atomic::Ordering::Relaxed);
     let t = Theme::global_mut(cx);
     t.font_family = FONT.into();
     t.font_size = px(p.font_size);

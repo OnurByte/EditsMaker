@@ -14,10 +14,12 @@ license = "MIT"
 # cargo build --release --no-default-features
 [features]
 default = ["app"]
-app = ["dep:gpui-kit"]
+app = ["dep:gpui-kit", "dep:kael_share"]
 
 [dependencies]
 gpui-kit = { version = "0.10.0", optional = true }
+# the system's own share sheet (macOS, Windows; mail on Linux), for Share on a clip or a pack; 0.4 pins a wasm-bindgen GPUI cannot share
+kael_share = { version = "=0.3.0", optional = true }
 regex = "1"
 resvg = { version = "0.45.1", default-features = false, features = ["text", "system-fonts", "raster-images"] }
 libloading = "0.8"

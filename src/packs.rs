@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 include!(concat!(env!("OUT_DIR"), "/built_in.rs"));
 
 /// The files a pack is made of, beside its programs and its cover.
-const PACK_FILES: &[&str] = &["manifest.json", "preset.json", "SKILL.md", "automation.js"];
+const PACK_FILES: &[&str] = &["manifest.json", "preset.json", "SKILL.md", "automation.js", "scene.js"];
 
 /// The community list `edits packs browse` reads: a pull request adding a line to packs.json is how a pack is listed.
 const REGISTRY: &str = "https://raw.githubusercontent.com/OnurByte/EditsMaker/main/packs.json";
@@ -41,6 +41,15 @@ pub struct Manifest {
     /// for a feed pack: the RSS or Atom feeds `edits rss` and `edits follow` read, first one by default
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub feeds: Vec<Feed>,
+    /// for an automation on more than one site: each site's block, its script in sites/SITE.js
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sites: Vec<Automation>,
+    /// for a feed pack of many topics: each by its short name (`edits rss football`), with its own feeds
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub topics: Vec<Topic>,
+    /// for a 3D scene (scene.js, three.js): how long it plays and how smoothly, laid over an edit as `--overlay ID`
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scene: Option<Scene>,
     /// for a source: the program edits runs, on its own, for new things to make (source.rs)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<Source>,
@@ -72,6 +81,24 @@ pub struct Setting {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Topic {
+    pub key: String,
+    pub name: String,
+    pub feeds: Vec<Feed>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Scene {
+    pub seconds: f64,
+    #[serde(default = "fps")]
+    pub fps: u32,
+}
+
+fn fps() -> u32 {
+    30
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Feed {
     pub name: String,
     pub url: String,
@@ -96,13 +123,33 @@ pub struct Pack {
     pub preset: Option<String>,
     pub skill: Option<String>,
     pub automation: Option<String>,
+    /// a family's presets (presets/*.json), beside or instead of preset.json
+    pub presets: Vec<String>,
+    /// a 3D scene's script (scene.js)
+    pub scene: Option<String>,
+    /// more agent skills (skills/*.md), each with its own name
+    pub skills: Vec<String>,
+    /// more sites' scripts (sites/SITE.js), by site
+    pub site_js: Vec<(String, String)>,
 }
 
 impl Pack {
-    /// The skill's own name (its folder in an agent's skills), from the SKILL.md front matter.
-    pub fn skill_name(&self) -> Option<&str> {
-        self.skill.as_deref().and_then(skill_name)
+    /// Every preset it carries, as text: preset.json, then the family's.
+    pub fn all_presets(&self) -> Vec<&str> {
+        self.preset.iter().chain(&self.presets).map(String::as_str).collect()
     }
+
+    /// Every site it automates, with its script: its automation.js, then sites/SITE.js.
+    pub fn automations(&self) -> Vec<(Automation, String)> {
+        let first = self.manifest.automation.clone().zip(self.automation.clone());
+        first.into_iter().chain(self.manifest.sites.iter().filter_map(|a| Some((a.clone(), self.site_js.iter().find(|x| x.0 == a.site)?.1.clone())))).collect()
+    }
+
+    /// Every skill it carries, (name, SKILL.md): its SKILL.md, then skills/*.md.
+    pub fn all_skills(&self) -> Vec<(String, String)> {
+        self.skill.iter().chain(&self.skills).filter_map(|t| Some((skill_name(t)?.to_string(), t.clone()))).collect()
+    }
+
 }
 
 /// A field of SKILL.md's front matter.
@@ -153,8 +200,8 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, automation: Op
             return Err(format!("{id}: kinds says {:?} but {file} is {}", m.kinds, if there { "there" } else { "missing" }));
         }
     }
-    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation", "feed", "source"].contains(&k.as_str())) {
-        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", \"feed\", \"source\", not {:?}", m.kinds));
+    if m.kinds.is_empty() || m.kinds.iter().any(|k| !["preset", "skill", "automation", "feed", "source", "scene"].contains(&k.as_str())) {
+        return Err(format!("{id}: kinds is some of \"preset\", \"skill\", \"automation\", \"feed\", \"source\", \"scene\", not {:?}", m.kinds));
     }
     if m.kinds.iter().any(|k| k == "source") != m.source.is_some() {
         return Err(format!("{id}: kinds and the \"source\" block disagree"));
@@ -172,22 +219,18 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, automation: Op
     if skill.is_none() {
         return Err(format!("{id}: every pack carries a SKILL.md (edits packs make drafts one)"));
     }
-    if m.kinds.iter().any(|k| k == "feed") != !m.feeds.is_empty() {
+    if m.kinds.iter().any(|k| k == "feed") != (!m.feeds.is_empty() || !m.topics.is_empty()) {
         return Err(format!("{id}: kinds says {:?} but it has {} feeds", m.kinds, m.feeds.len()));
     }
+    if m.topics.iter().any(|t| !valid_id(&t.key) || t.name.trim().is_empty() || t.feeds.is_empty()) {
+        return Err(format!("{id}: each topic has a key (lowercase), a name and feeds"));
+    }
     // a feed is only read, so plain http is fine too
-    if let Some(f) = m.feeds.iter().find(|f| f.name.trim().is_empty() || site_of(&f.url.replacen("http://", "https://", 1)).is_none()) {
+    if let Some(f) = m.feeds.iter().chain(m.topics.iter().flat_map(|t| &t.feeds)).find(|f| f.name.trim().is_empty() || site_of(&f.url.replacen("http://", "https://", 1)).is_none()) {
         return Err(format!("{id}: feed \"{}\" needs a name and an http(s):// address", f.name));
     }
     if let Some(js) = automation {
-        let a = m.automation.as_ref().ok_or(format!("{id}: an automation needs an \"automation\" block in manifest.json (PACKS.md)"))?;
-        if !valid_id(&a.site) || site_of(&a.page).is_none() || site_of(&a.page) != site_of(&a.login) || a.cookie.trim().is_empty() || a.domain.trim().is_empty() {
-            return Err(format!("{id}: automation needs a site name, a cookie and its domain, and its login and page as https pages of one site (PACKS.md)"));
-        }
-        let code: String = js.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
-        if !(code.trim_start().starts_with("async (p) => {") && code.trim_end().ends_with('}')) {
-            return Err(format!("{id}: automation.js is one function, async (p) => {{ ... }}"));
-        }
+        check_site(id, m.automation.as_ref().ok_or(format!("{id}: an automation needs an \"automation\" block in manifest.json (PACKS.md)"))?, js)?;
     }
     if let Some(p) = preset {
         let p: Preset = serde_json::from_str(p).map_err(|e| format!("{id}: preset.json is not a preset: {e}"))?;
@@ -204,11 +247,85 @@ fn check(m: &Manifest, preset: Option<&str>, skill: Option<&str>, automation: Op
     Ok(())
 }
 
+/// An automation's site and its script: one site's pages only, one function.
+fn check_site(id: &str, a: &Automation, js: &str) -> Result<(), String> {
+    if !valid_id(&a.site) || site_of(&a.page).is_none() || site_of(&a.page) != site_of(&a.login) || a.cookie.trim().is_empty() || a.domain.trim().is_empty() {
+        return Err(format!("{id}: automation needs a site name, a cookie and its domain, and its login and page as https pages of one site (PACKS.md)"));
+    }
+    let code: String = js.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
+    if !(code.trim_start().starts_with("async (p) => {") && code.trim_end().ends_with('}')) {
+        return Err(format!("{id}: an automation's script is one function, async (p) => {{ ... }}"));
+    }
+    Ok(())
+}
+
+/// A whole pack checked: its files as the manifest says, a family's presets and a scene too.
+fn check_pack(p: &Pack, built_in: bool) -> Result<(), String> {
+    let m = &p.manifest;
+    // a pack of sites stands in its first site for the one automation check() knows
+    let (mut m1, mut js) = (m.clone(), p.automation.clone());
+    if m1.automation.is_none() {
+        if let Some((a, j)) = p.automations().into_iter().next() {
+            (m1.automation, js) = (Some(a), Some(j));
+        }
+    }
+    check(&m1, p.preset.as_deref().or(p.presets.first().map(String::as_str)), p.skill.as_deref(), js.as_deref(), built_in)?;
+    for a in &m.sites {
+        let j = p.site_js.iter().find(|x| x.0 == a.site).ok_or(format!("{}: site {} has no sites/{}.js", m.id, a.site, a.site))?;
+        check_site(&m.id, a, &j.1)?;
+    }
+    for (i, t) in p.presets.iter().enumerate() {
+        let x: Preset = serde_json::from_str(t).map_err(|e| format!("{}: presets/ file {} is not a preset: {e}", m.id, i + 1))?;
+        if x.slots.is_empty() {
+            return Err(format!("{}: preset {} has no shots", m.id, x.name));
+        }
+    }
+    if m.kinds.iter().any(|k| k == "scene") != (p.scene.is_some() && m.scene.is_some()) {
+        return Err(format!("{}: a scene needs \"scene\" in kinds, a \"scene\" block ({{\"seconds\": 4}}) and scene.js", m.id));
+    }
+    if let Some(i) = p.skills.iter().position(|t| skill_name(t).is_none()) {
+        return Err(format!("{}: skills/ file {} needs front matter with a name: line", m.id, i + 1));
+    }
+    if m.scene.as_ref().is_some_and(|x| !(0.5..=30.0).contains(&x.seconds) || !(1..=60).contains(&x.fps)) {
+        return Err(format!("{}: a scene lasts 0.5 to 30 seconds, at 1 to 60 fps", m.id));
+    }
+    Ok(())
+}
+
+/// A built-in pack's moving cover (preview.gif), when it has one.
+#[cfg(any(feature = "app", test))]
+pub fn built_in_gif(id: &str) -> Option<&'static [u8]> {
+    BUILT_IN_PACKS.iter().find(|b| id.strip_prefix("edits.") == Some(b.0)).and_then(|b| b.9)
+}
+
 pub fn built_in() -> Vec<Pack> {
-    BUILT_IN_PACKS.iter().filter_map(|(d, m, p, s, a)| {
+    BUILT_IN_PACKS.iter().filter_map(|(d, m, p, s, a, sc, family, skills, sites, _)| {
         let manifest: Manifest = serde_json::from_str(m).map_err(|e| eprintln!("edits: pack {d}: {e}")).ok()?;
-        Some(Pack { manifest, preset: p.map(String::from), skill: s.map(String::from), automation: a.map(String::from) })
+        Some(Pack { manifest, preset: p.map(String::from), skill: s.map(String::from), automation: a.map(String::from), scene: sc.map(String::from), presets: family.iter().map(|t| t.to_string()).collect(), skills: skills.iter().map(|t| t.to_string()).collect(), site_js: sites.iter().map(|(a, b)| (a.to_string(), b.to_string())).collect() })
     }).collect()
+}
+
+/// A family's presets in a pack folder, by name.
+fn family(d: &Path) -> Vec<PathBuf> {
+    files_in(&d.join("presets"), "json")
+}
+
+/// sites/SITE.js in a pack folder, as (site, script).
+fn site_scripts(d: &Path) -> Vec<(String, String)> {
+    files_in(&d.join("sites"), "js").iter().filter_map(|f| Some((f.file_stem()?.to_string_lossy().into_owned(), std::fs::read_to_string(f).ok()?))).collect()
+}
+
+/// A folder's plain files with one extension, by name.
+fn files_in(d: &Path, ext: &str) -> Vec<PathBuf> {
+    let mut v: Vec<PathBuf> = std::fs::read_dir(d).map(|r| r.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == ext) && p.is_file()).collect()).unwrap_or_default();
+    v.sort();
+    v
+}
+
+/// The files of a pack that sit in its own folders: presets/*.json and skills/*.md, as names in the pack.
+fn nested(d: &Path) -> Vec<String> {
+    [("presets", "json"), ("skills", "md"), ("sites", "js")].iter().flat_map(|(sub, ext)| files_in(&d.join(sub), ext).into_iter()
+        .filter_map(move |f| Some(format!("{sub}/{}", f.file_name()?.to_string_lossy())))).collect()
 }
 
 /// A pack folder as it is on disk, checked.
@@ -216,9 +333,13 @@ pub fn read(d: &Path) -> Result<Pack, String> {
     let text = |f: &str| std::fs::read_to_string(d.join(f)).ok();
     let manifest: Manifest = serde_json::from_str(&text("manifest.json").ok_or(format!("{}: no manifest.json", d.display()))?)
         .map_err(|e| format!("{}/manifest.json: {e}", d.display()))?;
-    let (preset, skill, automation) = (text("preset.json"), text("SKILL.md"), text("automation.js"));
-    check(&manifest, preset.as_deref(), skill.as_deref(), automation.as_deref(), false)?;
-    Ok(Pack { manifest, preset, skill, automation })
+    let (preset, skill, automation, scene) = (text("preset.json"), text("SKILL.md"), text("automation.js"), text("scene.js"));
+    let presets = family(d).iter().filter_map(|f| std::fs::read_to_string(f).ok()).collect();
+    let skills = files_in(&d.join("skills"), "md").iter().filter_map(|f| std::fs::read_to_string(f).ok()).collect();
+    let site_js = site_scripts(d);
+    let p = Pack { manifest, preset, skill, automation, presets, scene, skills, site_js };
+    check_pack(&p, false)?;
+    Ok(p)
 }
 
 fn trust_file(id: &str) -> PathBuf {
@@ -228,6 +349,9 @@ fn trust_file(id: &str) -> PathBuf {
 /// The files of a pack that run: its automation.js and its source's programs.
 pub fn programs(m: &Manifest) -> Vec<String> {
     let mut v: Vec<String> = m.automation.as_ref().map(|_| "automation.js".to_string()).into_iter().collect();
+    // a scene's script runs too, in a browser of its own, and each site's
+    v.extend(m.scene.as_ref().map(|_| "scene.js".to_string()));
+    v.extend(m.sites.iter().map(|a| format!("sites/{}.js", a.site)));
     if let Some(s) = &m.source {
         v.push(s.run.clone());
         v.extend(s.windows.clone());
@@ -354,21 +478,69 @@ pub fn enable(id: &str, on: bool) -> Result<Pack, String> {
     Ok(p)
 }
 
-/// A pack made here, packed up to share: a .tgz of its own files, and the GitHub issue page to attach it to.
+/// A pack's own files, as (name in the pack, contents): what export packs up and add copies. A built-in pack's come
+/// from inside edits.
+fn own_files(id: &str) -> Result<Vec<(String, Vec<u8>)>, String> {
+    if origin(id) == Origin::BuiltIn {
+        let p = built_in().into_iter().find(|p| p.manifest.id == id).ok_or(format!("no pack \"{id}\" (edits packs lists them)"))?;
+        let mut v = vec![("manifest.json".to_string(), (serde_json::to_string_pretty(&p.manifest).map_err(|e| e.to_string())? + "\n").into_bytes())];
+        for (f, t) in [("preset.json", &p.preset), ("SKILL.md", &p.skill), ("automation.js", &p.automation), ("scene.js", &p.scene)] {
+            v.extend(t.as_ref().map(|t| (f.to_string(), t.clone().into_bytes())));
+        }
+        for t in &p.presets {
+            let name = serde_json::from_str::<Preset>(t).map(|x| crate::preset::slug(&x.name)).unwrap_or_else(|_| "preset".into());
+            v.push((format!("presets/{name}.json"), t.clone().into_bytes()));
+        }
+        for t in &p.skills {
+            v.push((format!("skills/{}.md", skill_name(t).unwrap_or("skill")), t.clone().into_bytes()));
+        }
+        for (site, js) in &p.site_js {
+            v.push((format!("sites/{site}.js"), js.clone().into_bytes()));
+        }
+        if let Some(gif) = BUILT_IN_PACKS.iter().find(|b| id.strip_prefix("edits.") == Some(b.0)).and_then(|b| b.9) {
+            v.push(("preview.gif".into(), gif.to_vec()));
+        }
+        v.push(("preview.svg".into(), preview(&p.manifest, p.all_presets().first().and_then(|t| serde_json::from_str(t).ok()).as_ref()).into_bytes()));
+        return Ok(v);
+    }
+    let d = dir().join(id);
+    let p = read(&d)?;
+    let mut names: Vec<String> = PACK_FILES.iter().map(|f| f.to_string()).chain(programs(&p.manifest)).chain(p.manifest.preview.clone()).collect();
+    names.extend(nested(&d));
+    names.dedup();
+    Ok(names.into_iter().filter_map(|f| Some((f.clone(), std::fs::read(d.join(&f)).ok()?))).collect())
+}
+
+/// Any pack packed up as ID.tgz (its own files in a folder named after it), at `to` or in edits' share folder.
+pub fn export(id: &str, to: Option<&Path>) -> Result<PathBuf, String> {
+    if !valid_id(id) {
+        return Err(format!("\"{id}\" is not a pack here (edits packs lists them)"));
+    }
+    let files = own_files(id)?;
+    let tmp = std::env::temp_dir().join(format!("edits-export-{}-{id}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&tmp);
+    let res = (|| {
+        for (f, bytes) in &files {
+            let p = tmp.join(id).join(f);
+            std::fs::create_dir_all(p.parent().unwrap_or(&tmp)).map_err(|e| e.to_string())?;
+            std::fs::write(&p, bytes).map_err(|e| e.to_string())?;
+        }
+        let out = to.map(PathBuf::from).unwrap_or_else(|| crate::util::home().join(".cache/edits/share").join(format!("{id}.tgz")));
+        std::fs::create_dir_all(out.parent().unwrap_or(Path::new("."))).map_err(|e| e.to_string())?;
+        crate::util::run(None, "tar", &["-czf", &out.to_string_lossy(), "-C", &tmp.to_string_lossy(), id])?;
+        Ok(out)
+    })();
+    let _ = std::fs::remove_dir_all(&tmp);
+    res
+}
+
+/// A pack made here, packed up to share: its .tgz, and the GitHub issue page to attach it to for the marketplace.
 pub fn share(id: &str) -> Result<(PathBuf, String), String> {
     if origin(id) == Origin::BuiltIn {
         return Err(format!("{id} is built in already"));
     }
-    let d = dir().join(id);
-    let p = read(&d)?;
-    let out = crate::util::home().join(".cache/edits/share");
-    std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
-    let tgz = out.join(format!("{id}.tgz"));
-    let files: Vec<String> = PACK_FILES.iter().map(|f| f.to_string()).chain(programs(&p.manifest)).chain(p.manifest.preview.clone()).filter(|f| d.join(f).is_file()).collect();
-    let mut args = vec!["-czf".to_string(), tgz.to_string_lossy().into_owned(), "-C".into(), d.parent().unwrap_or(&d).to_string_lossy().into_owned()];
-    args.extend(files.iter().map(|f| format!("{id}/{f}")));
-    crate::util::run(None, "tar", &args.iter().map(String::as_str).collect::<Vec<_>>())?;
-    let m = &p.manifest;
+    let tgz = export(id, None)?;
+    let m = read(&dir().join(id))?.manifest;
     let body = format!("A pack for the marketplace. The .tgz is attached below (drag it in).\n\n- id: `{}`\n- name: {}\n- what it is: {}\n- kinds: {}\n- tags: {}\n",
         m.id, m.name, m.description, m.kinds.join(", "), m.tags.join(", "));
     let url = format!("https://github.com/OnurByte/EditsMaker/issues/new?labels=pack&title={}&body={}", encode(&format!("Pack: {}", m.name)), encode(&body));
@@ -427,48 +599,84 @@ fn github(url: &str) -> Result<String, String> {
     Ok(rest.to_string())
 }
 
-/// Adds a community pack by its id in packs.json or its GitHub link: downloads the repository, checks it, and keeps
-/// only the pack's own files (manifest.json, preset.json, SKILL.md, the preview) in ~/.config/edits/packs/<id>.
+/// Copies a pack folder's own files (never links, what runs or is read under 20 MB, the cover any size) into
+/// ~/.config/edits/packs/<id>, and remembers where it came from.
+fn install(top: &Path, from: &str) -> Result<Pack, String> {
+    let pack = read(top)?;
+    let to = dir().join(&pack.manifest.id);
+    let _ = std::fs::remove_dir_all(&to);
+    for sub in ["presets", "skills", "sites"] {
+        std::fs::create_dir_all(to.join(sub)).map_err(|e| e.to_string())?;
+    }
+    let mut names: Vec<String> = PACK_FILES.iter().map(|f| f.to_string()).chain(programs(&pack.manifest)).chain(pack.manifest.preview.clone()).collect();
+    names.extend(nested(top));
+    for f in names {
+        let src = top.join(&f);
+        // the cover can be as big as it likes (a GIF); what runs or is read stays small
+        let cover = Some(f.as_str()) == pack.manifest.preview.as_deref();
+        match std::fs::symlink_metadata(&src) {
+            Ok(m) if m.is_file() && (cover || m.len() <= 20 << 20) => std::fs::copy(&src, to.join(&f)).map(|_| ()).map_err(|e| e.to_string())?,
+            Ok(m) if m.is_file() => return Err(format!("{from}: {f} is over 20 MB")),
+            Ok(_) => return Err(format!("{from}: {f} is not a plain file")),
+            Err(_) => {}
+        }
+    }
+    let _ = std::fs::remove_dir(to.join("presets"));
+    let _ = std::fs::remove_dir(to.join("skills"));
+    let _ = std::fs::remove_dir(to.join("sites"));
+    // where it came from: a community pack, not one made here
+    std::fs::write(to.join(".from"), format!("{from}\n")).map_err(|e| e.to_string())?;
+    read(&to)
+}
+
+/// The one pack folder in an unpacked download or clone: itself, or the folder inside holding manifest.json.
+fn pack_folder(d: &Path) -> Result<PathBuf, String> {
+    if d.join("manifest.json").is_file() {
+        return Ok(d.to_path_buf());
+    }
+    std::fs::read_dir(d).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).find(|p| p.join("manifest.json").is_file())
+        .ok_or(format!("{}: no manifest.json in it, so it is not a pack (PACKS.md)", d.display()))
+}
+
+/// Whether `what` names a git repository to clone (any host), rather than a GitHub page or a pack's id.
+pub fn is_git(what: &str) -> bool {
+    what.starts_with("git@") || what.starts_with("ssh://") || what.starts_with("git://") || (what.starts_with("https://") && what.ends_with(".git") && !what.contains("github.com"))
+}
+
+/// Adds a pack: by its id in packs.json, its GitHub link, any git repository (cloned), or a file here (a folder, or
+/// an exported .tgz). It is checked, and only its own files are kept, in ~/.config/edits/packs/<id>.
 pub fn add(what: &str) -> Result<Pack, String> {
-    let repo = if what.contains("github.com") {
-        github(what)?
-    } else {
-        let list = registry()?;
-        let e = list.iter().find(|e| e.id == what).ok_or(format!("no pack \"{what}\" in the list (edits packs browse)"))?;
-        github(&e.repo)?
-    };
     let tmp = std::env::temp_dir().join(format!("edits-pack-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&tmp);
-    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(tmp.join("x")).map_err(|e| e.to_string())?;
+    let out = tmp.join("x");
     let res = (|| {
+        let local = Path::new(what);
+        if local.is_dir() {
+            return install(&pack_folder(local)?, &format!("file:{}", local.display()));
+        }
+        if local.is_file() {
+            crate::util::run(None, "tar", &["-xzf", &local.to_string_lossy(), "-C", &out.to_string_lossy()]).map_err(|e| format!("{what}: not an exported pack (.tgz): {e}"))?;
+            return install(&pack_folder(&out)?, &format!("file:{}", local.display()));
+        }
+        if is_git(what) {
+            crate::util::run(None, "git", &["clone", "--depth", "1", "--quiet", "--", what, &out.join("repo").to_string_lossy()]).map_err(|e| format!("could not clone {what}: {e}"))?;
+            return install(&pack_folder(&out.join("repo"))?, what);
+        }
+        let repo = if what.contains("github.com") {
+            github(what)?
+        } else {
+            let list = registry()?;
+            let e = list.iter().find(|e| e.id == what).ok_or(format!("no pack \"{what}\" in the list (edits packs browse), and no such file or git repository"))?;
+            github(&e.repo)?
+        };
         let tar = tmp.join("pack.tar.gz");
         crate::util::run(None, "curl", &["-fsSL", "--max-time", "120", "-o", &tar.to_string_lossy(), &format!("https://codeload.github.com/{repo}/tar.gz/HEAD")])
             .map_err(|e| format!("could not download {repo}: {e}"))?;
-        let out = tmp.join("x");
-        std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
         crate::util::run(None, "tar", &["-xzf", &tar.to_string_lossy(), "-C", &out.to_string_lossy()])?;
         // the archive holds one folder, named after the repository and commit
         let top = std::fs::read_dir(&out).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).find(|p| p.is_dir()).ok_or("the download was empty")?;
-        let pack = read(&top)?;
-        let to = dir().join(&pack.manifest.id);
-        let _ = std::fs::remove_dir_all(&to);
-        std::fs::create_dir_all(&to).map_err(|e| e.to_string())?;
-        let programs = programs(&pack.manifest);
-        for f in PACK_FILES.iter().map(|f| f.to_string()).chain(programs).chain(pack.manifest.preview.clone()) {
-            let f = f.as_str();
-            let src = top.join(f);
-            // the cover can be as big as it likes (a GIF); what runs or is read stays small
-            let cover = Some(f) == pack.manifest.preview.as_deref();
-            match std::fs::symlink_metadata(&src) {
-                Ok(m) if m.is_file() && (cover || m.len() <= 20 << 20) => std::fs::copy(&src, to.join(f)).map(|_| ()).map_err(|e| e.to_string())?,
-                Ok(m) if m.is_file() => return Err(format!("{repo}: {f} is over 20 MB")),
-                Ok(_) => return Err(format!("{repo}: {f} is not a plain file")),
-                Err(_) => {}
-            }
-        }
-        // where it came from: a community pack, not one made here
-        std::fs::write(to.join(".from"), format!("https://github.com/{repo}\n")).map_err(|e| e.to_string())?;
-        read(&to)
+        install(&top, &format!("https://github.com/{repo}"))
     })();
     let _ = std::fs::remove_dir_all(&tmp);
     res
@@ -507,6 +715,9 @@ pub fn draft_skill(m: &Manifest, p: Option<&Preset>) -> String {
          format!("```sh\nedits source {short} --list        # what it finds now (--json for programs)\nedits source {short} -n 3          # a video for each of the 3 first\n{}edits follow {short} --post tiktok  # as it finds new things: made and posted\n```\n\nIts program runs alone: its own folder, {}. Added from someone else, it runs only after the person reads it and runs edits packs trust {}.\n",
             if set.is_empty() { String::new() } else { format!("edits packs set {} {}\n", m.id, set.join(" ")) },
             if m.source.as_ref().is_some_and(|x| x.network) { "the internet" } else { "no internet" }, m.id))
+    } else if has("scene") {
+        (format!("Lay the {} 3D scene (three.js) over an edit with edits. Use when the user wants {} or a 3D overlay on a clip.", m.name, m.description.trim_end_matches('.')),
+         format!("```sh\nedits <link|topic|video> --overlay {0}\nedits <link> --overlay {0}@2-6:0.8   # from 2 s to 6 s, at 80%\n```\n\nIts scene.js runs alone: in a browser of its own with no window, no files and nothing of the person's; only three.js is loaded for it. Added from someone else, it runs only after edits packs trust {0}.\n", m.id))
     } else if has("feed") {
         let short = m.id.strip_prefix("edits.rss-").unwrap_or(&m.id);
         let some: Vec<&str> = m.feeds.iter().take(3).map(|f| f.name.as_str()).collect();
@@ -532,22 +743,25 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path
         std::fs::write(d.join("preset.json"), crate::preset::pretty(&crate::preset::load(name)?)).map_err(|e| e.to_string())?;
     }
     let text = |f: &str| std::fs::read_to_string(d.join(f)).ok();
-    let p: Option<Preset> = text("preset.json").map(|t| serde_json::from_str(&t).map_err(|e| format!("{}/preset.json: {e}", d.display()))).transpose()?;
-    let (skill, automation) = (text("SKILL.md"), text("automation.js"));
+    // a family's first preset stands for it when there is no preset.json
+    let first = text("preset.json").or_else(|| family(d).first().and_then(|f| std::fs::read_to_string(f).ok()));
+    let p: Option<Preset> = first.map(|t| serde_json::from_str(&t).map_err(|e| format!("{}: its preset: {e}", d.display()))).transpose()?;
+    let (skill, automation, scene) = (text("SKILL.md"), text("automation.js"), text("scene.js"));
     let old: Option<Manifest> = text("manifest.json").and_then(|t| serde_json::from_str(&t).ok());
     // an OPML list (a reader's export) gives the feeds, and its first group's name the pack's
     let listed = opml.map(|f| std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display())).and_then(|x| crate::rss::opml(&x))).transpose()?;
     let feeds = listed.as_ref().map(|l| l.1.clone()).or(old.as_ref().map(|m| m.feeds.clone())).unwrap_or_default();
     let group = listed.and_then(|l| l.0);
-    if p.is_none() && skill.is_none() && automation.is_none() && feeds.is_empty() && old.as_ref().is_none_or(|m| m.source.is_none()) {
-        return Err(format!("{}: put a preset.json, a SKILL.md or an automation.js in it (or feeds in its manifest.json), or give --preset NAME", d.display()));
+    let topics = old.as_ref().map(|m| m.topics.clone()).unwrap_or_default();
+    if p.is_none() && skill.is_none() && automation.is_none() && scene.is_none() && feeds.is_empty() && topics.is_empty() && old.as_ref().is_none_or(|m| m.source.is_none()) {
+        return Err(format!("{}: put a preset.json, a SKILL.md, an automation.js or a scene.js in it (or feeds in its manifest.json), or give --preset NAME", d.display()));
     }
     let folder = d.canonicalize().ok().and_then(|c| c.file_name().map(|n| n.to_string_lossy().into_owned())).unwrap_or_else(|| "pack".into());
     let about = skill.as_deref().and_then(|s| front(s, "description")).map(String::from);
     let id = id.map(String::from).or(old.as_ref().map(|m| m.id.clone())).unwrap_or_else(|| crate::preset::slug(&folder));
     // a SKILL.md is drafted when there is none, so every pack has one
     let has_source = old.as_ref().is_some_and(|m| m.source.is_some());
-    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", true), ("automation", automation.is_some()), ("feed", !feeds.is_empty()), ("source", has_source)]
+    let kinds: Vec<String> = [("preset", p.is_some()), ("skill", true), ("automation", automation.is_some() || old.as_ref().is_some_and(|m| !m.sites.is_empty())), ("feed", !feeds.is_empty() || !topics.is_empty()), ("source", has_source), ("scene", scene.is_some())]
         .iter().filter(|k| k.1).map(|k| k.0.to_string()).collect();
     let own_picture = old.as_ref().and_then(|m| m.preview.clone()).filter(|f| f != "preview.svg" && d.join(f).is_file());
     let m = Manifest {
@@ -564,8 +778,11 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path
         license: old.as_ref().and_then(|m| m.license.clone()),
         source: old.as_ref().and_then(|m| m.source.clone()),
         settings: old.as_ref().map(|m| m.settings.clone()).unwrap_or_default(),
+        scene: old.as_ref().and_then(|m| m.scene.clone()).or(scene.as_ref().map(|_| Scene { seconds: 4.0, fps: 30 })),
+        sites: old.as_ref().map(|m| m.sites.clone()).unwrap_or_default(),
         automation: old.and_then(|m| m.automation),
         feeds,
+        topics,
         id,
     };
     let skill = match skill {
@@ -576,7 +793,9 @@ pub fn make(d: &Path, preset: Option<&str>, id: Option<&str>, opml: Option<&Path
             s
         }
     };
-    check(&m, text("preset.json").as_deref(), Some(&skill), automation.as_deref(), m.id.starts_with("edits."))?;
+    let presets = family(d).iter().filter_map(|f| std::fs::read_to_string(f).ok()).collect();
+    let skills = files_in(&d.join("skills"), "md").iter().filter_map(|f| std::fs::read_to_string(f).ok()).collect();
+    check_pack(&Pack { manifest: m.clone(), preset: text("preset.json"), skill: Some(skill), automation, presets, scene, skills, site_js: site_scripts(d) }, m.id.starts_with("edits."))?;
     if own_picture.is_none() {
         std::fs::write(d.join("preview.svg"), preview(&m, p.as_ref())).map_err(|e| e.to_string())?;
     }
@@ -618,7 +837,7 @@ pub fn preview(m: &Manifest, p: Option<&Preset>) -> String {
     let (bg, ink) = (format!("hsl({hue},{sat}%,11%)"), format!("hsl({hue},{}%,64%)", if sat == 0 { 0 } else { 70 }));
     let has = |k: &str| m.kinds.iter().any(|x| x == k);
     // one word in sentence case (BRAND.md § 4): a preset and a skill are both a pack to the person
-    let kind = if has("automation") { "Automation" } else if has("feed") { "RSS" } else { "Pack" };
+    let kind = if has("automation") { "Automation" } else if has("feed") { "RSS" } else if has("scene") { "3D scene" } else { "Pack" };
     let font = "font-family=\"Inter, Helvetica, Arial, sans-serif\"";
     let mut s = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 360\" width=\"640\" height=\"360\">\n\
         <rect width=\"640\" height=\"360\" rx=\"24\" fill=\"{bg}\"/>\n\
@@ -652,12 +871,20 @@ pub fn preview(m: &Manifest, p: Option<&Preset>) -> String {
             s += &format!("<text x=\"32\" y=\"344\" {font} font-size=\"13\" fill=\"#fff\" fill-opacity=\"0.6\">{}</text>\n", esc(&m.tags.join("  ")));
             s += &format!("<text x=\"608\" y=\"344\" text-anchor=\"end\" {font} font-size=\"13\" fill=\"#fff\" fill-opacity=\"0.6\">{} shots  {:.1}s</text>\n", p.slots.len(), p.total);
         }
+        None if !m.topics.is_empty() => {
+            let some: Vec<&str> = m.topics.iter().take(5).map(|t| t.name.as_str()).collect();
+            s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">{}  +{} more</text>\n", esc(&some.join("  ·  ")), m.topics.len().saturating_sub(5));
+        }
         None if has("feed") => {
             let some: Vec<String> = m.feeds.iter().take(3).map(|f| f.name.chars().take(24).collect()).collect();
             let more = if m.feeds.len() > 3 { format!("  +{} more", m.feeds.len() - 3) } else { String::new() };
             s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">{}{more}</text>\n", esc(&some.join("  ·  ")));
         }
-        None if has("automation") => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits connect {}</text>\n", esc(m.automation.as_ref().map_or("", |a| &a.site))),
+        None if has("automation") => {
+            let sites: Vec<&str> = m.automation.iter().chain(&m.sites).map(|a| a.site.as_str()).collect();
+            s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits connect {}</text>\n", esc(&sites.join("|")));
+        }
+        None if has("scene") => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits &lt;link&gt; --overlay {}</text>\n", esc(m.id.rsplit('.').next().unwrap_or(&m.id))),
         None => s += &format!("<text x=\"32\" y=\"336\" {font} font-size=\"14\" fill=\"{ink}\">edits skills install</text>\n"),
     }
     s + "</svg>\n"
@@ -706,11 +933,13 @@ mod tests {
 
     #[test]
     fn built_in_packs_are_whole() {
-        assert!(BUILT_IN_PACKS.len() >= 70);
+        assert!(BUILT_IN_PACKS.len() >= 15);
         let mut ids = vec![];
-        for (d, m, p, s, a) in BUILT_IN_PACKS {
+        for p in built_in() {
+            check_pack(&p, true).unwrap_or_else(|e| panic!("{e}"));
+        }
+        for (d, m, ..) in BUILT_IN_PACKS {
             let m: Manifest = serde_json::from_str(m).unwrap_or_else(|e| panic!("{d}: {e}"));
-            check(&m, *p, *s, *a, true).unwrap();
             assert_eq!(m.id, format!("edits.{d}"));
             assert!(m.preview.as_ref().is_some_and(|f| Path::new(env!("CARGO_MANIFEST_DIR")).join("packs").join(d).join(f).is_file()), "{d}: no picture");
             assert!(!ids.contains(&m.id));
@@ -738,8 +967,25 @@ mod tests {
     #[test]
     fn share_links_carry_the_pack() {
         assert_eq!(encode("Pack: Sad rain/ü"), "Pack%3A%20Sad%20rain%2F%C3%BC");
-        assert_eq!(origin("edits.akis-whip"), Origin::BuiltIn);
-        assert!(remove("edits.akis-whip").err().is_some_and(|e| e.contains("cannot be deleted")));
+        assert_eq!(origin("edits.punch-whip"), Origin::BuiltIn);
+        assert!(remove("edits.punch-whip").err().is_some_and(|e| e.contains("cannot be deleted")));
+        assert!(is_git("git@gitlab.com:a/b.git") && is_git("https://codeberg.org/a/b.git") && !is_git("https://github.com/a/b") && !is_git("io.github.a.b"));
+    }
+
+    #[test]
+    fn a_pack_goes_out_as_a_file_and_comes_back_in() {
+        let home = std::env::temp_dir().join(format!("edits-pack-export-{}", std::process::id()));
+        let tgz = home.join("spin.tgz");
+        let out = export("edits.spin", Some(&tgz)).unwrap();
+        assert!(out.is_file() && std::fs::metadata(&out).unwrap().len() > 100);
+        // unpacked, it is a whole pack with its family of presets
+        let x = home.join("x");
+        std::fs::create_dir_all(&x).unwrap();
+        crate::util::run(None, "tar", &["-xzf", &out.to_string_lossy(), "-C", &x.to_string_lossy()]).unwrap();
+        let f = pack_folder(&x).unwrap();
+        assert!(f.join("presets").is_dir() && f.join("SKILL.md").is_file());
+        assert_eq!(family(&f).len(), BUILT_IN_PACKS.iter().find(|b| b.0 == "spin").unwrap().6.len());
+        let _ = std::fs::remove_dir_all(&home);
     }
 
     #[test]
@@ -775,9 +1021,13 @@ mod tests {
     fn a_pack_is_made_from_a_preset_and_says_what_it_holds() {
         let d = std::env::temp_dir().join(format!("edits-pack-make-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
-        let (_, _, p, _, _) = BUILT_IN_PACKS.iter().find(|x| x.2.is_some()).unwrap();
+        let p = BUILT_IN_PACKS.iter().find_map(|x| x.6.first()).unwrap();
+        assert!(BUILT_IN_PACKS.iter().any(|x| !x.7.is_empty()), "a pack carries several skills");
+        assert!(built_in_gif("edits.spin").is_some_and(|g| g.starts_with(b"GIF89a")), "built-in packs have moving covers");
+        let post = built_in().into_iter().find(|p| p.manifest.id == "edits.post").unwrap();
+        assert_eq!(post.automations().iter().map(|a| a.0.site.as_str()).collect::<Vec<_>>(), ["tiktok", "instagram", "youtube"], "one pack posts to every site");
         std::fs::create_dir_all(&d).unwrap();
-        std::fs::write(d.join("preset.json"), p.unwrap()).unwrap();
+        std::fs::write(d.join("preset.json"), p).unwrap();
         let m = make(&d, None, Some("io.github.you.test"), None).unwrap();
         assert_eq!(m.kinds, ["preset", "skill"], "a skill is drafted when there is none");
         assert!(std::fs::read_to_string(d.join("SKILL.md")).unwrap().starts_with("---\nname: io-github-you-test\ndescription: \""));

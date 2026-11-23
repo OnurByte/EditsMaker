@@ -15,6 +15,10 @@ pub struct Choice {
     pub model: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub endpoint: String,
+    /// t3code's runtime mode: "" (supervised: the agent only answers, everything it asks to do is refused) or "full"
+    /// (full access: it runs with its own permission prompts skipped)
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub access: String,
 }
 
 /// (name, API base, key's environment variable) of the providers reached over HTTP.
@@ -90,21 +94,102 @@ fn about(name: &str) -> &'static str {
     }
 }
 
+/// The models t3code's picker offers for an agent that picks its own: its aliases, the newest of each size.
+fn agent_models(name: &str) -> &'static [&'static str] {
+    match name {
+        "claude-code" => &["opus", "sonnet", "haiku"],
+        "gemini-cli" => &["gemini-2.5-pro", "gemini-2.5-flash"],
+        _ => &[],
+    }
+}
+
+/// How an agent runs with full access: its own flag for skipping its permission prompts.
+fn full_access_flag(name: &str) -> &'static str {
+    match name {
+        "claude-code" => " --dangerously-skip-permissions",
+        "codex" => " --dangerously-bypass-approvals-and-sandbox",
+        "cursor" => " --force",
+        _ => "",
+    }
+}
+
+/// A JWT's claims, unchecked: enough to say whose plan it is, never to trust it.
+fn jwt_claims(token: &str) -> Option<Value> {
+    let out = crate::util::base64_decode(token.split('.').nth(1)?);
+    serde_json::from_slice(&out).ok()
+}
+
+fn read_json(p: PathBuf) -> Option<Value> {
+    std::fs::read_to_string(p).ok().and_then(|t| serde_json::from_str(&t).ok())
+}
+
+/// "Pro"/"plus" as a plan's name: "Claude Pro", "ChatGPT Plus".
+fn plan(of: &str, kind: &str) -> String {
+    let mut k: Vec<char> = kind.replace(['_', '-'], " ").chars().collect();
+    if let Some(c) = k.first_mut() {
+        *c = c.to_ascii_uppercase();
+    }
+    format!("{of} {}", k.into_iter().collect::<String>()).trim().to_string()
+}
+
+/// Whose subscription an agent runs on and which plan, as t3code shows it under the provider: read from the agent's
+/// own sign-in on this computer, (plan, name or email). Nothing is sent anywhere.
+pub fn account(name: &str) -> (String, String) {
+    match name {
+        "claude-code" => {
+            let creds = read_json(home().join(".claude/.credentials.json"));
+            let kind = creds.as_ref().and_then(|c| c["claudeAiOauth"]["subscriptionType"].as_str().map(String::from)).unwrap_or_default();
+            let who = read_json(home().join(".claude.json")).map(|v| v["oauthAccount"].clone()).unwrap_or_default();
+            let n = who["displayName"].as_str().or(who["emailAddress"].as_str()).unwrap_or_default().to_string();
+            (if kind.is_empty() { String::new() } else { plan("Claude", &kind) }, n)
+        }
+        "codex" => {
+            let auth = read_json(home().join(".codex/auth.json")).unwrap_or_default();
+            if auth["OPENAI_API_KEY"].as_str().is_some_and(|k| !k.is_empty()) && auth["tokens"].is_null() {
+                return ("API key".into(), String::new());
+            }
+            let claims = auth["tokens"]["id_token"].as_str().and_then(jwt_claims).unwrap_or_default();
+            let kind = claims["https://api.openai.com/auth"]["chatgpt_plan_type"].as_str().unwrap_or_default();
+            (if kind.is_empty() { String::new() } else { plan("ChatGPT", kind) }, claims["email"].as_str().unwrap_or_default().to_string())
+        }
+        "gemini-cli" => (String::new(), read_json(home().join(".gemini/google_accounts.json")).and_then(|v| v["active"].as_str().map(String::from)).unwrap_or_default()),
+        n if PROVIDERS.iter().any(|p| p.0 == n && !p.2.is_empty()) => (if key(n).is_ok() { "API key".into() } else { String::new() }, String::new()),
+        n if PROVIDERS.iter().any(|p| p.0 == n) => ("On this computer".into(), String::new()),
+        _ => Default::default(),
+    }
+}
+
+/// One AI call, kept for Settings, Usage: when, which, how long, how much went in and out, whether it answered.
+fn note_usage(c: &Choice, secs: f64, prompt: usize, answer: &Result<String, String>) {
+    let line = json!({"at": std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs()), "provider": c.provider, "model": c.model,
+        "secs": (secs * 10.).round() / 10., "in": prompt, "out": answer.as_ref().map_or(0, |a| a.len()), "ok": answer.is_ok()});
+    use std::io::Write;
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(usage_file()) {
+        let _ = writeln!(f, "{line}");
+    }
+}
+
+pub fn usage_file() -> PathBuf {
+    home().join(".config/edits/usage.jsonl")
+}
+
 pub fn providers() -> Vec<Value> {
     let c = choice();
     let agents = AGENTS.iter().map(|&(name, label, how, cmd)| {
         let bin = cmd.split_whitespace().next().unwrap_or("");
         let ready = if cmd.is_empty() { c.provider == name && !c.endpoint.is_empty() } else { crate::util::have(bin) };
+        let (plan, who) = if ready { account(name) } else { Default::default() };
         json!({"name": name, "label": label, "kind": if cmd.is_empty() { "acp" } else { "subscription" }, "how": how, "command": if cmd.is_empty() && c.provider == name { c.endpoint.as_str() } else { cmd },
-            "ready": ready, "inUse": c.provider == name, "base": "", "keyVar": "", "about": about(name)})
+            "ready": ready, "inUse": c.provider == name, "base": "", "keyVar": "", "about": about(name), "plan": plan, "account": who, "models": agent_models(name)})
     });
     let http = PROVIDERS.iter().map(|&(name, base, var)| {
         let kind = if var.is_empty() { "local" } else { "api" };
         let label = match name { "openai" => "OpenAI", "anthropic" => "Anthropic API", "gemini" => "Gemini API", "openrouter" => "OpenRouter", "ollama" => "Ollama", "lmstudio" => "LM Studio", "llamacpp" => "llama.cpp", _ => "vLLM" };
         // a server here counts as added once it is the one in use; a key, once it is saved
         let ready = if kind == "local" { c.provider == name } else { key(name).is_ok() };
+        let (plan, who) = if ready { account(name) } else { Default::default() };
         json!({"name": name, "label": label, "kind": kind, "how": "http", "command": "", "ready": ready, "inUse": c.provider == name,
-            "base": if c.provider == name && !c.endpoint.is_empty() { c.endpoint.as_str() } else { base }, "keyVar": var, "about": about(name)})
+            "base": if c.provider == name && !c.endpoint.is_empty() { c.endpoint.as_str() } else { base }, "keyVar": var, "about": about(name), "plan": plan, "account": who, "models": []})
     });
     agents.chain(http).collect()
 }
@@ -123,7 +208,7 @@ pub fn save_key(provider: &str, k: &str) -> Result<(), String> {
 /// The models a provider offers, at its endpoint (or its own), for the app's AI settings.
 #[cfg(feature = "app")]
 pub fn models_of(provider: &str, endpoint: &str) -> Result<Vec<String>, String> {
-    models(&Choice { provider: provider.into(), model: String::new(), endpoint: endpoint.into() })
+    models(&Choice { provider: provider.into(), endpoint: endpoint.into(), ..Default::default() })
 }
 fn keys_file() -> PathBuf {
     home().join(".config/edits/keys.json")
@@ -156,7 +241,10 @@ fn command(c: &Choice) -> Option<String> {
     if a.3.is_empty() {
         return Some(c.endpoint.clone()).filter(|e| !e.trim().is_empty());
     }
-    let m = if c.model.is_empty() { String::new() } else { format!(" --model {}", c.model) };
+    let mut m = if c.model.is_empty() { String::new() } else { format!(" --model {}", c.model) };
+    if c.access == "full" {
+        m += full_access_flag(&c.provider);
+    }
     Some(a.3.replace("{model}", &m))
 }
 
@@ -180,11 +268,18 @@ pub fn ready() -> bool {
     }
 }
 
-/// The prompt answered by the chosen AI.
+/// The prompt answered by the chosen AI, and the call noted for Usage.
 pub fn ask(prompt: &str) -> Result<String, String> {
-    let c = choice();
+    let (c, t) = (choice(), std::time::Instant::now());
+    let r = ask_with(&c, prompt);
+    note_usage(&c, t.elapsed().as_secs_f64(), prompt.len(), &r);
+    r
+}
+
+fn ask_with(c: &Choice, prompt: &str) -> Result<String, String> {
+    let c = c.clone();
     if let Some(cmd) = command(&c) {
-        return if acp(&c) { crate::acp::ask(&cmd, prompt) } else { crate::util::run_stdin(&cmd, prompt) };
+        return if acp(&c) { crate::acp::ask(&cmd, prompt, c.access == "full") } else { crate::util::run_stdin(&cmd, prompt) };
     }
     if agent(&c.provider).is_some() {
         return Err(format!("{} needs its command: edits ai {} --endpoint \"AGENT acp\"", c.provider, c.provider));
@@ -241,6 +336,18 @@ pub fn cmd(args: &[String]) -> Result<(), String> {
             println!("{p} key saved");
             Ok(())
         }
+        Some("access") => {
+            let mut c = choice();
+            c.access = match args.get(1).map(String::as_str) {
+                Some("full") => "full".into(),
+                Some("ask" | "supervised") => String::new(),
+                _ => return Err("usage: edits ai access full|supervised   (full: the agent runs with its own permission prompts skipped)".into()),
+            };
+            std::fs::create_dir_all(file().parent().unwrap()).map_err(|e| e.to_string())?;
+            std::fs::write(file(), serde_json::to_string_pretty(&c).unwrap_or_default()).map_err(|e| e.to_string())?;
+            println!("AI access: {}", if c.access == "full" { "full access" } else { "supervised" });
+            Ok(())
+        }
         Some("models") => {
             models(&choice())?.iter().for_each(|m| println!("{m}"));
             Ok(())
@@ -250,7 +357,8 @@ pub fn cmd(args: &[String]) -> Result<(), String> {
                 return Err(format!("unknown AI {p}; one of: {names}"));
             }
             let opt = args.iter().position(|a| a == "--endpoint").and_then(|i| args.get(i + 1)).cloned().unwrap_or_default();
-            let c = Choice { provider: p.into(), model: args.get(1).filter(|m| !m.starts_with("--")).cloned().unwrap_or_default(), endpoint: opt };
+            // the access mode stays what it was when the provider or model changes
+            let c = Choice { provider: p.into(), model: args.get(1).filter(|m| !m.starts_with("--")).cloned().unwrap_or_default(), endpoint: opt, access: choice().access };
             let api = PROVIDERS.iter().find(|x| x.0 == p).is_some_and(|x| !x.2.is_empty());
             if p == "acp" && c.endpoint.is_empty() {
                 return Err("the ACP Registry takes the agent's command: edits ai acp --endpoint \"devin acp\"".into());
@@ -273,17 +381,28 @@ mod tests {
 
     #[test]
     fn commands_and_bases() {
-        let c = |p: &str, m: &str| Choice { provider: p.into(), model: m.into(), endpoint: String::new() };
+        let c = |p: &str, m: &str| Choice { provider: p.into(), model: m.into(), ..Default::default() };
         if std::env::var("EDITS_LLM").is_err() {
             assert_eq!(command(&c("claude-code", "")).unwrap(), "claude -p");
             assert_eq!(command(&c("codex", "o4")).unwrap(), "codex exec --skip-git-repo-check --model o4 -");
             assert!(command(&c("openai", "x")).is_none());
             assert_eq!(command(&c("kiro", "")).unwrap(), "kiro-cli acp --agent-engine=v3 --auth-method=cli");
             assert!(acp(&c("antigravity", "")) && !acp(&c("claude-code", "")));
-            assert_eq!(command(&Choice { provider: "acp".into(), model: String::new(), endpoint: "devin acp".into() }).unwrap(), "devin acp");
+            assert_eq!(command(&Choice { provider: "acp".into(), endpoint: "devin acp".into(), ..Default::default() }).unwrap(), "devin acp");
+            let full = Choice { access: "full".into(), ..c("claude-code", "opus") };
+            assert_eq!(command(&full).unwrap(), "claude -p --model opus --dangerously-skip-permissions", "full access skips its prompts");
             assert!(command(&c("acp", "")).is_none(), "the registry's agent needs its command");
         }
         assert_eq!(base(&c("ollama", "")), "http://127.0.0.1:11434/v1");
-        assert_eq!(base(&Choice { provider: "ollama".into(), model: String::new(), endpoint: "http://box:11434/v1/".into() }), "http://box:11434/v1");
+        assert_eq!(base(&Choice { provider: "ollama".into(), endpoint: "http://box:11434/v1/".into(), ..Default::default() }), "http://box:11434/v1");
+    }
+
+    #[test]
+    fn a_plan_is_read_from_the_sign_in() {
+        // {"email":"a@b.c","https://api.openai.com/auth":{"chatgpt_plan_type":"plus"}}
+        let claims = jwt_claims("x.eyJlbWFpbCI6ImFAYi5jIiwiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS9hdXRoIjp7ImNoYXRncHRfcGxhbl90eXBlIjoicGx1cyJ9fQ.y").unwrap();
+        assert_eq!(claims["email"], "a@b.c");
+        assert_eq!(plan("ChatGPT", claims["https://api.openai.com/auth"]["chatgpt_plan_type"].as_str().unwrap()), "ChatGPT Plus");
+        assert_eq!(plan("Claude", "max"), "Claude Max");
     }
 }

@@ -1328,6 +1328,7 @@ name = "edits"
 version = "0.31.0"
 dependencies = [
  "gpui-kit",
+ "kael_share",
  "libloading",
  "regex",
  "resvg 0.45.1",
@@ -3298,6 +3299,20 @@ dependencies = [
  "cfg-if",
  "futures-util",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kael_share"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fea4bb75dc53ac72055f70f6972cab7f81131eb8e48e3eab8be1330c5f94581"
+dependencies = [
+ "anyhow",
+ "objc2 0.6.5",
+ "objc2-foundation 0.3.2",
+ "smol",
+ "url",
+ "windows 0.62.2",
 ]
 
 [[package]]

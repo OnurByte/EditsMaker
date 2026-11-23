@@ -6,7 +6,8 @@
 use crate::app::icons::{icon, Icon};
 use crate::app::runs::{Provider, Settings};
 use crate::app::theme::{self, brand, Brand, Prefs, BOLD, CARD, LIGHT, MONO, SMALL};
-use crate::app::ui::{card, pill, primary, text};
+use crate::app::ui::{card, pill, primary, tag, text};
+use gpui_kit::component::switch::Switch;
 use crate::app::workspace::{Section, Workspace};
 use gpui_kit::component::input::Input;
 use gpui_kit::component::notification::Notification;
@@ -16,12 +17,21 @@ use gpui_kit::*;
 
 /// The sections, their icons, and the words search finds them by (what their rows are about).
 const SECTIONS: &[(Section, &str, Icon, &str)] = &[
-    (Section::General, "General", Icon::Settings, "folder where edits go output videos encoder gpu graphics card render updates"),
-    (Section::Ai, "AI", Icon::Sparkles, "ai provider model claude codex cursor grok gemini antigravity kiro opencode pi acp openai anthropic openrouter ollama key api"),
+    (Section::General, "General", Icon::Settings, "folder where edits go output videos encoder gpu graphics card render updates discord rich presence playing status"),
+    (Section::Ai, "AI", Icon::Brain, "ai provider model claude codex cursor grok gemini antigravity kiro opencode pi acp openai anthropic openrouter ollama key api"),
     (Section::Accounts, "Accounts", Icon::User, "accounts connect sign in tiktok youtube instagram bluesky facebook post"),
     (Section::Agents, "Agents", Icon::Terminal, "agents mcp server skills claude code chatgpt cursor tools"),
+    (Section::Usage, "Usage", Icon::Usage, "usage how many edits clips space disk ai calls requests time spent stats"),
     (Section::Appearance, "Appearance", Icon::Palette, "appearance theme dark light system omarchy accent colour color chat width text size font"),
-    (Section::About, "About", Icon::Info, "about version github check doctor ffmpeg yt-dlp whisper"),
+    (Section::About, "About", Icon::Info, "about version github check doctor ffmpeg yt-dlp whisper terms of use privacy license legal"),
+];
+
+/// What About links to, each a file in the repository on GitHub: (title, line, file).
+pub const LEGAL: &[(&str, &str, &str)] = &[
+    ("Terms of use", "What you may do with EditsMaker, and what is yours to answer for.", "TERMS.md"),
+    ("Privacy", "What stays on this computer (everything), and what goes out only when you ask.", "PRIVACY.md"),
+    ("License", "MIT: use it, change it, share it.", "LICENSE"),
+    ("Contributing", "Packs, fixes and ideas: how to send them.", "CONTRIBUTING.md"),
 ];
 
 /// The sections a search finds, all of them for none.
@@ -162,8 +172,9 @@ impl Workspace {
             .child(div().flex_1().min_w_0().flex().flex_col().gap(px(2.))
                 .child(div().flex().items_center().gap(px(8.))
                     .child(text(p.label.clone(), 14., BOLD, b.ink))
-                    .child(div().px(px(8.)).h(px(20.)).flex().items_center().rounded(px(10.)).bg(badge.1.opacity(0.16)).child(text(badge.0, 11., BOLD, badge.1))))
-                .child(text(p.about.clone(), 13., LIGHT, b.gray).truncate()))
+                    .child(div().px(px(8.)).h(px(20.)).flex().items_center().rounded(px(10.)).bg(badge.1.opacity(0.16)).child(text(badge.0, 11., BOLD, badge.1)))
+                    .when(!p.plan.is_empty(), |d| d.child(tag(&p.plan, b))))
+                .child(text(if p.account.is_empty() { p.about.clone() } else { format!("Signed in as {}", p.account) }, 13., LIGHT, b.gray).truncate()))
             .child(select)
             .child(text(if open { "−" } else { "+" }, 18., LIGHT, b.gray))
             .on_click(cx.listener(move |this, _, window, cx| {
@@ -243,6 +254,8 @@ impl Workspace {
                     row("Where edits go", s.out.display().to_string(), pill("out", Some(Icon::Folder), "Open", false, b).on_click(move |_, _, cx| cx.open_with_system(&out)), true, b).into_any_element(),
                     row("What renders the video", "auto uses the graphics card when it works, else the processor.", self.choice("encoder", &s.encoders, &s.encoder, &["encoder"], b, cx), false, b).into_any_element(),
                     row("Updates", "Once a day, the newest release before a run.", self.choice("updates", &["on".into(), "off".into()], updates, &["update"], b, cx), false, b).into_any_element(),
+                    row("Discord", "Shows Playing EditsMaker on your profile, with what you are making and a button to download it.",
+                        Switch::new("discord").checked(theme::prefs().discord).on_click(|on: &bool, window, cx| theme::save(&Prefs { discord: *on, ..theme::prefs() }, window, cx)), false, b).into_any_element(),
                 ], b).into_any_element()]
             }
             Section::Ai => {
@@ -269,13 +282,45 @@ impl Workspace {
                 }).collect();
                 let first = rows.is_empty();
                 let sites = div().flex().gap(px(8.)).children(s.sites.iter().enumerate().map(|(i, site)| self.button(("connect", i), site, &["connect", site], b, cx)));
-                rows.push(row("Connect an account", "Signs in once in a window of its own; edits never sees the password. Bluesky and Facebook take a token: edits connect, in a terminal.", sites, first, b).into_any_element());
-                vec![group("", rows, b).into_any_element()]
+                rows.push(row("Connect an account", "Signs in once in a window of its own; edits never sees the password.", sites, first, b).into_any_element());
+                let token = |i: usize, platform: &'static str, b: &Brand, cx: &mut Context<Self>| {
+                    let [who, secret] = [self.sign_in[i * 2].clone(), self.sign_in[i * 2 + 1].clone()];
+                    div().flex().items_center().gap(px(8.))
+                        .child(div().w(px(140.)).child(Input::new(&who)))
+                        .child(div().w(px(140.)).child(Input::new(&secret)))
+                        .child(primary(("sign-in", i), "Connect", b).on_click(cx.listener(move |this, _, window, cx| {
+                            let (w, k) = (who.read(cx).value().to_string(), secret.read(cx).value().to_string());
+                            let clear = secret.clone();
+                            this.changing = Some(format!("connect {platform}"));
+                            cx.notify();
+                            cx.spawn_in(window, async move |this, cx| {
+                                let r = cx.background_executor().spawn(async move { crate::social::connect_token(platform, &w, &k) }).await;
+                                let _ = this.update_in(cx, |this, window, cx| {
+                                    this.changing = None;
+                                    match r {
+                                        Ok(said) => {
+                                            clear.update(cx, |s, cx| s.set_value("", window, cx));
+                                            window.push_notification(Notification::success(said), cx);
+                                        }
+                                        Err(e) => window.push_notification(Notification::error(e).title(format!("{platform} did not connect")), cx),
+                                    }
+                                    this.load_settings(cx);
+                                });
+                            })
+                            .detach();
+                        })))
+                };
+                let social = vec![
+                    row("Bluesky", "Your handle and an app password (bsky.app, Settings, App passwords): never your main password.", token(0, "bluesky", b, cx), true, b).into_any_element(),
+                    row("Facebook Page", "The Page's id and a Page access token that can post (pages_manage_posts).", token(1, "facebook", b, cx), false, b).into_any_element(),
+                ];
+                vec![group("", rows, b).into_any_element(), group("With a token", social, b).into_any_element()]
             }
             Section::Agents => vec![group("", vec![
                 row("MCP server", "edits as tools in Claude Code, ChatGPT, Cursor and every other agent on this computer.", self.button("mcp", "Install", &["mcp", "install"], b, cx), true, b).into_any_element(),
                 row("Skills", "The packs' agent skills in each agent's skills folder.", self.button("skills", "Install", &["skills", "install"], b, cx), false, b).into_any_element(),
             ], b).into_any_element()],
+            Section::Usage => self.usage_section(b),
             Section::Appearance => self.appearance(b, cx),
             Section::About => {
                 let doctor: AnyElement = match &self.doctor {
@@ -287,10 +332,44 @@ impl Workspace {
                         row("EditsMaker", format!("Version {}", s.version), pill("site", Some(Icon::Github), "GitHub", false, b).on_click(|_, _, cx| cx.open_url("https://github.com/OnurByte/EditsMaker")), true, b).into_any_element(),
                         row("Check this computer", "ffmpeg, yt-dlp, whisper and the AI, as edits doctor sees them.", primary("doctor", "Check", b).on_click(cx.listener(|this, _, _, cx| this.check(cx))), false, b).into_any_element(),
                     ], b).into_any_element(),
+                    group("Legal", LEGAL.iter().enumerate().map(|(i, &(title, about, file))| {
+                        let url = format!("https://github.com/OnurByte/EditsMaker/blob/main/{file}");
+                        row(title, about, pill(("legal", i), Some(Icon::External), "Read", false, b).on_click(move |_, _, cx| cx.open_url(&url)), i == 0, b).into_any_element()
+                    }).collect(), b).into_any_element(),
                     doctor,
                 ]
             }
         }
+    }
+
+    /// Usage: what edits made, and what the AI was asked.
+    fn usage_section(&self, b: &Brand) -> Vec<AnyElement> {
+        let Some(u) = &self.usage else {
+            return vec![text("Counting...", 14., FontWeight::NORMAL, b.gray).into_any_element()];
+        };
+        let tile = |n: String, what: &str, b: &Brand| div().flex_1().p(px(16.)).flex().flex_col().gap(px(4.)).rounded(CARD).bg(b.page)
+            .child(text(n, 28., BOLD, b.ink)).child(text(what.to_string(), 13., LIGHT, b.gray));
+        let most = u.days.iter().copied().max().unwrap_or(0).max(1);
+        let week: usize = u.days.iter().rev().take(7).sum();
+        let bars = div().h(px(96.)).flex().items_end().gap(px(6.)).children(u.days.iter().enumerate().map(|(i, &n)| {
+            let h = if n == 0 { 3. } else { 8. + 80. * n as f32 / most as f32 };
+            div().flex_1().h(px(h)).rounded(px(3.)).bg(if i == u.days.len() - 1 { b.accent } else { b.accent.opacity(if n == 0 { 0.15 } else { 0.5 }) })
+        }));
+        let ai_rows: Vec<AnyElement> = if u.ai.is_empty() {
+            vec![row("No AI calls yet", "Each time edits asks the AI to pick moments, it is counted here.", div(), true, b).into_any_element()]
+        } else {
+            u.ai.iter().enumerate().map(|(i, (name, a))| {
+                let label = self.settings.as_ref().and_then(|s| s.as_ref().ok()).and_then(|s| s.providers.iter().find(|p| &p.name == name)).map_or(name.clone(), |p| p.label.clone());
+                row(&label, format!("{} answered of {}, {:.0} s spent, about {} tokens", a.ok, a.calls, a.secs, a.chars / 4),
+                    text(format!("{}", a.calls), 20., BOLD, b.ink), i == 0, b).into_any_element()
+            }).collect()
+        };
+        vec![
+            div().flex().gap(px(8.)).child(tile(u.runs.to_string(), "edits made", b)).child(tile(u.clips.to_string(), "clips", b))
+                .child(tile(crate::app::usage::size(u.bytes), "on disk", b)).child(tile(week.to_string(), "this week", b)).into_any_element(),
+            div().flex().flex_col().gap(px(8.)).child(text("The last two weeks", 13., BOLD, b.gray)).child(div().p(px(16.)).rounded(CARD).bg(b.page).child(bars)).into_any_element(),
+            group("AI", ai_rows, b).into_any_element(),
+        ]
     }
 
     /// t3code's appearance: colours and themes (Omarchy's live one too), the interface, the type.
@@ -357,6 +436,9 @@ impl Workspace {
                 .child(text(label, 14., FontWeight::NORMAL, if on { b.ink } else { b.gray }))
                 .on_click(cx.listener(move |this, _, _, cx| {
                     this.settings_open = Some(s);
+                    if s == Section::Usage {
+                        this.usage = Some(crate::app::usage::read(&this.past));
+                    }
                     cx.notify();
                 }))
                 .into_any_element()
@@ -407,7 +489,12 @@ mod tests {
         assert_eq!(found("omarchy"), [Section::Appearance]);
         assert_eq!(found("tiktok"), [Section::Accounts]);
         assert!(found("claude").contains(&Section::Ai) && found("claude").contains(&Section::Agents));
-        assert_eq!(found("").len(), 6);
+        assert_eq!(found("").len(), 7);
+        assert_eq!(found("discord"), [Section::General]);
+        assert_eq!(found("privacy"), [Section::About]);
+        for (_, _, f) in super::LEGAL {
+            assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(f).is_file(), "{f} is in the repository");
+        }
         assert!(found("zzz").is_empty());
     }
 }

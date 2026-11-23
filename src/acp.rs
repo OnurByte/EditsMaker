@@ -11,11 +11,16 @@ use std::time::Duration;
 /// Longest an agent may take to answer.
 const WAIT: Duration = Duration::from_secs(600);
 
-/// What edits answers an agent's request with: a permission is cancelled, anything else is not offered.
-fn reply(msg: &Value) -> Option<Value> {
+/// What edits answers an agent's request with: a permission is cancelled (with full access, its first "allow"
+/// option is taken), anything else is not offered.
+fn reply(msg: &Value, full: bool) -> Option<Value> {
     let id = msg.get("id")?.clone();
     let method = msg["method"].as_str()?;
-    Some(if method == "session/request_permission" {
+    let allow = msg["params"]["options"].as_array().into_iter().flatten()
+        .find(|o| o["kind"].as_str().is_some_and(|k| k.starts_with("allow"))).and_then(|o| o["optionId"].as_str()).filter(|_| full);
+    Some(if let (true, Some(o)) = (method == "session/request_permission", allow) {
+        json!({"jsonrpc": "2.0", "id": id, "result": {"outcome": {"outcome": "selected", "optionId": o}}})
+    } else if method == "session/request_permission" {
         json!({"jsonrpc": "2.0", "id": id, "result": {"outcome": {"outcome": "cancelled"}}})
     } else {
         json!({"jsonrpc": "2.0", "id": id, "error": {"code": -32601, "message": "edits offers no files or terminal"}})
@@ -29,7 +34,7 @@ fn chunk(msg: &Value) -> Option<&str> {
 }
 
 /// Asks the agent `command` (started with the system's shell) one prompt; its answer's text.
-pub fn ask(command: &str, prompt: &str) -> Result<String, String> {
+pub fn ask(command: &str, prompt: &str, full: bool) -> Result<String, String> {
     let mut child = if cfg!(windows) { Command::new("cmd").args(["/C", command]).spawn_piped() } else { Command::new("sh").args(["-c", command]).spawn_piped() }
         .map_err(|e| format!("{command}: {e}"))?;
     let mut stdin = child.stdin.take().ok_or("no stdin")?;
@@ -56,7 +61,7 @@ pub fn ask(command: &str, prompt: &str) -> Result<String, String> {
                 if let Some(t) = chunk(&msg) {
                     answer.push_str(t);
                 } else if msg.get("method").is_some() {
-                    if let Some(r) = reply(&msg) {
+                    if let Some(r) = reply(&msg, full) {
                         send(r)?;
                     }
                 } else if msg["id"] == id {
@@ -95,11 +100,14 @@ mod tests {
 
     #[test]
     fn the_agent_gets_nothing_but_the_question() {
-        let p = reply(&json!({"jsonrpc": "2.0", "id": 7, "method": "session/request_permission", "params": {}})).unwrap();
+        let p = reply(&json!({"jsonrpc": "2.0", "id": 7, "method": "session/request_permission", "params": {}}), false).unwrap();
+        let ask = json!({"jsonrpc": "2.0", "id": 8, "method": "session/request_permission", "params": {"options": [{"optionId": "no", "kind": "reject_once"}, {"optionId": "yes", "kind": "allow_once"}]}});
+        assert_eq!(reply(&ask, true).unwrap()["result"]["outcome"], json!({"outcome": "selected", "optionId": "yes"}), "full access allows");
+        assert_eq!(reply(&ask, false).unwrap()["result"]["outcome"]["outcome"], "cancelled", "supervised refuses");
         assert_eq!(p["result"]["outcome"]["outcome"], "cancelled");
-        let f = reply(&json!({"jsonrpc": "2.0", "id": "x", "method": "fs/read_text_file", "params": {}})).unwrap();
+        let f = reply(&json!({"jsonrpc": "2.0", "id": "x", "method": "fs/read_text_file", "params": {}}), false).unwrap();
         assert_eq!((f["id"].as_str(), f["error"]["code"].as_i64()), (Some("x"), Some(-32601)));
-        assert!(reply(&json!({"jsonrpc": "2.0", "method": "session/update", "params": {}})).is_none(), "a notification gets no answer");
+        assert!(reply(&json!({"jsonrpc": "2.0", "method": "session/update", "params": {}}), false).is_none(), "a notification gets no answer");
         let c = json!({"jsonrpc": "2.0", "method": "session/update", "params": {"update": {"sessionUpdate": "agent_message_chunk", "content": {"type": "text", "text": "hi"}}}});
         assert_eq!(chunk(&c), Some("hi"));
     }
@@ -117,7 +125,7 @@ echo '{"jsonrpc":"2.0","method":"session/update","params":{"update":{"sessionUpd
 echo '{"jsonrpc":"2.0","id":3,"result":{"stopReason":"end_turn"}}'"#;
         let f = std::env::temp_dir().join(format!("edits-acp-{}.sh", std::process::id()));
         std::fs::write(&f, script).unwrap();
-        assert_eq!(ask(&format!("sh {}", f.display()), "pick moments").unwrap(), "[1, 2]");
+        assert_eq!(ask(&format!("sh {}", f.display()), "pick moments", false).unwrap(), "[1, 2]");
         let _ = std::fs::remove_file(&f);
     }
 }

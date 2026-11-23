@@ -62,6 +62,33 @@ pub struct Pack {
     pub added: u64,
     pub preview_file: Option<PathBuf>,
     pub preview_svg: Option<String>,
+    /// a family's presets, each with its line
+    #[serde(default)]
+    pub presets: Vec<Named>,
+    /// a many-topic feed pack's topics
+    #[serde(default)]
+    pub topics: Vec<TopicRef>,
+    #[serde(default)]
+    pub scene: bool,
+    #[serde(default)]
+    pub version: String,
+    /// where an added pack came from: its repository, a git address, a file
+    #[serde(default)]
+    pub from: Option<String>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct Named {
+    pub name: String,
+    #[serde(default)]
+    pub about: String,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct TopicRef {
+    pub key: String,
+    pub name: String,
+    pub feeds: Vec<FeedRef>,
 }
 
 /// A pack in the marketplace's list (packs.json), as `edits packs browse --json` gives it.
@@ -83,9 +110,9 @@ impl Pack {
         self.kinds.iter().any(|k| k == kind)
     }
 
-    /// What `edits rss` and `edits follow` call a feed pack: football for edits.rss-football.
+    /// What `edits rss` and `edits follow` call a feed pack: its id's last part.
     pub fn short(&self) -> String {
-        self.id.strip_prefix("edits.rss-").unwrap_or(&self.id).to_string()
+        self.id.rsplit('.').next().unwrap_or(&self.id).to_string()
     }
 }
 
@@ -121,6 +148,9 @@ pub fn listed() -> Result<Vec<Listed>, String> {
 #[derive(Clone, Deserialize)]
 pub struct Settings {
     pub version: String,
+    /// t3code's runtime mode: "" supervised, "full" full access
+    #[serde(default)]
+    pub access: String,
     pub ai: Ai,
     pub providers: Vec<Provider>,
     pub encoder: String,
@@ -150,6 +180,14 @@ pub struct Provider {
     pub base: String,
     pub key_var: String,
     pub about: String,
+    /// the subscription it runs on, and whose: "Claude Max", "Onur"
+    #[serde(default)]
+    pub plan: String,
+    #[serde(default)]
+    pub account: String,
+    /// the models t3code's picker offers for it, when it picks its own
+    #[serde(default)]
+    pub models: Vec<String>,
 }
 
 #[derive(Clone, Deserialize)]
@@ -309,11 +347,13 @@ pub struct Job {
     pub started: std::time::Instant,
     /// how long it took, once it ended
     pub took: Option<std::time::Duration>,
+    /// accounts its clips go up on once it worked
+    pub post: Vec<String>,
 }
 
 impl Job {
     pub fn start(args: Vec<String>) -> Job {
-        let job = Job { args, lines: Default::default(), ok: Default::default(), started: std::time::Instant::now(), took: None };
+        let job = Job { args, lines: Default::default(), ok: Default::default(), started: std::time::Instant::now(), took: None, post: vec![] };
         let args: Vec<&str> = job.args.iter().map(String::as_str).collect();
         match command(&args).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn() {
             Err(e) => {

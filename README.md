@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/badges-dark.svg">
-  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 70 built-in packs, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips">
+  <img src="assets/readme/badges-light.svg" width="100%" alt="MCP server, 62 built-in styles, 42 news topics, 3D scenes, community packs, 40 looks, TikTok and Spotify charts, stream VODs into clips">
 </picture>
 
 <p align="center">

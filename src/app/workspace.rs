@@ -20,6 +20,8 @@ pub enum Route {
     Market,
     /// automations, sources and flows
     Automations,
+    /// everything edits made, as cards
+    Library,
     Review,
 }
 
@@ -30,6 +32,7 @@ pub enum Section {
     Ai,
     Accounts,
     Agents,
+    Usage,
     Appearance,
     About,
 }
@@ -37,14 +40,17 @@ pub enum Section {
 /// The list open above the composer, or in a new flow.
 #[derive(Clone, Copy, PartialEq)]
 pub enum Picker {
-    Preset,
+    /// t3code's model picker, in the composer
+    Model,
     FlowSource,
 }
 
-/// The `edits` commands the composer runs: one per attached file (or one for what is typed), in the chosen style.
-pub fn commands(text: &str, files: &[PathBuf], preset: Option<&str>) -> Vec<Vec<String>> {
+/// The `edits` commands the composer runs: one per attached file (or one for what is typed), in the chosen style,
+/// with the chosen 3D scene over it.
+pub fn commands(text: &str, files: &[PathBuf], preset: Option<&str>, overlay: Option<&str>) -> Vec<Vec<String>> {
     let words = runs::split_args(text);
-    let style: Vec<String> = preset.filter(|_| !words.iter().any(|w| w == "--preset")).map(|p| vec!["--preset".to_string(), p.to_string()]).unwrap_or_default();
+    let mut style: Vec<String> = preset.filter(|_| !words.iter().any(|w| w == "--preset")).map(|p| vec!["--preset".to_string(), p.to_string()]).unwrap_or_default();
+    style.extend(overlay.into_iter().flat_map(|o| ["--overlay".to_string(), o.to_string()]));
     if files.is_empty() {
         return if words.is_empty() { vec![] } else { vec![[words, style].concat()] };
     }
@@ -61,6 +67,10 @@ pub struct Market {
     pub origin: Option<&'static str>,
     pub tag: Option<String>,
     pub newest: bool,
+    /// the pack open in its own sheet
+    pub open: Option<String>,
+    /// the Import from git field, shown
+    pub git: bool,
 }
 
 pub struct Review {
@@ -80,6 +90,10 @@ pub struct Workspace {
     /// files dropped or picked, each made on its own
     pub files: Vec<PathBuf>,
     pub preset: Option<String>,
+    /// a 3D scene picked with "/": its id and name
+    pub overlay: Option<(String, String)>,
+    /// accounts the edit goes up on once it is ready, picked with "/"
+    pub post: Vec<String>,
     pub picker: Option<Picker>,
     pub flows: Option<Result<Vec<Flow>, String>>,
     /// a new flow: its source, the accounts it posts to, minutes between checks
@@ -113,6 +127,21 @@ pub struct Workspace {
     pub review: Option<Review>,
     /// started by `edits review CLIP`: saving the notes closes the app
     pub review_only: bool,
+    /// the sidebar, open or a rail of icons (Ctrl+B)
+    pub sidebar_open: bool,
+    /// t3code's thread search, the marketplace's search, and a pack's git address
+    pub thread_search: Entity<InputState>,
+    pub market_search: Entity<InputState>,
+    pub library_search: Entity<InputState>,
+    pub git_url: Entity<InputState>,
+    /// the models each provider offers, for the composer's model picker
+    pub model_lists: std::collections::HashMap<String, Result<Vec<String>, String>>,
+    /// the welcome's step: one thing at a time
+    pub welcome_step: usize,
+    /// Bluesky's handle and app password, Facebook's Page and token: signed in here, not in a terminal
+    pub sign_in: [Entity<InputState>; 4],
+    /// what Usage counts, read when it opens
+    pub usage: Option<crate::app::usage::Usage>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -144,6 +173,24 @@ impl Workspace {
                 cx.notify();
             }
         }));
+        let search = |p: &'static str, window: &mut Window, cx: &mut Context<Self>| cx.new(|cx| InputState::new(window, cx).placeholder(p));
+        let (thread_search, market_search, git_url) = (search("Search edits", window, cx), search("Search packs, tags and topics", window, cx), search("https://github.com/you/your-pack", window, cx));
+        let library_search = search("Search your clips", window, cx);
+        let sign_in = [search("you.bsky.social", window, cx), cx.new(|cx| InputState::new(window, cx).masked(true).placeholder("App password")),
+            search("Page ID", window, cx), cx.new(|cx| InputState::new(window, cx).masked(true).placeholder("Page access token"))];
+        for s in [&thread_search, &market_search, &library_search] {
+            subscriptions.push(cx.subscribe(s, |_: &mut Self, _, e: &InputEvent, cx| {
+                if let InputEvent::Change = e {
+                    cx.notify();
+                }
+            }));
+        }
+        // "/" in the composer: the packs and automations to pick from
+        subscriptions.push(cx.subscribe(&input, |_: &mut Self, _, e: &InputEvent, cx| {
+            if let InputEvent::Change = e {
+                cx.notify();
+            }
+        }));
         let ai_key = cx.new(|cx| InputState::new(window, cx).masked(true).placeholder("API key"));
         let ai_endpoint = cx.new(|cx| InputState::new(window, cx).placeholder("http://127.0.0.1:11434/v1"));
         // following Omarchy: when its theme changes, so does the app's
@@ -164,12 +211,13 @@ impl Workspace {
             }
         })
         .detach();
-        let mut this = Self { input, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, settings_search, welcome: review.is_none() && !theme::prefs().onboarded, files: vec![], preset: None, picker: None, flows: None,
+        let mut this = Self { input, settings_open: None, ai_open: None, ai_key, ai_endpoint, ai_models: None, ai_adding: false, ai_more: false, settings_search, welcome: review.is_none() && !theme::prefs().onboarded, files: vec![], preset: None, overlay: None, post: vec![], picker: None, flows: None,
             flow_source: None, flow_post: vec![], flow_every: 60, jobs: vec![], past: runs::past(&runs::out_dir()), route: Route::New, show_log: false,
-            market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(), _subscriptions: subscriptions };
-        if this.welcome {
-            this.load_settings(cx);
-        }
+            market: Market::default(), settings: None, doctor: None, changing: None, review: None, review_only: review.is_some(),
+            sidebar_open: true, thread_search, market_search, library_search, git_url, model_lists: Default::default(), welcome_step: 0, sign_in, usage: None, _subscriptions: subscriptions };
+        crate::app::discord::start();
+        // the composer's model picker shows the AI in use from the start
+        this.load_settings(cx);
         if let Some(clip) = review {
             this.open_review(clip, window, cx);
         } else {
@@ -190,22 +238,40 @@ impl Workspace {
         if to == Route::Automations {
             self.load_flows(cx);
         }
+        if to == Route::Library {
+            self.past = runs::past(&runs::out_dir());
+        }
+        crate::app::discord::doing(match to {
+            Route::Market => "Browsing the marketplace".into(),
+            Route::Automations => "Setting up automations".into(),
+            Route::Library => "Looking through the library".into(),
+            Route::Job(i) => format!("Editing {}", self.jobs[i].title()),
+            Route::Run(i) => format!("Watching {}", self.past[i].subject),
+            Route::Review => "Reviewing an edit".into(),
+            Route::New => "Starting a new edit".into(),
+        });
         self.picker = None;
+        self.market.open = None;
         cx.notify();
     }
 
     /// Runs what the composer holds.
     pub fn start(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let text = self.input.read(cx).value().to_string();
-        let list = commands(&text, &self.files, self.preset.as_deref());
+        let list = commands(&text, &self.files, self.preset.as_deref(), self.overlay.as_ref().map(|o| o.0.as_str()));
         if list.is_empty() {
             window.push_notification(Notification::info("Paste a link, name a topic, or drop a video"), cx);
             return;
         }
         for args in list {
             self.launch(args, window, cx);
+            // posted once ready: the clips this job names, to the accounts picked
+            if let Some(j) = self.jobs.last_mut() {
+                j.post = self.post.clone();
+            }
         }
         self.files.clear();
+        self.post.clear();
         self.picker = None;
         self.input.update(cx, |s, cx| s.set_value("", window, cx));
         cx.notify();
@@ -229,6 +295,7 @@ impl Workspace {
         self.jobs.push(Job::start(args));
         let i = self.jobs.len() - 1;
         self.route = Route::Job(i);
+        crate::app::discord::doing(format!("Editing {}", self.jobs[i].title()));
         // the job's lines arrive on threads: look a few times a second until it ends, then say so once
         cx.spawn_in(window, async move |this, cx| loop {
             cx.background_executor().timer(Duration::from_millis(250)).await;
@@ -238,6 +305,13 @@ impl Workspace {
                 this.jobs[i].took = Some(this.jobs[i].started.elapsed());
                 this.past = runs::past(&runs::out_dir());
                 let what = this.jobs[i].title();
+                if ok && !this.jobs[i].post.is_empty() {
+                    let to = this.jobs[i].post.join(",");
+                    let clips: Vec<PathBuf> = runs::paths_in(&this.jobs[i].lines()).into_iter().filter(|p| p.extension().is_some_and(|e| e == "mp4")).collect();
+                    for c in clips {
+                        this.launch(vec!["post".into(), c.display().to_string(), "--to".into(), to.clone()], window, cx);
+                    }
+                }
                 let note = if ok { Notification::success(what).title("Ready") } else { Notification::error(what).title("Did not work") };
                 window.push_notification(note.in_app_and_system(), cx);
                 Some(())
@@ -306,7 +380,8 @@ impl Workspace {
             let _ = this.update_in(cx, |this, window, cx| {
                 this.market.busy = None;
                 let note = match r {
-                    Ok(_) => Notification::success(format!("{id}: {}", match verb { "add" => "added", "remove" => "deleted", "on" => "on", "off" => "off", "share" => "packed up; attach it to the GitHub issue that opened", _ => "trusted" })),
+                    Ok(out) if verb == "add" => Notification::success(out.lines().next().unwrap_or("added").to_string()).title("Pack added"),
+                    Ok(_) => Notification::success(format!("{id}: {}", match verb { "remove" => "deleted", "on" => "turned on", "off" => "turned off", "share" => "packed up; attach it to the GitHub issue that opened", _ => "trusted" })),
                     Err(e) => Notification::error(e).title(format!("{verb} {id}")),
                 };
                 window.push_notification(note, cx);
@@ -316,9 +391,78 @@ impl Workspace {
         .detach();
     }
 
+    /// Hands a file to the system's share sheet (AirDrop, Mail, Messages... on macOS; Share on Windows; mail on
+    /// Linux). Where there is none, the file is shown in its folder and its path copied, to drop anywhere.
+    pub fn share_file(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+        let sheet = kael_share::ShareSheet::builder().subject(name.clone()).file(path.clone()).build_checked();
+        cx.spawn_in(window, async move |_, cx| {
+            let shown = match sheet {
+                Ok(s) => s.show().await.map(|r| r.is_completed()).unwrap_or(false),
+                Err(_) => false,
+            };
+            let _ = cx.update(|window, cx| {
+                if !shown {
+                    cx.reveal_path(&path);
+                    cx.write_to_clipboard(ClipboardItem::new_string(path.display().to_string()));
+                }
+                let note = if shown { format!("{name}: shared") } else { format!("{name} is in the folder that opened; its path is copied") };
+                window.push_notification(Notification::success(note), cx);
+            });
+        })
+        .detach();
+    }
+
+    /// `edits packs export ID` into edits' share folder, then the share sheet: a pack sent as one file.
+    pub fn share_pack(&mut self, id: String, window: &mut Window, cx: &mut Context<Self>) {
+        cx.spawn_in(window, async move |this, cx| {
+            let r = cx.background_executor().spawn(async move { crate::packs::export(&id, None) }).await;
+            let _ = this.update_in(cx, |this, window, cx| match r {
+                Ok(f) => this.share_file(f, window, cx),
+                Err(e) => window.push_notification(Notification::error(e), cx),
+            });
+        })
+        .detach();
+    }
+
+    /// Export: a save dialog, then the pack written there as a .tgz.
+    pub fn export_pack(&mut self, id: String, window: &mut Window, cx: &mut Context<Self>) {
+        let start = crate::util::home().join("Downloads");
+        let to = cx.prompt_for_new_path(if start.is_dir() { &start } else { std::path::Path::new(".") }, Some(&format!("{id}.tgz")));
+        cx.spawn_in(window, async move |_, cx| {
+            let Ok(Ok(Some(to))) = to.await else { return };
+            let r = cx.background_executor().spawn(async move { crate::packs::export(&id, Some(&to)) }).await;
+            let _ = cx.update(|window, cx| match r {
+                Ok(f) => {
+                    cx.reveal_path(&f);
+                    window.push_notification(Notification::success(format!("Exported to {}", f.display())), cx);
+                }
+                Err(e) => window.push_notification(Notification::error(e), cx),
+            });
+        })
+        .detach();
+    }
+
+    /// Import: a pack file (.tgz) or folder picked here, added like one from the marketplace.
+    pub fn import_pack(&mut self, folder: bool, window: &mut Window, cx: &mut Context<Self>) {
+        let paths = cx.prompt_for_paths(PathPromptOptions { files: !folder, directories: folder, multiple: false, prompt: Some("A pack: its folder, or a .tgz it was exported as".into()) });
+        cx.spawn_in(window, async move |this, cx| {
+            if let Ok(Ok(Some(paths))) = paths.await {
+                if let Some(p) = paths.first() {
+                    let what = p.display().to_string();
+                    let _ = this.update_in(cx, |this, window, cx| this.pack_action("add", what, window, cx));
+                }
+            }
+        })
+        .detach();
+    }
+
     /// The settings window, at a section.
     pub fn open_settings(&mut self, at: Section, cx: &mut Context<Self>) {
         self.settings_open = Some(at);
+        if at == Section::Usage {
+            self.usage = Some(crate::app::usage::read(&self.past));
+        }
         if self.settings.is_none() {
             self.load_settings(cx);
         }
@@ -403,10 +547,12 @@ impl Render for Workspace {
         let main = match self.route {
             Route::Market => self.marketplace(false, window, cx).into_any_element(),
             Route::Automations => self.marketplace(true, window, cx).into_any_element(),
+            Route::Library => self.library(window, cx).into_any_element(),
             Route::Review => self.review_screen(window, cx).into_any_element(),
             _ => self.chat_view(window, cx).into_any_element(),
         };
         let settings = self.settings_open.map(|at| self.settings_window(at, window, cx));
+        let pack = self.market.open.clone().and_then(|id| self.pack_sheet(&id, cx));
         if self.welcome {
             return div().size_full().relative().flex().bg(b.page).text_color(b.ink).font_family(theme::FONT).font_weight(theme::LIGHT)
                 .child(self.welcome(window, cx)).children(settings);
@@ -417,8 +563,10 @@ impl Render for Workspace {
                     this.put(&PathBuf::from(p), window, cx);
                 }
             }))
+            .on_action(cx.listener(|this, _: &crate::app::ToggleSidebar, _, cx| this.toggle_sidebar(cx)))
             .when(!self.review_only, |d| d.child(self.sidebar(cx)))
             .child(div().flex_1().min_w_0().h_full().flex().flex_col().child(main))
+            .children(pack)
             .children(settings)
     }
 }
@@ -436,10 +584,11 @@ mod tests {
     #[test]
     fn the_composer_runs_one_edit_per_file_in_its_style() {
         let files = [PathBuf::from("/v/a b.mp4"), PathBuf::from("/v/c.mp4")];
-        assert_eq!(commands("--music trend:1", &files, Some("akis-whip")),
+        assert_eq!(commands("--music trend:1", &files, Some("akis-whip"), None),
             [s(&["/v/a b.mp4", "--music", "trend:1", "--preset", "akis-whip"]), s(&["/v/c.mp4", "--music", "trend:1", "--preset", "akis-whip"])]);
-        assert_eq!(commands("https://youtu.be/x --preset mine", &[], Some("akis-whip")), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
-        assert!(commands("  ", &[], None).is_empty());
+        assert_eq!(commands("https://youtu.be/x --preset mine", &[], Some("akis-whip"), None), [s(&["https://youtu.be/x", "--preset", "mine"])], "a typed preset wins");
+        assert_eq!(commands("x", &[], None, Some("stardust")), [s(&["x", "--overlay", "stardust"])], "a 3D scene goes over it");
+        assert!(commands("  ", &[], None, None).is_empty());
     }
 
 }
